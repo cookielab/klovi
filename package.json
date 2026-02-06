@@ -7,6 +7,8 @@
   "private": true,
   "scripts": {
     "dev": "bun run --hot --watch index.ts",
+    "start": "bun index.ts",
+    "build": "bun build ./index.html --outdir dist",
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome lint .",
     "format": "bunx biome format --write .",
