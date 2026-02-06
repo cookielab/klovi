@@ -10,7 +10,8 @@ function getSystemTheme(): ResolvedTheme {
 }
 
 function resolveTheme(setting: ThemeSetting): ResolvedTheme {
-  return setting === "system" ? getSystemTheme() : setting;
+  if (setting === "system") return getSystemTheme();
+  return setting;
 }
 
 export function useTheme() {
