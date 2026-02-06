@@ -3,11 +3,15 @@ import { handleProjects } from "./src/server/api/projects.ts";
 import { handleSession } from "./src/server/api/session.ts";
 import { handleSessions } from "./src/server/api/sessions.ts";
 import { handleSubAgent } from "./src/server/api/subagent.ts";
+import { handleVersion } from "./src/server/api/version.ts";
 
 Bun.serve({
   port: 3583,
   routes: {
     "/": index,
+    "/api/version": {
+      GET: () => handleVersion(),
+    },
     "/api/projects": {
       GET: () => handleProjects(),
     },

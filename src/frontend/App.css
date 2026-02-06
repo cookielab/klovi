@@ -126,6 +126,12 @@ body {
   color: var(--text-primary);
 }
 
+.sidebar-version {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
