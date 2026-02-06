@@ -4,6 +4,7 @@ interface HeaderProps {
   title: string;
   breadcrumb?: string;
   copyCommand?: string;
+  backHref?: string;
   themeSetting: "system" | "light" | "dark";
   onCycleTheme: () => void;
   fontSize: number;
@@ -18,6 +19,7 @@ export function Header({
   title,
   breadcrumb,
   copyCommand,
+  backHref,
   themeSetting,
   onCycleTheme,
   fontSize,
@@ -45,6 +47,11 @@ export function Header({
   return (
     <div className="header">
       <div className="header-title">
+        {backHref && (
+          <a className="back-btn" href={backHref}>
+            &larr; Back to session
+          </a>
+        )}
         {breadcrumb && (
           <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{breadcrumb} /&nbsp;</span>
         )}
