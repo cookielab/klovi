@@ -9,6 +9,22 @@ const PORT = 3583;
 const isDevMode = process.env.NODE_ENV === "development";
 const acceptRisks = process.argv.includes("--accept-risks");
 
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  console.log(`
+Klovi — a web viewer for Claude Code sessions
+
+Usage:
+  bun index.ts [options]
+
+Options:
+  --accept-risks  Skip the startup security warning
+  -h, --help      Show this help message
+
+The server runs on http://localhost:${PORT} by default.
+`);
+  process.exit(0);
+}
+
 if (!isDevMode && !acceptRisks) {
   const yellow = "\x1b[33m";
   const bold = "\x1b[1m";
