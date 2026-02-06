@@ -1,0 +1,31 @@
+import { GlobalWindow } from "happy-dom";
+
+const window = new GlobalWindow();
+
+// Register DOM globals
+const globals = [
+  "document",
+  "window",
+  "HTMLElement",
+  "HTMLDivElement",
+  "HTMLSpanElement",
+  "HTMLAnchorElement",
+  "HTMLImageElement",
+  "Element",
+  "Node",
+  "Text",
+  "DocumentFragment",
+  "Event",
+  "MouseEvent",
+  "CustomEvent",
+  "MutationObserver",
+  "navigator",
+  "location",
+  "getComputedStyle",
+] as const;
+
+for (const key of globals) {
+  if (key in window) {
+    (globalThis as Record<string, unknown>)[key] = (window as unknown as Record<string, unknown>)[key];
+  }
+}
