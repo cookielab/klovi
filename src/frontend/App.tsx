@@ -10,6 +10,7 @@ import { ProjectList } from "./components/project/ProjectList.tsx";
 import { SessionList } from "./components/project/SessionList.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
 import { SessionView } from "./components/session/SessionView.tsx";
+import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 
@@ -28,6 +29,7 @@ type ViewState =
       project: Project;
       sessionId: string;
       agentId: string;
+      presenting: boolean;
     };
 
 function viewToHash(view: ViewState): string {
@@ -63,7 +65,7 @@ async function restoreFromHash(): Promise<ViewState> {
 
   // Sub-agent route: #/<project>/<sessionId>/subagent/<agentId>
   if (isSubAgent) {
-    return { kind: "subagent", project, sessionId, agentId: parts[3]! };
+    return { kind: "subagent", project, sessionId, agentId: parts[3]!, presenting: false };
   }
 
   // Fetch session info
@@ -102,6 +104,48 @@ function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
     };
   }
   return { title: "Klovi", breadcrumb: "" };
+}
+
+function getSidebarContent(
+  view: ViewState,
+  selectProject: (p: Project) => void,
+  hiddenIds: Set<string>,
+  hide: (id: string) => void,
+  goHidden: () => void,
+  selectSession: (s: SessionSummary) => void,
+  goHome: () => void,
+): React.ReactNode {
+  if (view.kind === "home" || view.kind === "hidden") {
+    return (
+      <ProjectList
+        onSelect={selectProject}
+        hiddenIds={hiddenIds}
+        onHide={hide}
+        onShowHidden={goHidden}
+      />
+    );
+  }
+  if (view.kind === "project") {
+    return <SessionList project={view.project} onSelect={selectSession} onBack={goHome} />;
+  }
+  if (view.kind === "subagent") {
+    return (
+      <SessionList
+        project={view.project}
+        onSelect={selectSession}
+        onBack={goHome}
+        selectedId={view.sessionId}
+      />
+    );
+  }
+  return (
+    <SessionList
+      project={view.project}
+      onSelect={selectSession}
+      onBack={goHome}
+      selectedId={view.session.sessionId}
+    />
+  );
 }
 
 function App() {
@@ -154,9 +198,10 @@ function App() {
 
   const goHome = () => setView({ kind: "home" });
   const goHidden = () => setView({ kind: "hidden" });
+  const canPresent = view.kind === "session" || view.kind === "subagent";
 
   const togglePresentation = useCallback(() => {
-    if (view.kind === "session") {
+    if (view.kind === "session" || view.kind === "subagent") {
       setView({ ...view, presenting: !view.presenting });
     }
   }, [view]);
@@ -171,7 +216,7 @@ function App() {
 
       switch (e.key) {
         case "p":
-          if (view.kind === "session") {
+          if (canPresent) {
             e.preventDefault();
             togglePresentation();
           }
@@ -190,37 +235,20 @@ function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [view, togglePresentation, increase, decrease]);
+  }, [canPresent, togglePresentation, increase, decrease]);
 
   const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
+  const sidebarContent = getSidebarContent(
+    view,
+    selectProject,
+    hiddenIds,
+    hide,
+    goHidden,
+    selectSession,
+    goHome,
+  );
 
-  // Sidebar content
-  let sidebarContent: React.ReactNode;
-  if (view.kind === "home" || view.kind === "hidden") {
-    sidebarContent = (
-      <ProjectList
-        onSelect={selectProject}
-        hiddenIds={hiddenIds}
-        onHide={hide}
-        onShowHidden={goHidden}
-      />
-    );
-  } else if (view.kind === "project" || view.kind === "subagent") {
-    sidebarContent = (
-      <SessionList project={view.project} onSelect={selectSession} onBack={goHome} />
-    );
-  } else {
-    sidebarContent = (
-      <SessionList
-        project={view.project}
-        onSelect={selectSession}
-        onBack={goHome}
-        selectedId={view.session.sessionId}
-      />
-    );
-  }
-
-  const isPresenting = view.kind === "session" && view.presenting;
+  const isPresenting = canPresent && view.presenting;
 
   if (!ready) {
     return <div className="loading">Loading...</div>;
@@ -234,6 +262,9 @@ function App() {
         copyCommand={
           view.kind === "session" ? `claude --resume ${view.session.sessionId}` : undefined
         }
+        backHref={
+          view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined
+        }
         themeSetting={themeSetting}
         onCycleTheme={cycleTheme}
         fontSize={fontSize}
@@ -241,7 +272,7 @@ function App() {
         onDecreaseFontSize={decrease}
         presentationActive={isPresenting}
         onTogglePresentation={togglePresentation}
-        showPresentationToggle={view.kind === "session"}
+        showPresentationToggle={canPresent}
       />
       {view.kind === "home" && (
         <div className="empty-state">
@@ -268,13 +299,21 @@ function App() {
         ) : (
           <SessionView sessionId={view.session.sessionId} project={view.project.encodedPath} />
         ))}
-      {view.kind === "subagent" && (
-        <SubAgentView
-          sessionId={view.sessionId}
-          project={view.project.encodedPath}
-          agentId={view.agentId}
-        />
-      )}
+      {view.kind === "subagent" &&
+        (view.presenting ? (
+          <SubAgentPresentation
+            sessionId={view.sessionId}
+            project={view.project.encodedPath}
+            agentId={view.agentId}
+            onExit={togglePresentation}
+          />
+        ) : (
+          <SubAgentView
+            sessionId={view.sessionId}
+            project={view.project.encodedPath}
+            agentId={view.agentId}
+          />
+        ))}
     </Layout>
   );
 }
