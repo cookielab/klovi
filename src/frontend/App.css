@@ -427,11 +427,11 @@ body {
 }
 
 .markdown-content code.file-ref {
-  background: var(--accent-subtle);
+  background: transparent;
   color: var(--accent);
-  font-weight: 600;
-  border: 1px solid var(--accent);
-  padding: 1px 6px;
+  font-weight: 500;
+  border: none;
+  padding: 0;
 }
 
 .markdown-content pre {
