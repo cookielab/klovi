@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "module": "index.ts",
   "type": "module",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "bun run --hot --watch index.ts",
