@@ -22,6 +22,7 @@ const globals = [
   "navigator",
   "location",
   "getComputedStyle",
+  "localStorage",
 ] as const;
 
 for (const key of globals) {

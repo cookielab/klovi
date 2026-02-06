@@ -5,14 +5,17 @@ import type { Project, SessionSummary } from "../shared/types.ts";
 import { Header } from "./components/layout/Header.tsx";
 import { Layout } from "./components/layout/Layout.tsx";
 import { SubAgentView } from "./components/message/SubAgentView.tsx";
+import { HiddenProjectList } from "./components/project/HiddenProjectList.tsx";
 import { ProjectList } from "./components/project/ProjectList.tsx";
 import { SessionList } from "./components/project/SessionList.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
 import { SessionView } from "./components/session/SessionView.tsx";
+import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 
 type ViewState =
   | { kind: "home" }
+  | { kind: "hidden" }
   | { kind: "project"; project: Project }
   | {
       kind: "session";
@@ -28,6 +31,7 @@ type ViewState =
     };
 
 function viewToHash(view: ViewState): string {
+  if (view.kind === "hidden") return "#/hidden";
   if (view.kind === "project") return `#/${view.project.encodedPath}`;
   if (view.kind === "session") return `#/${view.project.encodedPath}/${view.session.sessionId}`;
   if (view.kind === "subagent")
@@ -38,6 +42,7 @@ function viewToHash(view: ViewState): string {
 async function restoreFromHash(): Promise<ViewState> {
   const hash = window.location.hash.replace(/^#\/?/, "");
   if (!hash) return { kind: "home" };
+  if (hash === "hidden") return { kind: "hidden" };
 
   const parts = hash.split("/");
   const encodedPath = parts[0];
@@ -76,6 +81,9 @@ async function restoreFromHash(): Promise<ViewState> {
 }
 
 function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
+  if (view.kind === "hidden") {
+    return { title: "Hidden Projects", breadcrumb: "" };
+  }
   if (view.kind === "project") {
     const parts = view.project.name.split("/").filter(Boolean);
     return { title: parts.slice(-2).join("/"), breadcrumb: "" };
@@ -99,6 +107,7 @@ function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
 function App() {
   const { setting: themeSetting, cycle: cycleTheme } = useTheme();
   const { size: fontSize, increase, decrease } = useFontSize();
+  const { hiddenIds, hide, unhide } = useHiddenProjects();
   const [view, setView] = useState<ViewState>({ kind: "home" });
   const [ready, setReady] = useState(false);
 
@@ -144,6 +153,7 @@ function App() {
   };
 
   const goHome = () => setView({ kind: "home" });
+  const goHidden = () => setView({ kind: "hidden" });
 
   const togglePresentation = () => {
     if (view.kind === "session") {
@@ -155,8 +165,15 @@ function App() {
 
   // Sidebar content
   let sidebarContent: React.ReactNode;
-  if (view.kind === "home") {
-    sidebarContent = <ProjectList onSelect={selectProject} />;
+  if (view.kind === "home" || view.kind === "hidden") {
+    sidebarContent = (
+      <ProjectList
+        onSelect={selectProject}
+        hiddenIds={hiddenIds}
+        onHide={hide}
+        onShowHidden={goHidden}
+      />
+    );
   } else if (view.kind === "project" || view.kind === "subagent") {
     sidebarContent = (
       <SessionList project={view.project} onSelect={selectSession} onBack={goHome} />
@@ -197,6 +214,9 @@ function App() {
           <div className="empty-state-title">Select a project to get started</div>
           <p>Browse your Claude Code sessions from the sidebar</p>
         </div>
+      )}
+      {view.kind === "hidden" && (
+        <HiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
       )}
       {view.kind === "project" && (
         <div className="empty-state">

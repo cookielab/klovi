@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
 import type { Project } from "../../../shared/types.ts";
+import { projectDisplayName } from "../../utils/project.ts";
 
 interface ProjectListProps {
   onSelect: (project: Project) => void;
   selected?: string;
+  hiddenIds: Set<string>;
+  onHide: (encodedPath: string) => void;
+  onShowHidden: () => void;
 }
 
-export function ProjectList({ onSelect, selected }: ProjectListProps) {
+export function ProjectList({
+  onSelect,
+  selected,
+  hiddenIds,
+  onHide,
+  onShowHidden,
+}: ProjectListProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,8 +33,9 @@ export function ProjectList({ onSelect, selected }: ProjectListProps) {
 
   const filtered = projects.filter(
     (p) =>
-      p.name.toLowerCase().includes(filter.toLowerCase()) ||
-      p.encodedPath.toLowerCase().includes(filter.toLowerCase()),
+      !hiddenIds.has(p.encodedPath) &&
+      (p.name.toLowerCase().includes(filter.toLowerCase()) ||
+        p.encodedPath.toLowerCase().includes(filter.toLowerCase())),
   );
 
   if (loading) return <div className="loading">Loading projects...</div>;
@@ -41,15 +52,28 @@ export function ProjectList({ onSelect, selected }: ProjectListProps) {
       {filtered.map((project) => (
         <div
           key={project.encodedPath}
-          className={`list-item ${selected === project.encodedPath ? "active" : ""}`}
+          className={`list-item list-item-with-action ${selected === project.encodedPath ? "active" : ""}`}
           onClick={() => onSelect(project)}
         >
-          <div className="list-item-title">{projectDisplayName(project)}</div>
-          <div className="list-item-meta">
-            {project.sessionCount} session{project.sessionCount !== 1 ? "s" : ""}
-            {" · "}
-            {formatRelativeTime(project.lastActivity)}
+          <div className="list-item-content">
+            <div className="list-item-title">{projectDisplayName(project)}</div>
+            <div className="list-item-meta">
+              {project.sessionCount} session{project.sessionCount !== 1 ? "s" : ""}
+              {" · "}
+              {formatRelativeTime(project.lastActivity)}
+            </div>
           </div>
+          <button
+            type="button"
+            className="btn-hide"
+            title="Hide project"
+            onClick={(e) => {
+              e.stopPropagation();
+              onHide(project.encodedPath);
+            }}
+          >
+            ×
+          </button>
         </div>
       ))}
       {filtered.length === 0 && (
@@ -64,14 +88,13 @@ export function ProjectList({ onSelect, selected }: ProjectListProps) {
           No projects found
         </div>
       )}
+      {hiddenIds.size > 0 && (
+        <div className="hidden-projects-link" onClick={onShowHidden}>
+          {hiddenIds.size} hidden project{hiddenIds.size !== 1 ? "s" : ""}
+        </div>
+      )}
     </div>
   );
-}
-
-function projectDisplayName(project: Project): string {
-  // Show just the last 2 segments of the path
-  const parts = project.name.split("/").filter(Boolean);
-  return parts.slice(-2).join("/");
 }
 
 function formatRelativeTime(iso: string): string {
