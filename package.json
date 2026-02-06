@@ -5,9 +5,14 @@
   "private": true,
   "scripts": {
     "dev": "bun run --hot --watch index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "bunx biome lint .",
+    "format": "bunx biome format --write .",
+    "check": "bunx biome check .",
+    "check:fix": "bunx biome check --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.14",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/bun": "latest",
