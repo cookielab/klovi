@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Session } from "../../../shared/types.ts";
 import { MessageList } from "../message/MessageList.tsx";
 
@@ -15,9 +15,7 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(
-      `/api/sessions/${sessionId}?project=${encodeURIComponent(project)}`
-    )
+    fetch(`/api/sessions/${sessionId}?project=${encodeURIComponent(project)}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -33,7 +31,12 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
   }, [sessionId, project]);
 
   if (loading) return <div className="loading">Loading session...</div>;
-  if (error) return <div className="loading" style={{ color: "var(--error)" }}>Error: {error}</div>;
+  if (error)
+    return (
+      <div className="loading" style={{ color: "var(--error)" }}>
+        Error: {error}
+      </div>
+    );
   if (!session) return null;
 
   return <MessageList turns={session.turns} />;

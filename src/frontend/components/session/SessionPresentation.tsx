@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Session } from "../../../shared/types.ts";
-import { MessageList } from "../message/MessageList.tsx";
-import { usePresentationMode } from "../../hooks/usePresentationMode.ts";
 import { useKeyboard } from "../../hooks/useKeyboard.ts";
+import { usePresentationMode } from "../../hooks/usePresentationMode.ts";
+import { MessageList } from "../message/MessageList.tsx";
 
 interface SessionPresentationProps {
   sessionId: string;
@@ -10,20 +10,14 @@ interface SessionPresentationProps {
   onExit: () => void;
 }
 
-export function SessionPresentation({
-  sessionId,
-  project,
-  onExit,
-}: SessionPresentationProps) {
+export function SessionPresentation({ sessionId, project, onExit }: SessionPresentationProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
-    fetch(
-      `/api/sessions/${sessionId}?project=${encodeURIComponent(project)}`
-    )
+    fetch(`/api/sessions/${sessionId}?project=${encodeURIComponent(project)}`)
       .then((r) => r.json())
       .then((data) => {
         setSession(data.session);
@@ -39,7 +33,7 @@ export function SessionPresentation({
     if (session && !presentation.active) {
       presentation.enter();
     }
-  }, [session]);
+  }, [session, presentation]);
 
   useKeyboard(
     {
@@ -48,15 +42,16 @@ export function SessionPresentation({
       onEscape: onExit,
       onFullscreen: presentation.toggleFullscreen,
     },
-    presentation.active
+    presentation.active,
   );
 
   // Auto-scroll to bottom when step changes
+  const currentStep = presentation.currentStep;
   useEffect(() => {
-    if (scrollRef.current) {
+    if (currentStep >= 0 && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [presentation.currentStep]);
+  }, [currentStep]);
 
   if (loading) return <div className="loading">Loading session...</div>;
   if (!session) return null;
@@ -81,14 +76,9 @@ export function SessionPresentation({
           Step {presentation.currentStep + 1} / {presentation.totalSteps}
         </span>
         <div className="presentation-progress-bar">
-          <div
-            className="presentation-progress-fill"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="presentation-progress-fill" style={{ width: `${progress}%` }} />
         </div>
-        <span style={{ fontSize: "0.75rem" }}>
-          ← → navigate · Esc exit · F fullscreen
-        </span>
+        <span style={{ fontSize: "0.75rem" }}>← → navigate · Esc exit · F fullscreen</span>
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import type { AssistantTurn, SystemTurn, UserTurn } from "../../shared/types.ts";
 import { buildTurns } from "./session.ts";
 import type { RawLine } from "./types.ts";
-import type { UserTurn, AssistantTurn, SystemTurn } from "../../shared/types.ts";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
   return {
-    uuid: "uuid-" + Math.random().toString(36).slice(2, 8),
+    uuid: `uuid-${Math.random().toString(36).slice(2, 8)}`,
     timestamp: "2025-01-15T10:00:00Z",
     ...overrides,
   } as RawLine;
@@ -252,9 +252,7 @@ describe("buildTurns", () => {
         type: "user",
         message: {
           role: "user",
-          content: [
-            { type: "tool_result", tool_use_id: "t1", content: "contents" },
-          ],
+          content: [{ type: "tool_result", tool_use_id: "t1", content: "contents" }],
         },
       }),
       line({

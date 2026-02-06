@@ -9,9 +9,7 @@
 export function cleanCommandMessage(text: string): string {
   if (!text.includes("<command-message>")) return text;
 
-  const argsMatch = text.match(
-    /<command-args>([\s\S]*?)<\/command-args>/
-  );
+  const argsMatch = text.match(/<command-args>([\s\S]*?)<\/command-args>/);
   if (argsMatch?.[1]) return argsMatch[1].trim();
 
   return text
@@ -21,17 +19,11 @@ export function cleanCommandMessage(text: string): string {
 }
 
 /** Parse structured command info (for session detail view). */
-export function parseCommandMessage(
-  text: string
-): { name: string; args: string } | null {
+export function parseCommandMessage(text: string): { name: string; args: string } | null {
   if (!text.includes("<command-message>")) return null;
 
-  const nameMatch = text.match(
-    /<command-name>([\s\S]*?)<\/command-name>/
-  );
-  const argsMatch = text.match(
-    /<command-args>([\s\S]*?)<\/command-args>/
-  );
+  const nameMatch = text.match(/<command-name>([\s\S]*?)<\/command-name>/);
+  const argsMatch = text.match(/<command-args>([\s\S]*?)<\/command-args>/);
 
   const name = nameMatch?.[1]?.trim() ?? "";
   const args = argsMatch?.[1]?.trim() ?? "";

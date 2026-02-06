@@ -3,24 +3,24 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "./CodeBlock.tsx";
 
-const FILE_REF_RE = /@([\w.\/-]+\.\w+)/g;
+const FILE_REF_RE = /@([\w./-]+\.\w+)/g;
 
 function renderTextWithFileRefs(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
   let last = 0;
-  let match: RegExpExecArray | null;
-
   FILE_REF_RE.lastIndex = 0;
-  while ((match = FILE_REF_RE.exec(text)) !== null) {
+  let match = FILE_REF_RE.exec(text);
+  while (match !== null) {
     if (match.index > last) {
       parts.push(text.slice(last, match.index));
     }
     parts.push(
       <code key={match.index} className="file-ref">
         @{match[1]}
-      </code>
+      </code>,
     );
     last = FILE_REF_RE.lastIndex;
+    match = FILE_REF_RE.exec(text);
   }
 
   if (parts.length === 0) return text;
@@ -42,9 +42,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             return (
               <p>
                 {React.Children.map(children, (child) =>
-                  typeof child === "string"
-                    ? renderTextWithFileRefs(child)
-                    : child
+                  typeof child === "string" ? renderTextWithFileRefs(child) : child,
                 )}
               </p>
             );

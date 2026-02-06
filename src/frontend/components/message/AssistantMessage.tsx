@@ -1,19 +1,16 @@
-import React from "react";
+import type React from "react";
 import type { AssistantTurn } from "../../../shared/types.ts";
+import { formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { ThinkingBlock } from "./ThinkingBlock.tsx";
 import { ToolCall } from "./ToolCall.tsx";
-import { formatTimestamp } from "../../utils/time.ts";
 
 interface AssistantMessageProps {
   turn: AssistantTurn;
   visibleSubSteps?: number; // how many sub-steps to show (presentation mode)
 }
 
-export function AssistantMessage({
-  turn,
-  visibleSubSteps,
-}: AssistantMessageProps) {
+export function AssistantMessage({ turn, visibleSubSteps }: AssistantMessageProps) {
   // Build ordered sub-steps
   const subSteps: React.ReactNode[] = [];
   let key = 0;
@@ -24,7 +21,7 @@ export function AssistantMessage({
         {turn.thinkingBlocks.map((b, i) => (
           <ThinkingBlock key={i} block={b} />
         ))}
-      </div>
+      </div>,
     );
   }
 
@@ -34,7 +31,7 @@ export function AssistantMessage({
         {turn.textBlocks.map((text, i) => (
           <MarkdownRenderer key={i} content={text} />
         ))}
-      </div>
+      </div>,
     );
   }
 
@@ -42,12 +39,11 @@ export function AssistantMessage({
     subSteps.push(
       <div key={`tool-${key++}`}>
         <ToolCall call={call} />
-      </div>
+      </div>,
     );
   }
 
-  const limit =
-    visibleSubSteps !== undefined ? visibleSubSteps : subSteps.length;
+  const limit = visibleSubSteps !== undefined ? visibleSubSteps : subSteps.length;
   const visible = subSteps.slice(0, limit);
 
   return (
@@ -55,31 +51,24 @@ export function AssistantMessage({
       <div className="message-role">
         Assistant
         {turn.model && (
-          <span style={{ fontWeight: 400, marginLeft: 8 }}>
-            {shortModel(turn.model)}
-          </span>
+          <span style={{ fontWeight: 400, marginLeft: 8 }}>{shortModel(turn.model)}</span>
         )}
         {turn.timestamp && (
-          <span className="message-timestamp">
-            {formatTimestamp(turn.timestamp)}
-          </span>
+          <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
         )}
       </div>
       {visible.map((node, i) => (
         <div
           key={i}
-          className={
-            visibleSubSteps !== undefined && i === visible.length - 1
-              ? "step-enter"
-              : ""
-          }
+          className={visibleSubSteps !== undefined && i === visible.length - 1 ? "step-enter" : ""}
         >
           {node}
         </div>
       ))}
       {turn.usage && (
         <div className="token-usage">
-          {turn.usage.inputTokens.toLocaleString()} in / {turn.usage.outputTokens.toLocaleString()} out
+          {turn.usage.inputTokens.toLocaleString()} in / {turn.usage.outputTokens.toLocaleString()}{" "}
+          out
           {turn.usage.cacheReadTokens && turn.usage.cacheReadTokens > 0 && (
             <span> · {turn.usage.cacheReadTokens.toLocaleString()} cache read</span>
           )}

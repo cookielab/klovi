@@ -1,9 +1,9 @@
 import { readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
 import { homedir } from "node:os";
+import { join } from "node:path";
 import type { Project, SessionSummary } from "../../shared/types.ts";
-import type { RawLine } from "./types.ts";
 import { cleanCommandMessage } from "./command-message.ts";
+import type { RawLine } from "./types.ts";
 
 const CLAUDE_DIR = join(homedir(), ".claude");
 const PROJECTS_DIR = join(CLAUDE_DIR, "projects");
@@ -16,9 +16,7 @@ export async function discoverProjects(): Promise<Project[]> {
     if (!entry.isDirectory()) continue;
 
     const projectDir = join(PROJECTS_DIR, entry.name);
-    const sessionFiles = (await readdir(projectDir)).filter((f) =>
-      f.endsWith(".jsonl")
-    );
+    const sessionFiles = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
     if (sessionFiles.length === 0) continue;
 
     let lastActivity = "";
@@ -51,9 +49,7 @@ export async function discoverProjects(): Promise<Project[]> {
   return projects;
 }
 
-export async function listSessions(
-  encodedPath: string
-): Promise<SessionSummary[]> {
+export async function listSessions(encodedPath: string): Promise<SessionSummary[]> {
   const projectDir = join(PROJECTS_DIR, encodedPath);
   const files = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
   const sessions: SessionSummary[] = [];
@@ -79,15 +75,13 @@ async function extractCwd(filePath: string): Promise<string> {
     try {
       const obj: RawLine = JSON.parse(line);
       if (obj.cwd) return obj.cwd;
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return "";
 }
 
 async function extractSessionMeta(
-  filePath: string
+  filePath: string,
 ): Promise<Omit<SessionSummary, "sessionId"> | null> {
   const file = Bun.file(filePath);
   const text = await file.text();
@@ -111,12 +105,7 @@ async function extractSessionMeta(
       if (obj.message?.model && !model) model = obj.message.model;
 
       // Find the first real user message
-      if (
-        !firstMessage &&
-        obj.type === "user" &&
-        !obj.isMeta &&
-        obj.message
-      ) {
+      if (!firstMessage && obj.type === "user" && !obj.isMeta && obj.message) {
         const content = obj.message.content;
         let raw = "";
         if (typeof content === "string") {
@@ -144,9 +133,7 @@ async function extractSessionMeta(
       }
 
       if (timestamp && slug && firstMessage && model && gitBranch) break;
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 
   if (!timestamp || !firstMessage) return null;
@@ -164,7 +151,7 @@ function decodeEncodedPath(encoded: string): string {
   // Encoded path has leading dash and dashes for slashes
   // e.g. "-Users-foo-Workspace-bar" -> "/Users/foo/Workspace/bar"
   if (encoded.startsWith("-")) {
-    return "/" + encoded.slice(1).replace(/-/g, "/");
+    return `/${encoded.slice(1).replace(/-/g, "/")}`;
   }
   return encoded.replace(/-/g, "/");
 }

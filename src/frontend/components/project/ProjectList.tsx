@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Project } from "../../../shared/types.ts";
 
 interface ProjectListProps {
@@ -24,7 +24,7 @@ export function ProjectList({ onSelect, selected }: ProjectListProps) {
   const filtered = projects.filter(
     (p) =>
       p.name.toLowerCase().includes(filter.toLowerCase()) ||
-      p.encodedPath.toLowerCase().includes(filter.toLowerCase())
+      p.encodedPath.toLowerCase().includes(filter.toLowerCase()),
   );
 
   if (loading) return <div className="loading">Loading projects...</div>;
@@ -37,9 +37,7 @@ export function ProjectList({ onSelect, selected }: ProjectListProps) {
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />
-      <div className="list-section-title">
-        Projects ({filtered.length})
-      </div>
+      <div className="list-section-title">Projects ({filtered.length})</div>
       {filtered.map((project) => (
         <div
           key={project.encodedPath}
@@ -55,7 +53,14 @@ export function ProjectList({ onSelect, selected }: ProjectListProps) {
         </div>
       ))}
       {filtered.length === 0 && (
-        <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+        <div
+          style={{
+            padding: "20px",
+            textAlign: "center",
+            color: "var(--text-muted)",
+            fontSize: "0.85rem",
+          }}
+        >
           No projects found
         </div>
       )}

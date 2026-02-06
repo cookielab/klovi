@@ -1,7 +1,6 @@
-import React from "react";
 import type { UserTurn } from "../../../shared/types.ts";
-import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { formatTimestamp } from "../../utils/time.ts";
+import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 
 interface UserMessageProps {
   turn: UserTurn;
@@ -21,9 +20,7 @@ export function UserMessage({ turn }: UserMessageProps) {
       <div className="message-role">
         User
         {turn.timestamp && (
-          <span className="message-timestamp">
-            {formatTimestamp(turn.timestamp)}
-          </span>
+          <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
         )}
       </div>
       {turn.command && (

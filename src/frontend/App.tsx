@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Project, SessionSummary } from "../shared/types.ts";
-import { useTheme, useFontSize } from "./hooks/useTheme.ts";
-import { Layout } from "./components/layout/Layout.tsx";
 import { Header } from "./components/layout/Header.tsx";
+import { Layout } from "./components/layout/Layout.tsx";
 import { ProjectList } from "./components/project/ProjectList.tsx";
 import { SessionList } from "./components/project/SessionList.tsx";
-import { SessionView } from "./components/session/SessionView.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
+import { SessionView } from "./components/session/SessionView.tsx";
+import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 
 type ViewState =
   | { kind: "home" }
@@ -21,8 +22,7 @@ type ViewState =
 
 function viewToHash(view: ViewState): string {
   if (view.kind === "project") return `#/${view.project.encodedPath}`;
-  if (view.kind === "session")
-    return `#/${view.project.encodedPath}/${view.session.sessionId}`;
+  if (view.kind === "session") return `#/${view.project.encodedPath}/${view.session.sessionId}`;
   return "#/";
 }
 
@@ -39,9 +39,7 @@ async function restoreFromHash(): Promise<ViewState> {
   try {
     const res = await fetch("/api/projects");
     const data = await res.json();
-    project = data.projects.find(
-      (p: Project) => p.encodedPath === encodedPath
-    );
+    project = data.projects.find((p: Project) => p.encodedPath === encodedPath);
   } catch {
     return { kind: "home" };
   }
@@ -52,9 +50,7 @@ async function restoreFromHash(): Promise<ViewState> {
   try {
     const res = await fetch(`/api/projects/${encodedPath}/sessions`);
     const data = await res.json();
-    const session = data.sessions.find(
-      (s: SessionSummary) => s.sessionId === sessionId
-    );
+    const session = data.sessions.find((s: SessionSummary) => s.sessionId === sessionId);
     if (session) {
       return { kind: "session", project, session, presenting: false };
     }
@@ -129,7 +125,7 @@ function App() {
     const parts = view.project.name.split("/").filter(Boolean);
     breadcrumb = parts.slice(-2).join("/");
     headerTitle = view.session.firstMessage || view.session.slug;
-    if (headerTitle.length > 60) headerTitle = headerTitle.slice(0, 60) + "...";
+    if (headerTitle.length > 60) headerTitle = `${headerTitle.slice(0, 60)}...`;
   }
 
   // Sidebar content
@@ -138,11 +134,7 @@ function App() {
     sidebarContent = <ProjectList onSelect={selectProject} />;
   } else if (view.kind === "project") {
     sidebarContent = (
-      <SessionList
-        project={view.project}
-        onSelect={selectSession}
-        onBack={goHome}
-      />
+      <SessionList project={view.project} onSelect={selectSession} onBack={goHome} />
     );
   } else {
     sidebarContent = (
@@ -177,9 +169,7 @@ function App() {
       />
       {view.kind === "home" && (
         <div className="empty-state">
-          <div className="empty-state-title">
-            Select a project to get started
-          </div>
+          <div className="empty-state-title">Select a project to get started</div>
           <p>Browse your Claude Code sessions from the sidebar</p>
         </div>
       )}
@@ -197,10 +187,7 @@ function App() {
             onExit={togglePresentation}
           />
         ) : (
-          <SessionView
-            sessionId={view.session.sessionId}
-            project={view.project.encodedPath}
-          />
+          <SessionView sessionId={view.session.sessionId} project={view.project.encodedPath} />
         ))}
     </Layout>
   );

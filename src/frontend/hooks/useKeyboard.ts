@@ -13,10 +13,7 @@ export function useKeyboard(handlers: KeyboardHandlers, active: boolean) {
 
     function handleKeyDown(e: KeyboardEvent) {
       // Don't capture if user is typing in an input
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
 

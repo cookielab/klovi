@@ -1,8 +1,7 @@
-import { test, expect, describe } from "bun:test";
-import React from "react";
+import { describe, expect, test } from "bun:test";
 import { render } from "@testing-library/react";
-import { UserMessage } from "./UserMessage.tsx";
 import type { UserTurn } from "../../../shared/types.ts";
+import { UserMessage } from "./UserMessage.tsx";
 
 function makeTurn(overrides: Partial<UserTurn> = {}): UserTurn {
   return {
@@ -17,7 +16,7 @@ function makeTurn(overrides: Partial<UserTurn> = {}): UserTurn {
 describe("UserMessage", () => {
   test("status notice for [bracketed text]", () => {
     const { container } = render(
-      <UserMessage turn={makeTurn({ text: "[Request interrupted by user]" })} />
+      <UserMessage turn={makeTurn({ text: "[Request interrupted by user]" })} />,
     );
     const notice = container.querySelector(".status-notice");
     expect(notice).not.toBeNull();
@@ -31,7 +30,7 @@ describe("UserMessage", () => {
           text: "fix the bug",
           command: { name: "/commit", args: "fix the bug" },
         })}
-      />
+      />,
     );
     const badge = container.querySelector(".command-call-label");
     expect(badge).not.toBeNull();
@@ -45,7 +44,7 @@ describe("UserMessage", () => {
           text: "See this",
           attachments: [{ type: "image", mediaType: "image/png" }],
         })}
-      />
+      />,
     );
     const badge = container.querySelector(".attachment-badge");
     expect(badge).not.toBeNull();
@@ -53,9 +52,7 @@ describe("UserMessage", () => {
   });
 
   test("regular markdown text renders", () => {
-    const { container } = render(
-      <UserMessage turn={makeTurn({ text: "Hello **world**" })} />
-    );
+    const { container } = render(<UserMessage turn={makeTurn({ text: "Hello **world**" })} />);
     const message = container.querySelector(".message-user");
     expect(message).not.toBeNull();
     // Should not be a status notice

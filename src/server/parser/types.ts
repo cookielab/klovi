@@ -66,9 +66,7 @@ export interface RawImageBlock {
   };
 }
 
-export type RawToolResultContent =
-  | RawToolResultTextContent
-  | RawToolResultImageContent;
+export type RawToolResultContent = RawToolResultTextContent | RawToolResultImageContent;
 
 export interface RawToolResultTextContent {
   type: "text";

@@ -26,6 +26,8 @@ const globals = [
 
 for (const key of globals) {
   if (key in window) {
-    (globalThis as Record<string, unknown>)[key] = (window as unknown as Record<string, unknown>)[key];
+    (globalThis as Record<string, unknown>)[key] = (window as unknown as Record<string, unknown>)[
+      key
+    ];
   }
 }

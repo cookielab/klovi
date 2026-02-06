@@ -1,4 +1,4 @@
-import { test, expect, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { cleanCommandMessage, parseCommandMessage } from "./command-message.ts";
 
 describe("cleanCommandMessage", () => {
@@ -22,8 +22,7 @@ describe("parseCommandMessage", () => {
   });
 
   test("with missing args → returns { name, args: '' }", () => {
-    const input =
-      "<command-message>help</command-message><command-name>/help</command-name>";
+    const input = "<command-message>help</command-message><command-name>/help</command-name>";
     const result = parseCommandMessage(input);
     expect(result).toEqual({ name: "/help", args: "" });
   });

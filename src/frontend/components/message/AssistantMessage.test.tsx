@@ -1,8 +1,7 @@
-import { test, expect, describe } from "bun:test";
-import React from "react";
+import { describe, expect, test } from "bun:test";
 import { render } from "@testing-library/react";
-import { AssistantMessage } from "./AssistantMessage.tsx";
 import type { AssistantTurn } from "../../../shared/types.ts";
+import { AssistantMessage } from "./AssistantMessage.tsx";
 
 function makeTurn(overrides: Partial<AssistantTurn> = {}): AssistantTurn {
   return {
@@ -20,7 +19,7 @@ function makeTurn(overrides: Partial<AssistantTurn> = {}): AssistantTurn {
 describe("AssistantMessage", () => {
   test("model name display — Opus", () => {
     const { container } = render(
-      <AssistantMessage turn={makeTurn({ model: "claude-opus-4-6" })} />
+      <AssistantMessage turn={makeTurn({ model: "claude-opus-4-6" })} />,
     );
     const role = container.querySelector(".message-role");
     expect(role!.textContent).toContain("Opus");
@@ -28,7 +27,7 @@ describe("AssistantMessage", () => {
 
   test("model name display — Sonnet", () => {
     const { container } = render(
-      <AssistantMessage turn={makeTurn({ model: "claude-sonnet-4-5-20250929" })} />
+      <AssistantMessage turn={makeTurn({ model: "claude-sonnet-4-5-20250929" })} />,
     );
     const role = container.querySelector(".message-role");
     expect(role!.textContent).toContain("Sonnet");
@@ -36,7 +35,7 @@ describe("AssistantMessage", () => {
 
   test("model name display — Haiku", () => {
     const { container } = render(
-      <AssistantMessage turn={makeTurn({ model: "claude-haiku-4-5-20251001" })} />
+      <AssistantMessage turn={makeTurn({ model: "claude-haiku-4-5-20251001" })} />,
     );
     const role = container.querySelector(".message-role");
     expect(role!.textContent).toContain("Haiku");
@@ -54,7 +53,7 @@ describe("AssistantMessage", () => {
             cacheCreationTokens: 100,
           },
         })}
-      />
+      />,
     );
     const usage = container.querySelector(".token-usage");
     expect(usage).not.toBeNull();
@@ -65,9 +64,7 @@ describe("AssistantMessage", () => {
   });
 
   test("token usage footer hidden when no usage", () => {
-    const { container } = render(
-      <AssistantMessage turn={makeTurn({ textBlocks: ["Hello"] })} />
-    );
+    const { container } = render(<AssistantMessage turn={makeTurn({ textBlocks: ["Hello"] })} />);
     const usage = container.querySelector(".token-usage");
     expect(usage).toBeNull();
   });
@@ -78,7 +75,7 @@ describe("AssistantMessage", () => {
         turn={makeTurn({
           thinkingBlocks: [{ text: "Let me think..." }],
         })}
-      />
+      />,
     );
     const thinking = container.querySelector(".thinking-block");
     expect(thinking).not.toBeNull();
@@ -90,7 +87,7 @@ describe("AssistantMessage", () => {
         turn={makeTurn({
           textBlocks: ["Hello **bold** world"],
         })}
-      />
+      />,
     );
     const content = container.querySelector(".markdown-content");
     expect(content).not.toBeNull();
@@ -110,7 +107,7 @@ describe("AssistantMessage", () => {
             },
           ],
         })}
-      />
+      />,
     );
     const toolCall = container.querySelector(".tool-call");
     expect(toolCall).not.toBeNull();

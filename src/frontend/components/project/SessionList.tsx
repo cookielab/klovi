@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
 
 interface SessionListProps {
@@ -8,12 +8,7 @@ interface SessionListProps {
   selectedId?: string;
 }
 
-export function SessionList({
-  project,
-  onSelect,
-  onBack,
-  selectedId,
-}: SessionListProps) {
+export function SessionList({ project, onSelect, onBack, selectedId }: SessionListProps) {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,9 +40,7 @@ export function SessionList({
             className={`list-item ${selectedId === session.sessionId ? "active" : ""}`}
             onClick={() => onSelect(session)}
           >
-            <div className="list-item-title">
-              {session.firstMessage || session.slug}
-            </div>
+            <div className="list-item-title">{session.firstMessage || session.slug}</div>
             <div className="list-item-meta">
               {session.model && <span>{shortModel(session.model)} · </span>}
               {session.gitBranch && <span>{session.gitBranch} · </span>}

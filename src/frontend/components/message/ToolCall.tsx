@@ -1,4 +1,3 @@
-import React from "react";
 import type { ToolCallWithResult } from "../../../shared/types.ts";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
 
@@ -15,18 +14,14 @@ export function ToolCall({ call }: ToolCallProps) {
       <CollapsibleSection
         title={
           <span>
-            {mcpServer && (
-              <span className="tool-mcp-server">{mcpServer}</span>
-            )}
+            {mcpServer && <span className="tool-mcp-server">{mcpServer}</span>}
             <span className="tool-call-name">
-              {mcpServer ? call.name.split("__").slice(1).join("__").replace(/__/g, " > ") : call.name}
+              {mcpServer
+                ? call.name.split("__").slice(1).join("__").replace(/__/g, " > ")
+                : call.name}
             </span>
-            {summary && (
-              <span className="tool-call-summary"> — {summary}</span>
-            )}
-            {call.isError && (
-              <span className="tool-call-error"> (error)</span>
-            )}
+            {summary && <span className="tool-call-summary"> — {summary}</span>}
+            {call.isError && <span className="tool-call-error"> (error)</span>}
           </span>
         }
       >
@@ -42,9 +37,7 @@ export function ToolCall({ call }: ToolCallProps) {
           >
             Input
           </div>
-          <div className="tool-call-input">
-            {formatToolInput(call)}
-          </div>
+          <div className="tool-call-input">{formatToolInput(call)}</div>
         </div>
         {(call.result || (call.resultImages && call.resultImages.length > 0)) && (
           <div>
@@ -60,9 +53,7 @@ export function ToolCall({ call }: ToolCallProps) {
               Output
             </div>
             {call.result && (
-              <div
-                className={`tool-call-output ${call.isError ? "tool-call-error" : ""}`}
-              >
+              <div className={`tool-call-output ${call.isError ? "tool-call-error" : ""}`}>
                 {truncateOutput(call.result)}
               </div>
             )}
@@ -78,7 +69,7 @@ export function ToolCall({ call }: ToolCallProps) {
                     <img
                       className="tool-result-image"
                       src={`data:${img.mediaType};base64,${img.data}`}
-                      alt={`Tool result image ${i + 1}`}
+                      alt={`Tool result ${i + 1}`}
                     />
                   </a>
                 ))}
@@ -177,10 +168,7 @@ export function formatToolInput(call: ToolCallWithResult): string {
     case "Write": {
       const parts: string[] = [];
       if (input.file_path) parts.push(`File: ${input.file_path}`);
-      if (input.content)
-        parts.push(
-          `Content:\n${truncate(String(input.content), 2000)}`
-        );
+      if (input.content) parts.push(`Content:\n${truncate(String(input.content), 2000)}`);
       return parts.join("\n\n");
     }
     case "Glob": {
@@ -256,10 +244,10 @@ export function formatToolInput(call: ToolCallWithResult): string {
 
 function truncate(s: string, max: number): string {
   if (s.length <= max) return s;
-  return s.slice(0, max) + "...";
+  return `${s.slice(0, max)}...`;
 }
 
 function truncateOutput(s: string): string {
   if (s.length <= 5000) return s;
-  return s.slice(0, 5000) + "\n\n... (truncated)";
+  return `${s.slice(0, 5000)}\n\n... (truncated)`;
 }

@@ -1,9 +1,8 @@
-import React from "react";
 import type { Turn } from "../../../shared/types.ts";
-import { UserMessage } from "./UserMessage.tsx";
-import { AssistantMessage } from "./AssistantMessage.tsx";
-import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { formatTimestamp } from "../../utils/time.ts";
+import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
+import { AssistantMessage } from "./AssistantMessage.tsx";
+import { UserMessage } from "./UserMessage.tsx";
 
 interface MessageListProps {
   turns: Turn[];
@@ -14,9 +13,7 @@ export function MessageList({ turns, visibleSubSteps }: MessageListProps) {
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
-        const isLast = visibleSubSteps
-          ? index === turns.length - 1
-          : false;
+        const isLast = visibleSubSteps ? index === turns.length - 1 : false;
 
         switch (turn.kind) {
           case "user":
@@ -31,10 +28,7 @@ export function MessageList({ turns, visibleSubSteps }: MessageListProps) {
           case "assistant":
             return (
               <div key={turn.uuid || index}>
-                <AssistantMessage
-                  turn={turn}
-                  visibleSubSteps={visibleSubSteps?.get(index)}
-                />
+                <AssistantMessage turn={turn} visibleSubSteps={visibleSubSteps?.get(index)} />
               </div>
             );
           case "system":
@@ -43,9 +37,7 @@ export function MessageList({ turns, visibleSubSteps }: MessageListProps) {
                 <div className="message-role">
                   System
                   {turn.timestamp && (
-                    <span className="message-timestamp">
-                      {formatTimestamp(turn.timestamp)}
-                    </span>
+                    <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
                   )}
                 </div>
                 <MarkdownRenderer content={turn.text} />

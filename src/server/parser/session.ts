@@ -1,28 +1,21 @@
-import { join } from "node:path";
 import { homedir } from "node:os";
+import { join } from "node:path";
 import type {
+  AssistantTurn,
+  Attachment,
   Session,
+  SystemTurn,
+  ToolCallWithResult,
+  ToolResultImage,
   Turn,
   UserTurn,
-  AssistantTurn,
-  SystemTurn,
-  Attachment,
-  ToolResultImage,
-  ToolCallWithResult,
 } from "../../shared/types.ts";
-import type {
-  RawLine,
-  RawContentBlock,
-  RawToolResultBlock,
-} from "./types.ts";
 import { parseCommandMessage } from "./command-message.ts";
+import type { RawContentBlock, RawLine, RawToolResultBlock } from "./types.ts";
 
 const PROJECTS_DIR = join(homedir(), ".claude", "projects");
 
-export async function parseSession(
-  sessionId: string,
-  encodedPath: string
-): Promise<Session> {
+export async function parseSession(sessionId: string, encodedPath: string): Promise<Session> {
   const filePath = join(PROJECTS_DIR, encodedPath, `${sessionId}.jsonl`);
   const file = Bun.file(filePath);
   const text = await file.text();
@@ -90,9 +83,7 @@ export function buildTurns(lines: RawLine[]): Turn[] {
       // Skip user messages that are only tool_results (they're matched to assistant tool calls)
       // Don't flush the current assistant - the next assistant line continues the same turn
       if (Array.isArray(content)) {
-        const hasOnlyToolResults = content.every(
-          (b) => b.type === "tool_result"
-        );
+        const hasOnlyToolResults = content.every((b) => b.type === "tool_result");
         if (hasOnlyToolResults) continue;
       }
 

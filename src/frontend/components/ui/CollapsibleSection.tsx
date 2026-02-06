@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 interface CollapsibleSectionProps {
   title: React.ReactNode;
@@ -15,10 +16,10 @@ export function CollapsibleSection({
 
   return (
     <div className="collapsible">
-      <div className="collapsible-header" onClick={() => setOpen(!open)}>
+      <button type="button" className="collapsible-header" onClick={() => setOpen(!open)}>
         <span className={`collapsible-chevron ${open ? "open" : ""}`}>▶</span>
         {title}
-      </div>
+      </button>
       {open && <div className="collapsible-content">{children}</div>}
     </div>
   );

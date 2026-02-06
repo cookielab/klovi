@@ -179,7 +179,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .btn:hover {
@@ -397,9 +399,15 @@ body {
   font-weight: 600;
 }
 
-.markdown-content h1 { font-size: 1.4em; }
-.markdown-content h2 { font-size: 1.2em; }
-.markdown-content h3 { font-size: 1.1em; }
+.markdown-content h1 {
+  font-size: 1.4em;
+}
+.markdown-content h2 {
+  font-size: 1.2em;
+}
+.markdown-content h3 {
+  font-size: 1.1em;
+}
 
 .markdown-content ul,
 .markdown-content ol {
@@ -480,10 +488,10 @@ body {
 }
 
 .code-block-content pre {
-  margin: 0 !important;
-  padding: 12px 16px !important;
-  background: var(--bg-code) !important;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--bg-code);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
 /* Collapsible sections */

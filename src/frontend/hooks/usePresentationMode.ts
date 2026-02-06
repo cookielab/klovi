@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
-import type { Turn, AssistantTurn } from "../../shared/types.ts";
+import { useCallback, useMemo, useState } from "react";
+import type { AssistantTurn, Turn } from "../../shared/types.ts";
 
 interface PresentationState {
   active: boolean;

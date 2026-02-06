@@ -1,6 +1,6 @@
 export function formatTimestamp(iso: string): string {
   const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) return "";
 
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -12,8 +12,18 @@ export function formatTimestamp(iso: string): string {
   if (diffHr < 24) return `${diffHr}h ago`;
 
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   const month = months[date.getMonth()];
   const day = date.getDate();

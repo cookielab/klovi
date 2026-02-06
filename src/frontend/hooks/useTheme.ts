@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type ThemeSetting = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
 function getSystemTheme(): ResolvedTheme {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function resolveTheme(setting: ThemeSetting): ResolvedTheme {
@@ -21,9 +19,7 @@ export function useTheme() {
     return "system";
   });
 
-  const [resolved, setResolved] = useState<ResolvedTheme>(() =>
-    resolveTheme(setting)
-  );
+  const [resolved, setResolved] = useState<ResolvedTheme>(() => resolveTheme(setting));
 
   // Apply theme to DOM
   useEffect(() => {
@@ -64,10 +60,7 @@ export function useFontSize() {
   });
 
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--font-size-base",
-      `${size}px`
-    );
+    document.documentElement.style.setProperty("--font-size-base", `${size}px`);
     localStorage.setItem("ccvie-font-size", String(size));
   }, [size]);
 

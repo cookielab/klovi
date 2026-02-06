@@ -1,5 +1,3 @@
-import React from "react";
-
 interface HeaderProps {
   title: string;
   breadcrumb?: string;
@@ -29,14 +27,13 @@ export function Header({
     <div className="header">
       <div className="header-title">
         {breadcrumb && (
-          <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>
-            {breadcrumb} /&nbsp;
-          </span>
+          <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{breadcrumb} /&nbsp;</span>
         )}
         {title}
       </div>
       <div className="header-actions">
         <button
+          type="button"
           className="btn btn-sm btn-icon"
           onClick={onDecreaseFontSize}
           title="Decrease font size"
@@ -54,6 +51,7 @@ export function Header({
           {fontSize}
         </span>
         <button
+          type="button"
           className="btn btn-sm btn-icon"
           onClick={onIncreaseFontSize}
           title="Increase font size"
@@ -61,16 +59,13 @@ export function Header({
           A+
         </button>
 
-        <button className="btn btn-sm" onClick={onCycleTheme}>
-          {themeSetting === "system"
-            ? "System"
-            : themeSetting === "light"
-              ? "Light"
-              : "Dark"}
+        <button type="button" className="btn btn-sm" onClick={onCycleTheme}>
+          {themeSetting === "system" ? "System" : themeSetting === "light" ? "Light" : "Dark"}
         </button>
 
         {showPresentationToggle && (
           <button
+            type="button"
             className={`btn btn-sm ${presentationActive ? "btn-primary" : ""}`}
             onClick={onTogglePresentation}
           >
