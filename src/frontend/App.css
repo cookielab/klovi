@@ -103,7 +103,8 @@ body {
 }
 
 .sidebar-header {
-  padding: 16px;
+  height: var(--header-height);
+  padding: 0 16px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -189,6 +190,7 @@ body {
 .btn-sm {
   padding: 4px 8px;
   font-size: 0.8rem;
+  height: 28px;
 }
 
 .btn-primary {
@@ -203,8 +205,8 @@ body {
 }
 
 .btn-icon {
-  padding: 6px;
-  min-width: 32px;
+  padding: 4px;
+  min-width: 28px;
   justify-content: center;
 }
 
