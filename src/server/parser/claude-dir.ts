@@ -147,12 +147,12 @@ async function extractSessionMeta(
     }
   }
 
-  if (!timestamp) return null;
+  if (!timestamp || !firstMessage) return null;
 
   return {
     timestamp,
     slug: slug || "unknown",
-    firstMessage: firstMessage || "(no message)",
+    firstMessage,
     model: model || "unknown",
     gitBranch: gitBranch || "",
   };
