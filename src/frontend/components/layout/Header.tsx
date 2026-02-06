@@ -1,0 +1,79 @@
+import React from "react";
+
+interface HeaderProps {
+  title: string;
+  breadcrumb?: string;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
+  fontSize: number;
+  onIncreaseFontSize: () => void;
+  onDecreaseFontSize: () => void;
+  presentationActive: boolean;
+  onTogglePresentation: () => void;
+  showPresentationToggle: boolean;
+}
+
+export function Header({
+  title,
+  breadcrumb,
+  theme,
+  onToggleTheme,
+  fontSize,
+  onIncreaseFontSize,
+  onDecreaseFontSize,
+  presentationActive,
+  onTogglePresentation,
+  showPresentationToggle,
+}: HeaderProps) {
+  return (
+    <div className="header">
+      <div className="header-title">
+        {breadcrumb && (
+          <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>
+            {breadcrumb} /&nbsp;
+          </span>
+        )}
+        {title}
+      </div>
+      <div className="header-actions">
+        <button
+          className="btn btn-sm btn-icon"
+          onClick={onDecreaseFontSize}
+          title="Decrease font size"
+        >
+          A-
+        </button>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--text-muted)",
+            minWidth: 30,
+            textAlign: "center",
+          }}
+        >
+          {fontSize}
+        </span>
+        <button
+          className="btn btn-sm btn-icon"
+          onClick={onIncreaseFontSize}
+          title="Increase font size"
+        >
+          A+
+        </button>
+
+        <button className="btn btn-sm" onClick={onToggleTheme}>
+          {theme === "light" ? "Dark" : "Light"}
+        </button>
+
+        {showPresentationToggle && (
+          <button
+            className={`btn btn-sm ${presentationActive ? "btn-primary" : ""}`}
+            onClick={onTogglePresentation}
+          >
+            {presentationActive ? "Exit Presentation" : "Present"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
