@@ -169,6 +169,33 @@ body {
   gap: 8px;
 }
 
+/* Copy command button */
+.btn-copy-command {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.btn-copy-command:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.btn-copy-command.copied {
+  color: var(--success);
+}
+
 /* Buttons */
 .btn {
   padding: 6px 12px;

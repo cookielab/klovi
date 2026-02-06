@@ -231,6 +231,9 @@ function App() {
       <Header
         title={headerTitle}
         breadcrumb={breadcrumb}
+        copyCommand={
+          view.kind === "session" ? `claude --resume ${view.session.sessionId}` : undefined
+        }
         themeSetting={themeSetting}
         onCycleTheme={cycleTheme}
         fontSize={fontSize}
