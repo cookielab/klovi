@@ -4,6 +4,20 @@ globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
 alwaysApply: false
 ---
 
+## Verification (MANDATORY)
+
+After every code change, run ALL checks and fix any issues you introduced:
+
+```sh
+bun run check      # Biome lint + format
+bun run typecheck  # TypeScript type checking
+bun test           # Unit tests
+```
+
+If any check fails, fix the issue and re-run until all pass. Never skip this step.
+
+---
+
 Default to using Bun instead of Node.js.
 
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
