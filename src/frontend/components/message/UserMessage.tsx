@@ -16,6 +16,15 @@ export function UserMessage({ turn }: UserMessageProps) {
         </div>
       )}
       <MarkdownRenderer content={turn.text} />
+      {turn.attachments && turn.attachments.length > 0 && (
+        <div className="attachments">
+          {turn.attachments.map((a, i) => (
+            <span key={i} className="attachment-badge">
+              image/{a.mediaType.replace(/^image\//, "")}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

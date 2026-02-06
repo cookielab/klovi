@@ -23,6 +23,11 @@ export interface Session {
 
 export type Turn = UserTurn | AssistantTurn | SystemTurn;
 
+export interface Attachment {
+  type: "image";
+  mediaType: string;
+}
+
 export interface UserTurn {
   kind: "user";
   uuid: string;
@@ -32,6 +37,7 @@ export interface UserTurn {
     name: string;
     args: string;
   };
+  attachments?: Attachment[];
 }
 
 export interface AssistantTurn {

@@ -6,6 +6,7 @@ import type {
   UserTurn,
   AssistantTurn,
   SystemTurn,
+  Attachment,
 } from "../../shared/types.ts";
 import type {
   RawLine,
@@ -98,13 +99,23 @@ function buildTurns(lines: RawLine[]): Turn[] {
         currentAssistant = null;
       }
 
-      // Extract user text
+      // Extract user text and attachments
       let text = "";
+      const attachments: Attachment[] = [];
       if (typeof content === "string") {
         text = content;
       } else if (Array.isArray(content)) {
         const textBlocks = content.filter((b) => b.type === "text");
         text = textBlocks.map((b) => ("text" in b ? b.text : "")).join("\n");
+
+        for (const block of content) {
+          if (block.type === "image" && "source" in block) {
+            attachments.push({
+              type: "image",
+              mediaType: (block as { source: { media_type: string } }).source.media_type,
+            });
+          }
+        }
       }
 
       // Skip command/system/internal messages
@@ -124,6 +135,7 @@ function buildTurns(lines: RawLine[]): Turn[] {
         timestamp: line.timestamp || "",
         text: command ? command.args : text,
         command: command ?? undefined,
+        attachments: attachments.length > 0 ? attachments : undefined,
       };
       turns.push(userTurn);
     } else if (line.type === "assistant" && line.message) {

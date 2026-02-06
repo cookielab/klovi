@@ -335,6 +335,25 @@ body {
   font-weight: 600;
 }
 
+/* Attachments */
+.attachments {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.attachment-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 .message-role {
   font-size: 0.7rem;
   font-weight: 600;

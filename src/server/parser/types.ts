@@ -23,7 +23,8 @@ export type RawContentBlock =
   | RawTextBlock
   | RawThinkingBlock
   | RawToolUseBlock
-  | RawToolResultBlock;
+  | RawToolResultBlock
+  | RawImageBlock;
 
 export interface RawTextBlock {
   type: "text";
@@ -47,6 +48,15 @@ export interface RawToolResultBlock {
   tool_use_id: string;
   content: string | RawToolResultContent[];
   is_error?: boolean;
+}
+
+export interface RawImageBlock {
+  type: "image";
+  source: {
+    type: "base64";
+    media_type: string;
+    data: string;
+  };
 }
 
 export interface RawToolResultContent {
