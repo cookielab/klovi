@@ -26,6 +26,9 @@
   --border: #d0d7de;
   --border-light: #e1e4e8;
 
+  --agent: #9a6700;
+  --bg-agent: #fff8c5;
+
   --error: #cf222e;
   --success: #1a7f37;
 
@@ -70,6 +73,9 @@ body {
 
   --border: #30363d;
   --border-light: #21262d;
+
+  --agent: #d29922;
+  --bg-agent: #1a1610;
 
   --error: #f85149;
   --success: #3fb950;
@@ -390,8 +396,8 @@ body {
 }
 
 .message-root-agent {
-  background: var(--bg-assistant);
-  border-left: 3px solid var(--highlight);
+  background: var(--bg-agent);
+  border-left: 3px solid var(--agent);
 }
 
 .message-assistant {
