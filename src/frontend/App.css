@@ -660,6 +660,60 @@ body {
   margin-bottom: 8px;
 }
 
+/* Token usage footer */
+.token-usage {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Message timestamps */
+.message-timestamp {
+  float: right;
+  font-weight: 400;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Tool result images */
+.tool-result-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.tool-result-image {
+  max-height: 200px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  object-fit: contain;
+  transition: border-color 0.15s;
+}
+
+.tool-result-image:hover {
+  border-color: var(--accent);
+}
+
+/* MCP server badge */
+.tool-mcp-server {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 /* Fullscreen */
 .fullscreen {
   position: fixed;

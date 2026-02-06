@@ -3,6 +3,7 @@ import type { Turn } from "../../../shared/types.ts";
 import { UserMessage } from "./UserMessage.tsx";
 import { AssistantMessage } from "./AssistantMessage.tsx";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
+import { formatTimestamp } from "../../utils/time.ts";
 
 interface MessageListProps {
   turns: Turn[];
@@ -39,7 +40,14 @@ export function MessageList({ turns, visibleSubSteps }: MessageListProps) {
           case "system":
             return (
               <div key={turn.uuid || index} className="message message-system">
-                <div className="message-role">System</div>
+                <div className="message-role">
+                  System
+                  {turn.timestamp && (
+                    <span className="message-timestamp">
+                      {formatTimestamp(turn.timestamp)}
+                    </span>
+                  )}
+                </div>
                 <MarkdownRenderer content={turn.text} />
               </div>
             );

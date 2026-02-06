@@ -3,6 +3,7 @@ import type { AssistantTurn } from "../../../shared/types.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { ThinkingBlock } from "./ThinkingBlock.tsx";
 import { ToolCall } from "./ToolCall.tsx";
+import { formatTimestamp } from "../../utils/time.ts";
 
 interface AssistantMessageProps {
   turn: AssistantTurn;
@@ -58,6 +59,11 @@ export function AssistantMessage({
             {shortModel(turn.model)}
           </span>
         )}
+        {turn.timestamp && (
+          <span className="message-timestamp">
+            {formatTimestamp(turn.timestamp)}
+          </span>
+        )}
       </div>
       {visible.map((node, i) => (
         <div
@@ -71,6 +77,17 @@ export function AssistantMessage({
           {node}
         </div>
       ))}
+      {turn.usage && (
+        <div className="token-usage">
+          {turn.usage.inputTokens.toLocaleString()} in / {turn.usage.outputTokens.toLocaleString()} out
+          {turn.usage.cacheReadTokens && turn.usage.cacheReadTokens > 0 && (
+            <span> · {turn.usage.cacheReadTokens.toLocaleString()} cache read</span>
+          )}
+          {turn.usage.cacheCreationTokens && turn.usage.cacheCreationTokens > 0 && (
+            <span> · {turn.usage.cacheCreationTokens.toLocaleString()} cache write</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
