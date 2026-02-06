@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { useTheme, useFontSize } from "./hooks/useTheme.ts";
@@ -19,10 +19,82 @@ type ViewState =
       presenting: boolean;
     };
 
+function viewToHash(view: ViewState): string {
+  if (view.kind === "project") return `#/${view.project.encodedPath}`;
+  if (view.kind === "session")
+    return `#/${view.project.encodedPath}/${view.session.sessionId}`;
+  return "#/";
+}
+
+async function restoreFromHash(): Promise<ViewState> {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  if (!hash) return { kind: "home" };
+
+  const parts = hash.split("/");
+  const encodedPath = parts[0];
+  const sessionId = parts[1];
+
+  // Fetch project info
+  let project: Project | undefined;
+  try {
+    const res = await fetch("/api/projects");
+    const data = await res.json();
+    project = data.projects.find(
+      (p: Project) => p.encodedPath === encodedPath
+    );
+  } catch {
+    return { kind: "home" };
+  }
+  if (!project) return { kind: "home" };
+  if (!sessionId) return { kind: "project", project };
+
+  // Fetch session info
+  try {
+    const res = await fetch(`/api/projects/${encodedPath}/sessions`);
+    const data = await res.json();
+    const session = data.sessions.find(
+      (s: SessionSummary) => s.sessionId === sessionId
+    );
+    if (session) {
+      return { kind: "session", project, session, presenting: false };
+    }
+  } catch {
+    // fall through
+  }
+  return { kind: "project", project };
+}
+
 function App() {
   const { setting: themeSetting, cycle: cycleTheme } = useTheme();
   const { size: fontSize, increase, decrease } = useFontSize();
   const [view, setView] = useState<ViewState>({ kind: "home" });
+  const [ready, setReady] = useState(false);
+
+  // Restore view from URL hash on mount
+  useEffect(() => {
+    restoreFromHash().then((v) => {
+      setView(v);
+      setReady(true);
+    });
+  }, []);
+
+  // Sync hash when view changes
+  useEffect(() => {
+    if (!ready) return;
+    const newHash = viewToHash(view);
+    if (window.location.hash !== newHash) {
+      history.pushState(null, "", newHash);
+    }
+  }, [view, ready]);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handler = () => {
+      restoreFromHash().then(setView);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
 
   const selectProject = (project: Project) => {
     setView({ kind: "project", project });
@@ -84,6 +156,10 @@ function App() {
   }
 
   const isPresenting = view.kind === "session" && view.presenting;
+
+  if (!ready) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return (
     <Layout sidebar={sidebarContent} hideSidebar={isPresenting}>
