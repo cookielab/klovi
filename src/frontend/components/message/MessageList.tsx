@@ -9,6 +9,7 @@ interface MessageListProps {
   visibleSubSteps?: Map<number, number>;
   sessionId?: string;
   project?: string;
+  isSubAgent?: boolean;
 }
 
 function renderTurn(
@@ -18,6 +19,7 @@ function renderTurn(
   visibleSubSteps: Map<number, number> | undefined,
   sessionId: string | undefined,
   project: string | undefined,
+  isSubAgent: boolean | undefined,
 ) {
   const activeClass = isActive ? "active-message" : "";
 
@@ -25,7 +27,7 @@ function renderTurn(
     case "user":
       return (
         <div key={turn.uuid || index} className={isActive ? "active-message step-enter" : ""}>
-          <UserMessage turn={turn} />
+          <UserMessage turn={turn} isSubAgent={isSubAgent} />
         </div>
       );
     case "assistant":
@@ -56,12 +58,18 @@ function renderTurn(
   }
 }
 
-export function MessageList({ turns, visibleSubSteps, sessionId, project }: MessageListProps) {
+export function MessageList({
+  turns,
+  visibleSubSteps,
+  sessionId,
+  project,
+  isSubAgent,
+}: MessageListProps) {
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
         const isActive = visibleSubSteps ? index === turns.length - 1 : false;
-        return renderTurn(turn, index, isActive, visibleSubSteps, sessionId, project);
+        return renderTurn(turn, index, isActive, visibleSubSteps, sessionId, project, isSubAgent);
       })}
     </div>
   );

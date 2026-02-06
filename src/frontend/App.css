@@ -362,6 +362,11 @@ body {
   border-left: 3px solid var(--accent);
 }
 
+.message-root-agent {
+  background: var(--bg-assistant);
+  border-left: 3px solid var(--highlight);
+}
+
 .message-assistant {
   background: var(--bg-assistant);
   border: 1px solid var(--border-light);

@@ -31,8 +31,6 @@ export function ToolCall({ call, sessionId, project }: ToolCallProps) {
               <a
                 className="subagent-link"
                 href={`#/${project}/${sessionId}/subagent/${call.subAgentId}`}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
               >
                 Open conversation

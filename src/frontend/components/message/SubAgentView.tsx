@@ -41,5 +41,12 @@ export function SubAgentView({ sessionId, project, agentId }: SubAgentViewProps)
   if (!session || session.turns.length === 0)
     return <div className="subagent-empty">No sub-agent conversation data available.</div>;
 
-  return <MessageList turns={session.turns} sessionId={sessionId} project={project} />;
+  return (
+    <>
+      <a className="back-btn" href={`#/${project}/${sessionId}`}>
+        &larr; Back to session
+      </a>
+      <MessageList turns={session.turns} sessionId={sessionId} project={project} isSubAgent />
+    </>
+  );
 }

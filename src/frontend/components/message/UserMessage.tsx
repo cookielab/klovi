@@ -4,11 +4,12 @@ import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 
 interface UserMessageProps {
   turn: UserTurn;
+  isSubAgent?: boolean;
 }
 
 const STATUS_RE = /^\[.+\]$/;
 
-export function UserMessage({ turn }: UserMessageProps) {
+export function UserMessage({ turn, isSubAgent }: UserMessageProps) {
   const isStatus = STATUS_RE.test(turn.text.trim());
 
   if (isStatus) {
@@ -16,9 +17,9 @@ export function UserMessage({ turn }: UserMessageProps) {
   }
 
   return (
-    <div className="message message-user">
+    <div className={`message ${isSubAgent ? "message-root-agent" : "message-user"}`}>
       <div className="message-role">
-        User
+        {isSubAgent ? "Root Agent" : "User"}
         {turn.timestamp && (
           <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
         )}
