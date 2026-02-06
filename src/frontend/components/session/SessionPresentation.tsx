@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Session } from "../../../shared/types.ts";
-import { useKeyboard } from "../../hooks/useKeyboard.ts";
-import { usePresentationMode } from "../../hooks/usePresentationMode.ts";
-import { MessageList } from "../message/MessageList.tsx";
+import { PresentationShell } from "./PresentationShell.tsx";
 
 interface SessionPresentationProps {
   sessionId: string;
@@ -13,7 +11,6 @@ interface SessionPresentationProps {
 export function SessionPresentation({ sessionId, project, onExit }: SessionPresentationProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -26,66 +23,15 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
       .catch(() => setLoading(false));
   }, [sessionId, project]);
 
-  const presentation = usePresentationMode(session?.turns ?? []);
-
-  // Auto-enter presentation when session loads
-  useEffect(() => {
-    if (session && !presentation.active) {
-      presentation.enter();
-    }
-  }, [session, presentation]);
-
-  useKeyboard(
-    {
-      onNext: presentation.next,
-      onPrev: presentation.prev,
-      onNextTurn: presentation.nextTurn,
-      onPrevTurn: presentation.prevTurn,
-      onEscape: onExit,
-      onFullscreen: presentation.toggleFullscreen,
-    },
-    presentation.active,
-  );
-
-  // Auto-scroll to bottom when step changes
-  const currentStep = presentation.currentStep;
-  useEffect(() => {
-    if (currentStep >= 0 && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [currentStep]);
-
   if (loading) return <div className="loading">Loading session...</div>;
   if (!session) return null;
 
-  const progress =
-    presentation.totalSteps > 0
-      ? ((presentation.currentStep + 1) / presentation.totalSteps) * 100
-      : 0;
-
   return (
-    <div
-      className={`presentation-mode ${presentation.fullscreen ? "fullscreen" : ""}`}
-      ref={scrollRef}
-      style={{ overflowY: "auto", height: "calc(100vh - 92px)" }}
-    >
-      <MessageList
-        turns={presentation.visibleTurns}
-        visibleSubSteps={presentation.visibleSubSteps}
-        sessionId={sessionId}
-        project={project}
-      />
-      <div className="presentation-progress">
-        <span>
-          Step {presentation.currentStep + 1} / {presentation.totalSteps}
-        </span>
-        <div className="presentation-progress-bar">
-          <div className="presentation-progress-fill" style={{ width: `${progress}%` }} />
-        </div>
-        <span style={{ fontSize: "0.75rem" }}>
-          ← → step · ↑ ↓ message · Esc exit · F fullscreen
-        </span>
-      </div>
-    </div>
+    <PresentationShell
+      turns={session.turns}
+      onExit={onExit}
+      sessionId={sessionId}
+      project={project}
+    />
   );
 }
