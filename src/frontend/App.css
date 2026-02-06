@@ -389,6 +389,14 @@ body {
   font-size: 0.88em;
 }
 
+.markdown-content code.file-ref {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 600;
+  border: 1px solid var(--accent);
+  padding: 1px 6px;
+}
+
 .markdown-content pre {
   margin: 0.75em 0;
   border-radius: var(--radius-sm);
