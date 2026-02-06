@@ -20,7 +20,7 @@ type ViewState =
     };
 
 function App() {
-  const { theme, toggle: toggleTheme } = useTheme();
+  const { setting: themeSetting, cycle: cycleTheme } = useTheme();
   const { size: fontSize, increase, decrease } = useFontSize();
   const [view, setView] = useState<ViewState>({ kind: "home" });
 
@@ -90,8 +90,8 @@ function App() {
       <Header
         title={headerTitle}
         breadcrumb={breadcrumb}
-        theme={theme}
-        onToggleTheme={toggleTheme}
+        themeSetting={themeSetting}
+        onCycleTheme={cycleTheme}
         fontSize={fontSize}
         onIncreaseFontSize={increase}
         onDecreaseFontSize={decrease}

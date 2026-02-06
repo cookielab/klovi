@@ -1,23 +1,59 @@
 import { useState, useEffect, useCallback } from "react";
 
-type Theme = "light" | "dark";
+export type ThemeSetting = "system" | "light" | "dark";
+export type ResolvedTheme = "light" | "dark";
+
+function getSystemTheme(): ResolvedTheme {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
+function resolveTheme(setting: ThemeSetting): ResolvedTheme {
+  return setting === "system" ? getSystemTheme() : setting;
+}
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [setting, setSetting] = useState<ThemeSetting>(() => {
     const stored = localStorage.getItem("ccvie-theme");
-    return (stored === "dark" ? "dark" : "light") as Theme;
+    if (stored === "light" || stored === "dark") return stored;
+    return "system";
   });
 
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("ccvie-theme", theme);
-  }, [theme]);
+  const [resolved, setResolved] = useState<ResolvedTheme>(() =>
+    resolveTheme(setting)
+  );
 
-  const toggle = useCallback(() => {
-    setTheme((t) => (t === "light" ? "dark" : "light"));
+  // Apply theme to DOM
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", resolved);
+  }, [resolved]);
+
+  // Persist setting
+  useEffect(() => {
+    localStorage.setItem("ccvie-theme", setting);
+    setResolved(resolveTheme(setting));
+  }, [setting]);
+
+  // Listen for system theme changes when in "system" mode
+  useEffect(() => {
+    if (setting !== "system") return;
+
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => setResolved(getSystemTheme());
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [setting]);
+
+  const cycle = useCallback(() => {
+    setSetting((s) => {
+      if (s === "system") return "light";
+      if (s === "light") return "dark";
+      return "system";
+    });
   }, []);
 
-  return { theme, toggle };
+  return { setting, resolved, cycle };
 }
 
 export function useFontSize() {

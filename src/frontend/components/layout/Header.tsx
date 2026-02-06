@@ -3,8 +3,8 @@ import React from "react";
 interface HeaderProps {
   title: string;
   breadcrumb?: string;
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
+  themeSetting: "system" | "light" | "dark";
+  onCycleTheme: () => void;
   fontSize: number;
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
@@ -16,8 +16,8 @@ interface HeaderProps {
 export function Header({
   title,
   breadcrumb,
-  theme,
-  onToggleTheme,
+  themeSetting,
+  onCycleTheme,
   fontSize,
   onIncreaseFontSize,
   onDecreaseFontSize,
@@ -61,8 +61,12 @@ export function Header({
           A+
         </button>
 
-        <button className="btn btn-sm" onClick={onToggleTheme}>
-          {theme === "light" ? "Dark" : "Light"}
+        <button className="btn btn-sm" onClick={onCycleTheme}>
+          {themeSetting === "system"
+            ? "System"
+            : themeSetting === "light"
+              ? "Light"
+              : "Dark"}
         </button>
 
         {showPresentationToggle && (
