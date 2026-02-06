@@ -11,48 +11,57 @@ interface MessageListProps {
   project?: string;
 }
 
+function renderTurn(
+  turn: Turn,
+  index: number,
+  isActive: boolean,
+  visibleSubSteps: Map<number, number> | undefined,
+  sessionId: string | undefined,
+  project: string | undefined,
+) {
+  const activeClass = isActive ? "active-message" : "";
+
+  switch (turn.kind) {
+    case "user":
+      return (
+        <div key={turn.uuid || index} className={isActive ? "active-message step-enter" : ""}>
+          <UserMessage turn={turn} />
+        </div>
+      );
+    case "assistant":
+      return (
+        <div key={turn.uuid || index} className={activeClass}>
+          <AssistantMessage
+            turn={turn}
+            visibleSubSteps={visibleSubSteps?.get(index)}
+            sessionId={sessionId}
+            project={project}
+          />
+        </div>
+      );
+    case "system":
+      return (
+        <div key={turn.uuid || index} className={`message message-system ${activeClass}`}>
+          <div className="message-role">
+            System
+            {turn.timestamp && (
+              <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
+            )}
+          </div>
+          <MarkdownRenderer content={turn.text} />
+        </div>
+      );
+    default:
+      return null;
+  }
+}
+
 export function MessageList({ turns, visibleSubSteps, sessionId, project }: MessageListProps) {
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
-        const isLast = visibleSubSteps ? index === turns.length - 1 : false;
-
-        switch (turn.kind) {
-          case "user":
-            return (
-              <div
-                key={turn.uuid || index}
-                className={isLast && visibleSubSteps ? "step-enter" : ""}
-              >
-                <UserMessage turn={turn} />
-              </div>
-            );
-          case "assistant":
-            return (
-              <div key={turn.uuid || index}>
-                <AssistantMessage
-                  turn={turn}
-                  visibleSubSteps={visibleSubSteps?.get(index)}
-                  sessionId={sessionId}
-                  project={project}
-                />
-              </div>
-            );
-          case "system":
-            return (
-              <div key={turn.uuid || index} className="message message-system">
-                <div className="message-role">
-                  System
-                  {turn.timestamp && (
-                    <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
-                  )}
-                </div>
-                <MarkdownRenderer content={turn.text} />
-              </div>
-            );
-          default:
-            return null;
-        }
+        const isActive = visibleSubSteps ? index === turns.length - 1 : false;
+        return renderTurn(turn, index, isActive, visibleSubSteps, sessionId, project);
       })}
     </div>
   );

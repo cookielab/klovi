@@ -21,6 +21,7 @@
   --accent: #1a7f37;
   --accent-hover: #218c3a;
   --accent-subtle: #dafbe1;
+  --highlight: #0969da;
 
   --border: #d0d7de;
   --border-light: #e1e4e8;
@@ -65,6 +66,7 @@ body {
   --accent: #3fb950;
   --accent-hover: #56d364;
   --accent-subtle: #122117;
+  --highlight: #58a6ff;
 
   --border: #30363d;
   --border-light: #21262d;
@@ -654,6 +656,11 @@ body {
 
 .presentation-mode .message {
   font-size: 1.1em;
+}
+
+.presentation-mode .active-message > .message {
+  border-left: 3px solid var(--highlight);
+  padding-left: 16px;
 }
 
 .presentation-progress {
