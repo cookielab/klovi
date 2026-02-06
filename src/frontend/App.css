@@ -314,6 +314,16 @@ body {
   color: var(--text-secondary);
 }
 
+/* Status notices (e.g. [Request interrupted by user]) */
+.status-notice {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0;
+  margin-bottom: 16px;
+}
+
 /* Command calls (slash commands) */
 .command-call {
   display: flex;

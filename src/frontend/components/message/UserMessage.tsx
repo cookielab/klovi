@@ -6,7 +6,15 @@ interface UserMessageProps {
   turn: UserTurn;
 }
 
+const STATUS_RE = /^\[.+\]$/;
+
 export function UserMessage({ turn }: UserMessageProps) {
+  const isStatus = STATUS_RE.test(turn.text.trim());
+
+  if (isStatus) {
+    return <div className="status-notice">{turn.text}</div>;
+  }
+
   return (
     <div className="message message-user">
       <div className="message-role">User</div>

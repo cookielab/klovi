@@ -130,10 +130,11 @@ async function extractSessionMeta(
           }
         }
         if (raw) {
-          // Skip internal command messages
+          // Skip internal command messages and status notices
           if (
             raw.startsWith("<local-command") ||
-            raw.startsWith("<command-name")
+            raw.startsWith("<command-name") ||
+            /^\[.+\]$/.test(raw.trim())
           ) {
             // skip
           } else {
