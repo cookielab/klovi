@@ -39,6 +39,8 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
     {
       onNext: presentation.next,
       onPrev: presentation.prev,
+      onNextTurn: presentation.nextTurn,
+      onPrevTurn: presentation.prevTurn,
       onEscape: onExit,
       onFullscreen: presentation.toggleFullscreen,
     },
@@ -80,7 +82,9 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
         <div className="presentation-progress-bar">
           <div className="presentation-progress-fill" style={{ width: `${progress}%` }} />
         </div>
-        <span style={{ fontSize: "0.75rem" }}>← → navigate · Esc exit · F fullscreen</span>
+        <span style={{ fontSize: "0.75rem" }}>
+          ← → step · ↑ ↓ message · Esc exit · F fullscreen
+        </span>
       </div>
     </div>
   );

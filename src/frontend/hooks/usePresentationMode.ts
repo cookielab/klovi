@@ -12,6 +12,8 @@ interface PresentationState {
   exit: () => void;
   next: () => void;
   prev: () => void;
+  nextTurn: () => void;
+  prevTurn: () => void;
   toggleFullscreen: () => void;
 }
 
@@ -43,6 +45,18 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
   }, [turns]);
 
   const totalSteps = steps.length;
+
+  // Turn boundaries: the step index of the last sub-step of each turn
+  const turnBoundaries = useMemo(() => {
+    const boundaries: number[] = [];
+    for (let i = 0; i < steps.length; i++) {
+      const next = steps[i + 1];
+      if (!next || next.turnIndex !== steps[i]!.turnIndex) {
+        boundaries.push(i);
+      }
+    }
+    return boundaries;
+  }, [steps]);
 
   // Compute which turns and sub-steps are visible
   const { visibleTurns, visibleSubSteps } = useMemo(() => {
@@ -84,6 +98,24 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
     setCurrentStep((s) => Math.max(s - 1, 0));
   }, []);
 
+  const nextTurn = useCallback(() => {
+    setCurrentStep((s) => {
+      for (const b of turnBoundaries) {
+        if (b > s) return b;
+      }
+      return s;
+    });
+  }, [turnBoundaries]);
+
+  const prevTurn = useCallback(() => {
+    setCurrentStep((s) => {
+      for (let i = turnBoundaries.length - 1; i >= 0; i--) {
+        if (turnBoundaries[i]! < s) return turnBoundaries[i]!;
+      }
+      return s;
+    });
+  }, [turnBoundaries]);
+
   const toggleFullscreen = useCallback(() => {
     setFullscreen((f) => !f);
   }, []);
@@ -99,6 +131,8 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
     exit,
     next,
     prev,
+    nextTurn,
+    prevTurn,
     toggleFullscreen,
   };
 }

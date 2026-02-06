@@ -3,6 +3,8 @@ import { useEffect } from "react";
 interface KeyboardHandlers {
   onNext?: () => void;
   onPrev?: () => void;
+  onNextTurn?: () => void;
+  onPrevTurn?: () => void;
   onEscape?: () => void;
   onFullscreen?: () => void;
 }
@@ -19,15 +21,21 @@ export function useKeyboard(handlers: KeyboardHandlers, active: boolean) {
 
       switch (e.key) {
         case "ArrowRight":
-        case "ArrowDown":
         case " ":
           e.preventDefault();
           handlers.onNext?.();
           break;
         case "ArrowLeft":
-        case "ArrowUp":
           e.preventDefault();
           handlers.onPrev?.();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          handlers.onNextTurn?.();
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          handlers.onPrevTurn?.();
           break;
         case "Escape":
           e.preventDefault();
