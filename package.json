@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "bun run --hot --watch index.ts",
+    "dev": "NODE_ENV=development bun --watch index.ts",
     "start": "bun index.ts",
     "build": "bun build ./index.html --outdir dist",
     "typecheck": "tsc --noEmit",

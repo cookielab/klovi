@@ -6,7 +6,7 @@ import { handleSubAgent } from "./src/server/api/subagent.ts";
 import { handleVersion } from "./src/server/api/version.ts";
 
 const PORT = 3583;
-const isDevMode = process.argv.includes("--hot");
+const isDevMode = process.env.NODE_ENV === "development";
 const acceptRisks = process.argv.includes("--accept-risks");
 
 if (!isDevMode && !acceptRisks) {
@@ -75,10 +75,12 @@ Bun.serve({
       },
     },
   },
-  development: {
-    hmr: true,
-    console: true,
-  },
+  development: isDevMode
+    ? {
+        hmr: true,
+        console: true,
+      }
+    : false,
 });
 
 console.log(`Klovi running at http://localhost:${PORT}`);
