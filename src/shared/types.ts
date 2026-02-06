@@ -28,6 +28,10 @@ export interface UserTurn {
   uuid: string;
   timestamp: string;
   text: string;
+  command?: {
+    name: string;
+    args: string;
+  };
 }
 
 export interface AssistantTurn {

@@ -314,6 +314,27 @@ body {
   color: var(--text-secondary);
 }
 
+/* Command calls (slash commands) */
+.command-call {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.command-call::before {
+  content: ">";
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.command-call-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .message-role {
   font-size: 0.7rem;
   font-weight: 600;

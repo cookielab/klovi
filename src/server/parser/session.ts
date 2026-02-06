@@ -12,6 +12,7 @@ import type {
   RawContentBlock,
   RawToolResultBlock,
 } from "./types.ts";
+import { parseCommandMessage } from "./command-message.ts";
 
 const PROJECTS_DIR = join(homedir(), ".claude", "projects");
 
@@ -116,11 +117,13 @@ function buildTurns(lines: RawLine[]): Turn[] {
         continue;
       }
 
+      const command = parseCommandMessage(text);
       const userTurn: UserTurn = {
         kind: "user",
         uuid: line.uuid || "",
         timestamp: line.timestamp || "",
-        text,
+        text: command ? command.args : text,
+        command: command ?? undefined,
       };
       turns.push(userTurn);
     } else if (line.type === "assistant" && line.message) {

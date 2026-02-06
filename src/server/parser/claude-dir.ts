@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import type { Project, SessionSummary } from "../../shared/types.ts";
 import type { RawLine } from "./types.ts";
+import { cleanCommandMessage } from "./command-message.ts";
 
 const CLAUDE_DIR = join(homedir(), ".claude");
 const PROJECTS_DIR = join(CLAUDE_DIR, "projects");
@@ -117,26 +118,26 @@ async function extractSessionMeta(
         obj.message
       ) {
         const content = obj.message.content;
+        let raw = "";
         if (typeof content === "string") {
-          // Skip command messages
-          if (
-            !content.startsWith("<local-command") &&
-            !content.startsWith("<command-name")
-          ) {
-            firstMessage = content.slice(0, 200);
-          }
+          raw = content;
         } else if (Array.isArray(content)) {
           for (const block of content) {
             if (block.type === "text" && "text" in block) {
-              const text = block.text;
-              if (
-                !text.startsWith("<local-command") &&
-                !text.startsWith("<command-name")
-              ) {
-                firstMessage = text.slice(0, 200);
-                break;
-              }
+              raw = block.text;
+              break;
             }
+          }
+        }
+        if (raw) {
+          // Skip internal command messages
+          if (
+            raw.startsWith("<local-command") ||
+            raw.startsWith("<command-name")
+          ) {
+            // skip
+          } else {
+            firstMessage = cleanCommandMessage(raw).slice(0, 200);
           }
         }
       }
