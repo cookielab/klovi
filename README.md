@@ -80,3 +80,11 @@ See [docs/](docs/) for detailed documentation:
 - [Components](docs/components.md) - frontend component guide and patterns
 - [Testing](docs/testing.md) - test setup, patterns, and conventions
 - [Content Types](CONTENT_TYPES.md) - catalog of all JSONL content types and rendering status
+
+## Built With
+
+This project was built with love using [Claude Code](https://claude.ai/claude-code).
+
+## Trademark Notice
+
+"Claude" and "Claude Code" are trademarks of Anthropic, PBC. This project is not affiliated with, endorsed by, or sponsored by Anthropic. All trademarks and registered trademarks are the property of their respective owners.
