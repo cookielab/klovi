@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { Header } from "./components/layout/Header.tsx";
@@ -155,11 +155,42 @@ function App() {
   const goHome = () => setView({ kind: "home" });
   const goHidden = () => setView({ kind: "hidden" });
 
-  const togglePresentation = () => {
+  const togglePresentation = useCallback(() => {
     if (view.kind === "session") {
       setView({ ...view, presenting: !view.presenting });
     }
-  };
+  }, [view]);
+
+  // Global keyboard shortcuts: p = toggle presentation, +/- = font size
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      switch (e.key) {
+        case "p":
+          if (view.kind === "session") {
+            e.preventDefault();
+            togglePresentation();
+          }
+          break;
+        case "+":
+        case "=":
+          e.preventDefault();
+          increase();
+          break;
+        case "-":
+          e.preventDefault();
+          decrease();
+          break;
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [view, togglePresentation, increase, decrease]);
 
   const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
 
