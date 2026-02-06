@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "ccvie",
+      "name": "@cookielab.io/klovi",
       "dependencies": {
         "@types/react": "^19.2.13",
         "@types/react-dom": "^19.2.3",

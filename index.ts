@@ -30,4 +30,4 @@ Bun.serve({
   },
 });
 
-console.log("CCvie running at http://localhost:3000");
+console.log("Klovi running at http://localhost:3000");

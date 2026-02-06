@@ -1,5 +1,5 @@
 {
-  "name": "ccvie",
+  "name": "@cookielab.io/klovi",
   "module": "index.ts",
   "type": "module",
   "private": true,

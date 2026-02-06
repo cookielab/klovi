@@ -1,4 +1,4 @@
-# CCvie Content Types & Formatting Guide
+# Klovi Content Types & Formatting Guide
 
 Catalog of all distinct content types found in Claude Code JSONL session files and their visual treatment needs.
 

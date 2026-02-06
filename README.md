@@ -1,8 +1,8 @@
-# CCvie
+# Klovi
 
 A local web app for browsing and presenting Claude Code session history. Built for showing AI coding workflows at meetups and conferences.
 
-CCvie reads session data directly from `~/.claude/projects/` (JSONL files) and renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode.
+Klovi reads session data directly from `~/.claude/projects/` (JSONL files) and renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode.
 
 ## Quick Start
 

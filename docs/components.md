@@ -122,7 +122,7 @@ Reusable expand/collapse wrapper with animated disclosure. Max height 500px with
 ### useTheme (`src/frontend/hooks/useTheme.ts`)
 
 - Settings: `"system"` (default), `"light"`, `"dark"`
-- Persisted to `localStorage` key `ccvie-theme`
+- Persisted to `localStorage` key `klovi-theme`
 - Sets `data-theme` attribute on `<html>` element
 - Listens to `prefers-color-scheme` media query in system mode
 - `cycle()` rotates through: system → light → dark → system
@@ -130,7 +130,7 @@ Reusable expand/collapse wrapper with animated disclosure. Max height 500px with
 ### useFontSize (`src/frontend/hooks/useTheme.ts`)
 
 - Range: 10px to 28px (default 14px)
-- Persisted to `localStorage` key `ccvie-font-size`
+- Persisted to `localStorage` key `klovi-font-size`
 - Sets `--font-size` CSS variable on document
 
 ### usePresentationMode (`src/frontend/hooks/usePresentationMode.ts`)

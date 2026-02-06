@@ -116,7 +116,7 @@ function App() {
   };
 
   // Determine header title
-  let headerTitle = "CCvie";
+  let headerTitle = "Klovi";
   let breadcrumb = "";
   if (view.kind === "project") {
     const parts = view.project.name.split("/").filter(Boolean);

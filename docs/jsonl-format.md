@@ -1,6 +1,6 @@
 # JSONL Session File Format
 
-Claude Code stores session history as JSONL files in `~/.claude/projects/`. Each line is a separate JSON object. This document describes the format and how CCvie parses it.
+Claude Code stores session history as JSONL files in `~/.claude/projects/`. Each line is a separate JSON object. This document describes the format and how Klovi parses it.
 
 ## File Location
 
@@ -16,7 +16,7 @@ The encoded path replaces `/` with `-` from the project's absolute path.
 
 Each line has a `type` field:
 
-| Type | Description | Parsed by CCvie |
+| Type | Description | Parsed by Klovi |
 |---|---|---|
 | `user` | User message | Yes |
 | `assistant` | Assistant response | Yes |
@@ -122,7 +122,7 @@ Line 4: user (tool_result only)     ← does NOT break the turn
 Line 5: assistant (text)
 ```
 
-CCvie merges all of these into **one AssistantTurn** with all thinking blocks, text blocks, and tool calls combined. This dramatically reduces turn count (e.g., 61 raw lines → 16 logical turns).
+Klovi merges all of these into **one AssistantTurn** with all thinking blocks, text blocks, and tool calls combined. This dramatically reduces turn count (e.g., 61 raw lines → 16 logical turns).
 
 The rule: a user message that contains **only** `tool_result` blocks does not flush the current assistant turn. Only a real user message (with text content) starts a new turn.
 

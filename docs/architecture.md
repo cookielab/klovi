@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-CCvie/
+Klovi/
 ├── index.ts                         # Server entry (Bun.serve, port 3000)
 ├── index.html                       # HTML template (imports frontend.tsx)
 ├── package.json
@@ -170,7 +170,7 @@ Two themes defined via CSS variables on `:root` (light) and `[data-theme="dark"]
 | `--accent` | `#1a7f37` | `#3fb950` |
 | `--error` | `#cf222e` | `#f85149` |
 
-Theme selection persisted to `localStorage` key `ccvie-theme`. Font size to `ccvie-font-size`.
+Theme selection persisted to `localStorage` key `klovi-theme`. Font size to `klovi-font-size`.
 
 ## Key Design Decisions
 

@@ -14,7 +14,7 @@ function resolveTheme(setting: ThemeSetting): ResolvedTheme {
 
 export function useTheme() {
   const [setting, setSetting] = useState<ThemeSetting>(() => {
-    const stored = localStorage.getItem("ccvie-theme");
+    const stored = localStorage.getItem("klovi-theme");
     if (stored === "light" || stored === "dark") return stored;
     return "system";
   });
@@ -28,7 +28,7 @@ export function useTheme() {
 
   // Persist setting
   useEffect(() => {
-    localStorage.setItem("ccvie-theme", setting);
+    localStorage.setItem("klovi-theme", setting);
     setResolved(resolveTheme(setting));
   }, [setting]);
 
@@ -55,13 +55,13 @@ export function useTheme() {
 
 export function useFontSize() {
   const [size, setSize] = useState(() => {
-    const stored = localStorage.getItem("ccvie-font-size");
+    const stored = localStorage.getItem("klovi-font-size");
     return stored ? parseInt(stored, 10) : 15;
   });
 
   useEffect(() => {
     document.documentElement.style.setProperty("--font-size-base", `${size}px`);
-    localStorage.setItem("ccvie-font-size", String(size));
+    localStorage.setItem("klovi-font-size", String(size));
   }, [size]);
 
   const increase = useCallback(() => setSize((s) => Math.min(s + 2, 28)), []);
