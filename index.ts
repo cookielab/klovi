@@ -5,7 +5,7 @@ import { handleSessions } from "./src/server/api/sessions.ts";
 import { handleSubAgent } from "./src/server/api/subagent.ts";
 
 Bun.serve({
-  port: 3000,
+  port: 3583,
   routes: {
     "/": index,
     "/api/projects": {
@@ -41,4 +41,4 @@ Bun.serve({
   },
 });
 
-console.log("Klovi running at http://localhost:3000");
+console.log("Klovi running at http://localhost:3583");

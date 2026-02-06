@@ -4,7 +4,7 @@
 
 ```
 Klovi/
-├── index.ts                         # Server entry (Bun.serve, port 3000)
+├── index.ts                         # Server entry (Bun.serve, port 3583)
 ├── index.html                       # HTML template (imports frontend.tsx)
 ├── package.json
 ├── tsconfig.json                    # Strict mode, noUncheckedIndexedAccess

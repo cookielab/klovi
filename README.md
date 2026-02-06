@@ -11,7 +11,7 @@ bun install
 bun run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:3583
 
 ## Features
 
@@ -46,7 +46,7 @@ Open http://localhost:3000
 
 | Script | Description |
 |---|---|
-| `bun run dev` | Start dev server with HMR (port 3000) |
+| `bun run dev` | Start dev server with HMR (port 3583) |
 | `bun test` | Run all tests |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `bun run lint` | Lint with Biome |
