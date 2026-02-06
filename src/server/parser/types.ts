@@ -17,6 +17,13 @@ export interface RawMessage {
   role: "user" | "assistant";
   model?: string;
   content: string | RawContentBlock[];
+  stop_reason?: string;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    cache_read_input_tokens?: number;
+    cache_creation_input_tokens?: number;
+  };
 }
 
 export type RawContentBlock =
@@ -59,7 +66,20 @@ export interface RawImageBlock {
   };
 }
 
-export interface RawToolResultContent {
+export type RawToolResultContent =
+  | RawToolResultTextContent
+  | RawToolResultImageContent;
+
+export interface RawToolResultTextContent {
   type: "text";
   text: string;
+}
+
+export interface RawToolResultImageContent {
+  type: "image";
+  source: {
+    type: "base64";
+    media_type: string;
+    data: string;
+  };
 }

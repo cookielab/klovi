@@ -48,6 +48,15 @@ export interface AssistantTurn {
   thinkingBlocks: ThinkingBlock[];
   textBlocks: string[];
   toolCalls: ToolCallWithResult[];
+  usage?: TokenUsage;
+  stopReason?: string;
+}
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheCreationTokens?: number;
 }
 
 export interface SystemTurn {
@@ -67,4 +76,10 @@ export interface ToolCallWithResult {
   input: Record<string, unknown>;
   result: string;
   isError: boolean;
+  resultImages?: ToolResultImage[];
+}
+
+export interface ToolResultImage {
+  mediaType: string;
+  data: string;
 }

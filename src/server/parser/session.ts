@@ -7,6 +7,8 @@ import type {
   AssistantTurn,
   SystemTurn,
   Attachment,
+  ToolResultImage,
+  ToolCallWithResult,
 } from "../../shared/types.ts";
 import type {
   RawLine,
@@ -45,7 +47,7 @@ export async function parseSession(
   };
 }
 
-function buildTurns(lines: RawLine[]): Turn[] {
+export function buildTurns(lines: RawLine[]): Turn[] {
   // Filter out non-displayable lines
   const displayable = lines.filter((l) => {
     if (l.type === "progress") return false;
@@ -59,7 +61,7 @@ function buildTurns(lines: RawLine[]): Turn[] {
   // Collect tool_result blocks from user messages, indexed by tool_use_id
   const toolResults = new Map<
     string,
-    { content: string; isError: boolean }
+    { content: string; isError: boolean; images: ToolResultImage[] }
   >();
   for (const line of displayable) {
     if (line.type !== "user" || !line.message) continue;
@@ -68,10 +70,11 @@ function buildTurns(lines: RawLine[]): Turn[] {
     for (const block of content) {
       if (block.type === "tool_result") {
         const tr = block as RawToolResultBlock;
-        const text = extractToolResultText(tr);
+        const { text, images } = extractToolResult(tr);
         toolResults.set(tr.tool_use_id, {
           content: text,
           isError: tr.is_error ?? false,
+          images,
         });
       }
     }
@@ -155,6 +158,20 @@ function buildTurns(lines: RawLine[]): Turn[] {
         };
       }
 
+      // Extract token usage and stop reason (last message wins)
+      const msg = line.message;
+      if (msg.usage) {
+        currentAssistant.usage = {
+          inputTokens: msg.usage.input_tokens ?? 0,
+          outputTokens: msg.usage.output_tokens ?? 0,
+          cacheReadTokens: msg.usage.cache_read_input_tokens,
+          cacheCreationTokens: msg.usage.cache_creation_input_tokens,
+        };
+      }
+      if (msg.stop_reason) {
+        currentAssistant.stopReason = msg.stop_reason;
+      }
+
       // Process content blocks
       for (const block of content as RawContentBlock[]) {
         if (block.type === "thinking" && "thinking" in block) {
@@ -167,13 +184,17 @@ function buildTurns(lines: RawLine[]): Turn[] {
           }
         } else if (block.type === "tool_use" && "id" in block) {
           const result = toolResults.get(block.id);
-          currentAssistant.toolCalls.push({
+          const toolCall: ToolCallWithResult = {
             toolUseId: block.id,
             name: block.name,
             input: block.input,
             result: result?.content ?? "",
             isError: result?.isError ?? false,
-          });
+          };
+          if (result?.images && result.images.length > 0) {
+            toolCall.resultImages = result.images;
+          }
+          currentAssistant.toolCalls.push(toolCall);
         }
       }
     } else if (line.type === "system" && line.message) {
@@ -201,13 +222,25 @@ function buildTurns(lines: RawLine[]): Turn[] {
   return turns;
 }
 
-function extractToolResultText(tr: RawToolResultBlock): string {
-  if (typeof tr.content === "string") return tr.content;
+function extractToolResult(tr: RawToolResultBlock): {
+  text: string;
+  images: ToolResultImage[];
+} {
+  if (typeof tr.content === "string") return { text: tr.content, images: [] };
   if (Array.isArray(tr.content)) {
-    return tr.content
-      .filter((c) => c.type === "text")
-      .map((c) => c.text)
-      .join("\n");
+    const textParts: string[] = [];
+    const images: ToolResultImage[] = [];
+    for (const c of tr.content) {
+      if (c.type === "text" && "text" in c) {
+        textParts.push(c.text);
+      } else if (c.type === "image" && "source" in c) {
+        images.push({
+          mediaType: c.source.media_type,
+          data: c.source.data,
+        });
+      }
+    }
+    return { text: textParts.join("\n"), images };
   }
-  return "";
+  return { text: "", images: [] };
 }
