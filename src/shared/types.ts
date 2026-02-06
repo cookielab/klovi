@@ -77,6 +77,7 @@ export interface ToolCallWithResult {
   result: string;
   isError: boolean;
   resultImages?: ToolResultImage[];
+  subAgentId?: string;
 }
 
 export interface ToolResultImage {

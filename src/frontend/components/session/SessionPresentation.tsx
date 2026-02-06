@@ -70,6 +70,8 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
       <MessageList
         turns={presentation.visibleTurns}
         visibleSubSteps={presentation.visibleSubSteps}
+        sessionId={sessionId}
+        project={project}
       />
       <div className="presentation-progress">
         <span>

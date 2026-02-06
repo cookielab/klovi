@@ -3,11 +3,20 @@ import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
 
 interface ToolCallProps {
   call: ToolCallWithResult;
+  sessionId?: string;
+  project?: string;
 }
 
-export function ToolCall({ call }: ToolCallProps) {
+export function ToolCall({ call, sessionId, project }: ToolCallProps) {
   const summary = getToolSummary(call);
   const mcpServer = getMcpServer(call.name);
+  const hasSubAgent = call.name === "Task" && call.subAgentId && sessionId && project;
+
+  const displayName = hasSubAgent
+    ? "Sub-Agent"
+    : mcpServer
+      ? call.name.split("__").slice(1).join("__").replace(/__/g, " > ")
+      : call.name;
 
   return (
     <div className="tool-call">
@@ -15,13 +24,20 @@ export function ToolCall({ call }: ToolCallProps) {
         title={
           <span>
             {mcpServer && <span className="tool-mcp-server">{mcpServer}</span>}
-            <span className="tool-call-name">
-              {mcpServer
-                ? call.name.split("__").slice(1).join("__").replace(/__/g, " > ")
-                : call.name}
-            </span>
+            <span className="tool-call-name">{displayName}</span>
             {summary && <span className="tool-call-summary"> — {summary}</span>}
             {call.isError && <span className="tool-call-error"> (error)</span>}
+            {hasSubAgent && (
+              <a
+                className="subagent-link"
+                href={`#/${project}/${sessionId}/subagent/${call.subAgentId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Open conversation
+              </a>
+            )}
           </span>
         }
       >

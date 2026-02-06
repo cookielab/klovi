@@ -11,6 +11,8 @@ export interface RawLine {
   slug?: string;
   timestamp?: string;
   message?: RawMessage;
+  parentToolUseID?: string;
+  data?: { type?: string; agentId?: string; [key: string]: unknown };
 }
 
 export interface RawMessage {

@@ -16,10 +16,112 @@ import type { RawContentBlock, RawLine, RawToolResultBlock } from "./types.ts";
 const PROJECTS_DIR = join(homedir(), ".claude", "projects");
 
 export async function parseSession(sessionId: string, encodedPath: string): Promise<Session> {
-  const filePath = join(PROJECTS_DIR, encodedPath, `${sessionId}.jsonl`);
+  const rawLines = await readJsonlLines(join(PROJECTS_DIR, encodedPath, `${sessionId}.jsonl`));
+
+  const subAgentMap = extractSubAgentMap(rawLines);
+  const turns = buildTurns(rawLines);
+
+  // Attach subAgentId to Task tool calls
+  for (const turn of turns) {
+    if (turn.kind !== "assistant") continue;
+    for (const call of turn.toolCalls) {
+      if (call.name === "Task") {
+        const agentId = subAgentMap.get(call.toolUseId);
+        if (agentId) {
+          call.subAgentId = agentId;
+        }
+      }
+    }
+  }
+
+  return {
+    sessionId,
+    project: encodedPath,
+    turns,
+  };
+}
+
+export async function parseSubAgentSession(
+  sessionId: string,
+  encodedPath: string,
+  agentId: string,
+): Promise<Session> {
+  const filePath = join(
+    PROJECTS_DIR,
+    encodedPath,
+    sessionId,
+    "subagents",
+    `agent-${agentId}.jsonl`,
+  );
+
+  let rawLines: RawLine[];
+  try {
+    rawLines = await readJsonlLines(filePath);
+  } catch {
+    return { sessionId, project: encodedPath, turns: [] };
+  }
+
+  const subAgentMap = extractSubAgentMap(rawLines);
+  const turns = buildTurns(rawLines);
+
+  for (const turn of turns) {
+    if (turn.kind !== "assistant") continue;
+    for (const call of turn.toolCalls) {
+      if (call.name === "Task") {
+        const nestedAgentId = subAgentMap.get(call.toolUseId);
+        if (nestedAgentId) {
+          call.subAgentId = nestedAgentId;
+        }
+      }
+    }
+  }
+
+  return { sessionId, project: encodedPath, turns };
+}
+
+const AGENT_ID_RE = /agentId:\s*(\w+)/;
+
+export function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const line of lines) {
+    // Method 1: progress events with agent_progress data (foreground agents)
+    if (
+      line.type === "progress" &&
+      line.parentToolUseID &&
+      line.data?.type === "agent_progress" &&
+      line.data.agentId
+    ) {
+      map.set(line.parentToolUseID, line.data.agentId);
+    }
+
+    // Method 2: tool_result content containing "agentId: <id>" (background agents)
+    if (line.type === "user" && line.message && Array.isArray(line.message.content)) {
+      for (const block of line.message.content) {
+        if (block.type !== "tool_result") continue;
+        const tr = block as RawToolResultBlock;
+        const text =
+          typeof tr.content === "string"
+            ? tr.content
+            : Array.isArray(tr.content)
+              ? tr.content
+                  .filter((c) => c.type === "text" && "text" in c)
+                  .map((c) => ("text" in c ? c.text : ""))
+                  .join("")
+              : "";
+        const match = AGENT_ID_RE.exec(text);
+        if (match?.[1]) {
+          map.set(tr.tool_use_id, match[1]);
+        }
+      }
+    }
+  }
+  return map;
+}
+
+async function readJsonlLines(filePath: string): Promise<RawLine[]> {
   const file = Bun.file(filePath);
   const text = await file.text();
-  const rawLines = text
+  return text
     .split("\n")
     .filter((l) => l.trim())
     .map((l) => {
@@ -30,14 +132,6 @@ export async function parseSession(sessionId: string, encodedPath: string): Prom
       }
     })
     .filter((l): l is RawLine => l !== null);
-
-  const turns = buildTurns(rawLines);
-
-  return {
-    sessionId,
-    project: encodedPath,
-    turns,
-  };
 }
 
 export function buildTurns(lines: RawLine[]): Turn[] {

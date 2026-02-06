@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { Header } from "./components/layout/Header.tsx";
 import { Layout } from "./components/layout/Layout.tsx";
+import { SubAgentView } from "./components/message/SubAgentView.tsx";
 import { ProjectList } from "./components/project/ProjectList.tsx";
 import { SessionList } from "./components/project/SessionList.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
@@ -18,11 +19,19 @@ type ViewState =
       project: Project;
       session: SessionSummary;
       presenting: boolean;
+    }
+  | {
+      kind: "subagent";
+      project: Project;
+      sessionId: string;
+      agentId: string;
     };
 
 function viewToHash(view: ViewState): string {
   if (view.kind === "project") return `#/${view.project.encodedPath}`;
   if (view.kind === "session") return `#/${view.project.encodedPath}/${view.session.sessionId}`;
+  if (view.kind === "subagent")
+    return `#/${view.project.encodedPath}/${view.sessionId}/subagent/${view.agentId}`;
   return "#/";
 }
 
@@ -33,6 +42,7 @@ async function restoreFromHash(): Promise<ViewState> {
   const parts = hash.split("/");
   const encodedPath = parts[0];
   const sessionId = parts[1];
+  const isSubAgent = parts[2] === "subagent" && parts[3];
 
   // Fetch project info
   let project: Project | undefined;
@@ -45,6 +55,11 @@ async function restoreFromHash(): Promise<ViewState> {
   }
   if (!project) return { kind: "home" };
   if (!sessionId) return { kind: "project", project };
+
+  // Sub-agent route: #/<project>/<sessionId>/subagent/<agentId>
+  if (isSubAgent) {
+    return { kind: "subagent", project, sessionId, agentId: parts[3]! };
+  }
 
   // Fetch session info
   try {
@@ -126,13 +141,17 @@ function App() {
     breadcrumb = parts.slice(-2).join("/");
     headerTitle = view.session.firstMessage || view.session.slug;
     if (headerTitle.length > 60) headerTitle = `${headerTitle.slice(0, 60)}...`;
+  } else if (view.kind === "subagent") {
+    const parts = view.project.name.split("/").filter(Boolean);
+    breadcrumb = parts.slice(-2).join("/");
+    headerTitle = `Sub-agent ${view.agentId.slice(0, 8)}`;
   }
 
   // Sidebar content
   let sidebarContent: React.ReactNode;
   if (view.kind === "home") {
     sidebarContent = <ProjectList onSelect={selectProject} />;
-  } else if (view.kind === "project") {
+  } else if (view.kind === "project" || view.kind === "subagent") {
     sidebarContent = (
       <SessionList project={view.project} onSelect={selectSession} onBack={goHome} />
     );
@@ -189,6 +208,13 @@ function App() {
         ) : (
           <SessionView sessionId={view.session.sessionId} project={view.project.encodedPath} />
         ))}
+      {view.kind === "subagent" && (
+        <SubAgentView
+          sessionId={view.sessionId}
+          project={view.project.encodedPath}
+          agentId={view.agentId}
+        />
+      )}
     </Layout>
   );
 }

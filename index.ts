@@ -2,6 +2,7 @@ import index from "./index.html";
 import { handleProjects } from "./src/server/api/projects.ts";
 import { handleSession } from "./src/server/api/session.ts";
 import { handleSessions } from "./src/server/api/sessions.ts";
+import { handleSubAgent } from "./src/server/api/subagent.ts";
 
 Bun.serve({
   port: 3000,
@@ -21,6 +22,16 @@ Bun.serve({
           return Response.json({ error: "project query parameter required" }, { status: 400 });
         }
         return handleSession(req.params.sessionId, project);
+      },
+    },
+    "/api/sessions/:sessionId/subagents/:agentId": {
+      GET: (req) => {
+        const url = new URL(req.url);
+        const project = url.searchParams.get("project");
+        if (!project) {
+          return Response.json({ error: "project query parameter required" }, { status: 400 });
+        }
+        return handleSubAgent(req.params.sessionId, req.params.agentId, project);
       },
     },
   },

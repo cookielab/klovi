@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { AssistantTurn, SystemTurn, UserTurn } from "../../shared/types.ts";
-import { buildTurns } from "./session.ts";
+import { buildTurns, extractSubAgentMap } from "./session.ts";
 import type { RawLine } from "./types.ts";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
@@ -430,5 +430,142 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     expect(turns).toHaveLength(1);
     expect((turns[0] as UserTurn).text).toBe("After malformed");
+  });
+});
+
+describe("extractSubAgentMap", () => {
+  test("extracts agentId from agent_progress events (foreground agents)", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "progress",
+        parentToolUseID: "toolu_abc123",
+        data: { type: "agent_progress", agentId: "a1b2c3d" },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.get("toolu_abc123")).toBe("a1b2c3d");
+  });
+
+  test("extracts agentId from tool_result text (background agents)", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "toolu_xyz789",
+              content: [
+                {
+                  type: "text",
+                  text: "Async agent launched successfully.\nagentId: a52c371 (internal ID)\nThe agent is working in the background.",
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.get("toolu_xyz789")).toBe("a52c371");
+  });
+
+  test("extracts agentId from plain string tool_result content", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "toolu_str1",
+              content: "agentId: abc1234 (internal ID)",
+            },
+          ],
+        },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.get("toolu_str1")).toBe("abc1234");
+  });
+
+  test("ignores progress events that are not agent_progress", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "progress",
+        parentToolUseID: "some-uuid",
+        data: { type: "hook_progress" },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.size).toBe(0);
+  });
+
+  test("ignores tool_results without agentId in text", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "toolu_nope",
+              content: "file contents here, no agent id",
+            },
+          ],
+        },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.size).toBe(0);
+  });
+
+  test("handles both foreground and background agents in same session", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "progress",
+        parentToolUseID: "toolu_fg1",
+        data: { type: "agent_progress", agentId: "afg0001" },
+      }),
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "toolu_bg1",
+              content: "Async agent launched successfully.\nagentId: abg0002",
+            },
+          ],
+        },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.size).toBe(2);
+    expect(map.get("toolu_fg1")).toBe("afg0001");
+    expect(map.get("toolu_bg1")).toBe("abg0002");
+  });
+
+  test("returns empty map when no sub-agents exist", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "Hello" },
+      }),
+      line({
+        type: "assistant",
+        message: {
+          role: "assistant",
+          model: "claude-sonnet-4-5-20250929",
+          content: [{ type: "text", text: "Hi!" }],
+        },
+      }),
+    ];
+    const map = extractSubAgentMap(lines);
+    expect(map.size).toBe(0);
   });
 });

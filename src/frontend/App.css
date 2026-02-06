@@ -728,6 +728,29 @@ body {
   letter-spacing: 0.03em;
 }
 
+/* Sub-agent */
+.subagent-link {
+  margin-left: 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.subagent-link:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.subagent-empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+
 /* Fullscreen */
 .fullscreen {
   position: fixed;

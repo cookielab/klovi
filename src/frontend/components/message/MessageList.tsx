@@ -7,9 +7,11 @@ import { UserMessage } from "./UserMessage.tsx";
 interface MessageListProps {
   turns: Turn[];
   visibleSubSteps?: Map<number, number>;
+  sessionId?: string;
+  project?: string;
 }
 
-export function MessageList({ turns, visibleSubSteps }: MessageListProps) {
+export function MessageList({ turns, visibleSubSteps, sessionId, project }: MessageListProps) {
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
@@ -28,7 +30,12 @@ export function MessageList({ turns, visibleSubSteps }: MessageListProps) {
           case "assistant":
             return (
               <div key={turn.uuid || index}>
-                <AssistantMessage turn={turn} visibleSubSteps={visibleSubSteps?.get(index)} />
+                <AssistantMessage
+                  turn={turn}
+                  visibleSubSteps={visibleSubSteps?.get(index)}
+                  sessionId={sessionId}
+                  project={project}
+                />
               </div>
             );
           case "system":

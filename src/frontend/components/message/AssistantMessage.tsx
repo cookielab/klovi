@@ -8,9 +8,16 @@ import { ToolCall } from "./ToolCall.tsx";
 interface AssistantMessageProps {
   turn: AssistantTurn;
   visibleSubSteps?: number; // how many sub-steps to show (presentation mode)
+  sessionId?: string;
+  project?: string;
 }
 
-export function AssistantMessage({ turn, visibleSubSteps }: AssistantMessageProps) {
+export function AssistantMessage({
+  turn,
+  visibleSubSteps,
+  sessionId,
+  project,
+}: AssistantMessageProps) {
   // Build ordered sub-steps
   const subSteps: React.ReactNode[] = [];
   let key = 0;
@@ -38,7 +45,7 @@ export function AssistantMessage({ turn, visibleSubSteps }: AssistantMessageProp
   for (const call of turn.toolCalls) {
     subSteps.push(
       <div key={`tool-${key++}`}>
-        <ToolCall call={call} />
+        <ToolCall call={call} sessionId={sessionId} project={project} />
       </div>,
     );
   }
