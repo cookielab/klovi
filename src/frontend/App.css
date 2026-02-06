@@ -496,33 +496,37 @@ body {
 
 /* Collapsible sections */
 .collapsible {
-  border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
-  margin: 8px 0;
-  overflow: hidden;
+  margin: 4px 0;
 }
 
 .collapsible-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--text-secondary);
-  background: var(--bg-secondary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  text-align: left;
   user-select: none;
   transition: background 0.1s;
 }
 
 .collapsible-header:hover {
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
 }
 
 .collapsible-chevron {
   transition: transform 0.15s;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
+  color: var(--text-muted);
 }
 
 .collapsible-chevron.open {
@@ -530,26 +534,27 @@ body {
 }
 
 .collapsible-content {
-  padding: 12px;
-  border-top: 1px solid var(--border-light);
+  padding: 10px 12px;
+  margin-left: 18px;
+  border-left: 2px solid var(--border-light);
   max-height: 500px;
   overflow-y: auto;
 }
 
 /* Tool calls */
 .tool-call {
-  margin: 8px 0;
+  margin: 2px 0;
 }
 
 .tool-call-name {
   font-weight: 600;
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .tool-call-input,
 .tool-call-output {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-family: "SF Mono", "Fira Code", Menlo, monospace;
   white-space: pre-wrap;
   word-break: break-word;
@@ -562,13 +567,14 @@ body {
 }
 
 .tool-call-summary {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
+  font-family: "SF Mono", "Fira Code", Menlo, monospace;
 }
 
 /* Thinking blocks */
 .thinking-block {
-  margin: 8px 0;
+  margin: 2px 0;
 }
 
 .thinking-content {
