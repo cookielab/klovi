@@ -1,6 +1,7 @@
 import React from "react";
 import type { ThinkingBlock as ThinkingBlockType } from "../../../shared/types.ts";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
+import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 
 interface ThinkingBlockProps {
   block: ThinkingBlockType;
@@ -22,7 +23,9 @@ export function ThinkingBlock({ block }: ThinkingBlockProps) {
           </span>
         }
       >
-        <div className="thinking-content">{block.text}</div>
+        <div className="thinking-content">
+          <MarkdownRenderer content={block.text} />
+        </div>
       </CollapsibleSection>
     </div>
   );
