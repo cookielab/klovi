@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Project, SessionSummary } from "../../shared/types.ts";
 import { cleanCommandMessage } from "./command-message.ts";
-import type { RawLine } from "./types.ts";
+import type { RawContentBlock, RawLine } from "./types.ts";
 
 const CLAUDE_DIR = join(homedir(), ".claude");
 const PROJECTS_DIR = join(CLAUDE_DIR, "projects");
@@ -80,6 +80,50 @@ async function extractCwd(filePath: string): Promise<string> {
   return "";
 }
 
+interface MetaFields {
+  timestamp: string;
+  slug: string;
+  firstMessage: string;
+  model: string;
+  gitBranch: string;
+}
+
+function extractTextFromContent(content: string | RawContentBlock[]): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    for (const block of content) {
+      if (block.type === "text" && "text" in block) return block.text;
+    }
+  }
+  return "";
+}
+
+function isInternalMessage(text: string): boolean {
+  return (
+    text.startsWith("<local-command") ||
+    text.startsWith("<command-name") ||
+    /^\[.+\]$/.test(text.trim())
+  );
+}
+
+function isMetaComplete(meta: MetaFields): boolean {
+  return !!(meta.timestamp && meta.slug && meta.firstMessage && meta.model && meta.gitBranch);
+}
+
+function processMetaLine(obj: RawLine, meta: MetaFields): void {
+  if (obj.timestamp && !meta.timestamp) meta.timestamp = obj.timestamp;
+  if (obj.slug && !meta.slug) meta.slug = obj.slug;
+  if (obj.gitBranch && !meta.gitBranch) meta.gitBranch = obj.gitBranch;
+  if (obj.message?.model && !meta.model) meta.model = obj.message.model;
+
+  if (!meta.firstMessage && obj.type === "user" && !obj.isMeta && obj.message) {
+    const raw = extractTextFromContent(obj.message.content);
+    if (raw && !isInternalMessage(raw)) {
+      meta.firstMessage = cleanCommandMessage(raw).slice(0, 200);
+    }
+  }
+}
+
 async function extractSessionMeta(
   filePath: string,
 ): Promise<Omit<SessionSummary, "sessionId"> | null> {
@@ -87,63 +131,25 @@ async function extractSessionMeta(
   const text = await file.text();
   const lines = text.split("\n");
 
-  let timestamp = "";
-  let slug = "";
-  let firstMessage = "";
-  let model = "";
-  let gitBranch = "";
+  const meta: MetaFields = { timestamp: "", slug: "", firstMessage: "", model: "", gitBranch: "" };
 
   for (const line of lines.slice(0, 50)) {
     if (!line.trim()) continue;
     try {
       const obj: RawLine = JSON.parse(line);
-
-      if (obj.timestamp && !timestamp) timestamp = obj.timestamp;
-      if (obj.slug && !slug) slug = obj.slug;
-      if (obj.gitBranch && !gitBranch) gitBranch = obj.gitBranch;
-
-      if (obj.message?.model && !model) model = obj.message.model;
-
-      // Find the first real user message
-      if (!firstMessage && obj.type === "user" && !obj.isMeta && obj.message) {
-        const content = obj.message.content;
-        let raw = "";
-        if (typeof content === "string") {
-          raw = content;
-        } else if (Array.isArray(content)) {
-          for (const block of content) {
-            if (block.type === "text" && "text" in block) {
-              raw = block.text;
-              break;
-            }
-          }
-        }
-        if (raw) {
-          // Skip internal command messages and status notices
-          if (
-            raw.startsWith("<local-command") ||
-            raw.startsWith("<command-name") ||
-            /^\[.+\]$/.test(raw.trim())
-          ) {
-            // skip
-          } else {
-            firstMessage = cleanCommandMessage(raw).slice(0, 200);
-          }
-        }
-      }
-
-      if (timestamp && slug && firstMessage && model && gitBranch) break;
+      processMetaLine(obj, meta);
+      if (isMetaComplete(meta)) break;
     } catch {}
   }
 
-  if (!timestamp || !firstMessage) return null;
+  if (!meta.timestamp || !meta.firstMessage) return null;
 
   return {
-    timestamp,
-    slug: slug || "unknown",
-    firstMessage,
-    model: model || "unknown",
-    gitBranch: gitBranch || "",
+    timestamp: meta.timestamp,
+    slug: meta.slug || "unknown",
+    firstMessage: meta.firstMessage,
+    model: meta.model || "unknown",
+    gitBranch: meta.gitBranch || "",
   };
 }
 

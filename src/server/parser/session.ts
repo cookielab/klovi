@@ -4,7 +4,6 @@ import type {
   AssistantTurn,
   Attachment,
   Session,
-  SystemTurn,
   ToolCallWithResult,
   ToolResultImage,
   Turn,
@@ -81,39 +80,45 @@ export async function parseSubAgentSession(
 
 const AGENT_ID_RE = /agentId:\s*(\w+)/;
 
+function extractFromProgressEvent(line: RawLine, map: Map<string, string>): void {
+  if (
+    line.type === "progress" &&
+    line.parentToolUseID &&
+    line.data?.type === "agent_progress" &&
+    line.data.agentId
+  ) {
+    map.set(line.parentToolUseID, line.data.agentId);
+  }
+}
+
+function extractToolResultText(tr: RawToolResultBlock): string {
+  if (typeof tr.content === "string") return tr.content;
+  if (Array.isArray(tr.content)) {
+    return tr.content
+      .filter((c) => c.type === "text" && "text" in c)
+      .map((c) => ("text" in c ? c.text : ""))
+      .join("");
+  }
+  return "";
+}
+
+function extractFromToolResult(line: RawLine, map: Map<string, string>): void {
+  if (line.type !== "user" || !line.message || !Array.isArray(line.message.content)) return;
+  for (const block of line.message.content) {
+    if (block.type !== "tool_result") continue;
+    const tr = block as RawToolResultBlock;
+    const match = AGENT_ID_RE.exec(extractToolResultText(tr));
+    if (match?.[1]) {
+      map.set(tr.tool_use_id, match[1]);
+    }
+  }
+}
+
 export function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const line of lines) {
-    // Method 1: progress events with agent_progress data (foreground agents)
-    if (
-      line.type === "progress" &&
-      line.parentToolUseID &&
-      line.data?.type === "agent_progress" &&
-      line.data.agentId
-    ) {
-      map.set(line.parentToolUseID, line.data.agentId);
-    }
-
-    // Method 2: tool_result content containing "agentId: <id>" (background agents)
-    if (line.type === "user" && line.message && Array.isArray(line.message.content)) {
-      for (const block of line.message.content) {
-        if (block.type !== "tool_result") continue;
-        const tr = block as RawToolResultBlock;
-        const text =
-          typeof tr.content === "string"
-            ? tr.content
-            : Array.isArray(tr.content)
-              ? tr.content
-                  .filter((c) => c.type === "text" && "text" in c)
-                  .map((c) => ("text" in c ? c.text : ""))
-                  .join("")
-              : "";
-        const match = AGENT_ID_RE.exec(text);
-        if (match?.[1]) {
-          map.set(tr.tool_use_id, match[1]);
-        }
-      }
-    }
+    extractFromProgressEvent(line, map);
+    extractFromToolResult(line, map);
   }
   return map;
 }
@@ -134,18 +139,18 @@ async function readJsonlLines(filePath: string): Promise<RawLine[]> {
     .filter((l): l is RawLine => l !== null);
 }
 
-export function buildTurns(lines: RawLine[]): Turn[] {
-  // Filter out non-displayable lines
-  const displayable = lines.filter((l) => {
-    if (l.type === "progress") return false;
-    if (l.type === "file-history-snapshot") return false;
-    if (l.type === "summary") return false;
-    if (l.isMeta) return false;
-    if (!l.message) return false;
-    return true;
-  });
+function isDisplayableLine(l: RawLine): boolean {
+  if (l.type === "progress") return false;
+  if (l.type === "file-history-snapshot") return false;
+  if (l.type === "summary") return false;
+  if (l.isMeta) return false;
+  if (!l.message) return false;
+  return true;
+}
 
-  // Collect tool_result blocks from user messages, indexed by tool_use_id
+function collectToolResults(
+  displayable: RawLine[],
+): Map<string, { content: string; isError: boolean; images: ToolResultImage[] }> {
   const toolResults = new Map<
     string,
     { content: string; isError: boolean; images: ToolResultImage[] }
@@ -166,144 +171,187 @@ export function buildTurns(lines: RawLine[]): Turn[] {
       }
     }
   }
+  return toolResults;
+}
+
+function extractUserContent(content: string | RawContentBlock[]): {
+  text: string;
+  attachments: Attachment[];
+} {
+  if (typeof content === "string") return { text: content, attachments: [] };
+  const textBlocks = content.filter((b) => b.type === "text");
+  const text = textBlocks.map((b) => ("text" in b ? b.text : "")).join("\n");
+  const attachments: Attachment[] = [];
+  for (const block of content) {
+    if (block.type === "image" && "source" in block) {
+      attachments.push({
+        type: "image",
+        mediaType: (block as { source: { media_type: string } }).source.media_type,
+      });
+    }
+  }
+  return { text, attachments };
+}
+
+function isSkippedUserText(text: string): boolean {
+  return (
+    text.startsWith("<local-command") ||
+    text.startsWith("<command-name") ||
+    text.startsWith("<task-notification") ||
+    text.startsWith("<system-reminder")
+  );
+}
+
+function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
+  if (!line.message) return null;
+  const content = line.message.content;
+
+  if (Array.isArray(content) && content.every((b) => b.type === "tool_result")) {
+    return "tool_result_only";
+  }
+
+  const { text, attachments } = extractUserContent(content);
+  if (isSkippedUserText(text)) return null;
+
+  const command = parseCommandMessage(text);
+  return {
+    kind: "user",
+    uuid: line.uuid || "",
+    timestamp: line.timestamp || "",
+    text: command ? command.args : text,
+    command: command ?? undefined,
+    attachments: attachments.length > 0 ? attachments : undefined,
+  };
+}
+
+function createAssistantTurn(line: RawLine): AssistantTurn {
+  return {
+    kind: "assistant",
+    uuid: line.uuid || "",
+    timestamp: line.timestamp || "",
+    model: line.message!.model || "",
+    thinkingBlocks: [],
+    textBlocks: [],
+    toolCalls: [],
+  };
+}
+
+type ToolResultMap = Map<string, { content: string; isError: boolean; images: ToolResultImage[] }>;
+
+function buildToolCall(block: RawContentBlock, toolResults: ToolResultMap): ToolCallWithResult {
+  const result = toolResults.get((block as { id: string }).id);
+  const toolCall: ToolCallWithResult = {
+    toolUseId: (block as { id: string }).id,
+    name: (block as { name: string }).name,
+    input: (block as { input: Record<string, unknown> }).input,
+    result: result?.content ?? "",
+    isError: result?.isError ?? false,
+  };
+  if (result?.images && result.images.length > 0) {
+    toolCall.resultImages = result.images;
+  }
+  return toolCall;
+}
+
+function processContentBlock(
+  block: RawContentBlock,
+  current: AssistantTurn,
+  toolResults: ToolResultMap,
+): void {
+  if (block.type === "thinking" && "thinking" in block) {
+    current.thinkingBlocks.push({ text: block.thinking });
+  } else if (block.type === "text" && "text" in block && block.text.trim()) {
+    current.textBlocks.push(block.text);
+  } else if (block.type === "tool_use" && "id" in block) {
+    current.toolCalls.push(buildToolCall(block, toolResults));
+  }
+}
+
+function processAssistantLine(
+  line: RawLine,
+  current: AssistantTurn,
+  toolResults: ToolResultMap,
+): void {
+  const msg = line.message!;
+  if (msg.usage) {
+    current.usage = {
+      inputTokens: msg.usage.input_tokens ?? 0,
+      outputTokens: msg.usage.output_tokens ?? 0,
+      cacheReadTokens: msg.usage.cache_read_input_tokens,
+      cacheCreationTokens: msg.usage.cache_creation_input_tokens,
+    };
+  }
+  if (msg.stop_reason) {
+    current.stopReason = msg.stop_reason;
+  }
+  for (const block of msg.content as RawContentBlock[]) {
+    processContentBlock(block, current, toolResults);
+  }
+}
+
+function flushAssistant(current: AssistantTurn | null, turns: Turn[]): null {
+  if (current) turns.push(current);
+  return null;
+}
+
+function handleUserLine(
+  line: RawLine,
+  currentAssistant: AssistantTurn | null,
+  turns: Turn[],
+): AssistantTurn | null {
+  const result = processUserLine(line);
+  if (result === "tool_result_only") return currentAssistant;
+  const flushed = flushAssistant(currentAssistant, turns);
+  if (result) turns.push(result);
+  return flushed;
+}
+
+function handleAssistantLine(
+  line: RawLine,
+  currentAssistant: AssistantTurn | null,
+  toolResults: ToolResultMap,
+): AssistantTurn | null {
+  if (!line.message || !Array.isArray(line.message.content)) return currentAssistant;
+  const current = currentAssistant ?? createAssistantTurn(line);
+  processAssistantLine(line, current, toolResults);
+  return current;
+}
+
+function handleSystemLine(
+  line: RawLine,
+  currentAssistant: AssistantTurn | null,
+  turns: Turn[],
+): null {
+  flushAssistant(currentAssistant, turns);
+  if (!line.message) return null;
+  const text = typeof line.message.content === "string" ? line.message.content : "";
+  turns.push({
+    kind: "system",
+    uuid: line.uuid || "",
+    timestamp: line.timestamp || "",
+    text,
+  });
+  return null;
+}
+
+export function buildTurns(lines: RawLine[]): Turn[] {
+  const displayable = lines.filter(isDisplayableLine);
+  const toolResults = collectToolResults(displayable);
 
   const turns: Turn[] = [];
   let currentAssistant: AssistantTurn | null = null;
 
   for (const line of displayable) {
-    if (line.type === "user" && line.message) {
-      const content = line.message.content;
-
-      // Skip user messages that are only tool_results (they're matched to assistant tool calls)
-      // Don't flush the current assistant - the next assistant line continues the same turn
-      if (Array.isArray(content)) {
-        const hasOnlyToolResults = content.every((b) => b.type === "tool_result");
-        if (hasOnlyToolResults) continue;
-      }
-
-      // Flush any pending assistant turn (real user message breaks the assistant turn)
-      if (currentAssistant) {
-        turns.push(currentAssistant);
-        currentAssistant = null;
-      }
-
-      // Extract user text and attachments
-      let text = "";
-      const attachments: Attachment[] = [];
-      if (typeof content === "string") {
-        text = content;
-      } else if (Array.isArray(content)) {
-        const textBlocks = content.filter((b) => b.type === "text");
-        text = textBlocks.map((b) => ("text" in b ? b.text : "")).join("\n");
-
-        for (const block of content) {
-          if (block.type === "image" && "source" in block) {
-            attachments.push({
-              type: "image",
-              mediaType: (block as { source: { media_type: string } }).source.media_type,
-            });
-          }
-        }
-      }
-
-      // Skip command/system/internal messages
-      if (
-        text.startsWith("<local-command") ||
-        text.startsWith("<command-name") ||
-        text.startsWith("<task-notification") ||
-        text.startsWith("<system-reminder")
-      ) {
-        continue;
-      }
-
-      const command = parseCommandMessage(text);
-      const userTurn: UserTurn = {
-        kind: "user",
-        uuid: line.uuid || "",
-        timestamp: line.timestamp || "",
-        text: command ? command.args : text,
-        command: command ?? undefined,
-        attachments: attachments.length > 0 ? attachments : undefined,
-      };
-      turns.push(userTurn);
-    } else if (line.type === "assistant" && line.message) {
-      const content = line.message.content;
-      if (!Array.isArray(content)) continue;
-
-      // Start new assistant turn if needed
-      if (!currentAssistant) {
-        currentAssistant = {
-          kind: "assistant",
-          uuid: line.uuid || "",
-          timestamp: line.timestamp || "",
-          model: line.message.model || "",
-          thinkingBlocks: [],
-          textBlocks: [],
-          toolCalls: [],
-        };
-      }
-
-      // Extract token usage and stop reason (last message wins)
-      const msg = line.message;
-      if (msg.usage) {
-        currentAssistant.usage = {
-          inputTokens: msg.usage.input_tokens ?? 0,
-          outputTokens: msg.usage.output_tokens ?? 0,
-          cacheReadTokens: msg.usage.cache_read_input_tokens,
-          cacheCreationTokens: msg.usage.cache_creation_input_tokens,
-        };
-      }
-      if (msg.stop_reason) {
-        currentAssistant.stopReason = msg.stop_reason;
-      }
-
-      // Process content blocks
-      for (const block of content as RawContentBlock[]) {
-        if (block.type === "thinking" && "thinking" in block) {
-          currentAssistant.thinkingBlocks.push({
-            text: block.thinking,
-          });
-        } else if (block.type === "text" && "text" in block) {
-          if (block.text.trim()) {
-            currentAssistant.textBlocks.push(block.text);
-          }
-        } else if (block.type === "tool_use" && "id" in block) {
-          const result = toolResults.get(block.id);
-          const toolCall: ToolCallWithResult = {
-            toolUseId: block.id,
-            name: block.name,
-            input: block.input,
-            result: result?.content ?? "",
-            isError: result?.isError ?? false,
-          };
-          if (result?.images && result.images.length > 0) {
-            toolCall.resultImages = result.images;
-          }
-          currentAssistant.toolCalls.push(toolCall);
-        }
-      }
-    } else if (line.type === "system" && line.message) {
-      if (currentAssistant) {
-        turns.push(currentAssistant);
-        currentAssistant = null;
-      }
-      const content = line.message.content;
-      const text = typeof content === "string" ? content : "";
-      const systemTurn: SystemTurn = {
-        kind: "system",
-        uuid: line.uuid || "",
-        timestamp: line.timestamp || "",
-        text,
-      };
-      turns.push(systemTurn);
+    if (line.type === "user") {
+      currentAssistant = handleUserLine(line, currentAssistant, turns);
+    } else if (line.type === "assistant") {
+      currentAssistant = handleAssistantLine(line, currentAssistant, toolResults);
+    } else if (line.type === "system") {
+      currentAssistant = handleSystemLine(line, currentAssistant, turns);
     }
   }
 
-  // Flush last assistant turn
-  if (currentAssistant) {
-    turns.push(currentAssistant);
-  }
-
+  flushAssistant(currentAssistant, turns);
   return turns;
 }
 

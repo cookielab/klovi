@@ -75,6 +75,27 @@ async function restoreFromHash(): Promise<ViewState> {
   return { kind: "project", project };
 }
 
+function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
+  if (view.kind === "project") {
+    const parts = view.project.name.split("/").filter(Boolean);
+    return { title: parts.slice(-2).join("/"), breadcrumb: "" };
+  }
+  if (view.kind === "session") {
+    const parts = view.project.name.split("/").filter(Boolean);
+    let title = view.session.firstMessage || view.session.slug;
+    if (title.length > 60) title = `${title.slice(0, 60)}...`;
+    return { title, breadcrumb: parts.slice(-2).join("/") };
+  }
+  if (view.kind === "subagent") {
+    const parts = view.project.name.split("/").filter(Boolean);
+    return {
+      title: `Sub-agent ${view.agentId.slice(0, 8)}`,
+      breadcrumb: parts.slice(-2).join("/"),
+    };
+  }
+  return { title: "Klovi", breadcrumb: "" };
+}
+
 function App() {
   const { setting: themeSetting, cycle: cycleTheme } = useTheme();
   const { size: fontSize, increase, decrease } = useFontSize();
@@ -130,22 +151,7 @@ function App() {
     }
   };
 
-  // Determine header title
-  let headerTitle = "Klovi";
-  let breadcrumb = "";
-  if (view.kind === "project") {
-    const parts = view.project.name.split("/").filter(Boolean);
-    headerTitle = parts.slice(-2).join("/");
-  } else if (view.kind === "session") {
-    const parts = view.project.name.split("/").filter(Boolean);
-    breadcrumb = parts.slice(-2).join("/");
-    headerTitle = view.session.firstMessage || view.session.slug;
-    if (headerTitle.length > 60) headerTitle = `${headerTitle.slice(0, 60)}...`;
-  } else if (view.kind === "subagent") {
-    const parts = view.project.name.split("/").filter(Boolean);
-    breadcrumb = parts.slice(-2).join("/");
-    headerTitle = `Sub-agent ${view.agentId.slice(0, 8)}`;
-  }
+  const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
 
   // Sidebar content
   let sidebarContent: React.ReactNode;
