@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { existsSync, readSync } from "node:fs";
 import index from "./index.html";
 import { handleProjects } from "./src/server/api/projects.ts";

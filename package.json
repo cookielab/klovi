@@ -1,6 +1,6 @@
 {
   "name": "@cookielab.io/klovi",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "A local web app for browsing and presenting Claude Code session history",
   "module": "index.ts",
   "type": "module",
@@ -23,6 +23,9 @@
     "presentation",
     "bun"
   ],
+  "engines": {
+    "bun": ">=1.2"
+  },
   "bin": {
     "klovi": "./index.ts"
   },

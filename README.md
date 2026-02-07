@@ -9,18 +9,30 @@ Klovi reads session data directly from `~/.claude/projects/` (JSONL files) and r
 
 ## Quick Start
 
+Run directly without installing (requires [Bun](https://bun.sh) runtime):
+
+```bash
+bunx @cookielab.io/klovi
+npx @cookielab.io/klovi
+yarn dlx @cookielab.io/klovi
+pnpm dlx @cookielab.io/klovi
+```
+
+Or install globally:
+
+```bash
+bun install -g @cookielab.io/klovi
+klovi
+```
+
+Open http://localhost:3583
+
+### Development
+
 ```bash
 bun install
 bun run dev
 ```
-
-Or run directly via npx:
-
-```bash
-bunx @cookielab.io/klovi
-```
-
-Open http://localhost:3583
 
 ## Features
 

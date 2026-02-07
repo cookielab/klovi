@@ -1,4 +1,5 @@
-const packageJson = await Bun.file("package.json").json();
+const packageJsonPath = new URL("../../package.json", import.meta.url).pathname;
+const packageJson = await Bun.file(packageJsonPath).json();
 const version: string = packageJson.version;
 
 let commitHash: string | null = null;
