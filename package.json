@@ -40,7 +40,7 @@
     "start": "node dist/server.js",
     "build": "bun run build:frontend && bun run build:server",
     "build:frontend": "rm -rf dist/public && bun build ./index.html --outdir dist/public",
-    "build:server": "node scripts/build-server.cjs",
+    "build:server": "bun scripts/build-server.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome lint .",
