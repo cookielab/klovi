@@ -24,52 +24,37 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get latest tag
-        id: latest
+      - name: Determine next version (auto)
+        if: inputs.bump == 'auto'
+        id: semver
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          noVersionBumpBehavior: patch
+          noNewCommitBehavior: patch
+
+      - name: Determine next version (manual)
+        if: inputs.bump != 'auto'
+        id: manual
         run: |
           TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Detect bump from conventional commits
-        if: inputs.bump == 'auto'
-        id: detect
-        run: |
-          TAG="${{ steps.latest.outputs.tag }}"
-          if [ "$TAG" = "0.0.0" ]; then
-            RANGE="HEAD"
-          else
-            RANGE="${TAG}..HEAD"
-          fi
-
-          BUMP="patch"
-          while IFS= read -r msg; do
-            if echo "$msg" | grep -qiE '^[a-z]+(\(.+\))?!:|BREAKING CHANGE'; then
-              BUMP="major"
-              break
-            elif echo "$msg" | grep -qE '^feat(\(.+\))?:'; then
-              BUMP="minor"
-            fi
-          done < <(git log --format='%s' "$RANGE")
-
-          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
-
-      - name: Calculate new version
-        id: version
-        run: |
-          BUMP="${{ inputs.bump == 'auto' && steps.detect.outputs.bump || inputs.bump }}"
-          IFS='.' read -r major minor patch <<< "${{ steps.latest.outputs.tag }}"
-          case "$BUMP" in
+          IFS='.' read -r major minor patch <<< "$TAG"
+          case "${{ inputs.bump }}" in
             major) major=$((major + 1)); minor=0; patch=0 ;;
             minor) minor=$((minor + 1)); patch=0 ;;
             patch) patch=$((patch + 1)) ;;
           esac
-          echo "new=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
-          echo "Bump type: $BUMP -> ${major}.${minor}.${patch}"
+          echo "version=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
 
-      - name: Create tag and release
+      - name: Create tag
         env:
-          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.bump == 'auto' && steps.semver.outputs.nextStrict || steps.manual.outputs.version }}
         run: |
-          git tag "${{ steps.version.outputs.new }}"
-          git push origin "${{ steps.version.outputs.new }}"
-          gh release create "${{ steps.version.outputs.new }}" --generate-notes
+          git tag "$VERSION"
+          git push origin "$VERSION"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.bump == 'auto' && steps.semver.outputs.nextStrict || steps.manual.outputs.version }}
+          generate_release_notes: true
