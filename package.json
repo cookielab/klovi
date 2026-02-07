@@ -1,14 +1,46 @@
 {
   "name": "@cookielab.io/klovi",
   "version": "1.0.0",
+  "description": "A local web app for browsing and presenting Claude Code session history",
   "module": "index.ts",
   "type": "module",
   "license": "MIT",
-  "private": true,
+  "author": "Cookielab s.r.o.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cookielab/klovi.git"
+  },
+  "homepage": "https://github.com/cookielab/klovi",
+  "bugs": {
+    "url": "https://github.com/cookielab/klovi/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "session-viewer",
+    "ai",
+    "developer-tools",
+    "presentation",
+    "bun"
+  ],
+  "bin": {
+    "klovi": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "index.html",
+    "src/",
+    "favicon.svg",
+    "favicon.ico",
+    "apple-touch-icon.png",
+    "LICENSE.md",
+    "README.md"
+  ],
   "scripts": {
     "dev": "NODE_ENV=development bun --watch index.ts",
     "start": "bun index.ts",
     "build": "bun build ./index.html --outdir dist",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome lint .",
     "format": "bunx biome format --write .",
