@@ -1,6 +1,15 @@
 import { join } from "node:path";
 import pkg from "../package.json";
 
+let version = pkg.version;
+if (version === "0.0.0") {
+  try {
+    version = (await Bun.$`git describe --tags`.text()).trim();
+  } catch {
+    version = "dev";
+  }
+}
+
 let commitHash = "";
 try {
   commitHash = (await Bun.$`git rev-parse --short HEAD`.text()).trim();
@@ -8,7 +17,7 @@ try {
   // git not available
 }
 
-await Bun.$`bun build index.ts --target node --outfile dist/server.js --define process.env.KLOVI_VERSION=${JSON.stringify(pkg.version)} --define process.env.KLOVI_COMMIT=${JSON.stringify(commitHash)}`;
+await Bun.$`bun build index.ts --target node --outfile dist/server.js --define process.env.KLOVI_VERSION=${JSON.stringify(version)} --define process.env.KLOVI_COMMIT=${JSON.stringify(commitHash)}`;
 
 // Prepend shebang for direct CLI execution (package.json "bin" points here)
 const serverPath = join(import.meta.dir, "..", "dist", "server.js");

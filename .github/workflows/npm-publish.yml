@@ -24,6 +24,8 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      - name: Set version from release tag
+        run: npm version "${{ github.event.release.tag_name }}" --no-git-tag-version --allow-same-version
       - run: bun run check
       - run: bun run typecheck
       - run: bun test
