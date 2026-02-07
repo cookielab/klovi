@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readSync } from "node:fs";
 import index from "./index.html";
 import { handleProjects } from "./src/server/api/projects.ts";
 import { handleSession } from "./src/server/api/session.ts";
@@ -7,7 +7,7 @@ import { handleSubAgent } from "./src/server/api/subagent.ts";
 import { handleVersion } from "./src/server/api/version.ts";
 import { getProjectsDir, setProjectsDir } from "./src/server/config.ts";
 
-const PORT = 3583;
+const PORT = Number.parseInt(process.env.PORT || "3583", 10);
 const isDevMode = process.env.NODE_ENV === "development";
 const acceptRisks = process.argv.includes("--accept-risks");
 
@@ -22,6 +22,9 @@ Options:
   --accept-risks           Skip the startup security warning
   --projects-dir <path>    Override the Claude projects directory
   -h, --help               Show this help message
+
+Environment:
+  PORT                     Server port (default: 3583)
 
 The server runs on http://localhost:${PORT} by default.
 `);
@@ -66,7 +69,7 @@ if (!isDevMode && !acceptRisks) {
   process.stdout.write("  Continue? (y/N) ");
 
   const buf = Buffer.alloc(1024);
-  const bytesRead = require("node:fs").readSync(0, buf, 0, 1024, null) as number;
+  const bytesRead = readSync(0, buf, 0, 1024, null);
   const answer = buf.toString("utf-8", 0, bytesRead).trim().toLowerCase();
 
   if (answer !== "y" && answer !== "yes") {
