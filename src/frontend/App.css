@@ -44,10 +44,6 @@
   --header-height: 52px;
 }
 
-body {
-  font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
-}
-
 /* Hacker Dark */
 [data-theme="dark"] {
   --bg-primary: #0d1117;
@@ -578,10 +574,10 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 6px 12px;
-  background: #181825;
+  background: var(--bg-code);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   font-size: 0.75rem;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .code-block-content {
@@ -856,6 +852,23 @@ body {
   color: var(--text-muted);
   font-style: italic;
   padding: 8px 0;
+}
+
+/* Tool section labels (Input / Output) */
+.tool-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+/* Empty list placeholder */
+.empty-list-message {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 /* Fullscreen */
