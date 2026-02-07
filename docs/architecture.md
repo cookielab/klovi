@@ -4,8 +4,8 @@
 
 ```
 Klovi/
-├── index.ts                         # Server entry (Bun.serve, port 3583, CLI flags)
-├── index.html                       # HTML template (imports frontend.tsx)
+├── index.ts                         # Server entry (CLI flags, route wiring, static dir)
+├── index.html                       # HTML template (imports frontend.tsx, built by Bun)
 ├── package.json
 ├── tsconfig.json                    # Strict mode, noUncheckedIndexedAccess
 ├── bunfig.toml                      # Preloads test-setup.ts
@@ -14,12 +14,16 @@ Klovi/
 ├── CLAUDE.md                        # Coding guidelines for Claude
 ├── CONTENT_TYPES.md                 # JSONL content type catalog
 │
+├── scripts/
+│   └── build-server.ts             # Bundles server for Node.js, injects version/commit
+│
 └── src/
     ├── shared/
     │   └── types.ts                 # Shared type definitions (Turn, Session, Project, etc.)
     │
     ├── server/
-    │   ├── config.ts                # CLI flag parsing (--projects-dir, --accept-risks, --help)
+    │   ├── config.ts                # Projects directory configuration
+    │   ├── http.ts                  # HTTP server (node:http), route matching, static files
     │   ├── version.ts               # Version info from package.json
     │   ├── api/
     │   │   ├── projects.ts          # GET /api/projects
@@ -68,7 +72,8 @@ Klovi/
         │   ├── usePresentationMode.ts   # Step-through state machine
         │   └── useKeyboard.ts       # Arrow/Space/Esc/F key bindings
         └── utils/
-            ├── time.ts              # Relative time formatting ("2 hours ago")
+            ├── time.ts              # Relative time formatting + timestamp display
+            ├── model.ts             # Model name shortening (Opus/Sonnet/Haiku)
             └── project.ts           # Project path utilities
 ```
 
@@ -97,24 +102,27 @@ Klovi/
 
 ## Server
 
-Single `Bun.serve()` in `index.ts` with six routes:
+Custom `node:http` server in `src/server/http.ts` with route matching and static file serving. Routes are wired in `index.ts`:
 
 | Route | Handler | Purpose |
 |---|---|---|
-| `/` | HTML import (`index.html`) | Serves bundled frontend |
+| `/*` | Static file serving | Serves pre-built frontend from `dist/public/` |
 | `/api/version` | `handleVersion()` | Server version information |
 | `/api/projects` | `handleProjects()` | Lists all discovered projects |
 | `/api/projects/:encodedPath/sessions` | `handleSessions()` | Lists sessions for a project |
 | `/api/sessions/:sessionId?project=` | `handleSession()` | Returns full parsed session |
 | `/api/sessions/:sessionId/subagents/:agentId?project=` | `handleSubAgent()` | Returns sub-agent session |
 
-Bun's HTML import system bundles the frontend (TSX, CSS) automatically. HMR enabled in development.
+### Build Pipeline
+
+The frontend is built with `bun build` (HTML imports) into `dist/public/`. The server is bundled with `bun build --target node` into `dist/server.js` with a Node.js shebang for CLI execution. In development, `bun --watch index.ts` serves the pre-built frontend with auto-reload.
 
 ### CLI Flags
 
 | Flag | Description |
 |---|---|
 | `--help` / `-h` | Show usage information and exit |
+| `--port <number>` | Specify server port (default: 3583) |
 | `--projects-dir <path>` | Override the Claude projects directory |
 | `--accept-risks` | Skip the startup security warning |
 

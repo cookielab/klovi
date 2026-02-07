@@ -164,7 +164,7 @@ Arrive as user messages with content array:
 | Text result | `content` is string | Handled | Monospace, truncated at 5000 chars |
 | Error result | `is_error: true` | Handled | Red text (`.tool-call-error`) |
 | Array content | `content` is array of objects | Partially | Joins text items |
-| Image in result | `content[].type === "image"` | Not handled | Should render thumbnail |
+| Image in result | `content[].type === "image"` | Handled | Rendered as clickable thumbnails |
 | Empty result | `content` is empty/null | Handled | Shows nothing |
 
 ---
@@ -252,15 +252,15 @@ Fields available on message lines for potential display:
 
 | Field | Example | Currently Used |
 |-------|---------|---------------|
-| `timestamp` | `"2025-02-06T10:30:00Z"` | No |
-| `uuid` | `"abc-123..."` | No |
+| `timestamp` | `"2025-02-06T10:30:00Z"` | Yes (shown on user and assistant messages) |
+| `uuid` | `"abc-123..."` | Yes (turn identity) |
 | `parentUuid` | `"def-456..."` | No |
 | `model` | `"claude-opus-4-6"` | Yes (shown on assistant messages) |
-| `stop_reason` | `"end_turn"`, `"tool_use"` | No |
-| `usage.input_tokens` | `3000` | No |
-| `usage.output_tokens` | `500` | No |
-| `usage.cache_read_input_tokens` | `10747` | No |
-| `usage.cache_creation_input_tokens` | `11728` | No |
+| `stop_reason` | `"end_turn"`, `"tool_use"` | Yes (on AssistantTurn) |
+| `usage.input_tokens` | `3000` | Yes (token usage footer on assistant messages) |
+| `usage.output_tokens` | `500` | Yes (token usage footer on assistant messages) |
+| `usage.cache_read_input_tokens` | `10747` | Yes (token usage footer on assistant messages) |
+| `usage.cache_creation_input_tokens` | `11728` | Yes (token usage footer on assistant messages) |
 | `cwd` | `"/Users/user/project"` | No |
 | `gitBranch` | `"main"` | No |
 | `version` | `"2.1.33"` | No |
@@ -269,27 +269,23 @@ Fields available on message lines for potential display:
 
 ## 9. Rendering Priority / Opportunities
 
-### High Priority (commonly seen, not yet styled)
-
-1. **Token usage** - Display input/output/cache token counts per message
-2. **Timestamps** - Show relative or absolute time on messages
-3. **Image results in tool output** - Render base64 images as thumbnails
-
 ### Medium Priority
 
-4. **MCP tools** - Group by server, show server icon, simplify display
-5. **Git metadata** - Branch name, working directory shown in session header
-6. **Stop reason** - Indicate if assistant was cut off vs finished naturally
-7. **`NotebookEdit`** - Show cell edits with notebook-style formatting
+1. **MCP tools** - Group by server, show server icon, simplify display
+2. **Git metadata** - Branch name, working directory shown in session header
+3. **`NotebookEdit`** - Show cell edits with notebook-style formatting
 
 ### Lower Priority
 
-8. **Progress events** - For future replay/streaming mode
-9. **File history snapshots** - For future diff/timeline view
-10. **Summaries** - For future compressed-context indicator
+4. **Progress events** - For future replay/streaming mode
+5. **File history snapshots** - For future diff/timeline view
+6. **Summaries** - For future compressed-context indicator
 
 ### Recently Completed
 
+- **Token usage** - Input/output/cache token counts shown as footer on assistant messages
+- **Timestamps** - Relative timestamps shown on user and assistant messages
+- **Image results in tool output** - Rendered as clickable thumbnails
 - **`AskUserQuestion`** - Summary shows first question text
 - **`Skill`** - Summary shows skill name
 - **`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet` / `TaskOutput` / `TaskStop`** - Summaries for all task management tools

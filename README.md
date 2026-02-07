@@ -9,10 +9,10 @@ Klovi reads session data directly from `~/.claude/projects/` (JSONL files) and r
 
 ## Quick Start
 
-Run directly without installing (requires [Bun](https://bun.sh) runtime):
+Run directly without installing (requires [Bun](https://bun.sh) or [Node.js](https://nodejs.org) >=24):
 
 ```bash
-bunx @cookielab.io/klovi
+bunx --bun @cookielab.io/klovi
 npx @cookielab.io/klovi
 yarn dlx @cookielab.io/klovi
 pnpm dlx @cookielab.io/klovi
@@ -50,6 +50,9 @@ bun run dev
 - Syntax-highlighted code blocks (language-aware, Prism)
 - Collapsible tool calls with smart summaries (file paths for Read/Write/Edit, commands for Bash, patterns for Grep/Glob)
 - Collapsible thinking/reasoning blocks
+- Token usage display (input/output/cache tokens per assistant message)
+- Timestamps on messages (relative time format)
+- Tool result images rendered as clickable thumbnails
 - File references (`@filepath.ext`) highlighted as green badges
 - Image attachments displayed as media-type badges
 - Slash commands shown with green `> /command` badge
@@ -67,6 +70,7 @@ bun run dev
 - Font size control (+/- buttons) for projector readability
 
 **CLI**
+- `--port <number>` — specify server port (default: 3583)
 - `--projects-dir <path>` — override the Claude projects directory
 - `--accept-risks` — skip the startup security warning
 - `--help` / `-h` — show usage information
@@ -75,8 +79,11 @@ bun run dev
 
 | Script | Description |
 |---|---|
-| `bun run dev` | Start dev server with HMR (port 3583) |
-| `bun run start` | Start production server |
+| `bun run dev` | Build frontend + start dev server with watch (port 3583) |
+| `bun run start` | Start production server (`node dist/server.js`) |
+| `bun run build` | Build frontend + server for production |
+| `bun run build:frontend` | Bundle frontend into `dist/public/` |
+| `bun run build:server` | Bundle server into `dist/server.js` (Node.js target) |
 | `bun test` | Run all tests |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `bun run lint` | Lint with Biome |
@@ -96,7 +103,7 @@ bun run dev
 
 ## Tech Stack
 
-- [Bun](https://bun.sh) - runtime, bundler, test runner, HTTP server
+- [Bun](https://bun.sh) - runtime, bundler, test runner; [Node.js](https://nodejs.org) - production HTTP server
 - React 19 + TypeScript (strict mode)
 - react-markdown + remark-gfm
 - react-syntax-highlighter (Prism, oneDark theme)

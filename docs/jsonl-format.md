@@ -155,11 +155,11 @@ Available on message lines but not all currently used:
 
 | Field | Example | Used |
 |---|---|---|
-| `timestamp` | `"2025-02-06T10:30:00Z"` | Yes (on turns) |
+| `timestamp` | `"2025-02-06T10:30:00Z"` | Yes (shown on user and assistant messages) |
 | `uuid` | `"abc-123"` | Yes (turn identity) |
 | `model` | `"claude-opus-4-6"` | Yes (assistant badge) |
 | `stop_reason` | `"end_turn"`, `"tool_use"` | Yes (on AssistantTurn) |
-| `usage.*` | Token counts | Yes (on AssistantTurn) |
+| `usage.*` | Token counts | Yes (token usage footer on assistant messages) |
 | `cwd` | `"/Users/user/project"` | No |
 | `gitBranch` | `"main"` | No (used in session list) |
 | `version` | `"2.1.33"` | No |

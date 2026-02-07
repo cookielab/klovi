@@ -167,7 +167,7 @@ Reusable expand/collapse wrapper with animated disclosure. Max height 500px with
 
 ### useFontSize (`src/frontend/hooks/useTheme.ts`)
 
-- Range: 10px to 28px (default 14px)
+- Range: 10px to 28px (default 15px)
 - Persisted to `localStorage` key `klovi-font-size`
 - Sets `--font-size` CSS variable on document
 
