@@ -27,4 +27,4 @@ jobs:
       - run: bun run check
       - run: bun run typecheck
       - run: bun test
-      - run: cp "$NPM_CONFIG_USERCONFIG" ~/.npmrc && bun publish --provenance --access public
+      - run: echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > ~/.npmrc && bun publish --provenance --access public
