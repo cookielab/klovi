@@ -72,7 +72,7 @@ Invocation of a tool. Matched with `tool_result` by `id` / `tool_use_id`.
 |------|--------------|---------------|--------|
 | `Bash` | `command` (80 chars) | Command directly | Handled |
 | `Task` | `description` (60 chars) | Description | Handled |
-| `KillShell` | — | JSON dump | Not styled |
+| `KillShell` | `task_id` or `shell_id` | JSON dump | Summary handled |
 
 ### 3.3 Web Tools
 
@@ -85,32 +85,34 @@ Invocation of a tool. Matched with `tool_result` by `id` / `tool_use_id`.
 
 | Tool | Summary Field | Input Display | Status |
 |------|--------------|---------------|--------|
-| `AskUserQuestion` | — | JSON dump | Not styled |
-| `Skill` | — | JSON dump | Not styled |
+| `AskUserQuestion` | First question text (60 chars) | JSON dump | Summary handled |
+| `Skill` | Skill name | JSON dump | Summary handled |
 
 ### 3.5 Task Management Tools
 
 | Tool | Summary Field | Input Display | Status |
 |------|--------------|---------------|--------|
-| `TaskCreate` | — | JSON dump | Not styled |
-| `TaskUpdate` | — | JSON dump | Not styled |
-| `TaskList` | — | JSON dump | Not styled |
-| `TaskOutput` | — | JSON dump | Not styled |
-| `TodoWrite` | — | JSON dump | Not styled |
+| `TaskCreate` | `subject` (60 chars) | JSON dump | Summary handled |
+| `TaskUpdate` | `#<taskId> → <status>` | JSON dump | Summary handled |
+| `TaskList` | "List all tasks" | JSON dump | Summary handled |
+| `TaskGet` | `#<taskId>` | JSON dump | Summary handled |
+| `TaskOutput` | `task_id` | JSON dump | Summary handled |
+| `TaskStop` | `task_id` or `shell_id` | JSON dump | Summary handled |
+| `TodoWrite` | `subject` (60 chars) | JSON dump | Summary handled |
 
 ### 3.6 Plan Mode Tools
 
 | Tool | Summary Field | Input Display | Status |
 |------|--------------|---------------|--------|
-| `EnterPlanMode` | — | JSON dump | Not styled |
-| `ExitPlanMode` | — | JSON dump | Not styled |
+| `EnterPlanMode` | "Enter plan mode" | JSON dump | Summary handled |
+| `ExitPlanMode` | "Exit plan mode" | JSON dump | Summary handled |
 
 ### 3.7 Notebook Tools
 
 | Tool | Summary Field | Input Display | Status |
 |------|--------------|---------------|--------|
-| `NotebookEdit` | — | JSON dump | Not styled |
-| `NotebookRead` | — | JSON dump | Not styled |
+| `NotebookEdit` | `notebook_path` | JSON dump | Summary handled |
+| `NotebookRead` | `notebook_path` | JSON dump | Summary handled |
 
 ### 3.8 MCP Tools (Model Context Protocol)
 
@@ -269,28 +271,32 @@ Fields available on message lines for potential display:
 
 ### High Priority (commonly seen, not yet styled)
 
-1. **`AskUserQuestion`** - Show the question text and options as a styled card
-2. **`Skill`** - Show skill name and args (e.g., "Skill: commit")
-3. **`TaskCreate` / `TaskUpdate` / `TaskList`** - Show task management as a styled list/status
-4. **Token usage** - Display input/output/cache token counts per message
-5. **Timestamps** - Show relative or absolute time on messages
-6. **Image results in tool output** - Render base64 images as thumbnails
+1. **Token usage** - Display input/output/cache token counts per message
+2. **Timestamps** - Show relative or absolute time on messages
+3. **Image results in tool output** - Render base64 images as thumbnails
 
 ### Medium Priority
 
-7. **`EnterPlanMode` / `ExitPlanMode`** - Visual separator or banner for plan sections
-8. **`NotebookEdit`** - Show cell edits with notebook-style formatting
-9. **MCP tools** - Group by server, show server icon, simplify display
-10. **`KillShell`** - Show as a terminal kill indicator
-11. **Git metadata** - Branch name, working directory shown in session header
-12. **Stop reason** - Indicate if assistant was cut off vs finished naturally
+4. **MCP tools** - Group by server, show server icon, simplify display
+5. **Git metadata** - Branch name, working directory shown in session header
+6. **Stop reason** - Indicate if assistant was cut off vs finished naturally
+7. **`NotebookEdit`** - Show cell edits with notebook-style formatting
 
 ### Lower Priority
 
-13. **Progress events** - For future replay/streaming mode
-14. **File history snapshots** - For future diff/timeline view
-15. **Summaries** - For future compressed-context indicator
-16. **`TodoWrite`** - Show todo items as a checklist
+8. **Progress events** - For future replay/streaming mode
+9. **File history snapshots** - For future diff/timeline view
+10. **Summaries** - For future compressed-context indicator
+
+### Recently Completed
+
+- **`AskUserQuestion`** - Summary shows first question text
+- **`Skill`** - Summary shows skill name
+- **`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet` / `TaskOutput` / `TaskStop`** - Summaries for all task management tools
+- **`EnterPlanMode` / `ExitPlanMode`** - Summaries show mode transitions
+- **`NotebookEdit` / `NotebookRead`** - Summaries show notebook path
+- **`KillShell`** - Summary shows task/shell ID
+- **`TodoWrite`** - Summary shows subject
 
 ---
 

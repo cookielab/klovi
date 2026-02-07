@@ -4,7 +4,7 @@
 
 ```
 Klovi/
-├── index.ts                         # Server entry (Bun.serve, port 3583)
+├── index.ts                         # Server entry (Bun.serve, port 3583, CLI flags)
 ├── index.html                       # HTML template (imports frontend.tsx)
 ├── package.json
 ├── tsconfig.json                    # Strict mode, noUncheckedIndexedAccess
@@ -19,10 +19,14 @@ Klovi/
     │   └── types.ts                 # Shared type definitions (Turn, Session, Project, etc.)
     │
     ├── server/
+    │   ├── config.ts                # CLI flag parsing (--projects-dir, --accept-risks, --help)
+    │   ├── version.ts               # Version info from package.json
     │   ├── api/
     │   │   ├── projects.ts          # GET /api/projects
     │   │   ├── sessions.ts          # GET /api/projects/:path/sessions
-    │   │   └── session.ts           # GET /api/sessions/:id?project=...
+    │   │   ├── session.ts           # GET /api/sessions/:id?project=...
+    │   │   ├── subagent.ts          # GET /api/sessions/:id/subagents/:agentId?project=...
+    │   │   └── version.ts           # GET /api/version
     │   └── parser/
     │       ├── claude-dir.ts        # Project/session discovery from ~/.claude/projects/
     │       ├── session.ts           # JSONL parser: parseSession(), buildTurns()
@@ -36,30 +40,36 @@ Klovi/
         ├── components/
         │   ├── layout/
         │   │   ├── Layout.tsx       # Sidebar + main content flex wrapper
-        │   │   ├── Header.tsx       # Top bar: title, theme, font size, presentation toggle
+        │   │   ├── Header.tsx       # Top bar: title, theme, font size, copy command, back link
         │   │   └── Sidebar.tsx      # Fixed 320px left sidebar
         │   ├── message/
         │   │   ├── MessageList.tsx   # Maps Turn[] to message components
         │   │   ├── UserMessage.tsx   # User bubble: text, commands, attachments
         │   │   ├── AssistantMessage.tsx  # Assistant: thinking + text + tool calls
         │   │   ├── ToolCall.tsx      # Collapsible tool call with smart summary
-        │   │   └── ThinkingBlock.tsx # Collapsible thinking/reasoning block
+        │   │   ├── ThinkingBlock.tsx # Collapsible thinking/reasoning block
+        │   │   └── SubAgentView.tsx  # Inline sub-agent session display
         │   ├── session/
         │   │   ├── SessionView.tsx       # Normal session display (fetches + renders)
-        │   │   └── SessionPresentation.tsx  # Presentation mode with step navigation
+        │   │   ├── SessionPresentation.tsx  # Presentation mode with step navigation
+        │   │   ├── PresentationShell.tsx    # Shared presentation wrapper (keyboard, progress)
+        │   │   └── SubAgentPresentation.tsx # Sub-agent presentation mode
         │   ├── project/
         │   │   ├── ProjectList.tsx   # Home view: all projects
-        │   │   └── SessionList.tsx   # Sidebar: sessions for selected project
+        │   │   ├── SessionList.tsx   # Sidebar: sessions for selected project
+        │   │   └── HiddenProjectList.tsx  # Hidden projects management view
         │   └── ui/
         │       ├── MarkdownRenderer.tsx  # react-markdown + GFM + file ref detection
         │       ├── CodeBlock.tsx     # Syntax-highlighted code (Prism)
         │       └── CollapsibleSection.tsx  # Reusable expand/collapse
         ├── hooks/
         │   ├── useTheme.ts          # Light/dark/system theme + font size persistence
+        │   ├── useHiddenProjects.ts  # Hidden projects state + localStorage persistence
         │   ├── usePresentationMode.ts   # Step-through state machine
-        │   └── useKeyboard.ts       # Arrow/Space/Esc key bindings
+        │   └── useKeyboard.ts       # Arrow/Space/Esc/F key bindings
         └── utils/
-            └── time.ts              # Relative time formatting ("2 hours ago")
+            ├── time.ts              # Relative time formatting ("2 hours ago")
+            └── project.ts           # Project path utilities
 ```
 
 ## Data Flow
@@ -87,16 +97,26 @@ Klovi/
 
 ## Server
 
-Single `Bun.serve()` in `index.ts` with four routes:
+Single `Bun.serve()` in `index.ts` with six routes:
 
 | Route | Handler | Purpose |
 |---|---|---|
 | `/` | HTML import (`index.html`) | Serves bundled frontend |
+| `/api/version` | `handleVersion()` | Server version information |
 | `/api/projects` | `handleProjects()` | Lists all discovered projects |
 | `/api/projects/:encodedPath/sessions` | `handleSessions()` | Lists sessions for a project |
 | `/api/sessions/:sessionId?project=` | `handleSession()` | Returns full parsed session |
+| `/api/sessions/:sessionId/subagents/:agentId?project=` | `handleSubAgent()` | Returns sub-agent session |
 
 Bun's HTML import system bundles the frontend (TSX, CSS) automatically. HMR enabled in development.
+
+### CLI Flags
+
+| Flag | Description |
+|---|---|
+| `--help` / `-h` | Show usage information and exit |
+| `--projects-dir <path>` | Override the Claude projects directory |
+| `--accept-risks` | Skip the startup security warning |
 
 ## Frontend Router
 
@@ -105,8 +125,10 @@ Hash-based routing in `App.tsx`:
 | Hash | ViewState | Content |
 |---|---|---|
 | `#/` | `{ kind: "home" }` | ProjectList in sidebar, empty main |
+| `#/hidden` | `{ kind: "hidden" }` | HiddenProjectList |
 | `#/:encodedPath` | `{ kind: "project", project }` | SessionList in sidebar, empty main |
 | `#/:encodedPath/:sessionId` | `{ kind: "session", project, session }` | SessionList in sidebar, SessionView or SessionPresentation in main |
+| `#/:encodedPath/:sessionId/subagent/:agentId` | `{ kind: "subagent", ... }` | Sub-agent session view or SubAgentPresentation |
 
 Navigation uses `history.pushState` + `popstate` listener for back/forward.
 
@@ -119,18 +141,23 @@ App
 │   │   ├── ProjectList          (home)
 │   │   └── SessionList          (project/session views)
 │   └── main
-│       ├── Header               (always visible)
+│       ├── Header               (always visible, with copyCommand + backHref)
 │       ├── empty-state          (home/project)
+│       ├── HiddenProjectList    (hidden projects view)
 │       ├── SessionView          (session, normal mode)
 │       │   └── MessageList
 │       │       ├── UserMessage
 │       │       ├── AssistantMessage
 │       │       │   ├── ThinkingBlock(s)
 │       │       │   ├── MarkdownRenderer (text blocks)
-│       │       │   └── ToolCall(s)
+│       │       │   ├── ToolCall(s)
+│       │       │   └── SubAgentView (inline sub-agent)
 │       │       └── SystemMessage (inline)
-│       └── SessionPresentation  (session, presenting)
-│           └── MessageList      (with visibility constraints)
+│       ├── SubAgentView         (sub-agent route, normal mode)
+│       ├── PresentationShell    (shared presentation wrapper)
+│       │   └── MessageList      (with visibility constraints)
+│       ├── SessionPresentation  (session, presenting → PresentationShell)
+│       └── SubAgentPresentation (sub-agent, presenting → PresentationShell)
 ```
 
 ## Type System
@@ -170,7 +197,7 @@ Two themes defined via CSS variables on `:root` (light) and `[data-theme="dark"]
 | `--accent` | `#1a7f37` | `#3fb950` |
 | `--error` | `#cf222e` | `#f85149` |
 
-Theme selection persisted to `localStorage` key `klovi-theme`. Font size to `klovi-font-size`.
+Theme selection persisted to `localStorage` key `klovi-theme`. Font size to `klovi-font-size`. Hidden projects to `klovi-hidden-projects`.
 
 ## Key Design Decisions
 

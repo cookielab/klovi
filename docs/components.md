@@ -53,10 +53,28 @@ Collapsible tool call display. Key features:
 | `Task` | `description` | 60 chars |
 | `WebFetch` | `url` | 60 chars |
 | `WebSearch` | `query` | 60 chars |
+| `AskUserQuestion` | First question text | 60 chars |
+| `Skill` | Skill name | full |
+| `TaskCreate` | `subject` | 60 chars |
+| `TaskUpdate` | `#<taskId> → <status>` | full |
+| `TaskList` | "List all tasks" | full |
+| `TaskGet` | `#<taskId>` | full |
+| `TaskOutput` | `task_id` | full |
+| `TaskStop` | `task_id` or `shell_id` | full |
+| `KillShell` | `task_id` or `shell_id` | full |
+| `EnterPlanMode` | "Enter plan mode" | full |
+| `ExitPlanMode` | "Exit plan mode" | full |
+| `NotebookEdit` | `notebook_path` | full |
+| `NotebookRead` | `notebook_path` | full |
+| `TodoWrite` | `subject` | 60 chars |
 | `mcp__*` | Parsed `server: action` | full |
 | Others | `null` (shows tool name only) | - |
 
 MCP tools follow the `mcp__<server>__<action>` naming pattern. The server name is extracted and shown as a badge prefix.
+
+### SubAgentView (`src/frontend/components/message/SubAgentView.tsx`)
+
+Displays a sub-agent conversation inline within the parent session. Fetches sub-agent data from `/api/sessions/:id/subagents/:agentId` and renders it using `MessageList` with the `isSubAgent` flag.
 
 ### ThinkingBlock (`src/frontend/components/message/ThinkingBlock.tsx`)
 
@@ -72,6 +90,8 @@ Flex container: sidebar (320px fixed) + main content area. `hideSidebar` prop hi
 
 Top bar with:
 - Title + optional breadcrumb (project path)
+- Copy resume command button (when `copyCommand` prop is provided)
+- Back link (when `backHref` prop is provided, used for sub-agent navigation)
 - Theme toggle button (cycles: system → light → dark)
 - Font size +/- buttons
 - Presentation mode toggle (play/stop icon)
@@ -90,6 +110,10 @@ Fetches `/api/projects` and renders a filterable list. Each project shows name (
 
 Fetches `/api/projects/:path/sessions` and renders session cards. Each shows first message preview, model, git branch, and relative timestamp. Highlights selected session.
 
+### HiddenProjectList (`src/frontend/components/project/HiddenProjectList.tsx`)
+
+Displays hidden projects with unhide functionality. Fetches all projects from `/api/projects` and filters to show only those in the hidden set. Provides an unhide button per project and a back link to the home view.
+
 ## Session Components
 
 ### SessionView (`src/frontend/components/session/SessionView.tsx`)
@@ -98,7 +122,21 @@ Normal session display. Fetches `/api/sessions/:id?project=...` and passes turns
 
 ### SessionPresentation (`src/frontend/components/session/SessionPresentation.tsx`)
 
-Presentation mode wrapper. Uses `usePresentationMode` hook for step state and `useKeyboard` for controls. Auto-scrolls to bottom on step changes. Shows progress bar at bottom.
+Presentation mode entry point. Fetches session data and delegates to `PresentationShell` for rendering.
+
+### PresentationShell (`src/frontend/components/session/PresentationShell.tsx`)
+
+Shared presentation wrapper used by both `SessionPresentation` and `SubAgentPresentation`. Manages:
+- Step-through state via `usePresentationMode` hook
+- Keyboard controls via `useKeyboard` hook
+- Auto-scrolling to bottom on step changes
+- Progress bar with step counter
+- Fullscreen support
+- Keyboard shortcut hints overlay
+
+### SubAgentPresentation (`src/frontend/components/session/SubAgentPresentation.tsx`)
+
+Fetches sub-agent session data from `/api/sessions/:id/subagents/:agentId` and renders it in `PresentationShell` with the `isSubAgent` flag.
 
 ## UI Components
 
@@ -142,10 +180,20 @@ Step-through state machine for presentations:
 - Tracks `visibleTurns` count and `visibleSubSteps` Map (turnIndex → subStepCount)
 - Methods: `enter()`, `exit()`, `next()`, `prev()`, `toggleFullscreen()`
 
+### useHiddenProjects (`src/frontend/hooks/useHiddenProjects.ts`)
+
+Manages hidden project state persisted to `localStorage` key `klovi-hidden-projects`:
+- `hiddenIds` — `Set<string>` of hidden project encoded paths
+- `hide(encodedPath)` — add project to hidden set
+- `unhide(encodedPath)` — remove project from hidden set
+- `isHidden(encodedPath)` — check if project is hidden
+
 ### useKeyboard (`src/frontend/hooks/useKeyboard.ts`)
 
 Keyboard event handler for presentation mode:
-- ArrowRight / ArrowDown / Space → next step
-- ArrowLeft / ArrowUp → previous step
+- ArrowRight / Space → next step (within a turn)
+- ArrowLeft → previous step (within a turn)
+- ArrowDown → next turn
+- ArrowUp → previous turn
 - Escape → exit presentation
-- F → toggle fullscreen
+- F → toggle fullscreen (without Ctrl/Cmd modifier)

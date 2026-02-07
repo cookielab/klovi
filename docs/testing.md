@@ -36,6 +36,7 @@ bun test --watch            # Watch mode
 | `src/frontend/components/message/UserMessage.test.tsx` | User messages | Regular text, commands, status notices, attachments |
 | `src/frontend/components/message/AssistantMessage.test.tsx` | Assistant messages | Thinking, text, tool calls, model display |
 | `src/frontend/components/message/ToolCall.test.tsx` | Tool calls | `getToolSummary()` for all tool types, MCP parsing |
+| `src/frontend/hooks/useHiddenProjects.test.ts` | Hidden projects | `useHiddenProjects` hook: hide, unhide, localStorage persistence |
 | `src/frontend/utils/time.test.ts` | Time formatting | Relative time strings |
 
 ## Patterns

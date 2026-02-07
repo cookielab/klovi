@@ -11,6 +11,12 @@ bun install
 bun run dev
 ```
 
+Or run directly via npx:
+
+```bash
+bunx @cookielab.io/klovi
+```
+
 Open http://localhost:3583
 
 ## Features
@@ -18,8 +24,11 @@ Open http://localhost:3583
 **Session Browsing**
 - Auto-discovers all projects from `~/.claude/projects/`
 - Filterable project list with session counts and last activity
+- Hide/unhide projects to declutter the list
 - Sessions show first message, model, git branch, and timestamp
 - Full conversation rendering with user/assistant/system messages
+- Sub-agent browsing: navigate into Task tool sub-agent sessions
+- Copy resume command (`claude --resume <id>`) from session header
 
 **Message Rendering**
 - Markdown with GFM support (tables, strikethrough, task lists)
@@ -42,24 +51,33 @@ Open http://localhost:3583
 - System theme auto-detection
 - Font size control (+/- buttons) for projector readability
 
+**CLI**
+- `--projects-dir <path>` — override the Claude projects directory
+- `--accept-risks` — skip the startup security warning
+- `--help` / `-h` — show usage information
+
 ## Scripts
 
 | Script | Description |
 |---|---|
 | `bun run dev` | Start dev server with HMR (port 3583) |
+| `bun run start` | Start production server |
 | `bun test` | Run all tests |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `bun run lint` | Lint with Biome |
 | `bun run format` | Format with Biome |
-| `bun run check:fix` | Lint + format combined |
+| `bun run check` | Biome check (lint + format, no write) |
+| `bun run check:fix` | Biome check + auto-fix |
 
 ## API
 
 | Endpoint | Description |
 |---|---|
+| `GET /api/version` | Server version information |
 | `GET /api/projects` | List all discovered projects |
 | `GET /api/projects/:encodedPath/sessions` | List sessions for a project |
 | `GET /api/sessions/:id?project=:encodedPath` | Full parsed session with turns |
+| `GET /api/sessions/:id/subagents/:agentId?project=:encodedPath` | Sub-agent session data |
 
 ## Tech Stack
 
