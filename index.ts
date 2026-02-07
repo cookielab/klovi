@@ -9,7 +9,21 @@ import { handleVersion } from "./src/server/api/version.ts";
 import { getProjectsDir, setProjectsDir } from "./src/server/config.ts";
 import { startServer } from "./src/server/http.ts";
 
-const PORT = Number.parseInt(process.env.PORT || "3583", 10);
+const portIdx = process.argv.indexOf("--port");
+let port = 3583;
+if (portIdx !== -1) {
+  const val = process.argv[portIdx + 1];
+  if (!val || val.startsWith("-")) {
+    console.error("Error: --port requires a number argument.");
+    process.exit(1);
+  }
+  port = Number.parseInt(val, 10);
+  if (Number.isNaN(port) || port < 1 || port > 65535) {
+    console.error("Error: --port must be a valid port number (1-65535).");
+    process.exit(1);
+  }
+}
+
 const acceptRisks = process.argv.includes("--accept-risks");
 
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -21,13 +35,11 @@ Usage:
 
 Options:
   --accept-risks           Skip the startup security warning
+  --port <number>          Server port (default: 3583)
   --projects-dir <path>    Override the Claude projects directory
   -h, --help               Show this help message
 
-Environment:
-  PORT                     Server port (default: 3583)
-
-The server runs on http://localhost:${PORT} by default.
+The server runs on http://localhost:3583 by default.
 `);
   process.exit(0);
 }
@@ -62,7 +74,7 @@ if (!acceptRisks) {
   console.log("  Session data may contain sensitive information such as API keys,");
   console.log("  credentials, or private code snippets.");
   console.log("");
-  console.log(`  The server will expose this data on ${bold}http://localhost:${PORT}${reset}.`);
+  console.log(`  The server will expose this data on ${bold}http://localhost:${port}${reset}.`);
   console.log("");
   console.log(`  ${dim}To skip this prompt, pass --accept-risks${reset}`);
   console.log("");
@@ -89,7 +101,7 @@ const staticDir = existsSync(join(__dirname, "public", "index.html"))
   : join(__dirname, "dist", "public");
 
 startServer(
-  PORT,
+  port,
   [
     { pattern: "/api/version", handler: () => handleVersion() },
     { pattern: "/api/projects", handler: () => handleProjects() },
@@ -121,4 +133,4 @@ startServer(
   staticDir,
 );
 
-console.log(`Klovi running at http://localhost:${PORT}`);
+console.log(`Klovi running at http://localhost:${port}`);
