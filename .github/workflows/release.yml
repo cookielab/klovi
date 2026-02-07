@@ -4,10 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       bump:
-        description: "Version bump type"
+        description: "Version bump type (auto = detect from conventional commits)"
         required: true
         type: choice
+        default: auto
         options:
+          - auto
           - patch
           - minor
           - major
@@ -28,16 +30,41 @@ jobs:
           TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+      - name: Detect bump from conventional commits
+        if: inputs.bump == 'auto'
+        id: detect
+        run: |
+          TAG="${{ steps.latest.outputs.tag }}"
+          if [ "$TAG" = "0.0.0" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${TAG}..HEAD"
+          fi
+
+          BUMP="patch"
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qiE '^[a-z]+(\(.+\))?!:|BREAKING CHANGE'; then
+              BUMP="major"
+              break
+            elif echo "$msg" | grep -qE '^feat(\(.+\))?:'; then
+              BUMP="minor"
+            fi
+          done < <(git log --format='%s' "$RANGE")
+
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+
       - name: Calculate new version
         id: version
         run: |
+          BUMP="${{ inputs.bump == 'auto' && steps.detect.outputs.bump || inputs.bump }}"
           IFS='.' read -r major minor patch <<< "${{ steps.latest.outputs.tag }}"
-          case "${{ inputs.bump }}" in
+          case "$BUMP" in
             major) major=$((major + 1)); minor=0; patch=0 ;;
             minor) minor=$((minor + 1)); patch=0 ;;
             patch) patch=$((patch + 1)) ;;
           esac
           echo "new=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+          echo "Bump type: $BUMP -> ${major}.${minor}.${patch}"
 
       - name: Create tag and release
         env:
