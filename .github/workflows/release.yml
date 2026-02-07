@@ -3,16 +3,10 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      bump:
-        description: "Version bump type (auto = detect from conventional commits)"
-        required: true
-        type: choice
-        default: auto
-        options:
-          - auto
-          - patch
-          - minor
-          - major
+      version:
+        description: "Specific version to release (e.g. 1.2.3), or leave empty for auto-detect from conventional commits"
+        required: false
+        type: string
 
 jobs:
   release:
@@ -25,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Determine next version (auto)
-        if: inputs.bump == 'auto'
+        if: inputs.version == ''
         id: semver
         uses: ietf-tools/semver-action@v1
         with:
@@ -33,22 +27,17 @@ jobs:
           noVersionBumpBehavior: patch
           noNewCommitBehavior: patch
 
-      - name: Determine next version (manual)
-        if: inputs.bump != 'auto'
-        id: manual
+      - name: Validate manual version
+        if: inputs.version != ''
         run: |
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          IFS='.' read -r major minor patch <<< "$TAG"
-          case "${{ inputs.bump }}" in
-            major) major=$((major + 1)); minor=0; patch=0 ;;
-            minor) minor=$((minor + 1)); patch=0 ;;
-            patch) patch=$((patch + 1)) ;;
-          esac
-          echo "version=${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+          if ! echo "${{ inputs.version }}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Invalid version format '${{ inputs.version }}'. Expected X.Y.Z"
+            exit 1
+          fi
 
       - name: Create tag
         env:
-          VERSION: ${{ inputs.bump == 'auto' && steps.semver.outputs.nextStrict || steps.manual.outputs.version }}
+          VERSION: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
         run: |
           git tag "$VERSION"
           git push origin "$VERSION"
@@ -56,5 +45,5 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.bump == 'auto' && steps.semver.outputs.nextStrict || steps.manual.outputs.version }}
+          tag_name: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
           generate_release_notes: true
