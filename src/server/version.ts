@@ -1,20 +1,21 @@
-const packageJsonPath = new URL("../../package.json", import.meta.url).pathname;
-const packageJson = await Bun.file(packageJsonPath).json();
-const version: string = packageJson.version;
+import { execFile as execFileCb } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { promisify } from "node:util";
 
-let commitHash: string | null = null;
-try {
-  const proc = Bun.spawn(["git", "rev-parse", "--short", "HEAD"], {
-    stdout: "pipe",
-    stderr: "ignore",
-  });
-  const output = await new Response(proc.stdout).text();
-  await proc.exited;
-  if (proc.exitCode === 0) {
-    commitHash = output.trim();
+const execFile = promisify(execFileCb);
+
+const packageJsonPath = new URL("../../package.json", import.meta.url).pathname;
+const version: string =
+  process.env.KLOVI_VERSION ?? JSON.parse(await readFile(packageJsonPath, "utf-8")).version;
+
+let commitHash: string | null = process.env.KLOVI_COMMIT ?? null;
+if (!commitHash) {
+  try {
+    const { stdout } = await execFile("git", ["rev-parse", "--short", "HEAD"]);
+    commitHash = stdout.trim() || null;
+  } catch {
+    // git not available
   }
-} catch {
-  // git not available
 }
 
 export const appVersion = { version, commitHash };

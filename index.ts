@@ -1,14 +1,15 @@
 import { existsSync, readSync } from "node:fs";
-import index from "./index.html";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { handleProjects } from "./src/server/api/projects.ts";
 import { handleSession } from "./src/server/api/session.ts";
 import { handleSessions } from "./src/server/api/sessions.ts";
 import { handleSubAgent } from "./src/server/api/subagent.ts";
 import { handleVersion } from "./src/server/api/version.ts";
 import { getProjectsDir, setProjectsDir } from "./src/server/config.ts";
+import { startServer } from "./src/server/http.ts";
 
 const PORT = Number.parseInt(process.env.PORT || "3583", 10);
-const isDevMode = process.env.NODE_ENV === "development";
 const acceptRisks = process.argv.includes("--accept-risks");
 
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -16,7 +17,7 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 Klovi — a web viewer for Claude Code sessions
 
 Usage:
-  bun index.ts [options]
+  klovi [options]
 
 Options:
   --accept-risks           Skip the startup security warning
@@ -48,7 +49,7 @@ if (!existsSync(resolvedDir)) {
   process.exit(1);
 }
 
-if (!isDevMode && !acceptRisks) {
+if (!acceptRisks) {
   const yellow = "\x1b[33m";
   const bold = "\x1b[1m";
   const reset = "\x1b[0m";
@@ -80,46 +81,44 @@ if (!isDevMode && !acceptRisks) {
   console.log("");
 }
 
-Bun.serve({
-  port: PORT,
-  routes: {
-    "/": index,
-    "/api/version": {
-      GET: () => handleVersion(),
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// When bundled into dist/server.js, __dirname is "dist/" so public/ is a sibling.
+// When running from source (bun index.ts), __dirname is project root so public/ is in dist/public/.
+const staticDir = existsSync(join(__dirname, "public", "index.html"))
+  ? join(__dirname, "public")
+  : join(__dirname, "dist", "public");
+
+startServer(
+  PORT,
+  [
+    { pattern: "/api/version", handler: () => handleVersion() },
+    { pattern: "/api/projects", handler: () => handleProjects() },
+    {
+      pattern: "/api/projects/:encodedPath/sessions",
+      handler: (_req, p) => handleSessions(p.encodedPath!),
     },
-    "/api/projects": {
-      GET: () => handleProjects(),
-    },
-    "/api/projects/:encodedPath/sessions": {
-      GET: (req) => handleSessions(req.params.encodedPath),
-    },
-    "/api/sessions/:sessionId": {
-      GET: (req) => {
-        const url = new URL(req.url);
-        const project = url.searchParams.get("project");
+    {
+      pattern: "/api/sessions/:sessionId",
+      handler: (req, p) => {
+        const project = new URL(req.url).searchParams.get("project");
         if (!project) {
           return Response.json({ error: "project query parameter required" }, { status: 400 });
         }
-        return handleSession(req.params.sessionId, project);
+        return handleSession(p.sessionId!, project);
       },
     },
-    "/api/sessions/:sessionId/subagents/:agentId": {
-      GET: (req) => {
-        const url = new URL(req.url);
-        const project = url.searchParams.get("project");
+    {
+      pattern: "/api/sessions/:sessionId/subagents/:agentId",
+      handler: (req, p) => {
+        const project = new URL(req.url).searchParams.get("project");
         if (!project) {
           return Response.json({ error: "project query parameter required" }, { status: 400 });
         }
-        return handleSubAgent(req.params.sessionId, req.params.agentId, project);
+        return handleSubAgent(p.sessionId!, p.agentId!, project);
       },
     },
-  },
-  development: isDevMode
-    ? {
-        hmr: true,
-        console: true,
-      }
-    : false,
-});
+  ],
+  staticDir,
+);
 
 console.log(`Klovi running at http://localhost:${PORT}`);

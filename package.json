@@ -24,26 +24,23 @@
     "bun"
   ],
   "engines": {
+    "node": ">=24.0.0",
     "bun": ">=1.2"
   },
   "bin": {
-    "klovi": "bin/klovi.cjs"
+    "klovi": "dist/server.js"
   },
   "files": [
-    "bin/",
-    "index.ts",
-    "index.html",
-    "src/",
-    "favicon.svg",
-    "favicon.ico",
-    "apple-touch-icon.png",
+    "dist/",
     "LICENSE.md",
     "README.md"
   ],
   "scripts": {
-    "dev": "NODE_ENV=development bun --watch index.ts",
-    "start": "bun index.ts",
-    "build": "bun build ./index.html --outdir dist",
+    "dev": "bun run build:frontend && NODE_ENV=development bun --watch index.ts",
+    "start": "node dist/server.js",
+    "build": "bun run build:frontend && bun run build:server",
+    "build:frontend": "rm -rf dist/public && bun build ./index.html --outdir dist/public",
+    "build:server": "node scripts/build-server.cjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome lint .",

@@ -122,8 +122,8 @@ export function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
 }
 
 async function readJsonlLines(filePath: string): Promise<RawLine[]> {
-  const file = Bun.file(filePath);
-  const text = await file.text();
+  const { readFile } = await import("node:fs/promises");
+  const text = await readFile(filePath, "utf-8");
   return text
     .split("\n")
     .filter((l) => l.trim())

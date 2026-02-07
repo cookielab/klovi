@@ -1,4 +1,4 @@
-import { readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { Project, SessionSummary } from "../../shared/types.ts";
 import { getProjectsDir } from "../config.ts";
@@ -63,8 +63,7 @@ export async function listSessions(encodedPath: string): Promise<SessionSummary[
 }
 
 async function extractCwd(filePath: string): Promise<string> {
-  const file = Bun.file(filePath);
-  const text = await file.text();
+  const text = await readFile(filePath, "utf-8");
   const lines = text.split("\n");
 
   for (const line of lines.slice(0, 20)) {
@@ -124,8 +123,7 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 async function extractSessionMeta(
   filePath: string,
 ): Promise<Omit<SessionSummary, "sessionId"> | null> {
-  const file = Bun.file(filePath);
-  const text = await file.text();
+  const text = await readFile(filePath, "utf-8");
   const lines = text.split("\n");
 
   const meta: MetaFields = { timestamp: "", slug: "", firstMessage: "", model: "", gitBranch: "" };
