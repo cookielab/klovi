@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
+import { shortModel } from "../../utils/model.ts";
+import { formatTime } from "../../utils/time.ts";
 
 interface SessionListProps {
   project: Project;
@@ -49,34 +51,8 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
           </div>
         ))}
       {!loading && sessions.length === 0 && (
-        <div
-          style={{
-            padding: "20px",
-            textAlign: "center",
-            color: "var(--text-muted)",
-            fontSize: "0.85rem",
-          }}
-        >
-          No sessions found
-        </div>
+        <div className="empty-list-message">No sessions found</div>
       )}
     </div>
   );
-}
-
-function shortModel(model: string): string {
-  if (model.includes("opus")) return "Opus";
-  if (model.includes("sonnet")) return "Sonnet";
-  if (model.includes("haiku")) return "Haiku";
-  return model;
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

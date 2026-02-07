@@ -1,5 +1,6 @@
 import type React from "react";
 import type { AssistantTurn } from "../../../shared/types.ts";
+import { shortModel } from "../../utils/model.ts";
 import { formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { ThinkingBlock } from "./ThinkingBlock.tsx";
@@ -86,11 +87,4 @@ export function AssistantMessage({
       )}
     </div>
   );
-}
-
-function shortModel(model: string): string {
-  if (model.includes("opus")) return "Opus";
-  if (model.includes("sonnet")) return "Sonnet";
-  if (model.includes("haiku")) return "Haiku";
-  return model;
 }

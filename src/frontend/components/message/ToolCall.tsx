@@ -1,6 +1,10 @@
 import type { ToolCallWithResult } from "../../../shared/types.ts";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
 
+const MAX_OUTPUT_LENGTH = 5000;
+const MAX_CONTENT_LENGTH = 2000;
+export const MAX_THINKING_PREVIEW = 100;
+
 interface ToolCallProps {
   call: ToolCallWithResult;
   sessionId?: string;
@@ -40,32 +44,12 @@ export function ToolCall({ call, sessionId, project }: ToolCallProps) {
         }
       >
         <div style={{ marginBottom: 8 }}>
-          <div
-            style={{
-              fontSize: "0.7rem",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              color: "var(--text-muted)",
-              marginBottom: 4,
-            }}
-          >
-            Input
-          </div>
+          <div className="tool-section-label">Input</div>
           <div className="tool-call-input">{formatToolInput(call)}</div>
         </div>
         {(call.result || (call.resultImages && call.resultImages.length > 0)) && (
           <div>
-            <div
-              style={{
-                fontSize: "0.7rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                color: "var(--text-muted)",
-                marginBottom: 4,
-              }}
-            >
-              Output
-            </div>
+            <div className="tool-section-label">Output</div>
             {call.result && (
               <div className={`tool-call-output ${call.isError ? "tool-call-error" : ""}`}>
                 {truncateOutput(call.result)}
@@ -168,7 +152,7 @@ function formatEditInput(input: Input): string {
 function formatWriteInput(input: Input): string {
   const parts: string[] = [];
   if (input.file_path) parts.push(`File: ${input.file_path}`);
-  if (input.content) parts.push(`Content:\n${truncate(String(input.content), 2000)}`);
+  if (input.content) parts.push(`Content:\n${truncate(String(input.content), MAX_CONTENT_LENGTH)}`);
   return parts.join("\n\n");
 }
 
@@ -200,7 +184,8 @@ function formatNotebookEditInput(input: Input): string {
   if (input.notebook_path) parts.push(`Notebook: ${input.notebook_path}`);
   if (input.cell_number !== undefined) parts.push(`Cell: ${input.cell_number}`);
   if (input.edit_mode) parts.push(`Mode: ${input.edit_mode}`);
-  if (input.new_source) parts.push(`Source:\n${truncate(String(input.new_source), 2000)}`);
+  if (input.new_source)
+    parts.push(`Source:\n${truncate(String(input.new_source), MAX_CONTENT_LENGTH)}`);
   return parts.join("\n") || JSON.stringify(input, null, 2);
 }
 
@@ -261,6 +246,6 @@ function truncate(s: string, max: number): string {
 }
 
 function truncateOutput(s: string): string {
-  if (s.length <= 5000) return s;
-  return `${s.slice(0, 5000)}\n\n... (truncated)`;
+  if (s.length <= MAX_OUTPUT_LENGTH) return s;
+  return `${s.slice(0, MAX_OUTPUT_LENGTH)}\n\n... (truncated)`;
 }
