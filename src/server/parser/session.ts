@@ -1,4 +1,3 @@
-import { homedir } from "node:os";
 import { join } from "node:path";
 import type {
   AssistantTurn,
@@ -9,13 +8,12 @@ import type {
   Turn,
   UserTurn,
 } from "../../shared/types.ts";
+import { getProjectsDir } from "../config.ts";
 import { parseCommandMessage } from "./command-message.ts";
 import type { RawContentBlock, RawLine, RawToolResultBlock } from "./types.ts";
 
-const PROJECTS_DIR = join(homedir(), ".claude", "projects");
-
 export async function parseSession(sessionId: string, encodedPath: string): Promise<Session> {
-  const rawLines = await readJsonlLines(join(PROJECTS_DIR, encodedPath, `${sessionId}.jsonl`));
+  const rawLines = await readJsonlLines(join(getProjectsDir(), encodedPath, `${sessionId}.jsonl`));
 
   const subAgentMap = extractSubAgentMap(rawLines);
   const turns = buildTurns(rawLines);
@@ -46,7 +44,7 @@ export async function parseSubAgentSession(
   agentId: string,
 ): Promise<Session> {
   const filePath = join(
-    PROJECTS_DIR,
+    getProjectsDir(),
     encodedPath,
     sessionId,
     "subagents",

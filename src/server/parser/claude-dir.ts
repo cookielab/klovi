@@ -1,21 +1,18 @@
 import { readdir, stat } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Project, SessionSummary } from "../../shared/types.ts";
+import { getProjectsDir } from "../config.ts";
 import { cleanCommandMessage } from "./command-message.ts";
 import type { RawContentBlock, RawLine } from "./types.ts";
 
-const CLAUDE_DIR = join(homedir(), ".claude");
-const PROJECTS_DIR = join(CLAUDE_DIR, "projects");
-
 export async function discoverProjects(): Promise<Project[]> {
-  const entries = await readdir(PROJECTS_DIR, { withFileTypes: true });
+  const entries = await readdir(getProjectsDir(), { withFileTypes: true });
   const projects: Project[] = [];
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
 
-    const projectDir = join(PROJECTS_DIR, entry.name);
+    const projectDir = join(getProjectsDir(), entry.name);
     const sessionFiles = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
     if (sessionFiles.length === 0) continue;
 
@@ -50,7 +47,7 @@ export async function discoverProjects(): Promise<Project[]> {
 }
 
 export async function listSessions(encodedPath: string): Promise<SessionSummary[]> {
-  const projectDir = join(PROJECTS_DIR, encodedPath);
+  const projectDir = join(getProjectsDir(), encodedPath);
   const files = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
   const sessions: SessionSummary[] = [];
 
@@ -156,8 +153,14 @@ async function extractSessionMeta(
 function decodeEncodedPath(encoded: string): string {
   // Encoded path has leading dash and dashes for slashes
   // e.g. "-Users-foo-Workspace-bar" -> "/Users/foo/Workspace/bar"
+  // Windows: "-C-Users-foo-bar" -> "C:/Users/foo/bar"
   if (encoded.startsWith("-")) {
-    return `/${encoded.slice(1).replace(/-/g, "/")}`;
+    const withSlashes = encoded.slice(1).replace(/-/g, "/");
+    // On Windows, detect single-letter drive prefix (e.g. "C/Users/...")
+    if (process.platform === "win32" && /^[A-Za-z]\//.test(withSlashes)) {
+      return `${withSlashes[0]}:${withSlashes.slice(1)}`;
+    }
+    return `/${withSlashes}`;
   }
   return encoded.replace(/-/g, "/");
 }
