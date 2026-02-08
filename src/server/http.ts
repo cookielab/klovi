@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join } from "node:path";
+import { extname, resolve, sep } from "node:path";
 
 export interface Route {
   pattern: string;
@@ -37,20 +37,26 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 async function serveStatic(pathname: string, staticDir: string): Promise<Response | null> {
-  const safePath = pathname.replace(/\.\./g, "");
-  const filePath = join(staticDir, safePath === "/" ? "index.html" : safePath);
+  const requestedPath = pathname === "/" ? "index.html" : pathname.slice(1);
+  const absoluteStaticDir = resolve(staticDir);
+  const absoluteFilePath = resolve(staticDir, requestedPath);
+
+  // Prevent path traversal attacks
+  if (!absoluteFilePath.startsWith(absoluteStaticDir + sep) && absoluteFilePath !== absoluteStaticDir) {
+    return null;
+  }
 
   try {
-    const data = await readFile(filePath);
-    const ext = extname(filePath);
+    const data = await readFile(absoluteFilePath);
+    const ext = extname(absoluteFilePath);
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
     return new Response(data, {
       headers: { "content-type": contentType },
     });
   } catch {
     // File not found — SPA fallback to index.html
-    if (safePath !== "/index.html" && !extname(safePath)) {
-      const indexPath = join(staticDir, "index.html");
+    if (pathname !== "/index.html" && !extname(pathname)) {
+      const indexPath = resolve(staticDir, "index.html");
       try {
         const data = await readFile(indexPath);
         return new Response(data, {
