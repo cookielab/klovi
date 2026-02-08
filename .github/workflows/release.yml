@@ -65,3 +65,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
         run: gh workflow run npm-publish.yml --ref "$VERSION" -f version="$VERSION"
+
+      - name: Trigger Homebrew release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
+        run: gh workflow run homebrew-release.yml --ref "$VERSION" -f version="$VERSION"

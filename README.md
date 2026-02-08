@@ -31,6 +31,13 @@ bun install -g @cookielab.io/klovi
 klovi
 ```
 
+Or install via [Homebrew](https://brew.sh) (no runtime dependency):
+
+```bash
+brew install cookielab/tap/klovi
+klovi
+```
+
 Open http://localhost:3583
 
 ### Development

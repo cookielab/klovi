@@ -41,6 +41,7 @@
     "build": "bun run build:frontend && bun run build:server",
     "build:frontend": "rm -rf dist/public && bun build ./index.html --outdir dist/public",
     "build:server": "bun scripts/build-server.ts",
+    "build:compile": "bun scripts/build-compile.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome lint .",
