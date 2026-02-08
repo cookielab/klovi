@@ -8,6 +8,11 @@ export interface Route {
   handler: (req: Request, params: Record<string, string>) => Response | Promise<Response>;
 }
 
+export interface EmbeddedAsset {
+  data: Uint8Array;
+  contentType: string;
+}
+
 function matchRoute(pattern: string, pathname: string): Record<string, string> | null {
   const patternParts = pattern.split("/");
   const pathParts = pathname.split("/");
@@ -73,36 +78,82 @@ async function serveStatic(pathname: string, staticDir: string): Promise<Respons
   }
 }
 
-export function startServer(port: number, routes: Route[], staticDir: string): void {
-  const hasStaticDir = existsSync(staticDir);
+function serveEmbedded(pathname: string, assets: Map<string, EmbeddedAsset>): Response | null {
+  const key = pathname === "/" ? "index.html" : pathname.slice(1);
+  const asset = assets.get(key);
+  if (asset) {
+    return new Response(asset.data.buffer as ArrayBuffer, {
+      headers: { "content-type": asset.contentType },
+    });
+  }
+
+  // SPA fallback to index.html for extensionless paths
+  if (!extname(pathname)) {
+    const index = assets.get("index.html");
+    if (index) {
+      return new Response(index.data.buffer as ArrayBuffer, {
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+  }
+
+  return null;
+}
+
+async function handleRequest(
+  pathname: string,
+  url: URL,
+  method: string,
+  routes: Route[],
+  staticDir: string,
+  hasStaticDir: boolean,
+  embeddedAssets?: Map<string, EmbeddedAsset>,
+): Promise<Response> {
+  // Try API routes first
+  for (const route of routes) {
+    const params = matchRoute(route.pattern, pathname);
+    if (params !== null) {
+      const webReq = new Request(url.toString(), { method });
+      return route.handler(webReq, params);
+    }
+  }
+
+  // Serve from embedded assets (compiled binary) or filesystem
+  if (embeddedAssets) {
+    const response = serveEmbedded(pathname, embeddedAssets);
+    if (response) return response;
+  } else if (hasStaticDir) {
+    const response = await serveStatic(pathname, staticDir);
+    if (response) return response;
+  }
+
+  return new Response("Not Found", {
+    status: 404,
+    headers: { "content-type": "text/plain" },
+  });
+}
+
+export function startServer(
+  port: number,
+  routes: Route[],
+  staticDir: string,
+  embeddedAssets?: Map<string, EmbeddedAsset>,
+): void {
+  const hasStaticDir = !embeddedAssets && existsSync(staticDir);
 
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url!, `http://${req.headers.host || "localhost"}`);
-      const pathname = url.pathname;
-
-      // Try API routes first
-      for (const route of routes) {
-        const params = matchRoute(route.pattern, pathname);
-        if (params !== null) {
-          const webReq = new Request(url.toString(), { method: req.method });
-          const response = await route.handler(webReq, params);
-          await writeResponse(res, response);
-          return;
-        }
-      }
-
-      // Static file serving
-      if (hasStaticDir) {
-        const response = await serveStatic(pathname, staticDir);
-        if (response) {
-          await writeResponse(res, response);
-          return;
-        }
-      }
-
-      res.writeHead(404, { "content-type": "text/plain" });
-      res.end("Not Found");
+      const response = await handleRequest(
+        url.pathname,
+        url,
+        req.method!,
+        routes,
+        staticDir,
+        hasStaticDir,
+        embeddedAssets,
+      );
+      await writeResponse(res, response);
     } catch (err) {
       console.error("Request error:", err);
       res.writeHead(500, { "content-type": "text/plain" });
