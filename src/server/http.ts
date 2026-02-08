@@ -42,7 +42,10 @@ async function serveStatic(pathname: string, staticDir: string): Promise<Respons
   const absoluteFilePath = resolve(staticDir, requestedPath);
 
   // Prevent path traversal attacks
-  if (!absoluteFilePath.startsWith(absoluteStaticDir + sep) && absoluteFilePath !== absoluteStaticDir) {
+  if (
+    !absoluteFilePath.startsWith(absoluteStaticDir + sep) &&
+    absoluteFilePath !== absoluteStaticDir
+  ) {
     return null;
   }
 
