@@ -18,10 +18,10 @@ Klovi reads session data directly from `~/.claude/projects/` (JSONL files) and r
 Run directly without installing (requires [Bun](https://bun.sh) or [Node.js](https://nodejs.org) >=24):
 
 ```bash
-bunx --bun @cookielab.io/klovi
-npx @cookielab.io/klovi
-yarn dlx @cookielab.io/klovi
-pnpm dlx @cookielab.io/klovi
+bunx --bun @cookielab.io/klovi@latest
+npx @cookielab.io/klovi@latest
+yarn dlx @cookielab.io/klovi@latest
+pnpm dlx @cookielab.io/klovi@latest
 ```
 
 Or install globally:
