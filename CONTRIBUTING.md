@@ -2,6 +2,8 @@
 
 Thanks for your interest in contributing to Klovi! This guide will help you get started.
 
+Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Development Setup
 
 1. **Prerequisites:** [Bun](https://bun.sh) v1.2+
@@ -39,6 +41,24 @@ bun run check:fix
 - **TypeScript:** Strict mode with `noUncheckedIndexedAccess`. Use `!` non-null assertions for array index access when the index is known to be valid.
 - **CSS:** Plain CSS with custom properties for theming. No CSS framework. Add new styles to `src/frontend/App.css`.
 - **Testing:** Use `bun:test` with `@testing-library/react` and `happy-dom`. See `docs/testing.md` for patterns.
+
+## Commit Messages
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Prefix your commit messages with a type:
+
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation only
+- `test:` — adding or updating tests
+- `refactor:` — code change that neither fixes a bug nor adds a feature
+- `chore:` — maintenance tasks (deps, CI, build)
+
+Examples:
+```
+feat: add search filtering to session list
+fix: prevent path traversal in static file serving
+docs: update README with contributing section
+```
 
 ## Pull Request Process
 

@@ -1,9 +1,15 @@
 # Klovi
 
 [![CI](https://github.com/cookielab/klovi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookielab/klovi/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@cookielab.io/klovi)](https://www.npmjs.com/package/@cookielab.io/klovi)
+[![npm downloads](https://img.shields.io/npm/dm/@cookielab.io/klovi)](https://www.npmjs.com/package/@cookielab.io/klovi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
 A local web app for browsing and presenting Claude Code session history. Built for showing AI coding workflows at meetups and conferences.
+
+## Why Klovi?
+
+Claude Code stores every conversation as JSONL files in `~/.claude/projects/`, but there's no built-in way to browse, search, or present them. Klovi fills that gap: run a single command and get a local web UI to explore your full session history, review what Claude did across projects, and step through conversations in a presentation mode perfect for demos and talks.
 
 Klovi reads session data directly from `~/.claude/projects/` (JSONL files) and renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode.
 
@@ -120,6 +126,12 @@ See [docs/](docs/) for detailed documentation:
 - [Components](docs/components.md) - frontend component guide and patterns
 - [Testing](docs/testing.md) - test setup, patterns, and conventions
 - [Content Types](CONTENT_TYPES.md) - catalog of all JSONL content types and rendering status
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+Please note that this project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Built With
 
