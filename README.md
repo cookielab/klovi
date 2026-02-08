@@ -7,6 +7,8 @@
 
 A local web app for browsing and presenting Claude Code session history. Built for showing AI coding workflows at meetups and conferences.
 
+![Klovi screenshot](docs/example.png)
+
 ## Why Klovi?
 
 Claude Code stores every conversation as JSONL files in `~/.claude/projects/`, but there's no built-in way to browse, search, or present them. Klovi fills that gap: run a single command and get a local web UI to explore your full session history, review what Claude did across projects, and step through conversations in a presentation mode perfect for demos and talks.
