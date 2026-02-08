@@ -13,7 +13,7 @@ describe("shortModel", () => {
   });
 
   test("returns original string for unknown models", () => {
-    expect(shortModel("gpt-4o")).toBe("gpt-4o");
+    expect(shortModel("unknown-model")).toBe("unknown-model");
   });
 
   test("returns empty string for empty input", () => {
