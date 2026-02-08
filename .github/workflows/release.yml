@@ -58,3 +58,9 @@ jobs:
         with:
           tag_name: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
           body: ${{ steps.changelog.outputs.changes }}
+
+      - name: Trigger npm publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
+        run: gh workflow run npm-publish.yml -f version="$VERSION"

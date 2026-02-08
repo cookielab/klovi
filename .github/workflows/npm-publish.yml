@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.2.3)"
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -14,6 +20,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.version || github.ref_name }}
       - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v6
         with:
@@ -26,7 +34,7 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - name: Set version from tag
-        run: npm version "${{ github.ref_name }}" --no-git-tag-version --allow-same-version
+        run: npm version "${{ inputs.version || github.ref_name }}" --no-git-tag-version --allow-same-version
       - run: bun run check
       - run: bun run typecheck
       - run: bun test
