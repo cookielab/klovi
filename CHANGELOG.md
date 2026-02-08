@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Move `@types/*` packages to `devDependencies`
 - Pin `@types/bun` to `^1.3.8` instead of `latest`
-- Add `prepublishOnly` script to prevent incomplete publishes
 
 ### Added
 
