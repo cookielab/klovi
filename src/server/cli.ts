@@ -2,6 +2,7 @@ import { readSync } from "node:fs";
 import { handleProjects } from "./api/projects.ts";
 import { handleSession } from "./api/session.ts";
 import { handleSessions } from "./api/sessions.ts";
+import { handleStats } from "./api/stats.ts";
 import { handleSubAgent } from "./api/subagent.ts";
 import { handleVersion } from "./api/version.ts";
 import { getProjectsDir, setProjectsDir } from "./config.ts";
@@ -141,6 +142,7 @@ export function promptSecurityWarning(port: number): void {
 export function createRoutes(): Route[] {
   return [
     { pattern: "/api/version", handler: () => handleVersion() },
+    { pattern: "/api/stats", handler: () => handleStats() },
     { pattern: "/api/projects", handler: () => handleProjects() },
     {
       pattern: "/api/projects/:encodedPath/sessions",

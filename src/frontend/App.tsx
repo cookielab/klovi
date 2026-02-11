@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import faviconUrl from "../../favicon.svg";
 import type { Project, SessionSummary } from "../shared/types.ts";
+import { DashboardStats } from "./components/dashboard/DashboardStats.tsx";
 import { Header } from "./components/layout/Header.tsx";
 import { Layout } from "./components/layout/Layout.tsx";
 import { SubAgentView } from "./components/message/SubAgentView.tsx";
@@ -277,11 +278,14 @@ function App() {
         showPresentationToggle={canPresent}
       />
       {view.kind === "home" && (
-        <div className="empty-state">
-          <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
-          <div className="empty-state-title">Welcome to Klovi</div>
-          <p>Select a project from the sidebar to browse your Claude Code sessions</p>
-        </div>
+        <>
+          <div className="empty-state">
+            <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
+            <div className="empty-state-title">Welcome to Klovi</div>
+            <p>Select a project from the sidebar to browse your Claude Code sessions</p>
+          </div>
+          <DashboardStats />
+        </>
       )}
       {view.kind === "hidden" && (
         <HiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />

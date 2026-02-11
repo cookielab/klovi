@@ -90,3 +90,14 @@ export interface ToolResultImage {
   mediaType: string;
   data: string;
 }
+
+export interface DashboardStats {
+  projects: number;
+  sessions: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  toolCalls: number;
+  models: Record<string, number>;
+}

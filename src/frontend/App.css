@@ -934,6 +934,76 @@
   border-left: 3px solid var(--impl-color);
 }
 
+/* Dashboard stats */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 0 40px 40px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card-skeleton {
+  height: 72px;
+  opacity: 0.4;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.stat-card-models {
+  grid-column: span 2;
+}
+
+.model-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.model-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 0.8rem;
+}
+
+.model-name {
+  color: var(--text-secondary);
+  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+  font-size: 0.78rem;
+}
+
+.model-count {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
 /* Fullscreen */
 .fullscreen {
   position: fixed;
