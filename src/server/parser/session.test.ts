@@ -714,4 +714,19 @@ describe("findPlanSessionId", () => {
     const result = findPlanSessionId(turns, undefined, sessions, "impl-session-2");
     expect(result).toBeUndefined();
   });
+
+  test("skips status-notice turns like [Request interrupted]", () => {
+    const turns = buildTurns([
+      line({
+        type: "user",
+        message: { role: "user", content: "[Request interrupted by user for tool use]" },
+      }),
+      line({
+        type: "user",
+        message: { role: "user", content: "Implement the following plan:\n\n# My Plan" },
+      }),
+    ]);
+    const result = findPlanSessionId(turns, "prancy-pondering-deer", sessions, "impl-session-2");
+    expect(result).toBe("plan-session-1");
+  });
 });

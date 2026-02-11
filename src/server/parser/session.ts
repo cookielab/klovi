@@ -140,14 +140,18 @@ export function extractSlug(lines: RawLine[]): string | undefined {
 
 const PLAN_PREFIX = "Implement the following plan";
 
+const STATUS_RE = /^\[.+\]$/;
+
 export function findPlanSessionId(
   turns: Turn[],
   slug: string | undefined,
   sessions: SessionSummary[],
   currentSessionId: string,
 ): string | undefined {
-  const firstUser = turns.find((t) => t.kind === "user") as UserTurn | undefined;
-  if (!firstUser || !firstUser.text.startsWith(PLAN_PREFIX)) return undefined;
+  const planTurn = turns.find((t) => t.kind === "user" && !STATUS_RE.test(t.text.trim())) as
+    | UserTurn
+    | undefined;
+  if (!planTurn || !planTurn.text.startsWith(PLAN_PREFIX)) return undefined;
   if (!slug) return undefined;
   const match = sessions.find((s) => s.slug === slug && s.sessionId !== currentSessionId);
   return match?.sessionId;

@@ -73,17 +73,10 @@ export function MessageList({
   isSubAgent,
   planSessionId,
 }: MessageListProps) {
-  let planSessionIdUsed = false;
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
         const isActive = visibleSubSteps ? index === turns.length - 1 : false;
-        // Only pass planSessionId to the first user turn
-        let turnPlanSessionId: string | undefined;
-        if (planSessionId && !planSessionIdUsed && turn.kind === "user") {
-          turnPlanSessionId = planSessionId;
-          planSessionIdUsed = true;
-        }
         return renderTurn(
           turn,
           index,
@@ -92,7 +85,7 @@ export function MessageList({
           sessionId,
           project,
           isSubAgent,
-          turnPlanSessionId,
+          planSessionId,
         );
       })}
     </div>
