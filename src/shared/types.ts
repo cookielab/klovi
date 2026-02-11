@@ -19,6 +19,7 @@ export interface Session {
   sessionId: string;
   project: string;
   turns: Turn[];
+  planSessionId?: string;
 }
 
 export type Turn = UserTurn | AssistantTurn | SystemTurn;

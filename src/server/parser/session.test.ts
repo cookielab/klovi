@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { AssistantTurn, SystemTurn, UserTurn } from "../../shared/types.ts";
-import { buildTurns, extractSubAgentMap } from "./session.ts";
+import type { AssistantTurn, SessionSummary, SystemTurn, UserTurn } from "../../shared/types.ts";
+import { buildTurns, extractSlug, extractSubAgentMap, findPlanSessionId } from "./session.ts";
 import type { RawLine } from "./types.ts";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
@@ -633,5 +633,85 @@ describe("extractSubAgentMap", () => {
     ];
     const map = extractSubAgentMap(lines);
     expect(map.size).toBe(0);
+  });
+});
+
+describe("extractSlug", () => {
+  test("returns slug from first line that has one", () => {
+    const lines: RawLine[] = [
+      line({ type: "user", slug: "prancy-pondering-deer" }),
+      line({ type: "user", slug: "another-slug" }),
+    ];
+    expect(extractSlug(lines)).toBe("prancy-pondering-deer");
+  });
+
+  test("returns undefined when no lines have a slug", () => {
+    const lines: RawLine[] = [line({ type: "user", message: { role: "user", content: "Hello" } })];
+    expect(extractSlug(lines)).toBeUndefined();
+  });
+});
+
+describe("findPlanSessionId", () => {
+  const sessions: SessionSummary[] = [
+    {
+      sessionId: "plan-session-1",
+      timestamp: "2025-01-15T09:00:00Z",
+      slug: "prancy-pondering-deer",
+      firstMessage: "Help me plan something",
+      model: "claude-opus-4-6",
+      gitBranch: "main",
+    },
+    {
+      sessionId: "impl-session-2",
+      timestamp: "2025-01-15T10:00:00Z",
+      slug: "prancy-pondering-deer",
+      firstMessage: "Implement the following plan",
+      model: "claude-opus-4-6",
+      gitBranch: "main",
+    },
+  ];
+
+  test("returns planning session ID when first user turn starts with plan prefix", () => {
+    const turns = buildTurns([
+      line({
+        type: "user",
+        message: { role: "user", content: "Implement the following plan:\n\n# My Plan" },
+      }),
+    ]);
+    const result = findPlanSessionId(turns, "prancy-pondering-deer", sessions, "impl-session-2");
+    expect(result).toBe("plan-session-1");
+  });
+
+  test("returns undefined when first user turn is a regular message", () => {
+    const turns = buildTurns([
+      line({
+        type: "user",
+        message: { role: "user", content: "Hello, help me with something" },
+      }),
+    ]);
+    const result = findPlanSessionId(turns, "prancy-pondering-deer", sessions, "impl-session-2");
+    expect(result).toBeUndefined();
+  });
+
+  test("returns undefined when no session with matching slug is found", () => {
+    const turns = buildTurns([
+      line({
+        type: "user",
+        message: { role: "user", content: "Implement the following plan:\n\n# Plan" },
+      }),
+    ]);
+    const result = findPlanSessionId(turns, "nonexistent-slug", sessions, "impl-session-2");
+    expect(result).toBeUndefined();
+  });
+
+  test("returns undefined when slug is undefined", () => {
+    const turns = buildTurns([
+      line({
+        type: "user",
+        message: { role: "user", content: "Implement the following plan:\n\n# Plan" },
+      }),
+    ]);
+    const result = findPlanSessionId(turns, undefined, sessions, "impl-session-2");
+    expect(result).toBeUndefined();
   });
 });

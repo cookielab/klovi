@@ -10,6 +10,7 @@ interface MessageListProps {
   sessionId?: string;
   project?: string;
   isSubAgent?: boolean;
+  planSessionId?: string;
 }
 
 function renderTurn(
@@ -20,6 +21,7 @@ function renderTurn(
   sessionId: string | undefined,
   project: string | undefined,
   isSubAgent: boolean | undefined,
+  planSessionId: string | undefined,
 ) {
   const activeClass = isActive ? "active-message" : "";
 
@@ -27,7 +29,12 @@ function renderTurn(
     case "user":
       return (
         <div key={turn.uuid || index} className={isActive ? "active-message step-enter" : ""}>
-          <UserMessage turn={turn} isSubAgent={isSubAgent} />
+          <UserMessage
+            turn={turn}
+            isSubAgent={isSubAgent}
+            planSessionId={planSessionId}
+            project={project}
+          />
         </div>
       );
     case "assistant":
@@ -64,12 +71,29 @@ export function MessageList({
   sessionId,
   project,
   isSubAgent,
+  planSessionId,
 }: MessageListProps) {
+  let planSessionIdUsed = false;
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
         const isActive = visibleSubSteps ? index === turns.length - 1 : false;
-        return renderTurn(turn, index, isActive, visibleSubSteps, sessionId, project, isSubAgent);
+        // Only pass planSessionId to the first user turn
+        let turnPlanSessionId: string | undefined;
+        if (planSessionId && !planSessionIdUsed && turn.kind === "user") {
+          turnPlanSessionId = planSessionId;
+          planSessionIdUsed = true;
+        }
+        return renderTurn(
+          turn,
+          index,
+          isActive,
+          visibleSubSteps,
+          sessionId,
+          project,
+          isSubAgent,
+          turnPlanSessionId,
+        );
       })}
     </div>
   );

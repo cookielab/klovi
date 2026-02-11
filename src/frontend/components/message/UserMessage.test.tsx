@@ -76,4 +76,41 @@ describe("UserMessage", () => {
     const role = container.querySelector(".message-role");
     expect(role!.textContent).toContain("Root Agent");
   });
+
+  test("renders plan session link when planSessionId and project are provided", () => {
+    const { container } = render(
+      <UserMessage
+        turn={makeTurn({ text: "Implement the following plan:\n\n# My Plan" })}
+        planSessionId="plan-123"
+        project="my-project"
+      />,
+    );
+    const link = container.querySelector(".subagent-link") as HTMLAnchorElement | null;
+    expect(link).not.toBeNull();
+    expect(link!.textContent).toBe("View planning session");
+    expect(link!.getAttribute("href")).toBe("#/my-project/plan-123");
+  });
+
+  test("does not render plan link for regular user messages", () => {
+    const { container } = render(
+      <UserMessage
+        turn={makeTurn({ text: "Hello, help me with something" })}
+        planSessionId="plan-123"
+        project="my-project"
+      />,
+    );
+    const link = container.querySelector(".subagent-link");
+    expect(link).toBeNull();
+  });
+
+  test("does not render plan link when planSessionId is absent", () => {
+    const { container } = render(
+      <UserMessage
+        turn={makeTurn({ text: "Implement the following plan:\n\n# Plan" })}
+        project="my-project"
+      />,
+    );
+    const link = container.querySelector(".subagent-link");
+    expect(link).toBeNull();
+  });
 });

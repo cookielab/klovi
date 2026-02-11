@@ -39,5 +39,12 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
     );
   if (!session) return null;
 
-  return <MessageList turns={session.turns} sessionId={sessionId} project={project} />;
+  return (
+    <MessageList
+      turns={session.turns}
+      sessionId={sessionId}
+      project={project}
+      planSessionId={session.planSessionId}
+    />
+  );
 }

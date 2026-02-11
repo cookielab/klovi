@@ -3,6 +3,7 @@ import type {
   AssistantTurn,
   Attachment,
   Session,
+  SessionSummary,
   ToolCallWithResult,
   ToolResultImage,
   Turn,
@@ -12,10 +13,16 @@ import { getProjectsDir } from "../config.ts";
 import { parseCommandMessage } from "./command-message.ts";
 import type { RawContentBlock, RawLine, RawToolResultBlock } from "./types.ts";
 
-export async function parseSession(sessionId: string, encodedPath: string): Promise<Session> {
+interface ParsedSession {
+  session: Session;
+  slug: string | undefined;
+}
+
+export async function parseSession(sessionId: string, encodedPath: string): Promise<ParsedSession> {
   const rawLines = await readJsonlLines(join(getProjectsDir(), encodedPath, `${sessionId}.jsonl`));
 
   const subAgentMap = extractSubAgentMap(rawLines);
+  const slug = extractSlug(rawLines);
   const turns = buildTurns(rawLines);
 
   // Attach subAgentId to Task tool calls
@@ -32,9 +39,12 @@ export async function parseSession(sessionId: string, encodedPath: string): Prom
   }
 
   return {
-    sessionId,
-    project: encodedPath,
-    turns,
+    session: {
+      sessionId,
+      project: encodedPath,
+      turns,
+    },
+    slug,
   };
 }
 
@@ -119,6 +129,28 @@ export function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
     extractFromToolResult(line, map);
   }
   return map;
+}
+
+export function extractSlug(lines: RawLine[]): string | undefined {
+  for (const line of lines) {
+    if (line.slug) return line.slug;
+  }
+  return undefined;
+}
+
+const PLAN_PREFIX = "Implement the following plan";
+
+export function findPlanSessionId(
+  turns: Turn[],
+  slug: string | undefined,
+  sessions: SessionSummary[],
+  currentSessionId: string,
+): string | undefined {
+  const firstUser = turns.find((t) => t.kind === "user") as UserTurn | undefined;
+  if (!firstUser || !firstUser.text.startsWith(PLAN_PREFIX)) return undefined;
+  if (!slug) return undefined;
+  const match = sessions.find((s) => s.slug === slug && s.sessionId !== currentSessionId);
+  return match?.sessionId;
 }
 
 async function readJsonlLines(filePath: string): Promise<RawLine[]> {
