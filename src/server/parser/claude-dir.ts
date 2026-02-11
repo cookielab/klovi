@@ -46,6 +46,8 @@ export async function discoverProjects(): Promise<Project[]> {
   return projects;
 }
 
+const PLAN_PREFIX = "Implement the following plan";
+
 export async function listSessions(encodedPath: string): Promise<SessionSummary[]> {
   const projectDir = join(getProjectsDir(), encodedPath);
   const files = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
@@ -58,8 +60,28 @@ export async function listSessions(encodedPath: string): Promise<SessionSummary[
     if (meta) sessions.push({ sessionId, ...meta });
   }
 
+  classifySessionTypes(sessions);
+
   sessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   return sessions;
+}
+
+export function classifySessionTypes(sessions: SessionSummary[]): void {
+  // First pass: mark implementation sessions
+  const implSlugs = new Set<string>();
+  for (const session of sessions) {
+    if (session.firstMessage.startsWith(PLAN_PREFIX)) {
+      session.sessionType = "implementation";
+      if (session.slug) implSlugs.add(session.slug);
+    }
+  }
+
+  // Second pass: mark plan sessions (same slug as an implementation session, but not itself one)
+  for (const session of sessions) {
+    if (!session.sessionType && session.slug && implSlugs.has(session.slug)) {
+      session.sessionType = "plan";
+    }
+  }
 }
 
 async function extractCwd(filePath: string): Promise<string> {

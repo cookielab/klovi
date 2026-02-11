@@ -29,6 +29,11 @@
   --agent: #9a6700;
   --bg-agent: #fff8c5;
 
+  --plan-color: #8250df;
+  --plan-subtle: #ede6f6;
+  --impl-color: #bf5700;
+  --impl-subtle: #fff1e0;
+
   --error: #cf222e;
   --success: #1a7f37;
 
@@ -72,6 +77,11 @@
 
   --agent: #d29922;
   --bg-agent: #1a1610;
+
+  --plan-color: #bc8cff;
+  --plan-subtle: #1e1535;
+  --impl-color: #e09b50;
+  --impl-subtle: #1e1510;
 
   --error: #f85149;
   --success: #3fb950;
@@ -869,6 +879,36 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+/* Session type badges */
+.session-type-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 9px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.session-type-badge.plan {
+  background: var(--plan-subtle);
+  color: var(--plan-color);
+}
+
+.session-type-badge.implementation {
+  background: var(--impl-subtle);
+  color: var(--impl-color);
+}
+
+.list-item.plan {
+  border-left: 3px solid var(--plan-color);
+}
+
+.list-item.implementation {
+  border-left: 3px solid var(--impl-color);
 }
 
 /* Fullscreen */

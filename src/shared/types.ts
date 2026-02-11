@@ -13,6 +13,7 @@ export interface SessionSummary {
   firstMessage: string;
   model: string;
   gitBranch: string;
+  sessionType?: "plan" | "implementation";
 }
 
 export interface Session {

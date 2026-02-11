@@ -39,11 +39,16 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
         sessions.map((session) => (
           <div
             key={session.sessionId}
-            className={`list-item ${selectedId === session.sessionId ? "active" : ""}`}
+            className={`list-item ${selectedId === session.sessionId ? "active" : ""}${session.sessionType ? ` ${session.sessionType}` : ""}`}
             onClick={() => onSelect(session)}
           >
             <div className="list-item-title">{session.firstMessage || session.slug}</div>
             <div className="list-item-meta">
+              {session.sessionType && (
+                <span className={`session-type-badge ${session.sessionType}`}>
+                  {session.sessionType === "plan" ? "Plan" : "Impl"}
+                </span>
+              )}{" "}
               {session.model && <span>{shortModel(session.model)} · </span>}
               {session.gitBranch && <span>{session.gitBranch} · </span>}
               {formatTime(session.timestamp)}

@@ -5,6 +5,7 @@ interface HeaderProps {
   breadcrumb?: string;
   copyCommand?: string;
   backHref?: string;
+  sessionType?: "plan" | "implementation";
   themeSetting: "system" | "light" | "dark";
   onCycleTheme: () => void;
   fontSize: number;
@@ -20,6 +21,7 @@ export function Header({
   breadcrumb,
   copyCommand,
   backHref,
+  sessionType,
   themeSetting,
   onCycleTheme,
   fontSize,
@@ -56,6 +58,11 @@ export function Header({
           <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{breadcrumb} /&nbsp;</span>
         )}
         {title}
+        {sessionType && (
+          <span className={`session-type-badge ${sessionType}`}>
+            {sessionType === "plan" ? "Plan" : "Impl"}
+          </span>
+        )}
         {copyCommand && (
           <button
             type="button"

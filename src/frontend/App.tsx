@@ -265,6 +265,7 @@ function App() {
         backHref={
           view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined
         }
+        sessionType={view.kind === "session" ? view.session.sessionType : undefined}
         themeSetting={themeSetting}
         onCycleTheme={cycleTheme}
         fontSize={fontSize}
