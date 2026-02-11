@@ -27,17 +27,23 @@ bun test src/frontend       # Frontend tests only
 bun test --watch            # Watch mode
 ```
 
+**Current:** 127 tests across 11 files
+
 ## Test Files
 
-| File | Tests | What it covers |
-|---|---|---|
-| `src/server/parser/session.test.ts` | Parser logic | `buildTurns()` with synthetic RawLine objects |
-| `src/server/parser/command-message.test.ts` | Command parsing | `parseCommandMessage()`, `cleanCommandMessage()` |
-| `src/frontend/components/message/UserMessage.test.tsx` | User messages | Regular text, commands, status notices, attachments |
-| `src/frontend/components/message/AssistantMessage.test.tsx` | Assistant messages | Thinking, text, tool calls, model display |
-| `src/frontend/components/message/ToolCall.test.tsx` | Tool calls | `getToolSummary()` for all tool types, MCP parsing |
-| `src/frontend/hooks/useHiddenProjects.test.ts` | Hidden projects | `useHiddenProjects` hook: hide, unhide, localStorage persistence |
-| `src/frontend/utils/time.test.ts` | Time formatting | Relative time strings |
+| File | What it covers |
+|---|---|
+| `src/server/parser/session.test.ts` | `buildTurns()`, `extractSubAgentMap()`, contentBlocks ordering |
+| `src/server/parser/command-message.test.ts` | `parseCommandMessage()`, `cleanCommandMessage()` |
+| `src/frontend/components/message/UserMessage.test.tsx` | Regular text, commands, status notices, attachments |
+| `src/frontend/components/message/AssistantMessage.test.tsx` | Thinking, text, tool calls, model display, token usage |
+| `src/frontend/components/message/ToolCall.test.tsx` | `getToolSummary()` for all tool types, MCP parsing |
+| `src/frontend/hooks/useHiddenProjects.test.ts` | `useHiddenProjects` hook: hide, unhide, localStorage persistence |
+| `src/frontend/hooks/usePresentationMode.test.ts` | Step counting, navigation, turn boundaries, visibility |
+| `src/frontend/hooks/useTheme.test.ts` | Theme cycling, font size, localStorage persistence |
+| `src/frontend/utils/time.test.ts` | Relative time strings |
+| `src/frontend/utils/model.test.ts` | Model name shortening (Opus/Sonnet/Haiku) |
+| `src/frontend/utils/project.test.ts` | Project path utilities |
 
 ## Patterns
 
