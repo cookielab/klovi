@@ -144,6 +144,24 @@
   padding: 8px;
 }
 
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--border-light);
+}
+
+.sidebar-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.sidebar-footer a:hover {
+  color: var(--accent);
+}
+
 .main-content {
   margin-left: var(--sidebar-width);
   flex: 1;
@@ -778,6 +796,11 @@
   padding: 60px 20px;
   color: var(--text-muted);
   text-align: center;
+}
+
+.empty-state-logo {
+  margin-bottom: 16px;
+  opacity: 0.7;
 }
 
 .empty-state-title {

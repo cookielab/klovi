@@ -34,6 +34,12 @@ export function Sidebar({ children }: SidebarProps) {
         )}
       </div>
       <div className="sidebar-content">{children}</div>
+      <div className="sidebar-footer">
+        Made by{" "}
+        <a href="https://cookielab.io" target="_blank" rel="noopener noreferrer">
+          cookielab.io
+        </a>
+      </div>
     </div>
   );
 }

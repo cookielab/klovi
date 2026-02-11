@@ -1,6 +1,7 @@
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import faviconUrl from "../../favicon.svg";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { Header } from "./components/layout/Header.tsx";
 import { Layout } from "./components/layout/Layout.tsx";
@@ -277,8 +278,9 @@ function App() {
       />
       {view.kind === "home" && (
         <div className="empty-state">
-          <div className="empty-state-title">Select a project to get started</div>
-          <p>Browse your Claude Code sessions from the sidebar</p>
+          <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
+          <div className="empty-state-title">Welcome to Klovi</div>
+          <p>Select a project from the sidebar to browse your Claude Code sessions</p>
         </div>
       )}
       {view.kind === "hidden" && (

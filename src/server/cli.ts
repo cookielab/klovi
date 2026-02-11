@@ -6,6 +6,7 @@ import { handleSubAgent } from "./api/subagent.ts";
 import { handleVersion } from "./api/version.ts";
 import { getProjectsDir, setProjectsDir } from "./config.ts";
 import type { Route } from "./http.ts";
+import { appVersion } from "./version.ts";
 
 export interface CliArgs {
   port: number;
@@ -46,8 +47,12 @@ export function parseCliArgs(argv: string[]): CliArgs {
 }
 
 export function showHelpText(): void {
+  const dim = "\x1b[2m";
+  const reset = "\x1b[0m";
+
   console.log(`
 Klovi — a web viewer for Claude Code sessions
+${dim}by cookielab.io${reset}
 
 Usage:
   klovi [options]
@@ -60,6 +65,44 @@ Options:
 
 The server runs on http://localhost:3583 by default.
 `);
+}
+
+export function printStartupBanner(port: number): void {
+  const dim = "\x1b[2m";
+  const bold = "\x1b[1m";
+  const green = "\x1b[32m";
+  const reset = "\x1b[0m";
+
+  const version = appVersion.version;
+  const url = `http://localhost:${port}`;
+
+  const line1 = `   ${bold}${green}{K>  Klovi${reset} ${dim}v${version}${reset}`;
+  const line2 = `        ${dim}by cookielab.io${reset}`;
+  const line3 = `   Running at ${bold}${url}${reset}`;
+
+  // Box width (inner content area)
+  const w = 42;
+  const pad = (s: string) => {
+    // Strip ANSI codes to measure visible length
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI escape sequences
+    const visible = s.replace(/\x1b\[[0-9;]*m/g, "");
+    const remaining = w - visible.length;
+    return `${s}${" ".repeat(Math.max(0, remaining))}`;
+  };
+
+  const top = `${dim}\u256d${"\u2500".repeat(w)}\u256e${reset}`;
+  const bot = `${dim}\u2570${"\u2500".repeat(w)}\u256f${reset}`;
+  const empty = `${dim}\u2502${reset}${" ".repeat(w)}${dim}\u2502${reset}`;
+  const row = (s: string) => `${dim}\u2502${reset}${pad(s)}${dim}\u2502${reset}`;
+
+  console.log(top);
+  console.log(empty);
+  console.log(row(line1));
+  console.log(row(line2));
+  console.log(empty);
+  console.log(row(line3));
+  console.log(empty);
+  console.log(bot);
 }
 
 export function promptSecurityWarning(port: number): void {

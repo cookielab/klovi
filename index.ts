@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import {
   createRoutes,
   parseCliArgs,
+  printStartupBanner,
   promptSecurityWarning,
   showHelpText,
 } from "./src/server/cli.ts";
@@ -37,4 +38,4 @@ const staticDir = existsSync(join(__dirname, "public", "index.html"))
 
 startServer(port, createRoutes(), staticDir);
 
-console.log(`Klovi running at http://localhost:${port}`);
+printStartupBanner(port);
