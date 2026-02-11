@@ -1,5 +1,6 @@
 import { readSync } from "node:fs";
 import { handleProjects } from "./api/projects.ts";
+import { handleSearchSessions } from "./api/search.ts";
 import { handleSession } from "./api/session.ts";
 import { handleSessions } from "./api/sessions.ts";
 import { handleStats } from "./api/stats.ts";
@@ -143,6 +144,7 @@ export function createRoutes(): Route[] {
   return [
     { pattern: "/api/version", handler: () => handleVersion() },
     { pattern: "/api/stats", handler: () => handleStats() },
+    { pattern: "/api/search/sessions", handler: () => handleSearchSessions() },
     { pattern: "/api/projects", handler: () => handleProjects() },
     {
       pattern: "/api/projects/:encodedPath/sessions",

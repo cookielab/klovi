@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import type { Project, SessionSummary } from "../../shared/types.ts";
+import type { GlobalSessionResult, Project, SessionSummary } from "../../shared/types.ts";
 import { getProjectsDir } from "../config.ts";
 import { cleanCommandMessage } from "./command-message.ts";
 import type { RawContentBlock, RawLine } from "./types.ts";
@@ -168,6 +168,46 @@ async function extractSessionMeta(
     model: meta.model || "unknown",
     gitBranch: meta.gitBranch || "",
   };
+}
+
+function projectNameFromPath(fullPath: string): string {
+  const parts = fullPath.split("/").filter(Boolean);
+  return parts.slice(-2).join("/");
+}
+
+export function aggregateSessions(
+  projects: Project[],
+  sessionsByProject: Map<string, SessionSummary[]>,
+): GlobalSessionResult[] {
+  const results: GlobalSessionResult[] = [];
+
+  for (const project of projects) {
+    const sessions = sessionsByProject.get(project.encodedPath) ?? [];
+    const projectName = projectNameFromPath(project.name);
+
+    for (const session of sessions) {
+      results.push({
+        ...session,
+        encodedPath: project.encodedPath,
+        projectName,
+      });
+    }
+  }
+
+  results.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  return results;
+}
+
+export async function listAllSessions(): Promise<GlobalSessionResult[]> {
+  const projects = await discoverProjects();
+  const sessionsByProject = new Map<string, SessionSummary[]>();
+
+  for (const project of projects) {
+    const sessions = await listSessions(project.encodedPath);
+    sessionsByProject.set(project.encodedPath, sessions);
+  }
+
+  return aggregateSessions(projects, sessionsByProject);
 }
 
 function decodeEncodedPath(encoded: string): string {

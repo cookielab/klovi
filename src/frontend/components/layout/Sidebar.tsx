@@ -9,9 +9,10 @@ interface VersionInfo {
 
 interface SidebarProps {
   children: React.ReactNode;
+  onSearchClick?: () => void;
 }
 
-export function Sidebar({ children }: SidebarProps) {
+export function Sidebar({ children, onSearchClick }: SidebarProps) {
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
 
   useEffect(() => {
@@ -31,6 +32,16 @@ export function Sidebar({ children }: SidebarProps) {
             {versionInfo.version}
             {versionInfo.commitHash ? ` (${versionInfo.commitHash})` : ""}
           </span>
+        )}
+        {onSearchClick && (
+          <button
+            type="button"
+            className="btn-sidebar-search"
+            onClick={onSearchClick}
+            title="Search sessions (Cmd+K)"
+          >
+            Search
+          </button>
         )}
       </div>
       <div className="sidebar-content">{children}</div>

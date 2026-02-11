@@ -91,6 +91,11 @@ export interface ToolResultImage {
   data: string;
 }
 
+export interface GlobalSessionResult extends SessionSummary {
+  encodedPath: string;
+  projectName: string;
+}
+
 export interface DashboardStats {
   projects: number;
   sessions: number;
