@@ -3,36 +3,14 @@ import type { DashboardStats as Stats } from "../../../shared/types.ts";
 
 const fmt = new Intl.NumberFormat();
 
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-value">{fmt.format(value)}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  );
-}
-
-function ModelCard({ models }: { models: Record<string, number> }) {
-  const sorted = Object.entries(models).sort((a, b) => b[1] - a[1]);
-  if (sorted.length === 0) return null;
-
-  return (
-    <div className="stat-card stat-card-models">
-      <div className="stat-label">Models Used</div>
-      <ul className="model-list">
-        {sorted.map(([model, count]) => (
-          <li key={model}>
-            <span className="model-name">{simplifyModelName(model)}</span>
-            <span className="model-count">{fmt.format(count)}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+function compactNumber(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
 
 function simplifyModelName(model: string): string {
-  // "claude-sonnet-4-5-20250929" -> "sonnet-4-5"
   const match = model.match(/claude-(\w+-[\d-]+?)(?:-\d{8})?$/);
   return match?.[1] ?? model;
 }
@@ -52,25 +30,71 @@ export function DashboardStats() {
   if (loading) {
     return (
       <div className="dashboard-stats">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="stat-card stat-card-skeleton" />
-        ))}
+        <div className="stats-row stats-row-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="stat-card stat-card-skeleton" />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!stats) return null;
 
+  const sortedModels = Object.entries(stats.models).sort((a, b) => b[1] - a[1]);
+
   return (
     <div className="dashboard-stats">
-      <StatCard label="Projects" value={stats.projects} />
-      <StatCard label="Sessions" value={stats.sessions} />
-      <StatCard label="Input Tokens" value={stats.inputTokens} />
-      <StatCard label="Output Tokens" value={stats.outputTokens} />
-      <StatCard label="Cache Read Tokens" value={stats.cacheReadTokens} />
-      <StatCard label="Cache Creation Tokens" value={stats.cacheCreationTokens} />
-      <StatCard label="Tool Calls" value={stats.toolCalls} />
-      <ModelCard models={stats.models} />
+      <div className="stats-row stats-row-3">
+        <div className="stat-card">
+          <div className="stat-value">{fmt.format(stats.projects)}</div>
+          <div className="stat-label">Projects</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{fmt.format(stats.sessions)}</div>
+          <div className="stat-label">Sessions</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{fmt.format(stats.toolCalls)}</div>
+          <div className="stat-label">Tool Calls</div>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-label">Tokens</div>
+        <div className="stats-row stats-row-4 token-row">
+          <div title={fmt.format(stats.inputTokens)}>
+            <div className="stat-value">{compactNumber(stats.inputTokens)}</div>
+            <div className="stat-sublabel">Input</div>
+          </div>
+          <div title={fmt.format(stats.outputTokens)}>
+            <div className="stat-value">{compactNumber(stats.outputTokens)}</div>
+            <div className="stat-sublabel">Output</div>
+          </div>
+          <div title={fmt.format(stats.cacheReadTokens)}>
+            <div className="stat-value">{compactNumber(stats.cacheReadTokens)}</div>
+            <div className="stat-sublabel">Cache Read</div>
+          </div>
+          <div title={fmt.format(stats.cacheCreationTokens)}>
+            <div className="stat-value">{compactNumber(stats.cacheCreationTokens)}</div>
+            <div className="stat-sublabel">Cache Creation</div>
+          </div>
+        </div>
+      </div>
+
+      {sortedModels.length > 0 && (
+        <div className="stat-card">
+          <div className="stat-label">Models</div>
+          <ul className="model-list">
+            {sortedModels.map(([model, count]) => (
+              <li key={model}>
+                <span className="model-name">{simplifyModelName(model)}</span>
+                <span className="model-count">{fmt.format(count)} turns</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

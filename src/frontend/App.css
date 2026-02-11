@@ -936,51 +936,72 @@
 
 /* Dashboard stats */
 .dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 0 40px 40px;
-  max-width: 900px;
+  max-width: 700px;
   margin: 0 auto;
   width: 100%;
+}
+
+.stats-row {
+  display: grid;
+  gap: 12px;
+}
+
+.stats-row-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.stats-row-4 {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .stat-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
-  box-shadow: var(--shadow-sm);
+  padding: 14px 18px;
 }
 
 .stat-card-skeleton {
-  height: 72px;
+  height: 64px;
   opacity: 0.4;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 2px;
+  white-space: nowrap;
 }
 
-.stat-card-models {
-  grid-column: span 2;
+.stat-sublabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.token-row {
+  margin-top: 8px;
 }
 
 .model-list {
   list-style: none;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   padding: 0;
 }
 
@@ -988,7 +1009,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3px 0;
+  padding: 2px 0;
   font-size: 0.8rem;
 }
 
@@ -1000,8 +1021,7 @@
 
 .model-count {
   color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 /* Fullscreen */

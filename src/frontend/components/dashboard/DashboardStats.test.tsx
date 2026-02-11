@@ -46,18 +46,20 @@ describe("DashboardStats", () => {
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ stats }), { status: 200 })));
 
     const { container, findByText } = render(<DashboardStats />);
-    await findByText("1,234,567");
+    // Token values use compact format (1.2M), non-token values use full format
+    await findByText("1.2M");
 
     expect(container.querySelector(".dashboard-stats")).not.toBeNull();
-    expect(container.querySelectorAll(".stat-card").length).toBeGreaterThanOrEqual(7);
+    // 3 top cards + 1 tokens card + 1 models card = 5
+    expect(container.querySelectorAll(".stat-card").length).toBe(5);
   });
 
-  test("formats numbers with commas", async () => {
+  test("formats token numbers with compact suffix", async () => {
     const stats = makeStats({ inputTokens: 9_876_543 });
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ stats }), { status: 200 })));
 
     const { findByText } = render(<DashboardStats />);
-    await findByText("9,876,543");
+    await findByText("9.9M");
   });
 
   test("renders model breakdown", async () => {
