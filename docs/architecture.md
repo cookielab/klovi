@@ -19,7 +19,8 @@ Klovi/
 │
 └── src/
     ├── shared/
-    │   └── types.ts                 # Shared type definitions (Turn, Session, Project, etc.)
+    │   ├── types.ts                 # Shared type definitions (Turn, Session, Project, etc.)
+    │   └── content-blocks.ts        # ContentBlock grouping for presentation steps
     │
     ├── server/
     │   ├── config.ts                # Projects directory configuration
@@ -177,8 +178,12 @@ Session { sessionId, project, turns: Turn[] }
 Turn = UserTurn | AssistantTurn | SystemTurn
 
 UserTurn { kind: "user", text, command?, attachments?, uuid, timestamp }
-AssistantTurn { kind: "assistant", model, thinkingBlocks, textBlocks, toolCalls, usage?, stopReason?, uuid, timestamp }
+AssistantTurn { kind: "assistant", model, contentBlocks: ContentBlock[], usage?, stopReason?, uuid, timestamp }
 SystemTurn { kind: "system", text, uuid, timestamp }
+
+ContentBlock = { type: "thinking", block: ThinkingBlock }
+            | { type: "text", text: string }
+            | { type: "tool_call", call: ToolCallWithResult }
 
 ToolCallWithResult { toolUseId, name, input, result, isError, resultImages? }
 TokenUsage { inputTokens, outputTokens, cacheReadTokens?, cacheCreationTokens? }
@@ -214,4 +219,5 @@ Theme selection persisted to `localStorage` key `klovi-theme`. Font size to `klo
 3. **No CSS framework** - custom design system with CSS variables
 4. **Turn merging** - consecutive assistant messages merged into one logical turn (tool_result user messages don't break the turn)
 5. **Hash routing** - simple client-side navigation without a router library
-6. **Sub-step presentation** - assistant turns decomposed into thinking/text/tool-call steps for presentation mode
+6. **Chronological content blocks** - assistant turn content stored as a single `contentBlocks` array preserving API order (thinking, text, and tool calls interleaved)
+7. **Grouped presentation steps** - consecutive non-text blocks (thinking, tool calls) are revealed together as one step; each text block is its own step

@@ -73,7 +73,7 @@ bun run dev
 - Slash commands shown with green `> /command` badge
 
 **Presentation Mode**
-- Step-through navigation: each conversation turn is a step, assistant turns have sub-steps (thinking, text, each tool call)
+- Step-through navigation: each conversation turn is a step, assistant turns have sub-steps (each text block is a step, consecutive non-text blocks like thinking and tool calls are grouped together)
 - Keyboard controls: Arrow keys / Space to advance, Escape to exit, F for fullscreen
 - Progress bar with step counter at the bottom
 - Sidebar hidden, content full-width with larger font

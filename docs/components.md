@@ -18,15 +18,16 @@ Also shows image attachment badges (media type label, not rendered inline).
 
 ### AssistantMessage (`src/frontend/components/message/AssistantMessage.tsx`)
 
-Renders assistant turns as ordered sub-steps:
+Renders assistant turns from the chronological `contentBlocks` array, grouped into presentation steps via `groupContentBlocks()`:
 
-1. **Thinking blocks** → `ThinkingBlock` component (collapsible)
-2. **Text blocks** → `MarkdownRenderer` for each block
-3. **Tool calls** → `ToolCall` component for each (collapsible)
+- **Text blocks** → each is its own step (`MarkdownRenderer`)
+- **Non-text blocks** (thinking, tool calls) → consecutive runs grouped into a single step
+  - Thinking → `ThinkingBlock` (collapsible)
+  - Tool calls → `ToolCall` (collapsible)
 
 Shows model shorthand in the header (Opus/Sonnet/Haiku parsed from model string). Displays token usage footer when available.
 
-In presentation mode, limits visible sub-steps based on `visibleSubSteps` count.
+In presentation mode, limits visible step groups based on `visibleSubSteps` count.
 
 ### ToolCall (`src/frontend/components/message/ToolCall.tsx`)
 
@@ -176,9 +177,9 @@ Reusable expand/collapse wrapper with animated disclosure. Max height 500px with
 Step-through state machine for presentations:
 
 - Builds a flat step list from turns: each user/system turn = 1 step, each assistant turn = N sub-steps
-- Sub-step breakdown: (thinking blocks count as 1) + (text blocks count as 1) + (each tool call counts as 1)
+- Sub-steps use `groupContentBlocks()`: each text block is one step, consecutive non-text blocks (thinking, tool calls) are grouped into one step
 - Tracks `visibleTurns` count and `visibleSubSteps` Map (turnIndex → subStepCount)
-- Methods: `enter()`, `exit()`, `next()`, `prev()`, `toggleFullscreen()`
+- Methods: `enter()`, `exit()`, `next()`, `prev()`, `nextTurn()`, `prevTurn()`, `toggleFullscreen()`
 
 ### useHiddenProjects (`src/frontend/hooks/useHiddenProjects.ts`)
 
