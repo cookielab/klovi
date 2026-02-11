@@ -68,6 +68,8 @@ function renderTurn(
   }
 }
 
+const STATUS_RE = /^\[.+\]$/;
+
 export function MessageList({
   turns,
   visibleSubSteps,
@@ -77,6 +79,11 @@ export function MessageList({
   planSessionId,
   implSessionId,
 }: MessageListProps) {
+  const firstUserTurnIndex = turns.findIndex((t) => {
+    if (t.kind !== "user") return false;
+    return !STATUS_RE.test(t.text.trim());
+  });
+
   return (
     <div className="message-list">
       {turns.map((turn, index) => {
@@ -90,7 +97,7 @@ export function MessageList({
           project,
           isSubAgent,
           planSessionId,
-          implSessionId,
+          index === firstUserTurnIndex ? implSessionId : undefined,
         );
       })}
     </div>
