@@ -53,9 +53,11 @@ bun run dev
 
 **Session Browsing**
 - Auto-discovers all projects from `~/.claude/projects/`
+- Dashboard statistics: project/session/tool counts, token usage breakdown, model distribution
 - Filterable project list with session counts and last activity
 - Hide/unhide projects to declutter the list
 - Sessions show first message, model, git branch, and timestamp
+- Plan/implementation session detection with colored badges and cross-session navigation links
 - Full conversation rendering with user/assistant/system messages
 - Sub-agent browsing: navigate into Task tool sub-agent sessions
 - Copy resume command (`claude --resume <id>`) from session header
@@ -99,6 +101,7 @@ bun run dev
 | `bun run build` | Build frontend + server for production |
 | `bun run build:frontend` | Bundle frontend into `dist/public/` |
 | `bun run build:server` | Bundle server into `dist/server.js` (Node.js target) |
+| `bun run build:compile` | Compile standalone binaries for multiple platforms |
 | `bun test` | Run all tests |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `bun run lint` | Lint with Biome |
@@ -111,6 +114,7 @@ bun run dev
 | Endpoint | Description |
 |---|---|
 | `GET /api/version` | Server version information |
+| `GET /api/stats` | Aggregate dashboard statistics (projects, sessions, tokens, models) |
 | `GET /api/projects` | List all discovered projects |
 | `GET /api/projects/:encodedPath/sessions` | List sessions for a project |
 | `GET /api/sessions/:id?project=:encodedPath` | Full parsed session with turns |

@@ -1,10 +1,23 @@
 # Frontend Components
 
+## Dashboard Components
+
+### DashboardStats (`src/frontend/components/dashboard/DashboardStats.tsx`)
+
+Fetches `/api/stats` and displays aggregate statistics on the homepage. Shows:
+- **Top row**: project count, session count, tool call count
+- **Token card**: input, output, cache read, cache creation tokens (compact formatting: K/M/B with full number on hover)
+- **Models card**: sorted list of models with turn counts
+
+Displays a skeleton loading state (3 placeholder cards) while fetching. Returns `null` on error.
+
 ## Message Components
 
 ### MessageList (`src/frontend/components/message/MessageList.tsx`)
 
 Maps `Turn[]` to the appropriate message component. In presentation mode, respects `visibleTurns` and `visibleSubSteps` from the presentation hook to progressively reveal content.
+
+Passes `planSessionId` to all `UserMessage` components and `implSessionId` only to the first real user turn (for plan→implementation session linking).
 
 ### UserMessage (`src/frontend/components/message/UserMessage.tsx`)
 
@@ -15,6 +28,10 @@ Renders user turns. Three display modes:
 3. **Regular text** - rendered as markdown via MarkdownRenderer
 
 Also shows image attachment badges (media type label, not rendered inline).
+
+Supports plan/implementation session linking:
+- When `planSessionId` is provided and the message starts with "Implement the following plan", shows a "View planning session" link
+- When `implSessionId` is provided on the first user turn (non-plan message), shows a "View implementation session" link
 
 ### AssistantMessage (`src/frontend/components/message/AssistantMessage.tsx`)
 
@@ -91,6 +108,7 @@ Flex container: sidebar (320px fixed) + main content area. `hideSidebar` prop hi
 
 Top bar with:
 - Title + optional breadcrumb (project path)
+- Session type badge ("Plan" or "Impl") when `sessionType` prop is provided
 - Copy resume command button (when `copyCommand` prop is provided)
 - Back link (when `backHref` prop is provided, used for sub-agent navigation)
 - Theme toggle button (cycles: system → light → dark)
@@ -109,7 +127,7 @@ Fetches `/api/projects` and renders a filterable list. Each project shows name (
 
 ### SessionList (`src/frontend/components/project/SessionList.tsx`)
 
-Fetches `/api/projects/:path/sessions` and renders session cards. Each shows first message preview, model, git branch, and relative timestamp. Highlights selected session.
+Fetches `/api/projects/:path/sessions` and renders session cards. Each shows first message preview, model, git branch, and relative timestamp. Highlights selected session. Sessions with a detected `sessionType` display a colored badge ("Plan" or "Impl") and get a corresponding CSS class for visual distinction.
 
 ### HiddenProjectList (`src/frontend/components/project/HiddenProjectList.tsx`)
 

@@ -4,7 +4,7 @@
 
 ```
 Klovi/
-├── index.ts                         # Server entry (CLI flags, route wiring, static dir)
+├── index.ts                         # Server entry (CLI bootstrap, static dir resolution)
 ├── index.html                       # HTML template (imports frontend.tsx, built by Bun)
 ├── package.json
 ├── tsconfig.json                    # Strict mode, noUncheckedIndexedAccess
@@ -15,7 +15,8 @@ Klovi/
 ├── CONTENT_TYPES.md                 # JSONL content type catalog
 │
 ├── scripts/
-│   └── build-server.ts             # Bundles server for Node.js, injects version/commit
+│   ├── build-server.ts             # Bundles server for Node.js, injects version/commit
+│   └── build-compile.ts            # Compiles standalone binaries (embeds frontend assets)
 │
 └── src/
     ├── shared/
@@ -23,6 +24,7 @@ Klovi/
     │   └── content-blocks.ts        # ContentBlock grouping for presentation steps
     │
     ├── server/
+    │   ├── cli.ts                   # CLI arg parsing, help text, startup banner, route wiring
     │   ├── config.ts                # Projects directory configuration
     │   ├── http.ts                  # HTTP server (node:http), route matching, static files
     │   ├── version.ts               # Version info from package.json
@@ -30,11 +32,13 @@ Klovi/
     │   │   ├── projects.ts          # GET /api/projects
     │   │   ├── sessions.ts          # GET /api/projects/:path/sessions
     │   │   ├── session.ts           # GET /api/sessions/:id?project=...
+    │   │   ├── stats.ts             # GET /api/stats (dashboard statistics, 5-min cache)
     │   │   ├── subagent.ts          # GET /api/sessions/:id/subagents/:agentId?project=...
     │   │   └── version.ts           # GET /api/version
     │   └── parser/
     │       ├── claude-dir.ts        # Project/session discovery from ~/.claude/projects/
     │       ├── session.ts           # JSONL parser: parseSession(), buildTurns()
+    │       ├── stats.ts             # Scans all sessions for aggregate statistics
     │       ├── command-message.ts   # Slash command XML extraction
     │       └── types.ts             # Raw JSONL line types (RawLine, RawMessage, etc.)
     │
@@ -42,7 +46,10 @@ Klovi/
         ├── App.tsx                  # Root component: router, state, hash navigation
         ├── App.css                  # All styles + CSS custom properties (light/dark)
         ├── index.css                # Global reset + base styles
+        ├── svg.d.ts                 # SVG module declarations for TypeScript
         ├── components/
+        │   ├── dashboard/
+        │   │   └── DashboardStats.tsx  # Homepage statistics (projects, sessions, tokens, models)
         │   ├── layout/
         │   │   ├── Layout.tsx       # Sidebar + main content flex wrapper
         │   │   ├── Header.tsx       # Top bar: title, theme, font size, copy command, back link
@@ -103,15 +110,16 @@ Klovi/
 
 ## Server
 
-Custom `node:http` server in `src/server/http.ts` with route matching and static file serving. Routes are wired in `index.ts`:
+Custom `node:http` server in `src/server/http.ts` with route matching and static file serving. CLI argument parsing, help text, startup banner, and route creation are extracted to `src/server/cli.ts`. Routes are wired via `createRoutes()`:
 
 | Route | Handler | Purpose |
 |---|---|---|
 | `/*` | Static file serving | Serves pre-built frontend from `dist/public/` |
 | `/api/version` | `handleVersion()` | Server version information |
+| `/api/stats` | `handleStats()` | Aggregate dashboard statistics (5-min cache) |
 | `/api/projects` | `handleProjects()` | Lists all discovered projects |
 | `/api/projects/:encodedPath/sessions` | `handleSessions()` | Lists sessions for a project |
-| `/api/sessions/:sessionId?project=` | `handleSession()` | Returns full parsed session |
+| `/api/sessions/:sessionId?project=` | `handleSession()` | Returns full parsed session (with plan/impl linking) |
 | `/api/sessions/:sessionId/subagents/:agentId?project=` | `handleSubAgent()` | Returns sub-agent session |
 
 ### Build Pipeline
@@ -150,7 +158,8 @@ App
 │   │   ├── ProjectList          (home)
 │   │   └── SessionList          (project/session views)
 │   └── main
-│       ├── Header               (always visible, with copyCommand + backHref)
+│       ├── Header               (always visible, with copyCommand + backHref + sessionType badge)
+│       ├── DashboardStats       (home view, fetches /api/stats)
 │       ├── empty-state          (home/project)
 │       ├── HiddenProjectList    (hidden projects view)
 │       ├── SessionView          (session, normal mode)
@@ -174,7 +183,8 @@ App
 All shared types live in `src/shared/types.ts`:
 
 ```
-Session { sessionId, project, turns: Turn[] }
+Session { sessionId, project, turns: Turn[], planSessionId?, implSessionId? }
+SessionSummary { sessionId, timestamp, slug, firstMessage, model, gitBranch, sessionType? }
 Turn = UserTurn | AssistantTurn | SystemTurn
 
 UserTurn { kind: "user", text, command?, attachments?, uuid, timestamp }
@@ -187,6 +197,7 @@ ContentBlock = { type: "thinking", block: ThinkingBlock }
 
 ToolCallWithResult { toolUseId, name, input, result, isError, resultImages? }
 TokenUsage { inputTokens, outputTokens, cacheReadTokens?, cacheCreationTokens? }
+DashboardStats { projects, sessions, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens, toolCalls, models }
 ```
 
 Raw JSONL types in `src/server/parser/types.ts`:

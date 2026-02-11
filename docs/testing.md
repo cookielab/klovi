@@ -27,17 +27,20 @@ bun test src/frontend       # Frontend tests only
 bun test --watch            # Watch mode
 ```
 
-**Current:** 127 tests across 11 files
+**Current:** 161 tests across 14 files
 
 ## Test Files
 
 | File | What it covers |
 |---|---|
-| `src/server/parser/session.test.ts` | `buildTurns()`, `extractSubAgentMap()`, contentBlocks ordering |
+| `src/server/parser/session.test.ts` | `buildTurns()`, `extractSubAgentMap()`, contentBlocks ordering, plan/impl linking |
 | `src/server/parser/command-message.test.ts` | `parseCommandMessage()`, `cleanCommandMessage()` |
-| `src/frontend/components/message/UserMessage.test.tsx` | Regular text, commands, status notices, attachments |
+| `src/server/parser/claude-dir.test.ts` | Session discovery, `classifySessionTypes()`, slug extraction |
+| `src/server/parser/stats.test.ts` | `scanStats()` aggregate statistics computation |
+| `src/frontend/components/message/UserMessage.test.tsx` | Regular text, commands, status notices, attachments, plan/impl links |
 | `src/frontend/components/message/AssistantMessage.test.tsx` | Thinking, text, tool calls, model display, token usage |
 | `src/frontend/components/message/ToolCall.test.tsx` | `getToolSummary()` for all tool types, MCP parsing |
+| `src/frontend/components/dashboard/DashboardStats.test.tsx` | Dashboard rendering, loading state, model display |
 | `src/frontend/hooks/useHiddenProjects.test.ts` | `useHiddenProjects` hook: hide, unhide, localStorage persistence |
 | `src/frontend/hooks/usePresentationMode.test.ts` | Step counting, navigation, turn boundaries, visibility |
 | `src/frontend/hooks/useTheme.test.ts` | Theme cycling, font size, localStorage persistence |

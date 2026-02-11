@@ -157,6 +157,7 @@ Available on message lines but not all currently used:
 |---|---|---|
 | `timestamp` | `"2025-02-06T10:30:00Z"` | Yes (shown on user and assistant messages) |
 | `uuid` | `"abc-123"` | Yes (turn identity) |
+| `slug` | `"abc-123-slug"` | Yes (session identity for plan/impl linking) |
 | `model` | `"claude-opus-4-6"` | Yes (assistant badge) |
 | `stop_reason` | `"end_turn"`, `"tool_use"` | Yes (on AssistantTurn) |
 | `usage.*` | Token counts | Yes (token usage footer on assistant messages) |
@@ -164,6 +165,18 @@ Available on message lines but not all currently used:
 | `gitBranch` | `"main"` | No (used in session list) |
 | `version` | `"2.1.33"` | No |
 | `parentUuid` | `"def-456"` | No |
+
+## Plan/Implementation Session Linking
+
+Klovi detects planning and implementation sessions using the `slug` field and first message content:
+
+1. **Session type classification** (`classifySessionTypes()`): Sessions whose first message starts with "Implement the following plan" are classified as `implementation`. Sessions sharing the same `slug` as an implementation session (but not themselves implementation sessions) are classified as `plan`.
+
+2. **Cross-session linking**: When viewing a session, Klovi resolves links to related sessions:
+   - `findPlanSessionId()` — for implementation sessions, finds the planning session with the same `slug`. Skips status notices (e.g. `[Session resumed]`) when checking the first real user message.
+   - `findImplSessionId()` — for any session, finds an implementation session with the same `slug`.
+
+3. **UI rendering**: Planning sessions show a "View implementation session" link on the first user turn. Implementation sessions show a "View planning session" link on their "Implement the following plan" message.
 
 ## Progress Events (Skipped)
 
