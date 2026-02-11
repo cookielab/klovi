@@ -40,14 +40,17 @@ export interface UserTurn {
   attachments?: Attachment[];
 }
 
+export type ContentBlock =
+  | { type: "thinking"; block: ThinkingBlock }
+  | { type: "text"; text: string }
+  | { type: "tool_call"; call: ToolCallWithResult };
+
 export interface AssistantTurn {
   kind: "assistant";
   uuid: string;
   timestamp: string;
   model: string;
-  thinkingBlocks: ThinkingBlock[];
-  textBlocks: string[];
-  toolCalls: ToolCallWithResult[];
+  contentBlocks: ContentBlock[];
   usage?: TokenUsage;
   stopReason?: string;
 }

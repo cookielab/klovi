@@ -25,7 +25,7 @@ describe("buildTurns", () => {
     expect((turns[0] as UserTurn).text).toBe("Hello world");
   });
 
-  test("basic assistant text → AssistantTurn with textBlocks", () => {
+  test("basic assistant text → AssistantTurn with text contentBlock", () => {
     const lines: RawLine[] = [
       line({
         type: "assistant",
@@ -40,7 +40,8 @@ describe("buildTurns", () => {
     expect(turns).toHaveLength(1);
     const turn = turns[0] as AssistantTurn;
     expect(turn.kind).toBe("assistant");
-    expect(turn.textBlocks).toEqual(["Here is my response."]);
+    expect(turn.contentBlocks).toHaveLength(1);
+    expect(turn.contentBlocks[0]).toEqual({ type: "text", text: "Here is my response." });
     expect(turn.model).toBe("claude-sonnet-4-5-20250929");
   });
 
@@ -60,9 +61,12 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     const turn = turns[0] as AssistantTurn;
-    expect(turn.thinkingBlocks).toHaveLength(1);
-    expect(turn.thinkingBlocks[0]!.text).toBe("Let me think about this...");
-    expect(turn.textBlocks).toEqual(["My answer."]);
+    expect(turn.contentBlocks).toHaveLength(2);
+    expect(turn.contentBlocks[0]).toEqual({
+      type: "thinking",
+      block: { text: "Let me think about this..." },
+    });
+    expect(turn.contentBlocks[1]).toEqual({ type: "text", text: "My answer." });
   });
 
   test("tool use + tool result matching by id", () => {
@@ -99,10 +103,14 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     expect(turns).toHaveLength(1);
     const turn = turns[0] as AssistantTurn;
-    expect(turn.toolCalls).toHaveLength(1);
-    expect(turn.toolCalls[0]!.name).toBe("Read");
-    expect(turn.toolCalls[0]!.result).toBe("file contents here");
-    expect(turn.toolCalls[0]!.isError).toBe(false);
+    expect(turn.contentBlocks).toHaveLength(1);
+    const call = turn.contentBlocks[0]!;
+    expect(call.type).toBe("tool_call");
+    if (call.type === "tool_call") {
+      expect(call.call.name).toBe("Read");
+      expect(call.call.result).toBe("file contents here");
+      expect(call.call.isError).toBe(false);
+    }
   });
 
   test("tool result is_error: true → isError: true", () => {
@@ -139,8 +147,12 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     const turn = turns[0] as AssistantTurn;
-    expect(turn.toolCalls[0]!.isError).toBe(true);
-    expect(turn.toolCalls[0]!.result).toBe("command failed");
+    const call = turn.contentBlocks[0]!;
+    expect(call.type).toBe("tool_call");
+    if (call.type === "tool_call") {
+      expect(call.call.isError).toBe(true);
+      expect(call.call.result).toBe("command failed");
+    }
   });
 
   test("image attachment in user message → Attachment", () => {
@@ -268,8 +280,58 @@ describe("buildTurns", () => {
     // Should merge into one assistant turn
     expect(turns).toHaveLength(1);
     const turn = turns[0] as AssistantTurn;
-    expect(turn.textBlocks).toEqual(["I'll read the file.", "Now I'll continue."]);
-    expect(turn.toolCalls).toHaveLength(1);
+    expect(turn.contentBlocks.map((b) => b.type)).toEqual(["text", "tool_call", "text"]);
+  });
+
+  test("contentBlocks preserve chronological order of thinking, text, and tool calls", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "assistant",
+        message: {
+          role: "assistant",
+          model: "claude-opus-4-6",
+          content: [
+            { type: "thinking", thinking: "Let me think..." },
+            { type: "text", text: "I'll read the file." },
+            {
+              type: "tool_use",
+              id: "t1",
+              name: "Read",
+              input: { file_path: "/a.ts" },
+            },
+          ],
+        },
+      }),
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: [{ type: "tool_result", tool_use_id: "t1", content: "contents" }],
+        },
+      }),
+      line({
+        type: "assistant",
+        message: {
+          role: "assistant",
+          model: "claude-opus-4-6",
+          content: [
+            { type: "thinking", thinking: "Now I know the file contents." },
+            { type: "text", text: "The file contains..." },
+          ],
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as AssistantTurn;
+    expect(turn.contentBlocks).toHaveLength(5);
+    expect(turn.contentBlocks.map((b) => b.type)).toEqual([
+      "thinking",
+      "text",
+      "tool_call",
+      "thinking",
+      "text",
+    ]);
   });
 
   test("system turn extraction", () => {
@@ -371,10 +433,14 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     const turn = turns[0] as AssistantTurn;
-    expect(turn.toolCalls[0]!.result).toBe("Image read successfully");
-    expect(turn.toolCalls[0]!.resultImages).toHaveLength(1);
-    expect(turn.toolCalls[0]!.resultImages![0]!.mediaType).toBe("image/png");
-    expect(turn.toolCalls[0]!.resultImages![0]!.data).toBe("AAAA");
+    const call = turn.contentBlocks[0]!;
+    expect(call.type).toBe("tool_call");
+    if (call.type === "tool_call") {
+      expect(call.call.result).toBe("Image read successfully");
+      expect(call.call.resultImages).toHaveLength(1);
+      expect(call.call.resultImages![0]!.mediaType).toBe("image/png");
+      expect(call.call.resultImages![0]!.data).toBe("AAAA");
+    }
   });
 
   test("multiple assistant lines merge into one turn", () => {
@@ -407,8 +473,8 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     expect(turns).toHaveLength(1);
     const turn = turns[0] as AssistantTurn;
-    expect(turn.thinkingBlocks).toHaveLength(1);
-    expect(turn.textBlocks).toEqual(["First part.", "Second part."]);
+    expect(turn.contentBlocks).toHaveLength(3);
+    expect(turn.contentBlocks.map((b) => b.type)).toEqual(["thinking", "text", "text"]);
   });
 
   test("empty/malformed lines handled gracefully", () => {

@@ -1,4 +1,5 @@
 import type React from "react";
+import { groupContentBlocks } from "../../../shared/content-blocks.ts";
 import type { AssistantTurn } from "../../../shared/types.ts";
 import { shortModel } from "../../utils/model.ts";
 import { formatTimestamp } from "../../utils/time.ts";
@@ -19,34 +20,25 @@ export function AssistantMessage({
   sessionId,
   project,
 }: AssistantMessageProps) {
-  // Build ordered sub-steps
+  // Group consecutive non-text blocks into single steps
+  const groups = groupContentBlocks(turn.contentBlocks);
   const subSteps: React.ReactNode[] = [];
-  let key = 0;
 
-  if (turn.thinkingBlocks.length > 0) {
+  for (let g = 0; g < groups.length; g++) {
+    const group = groups[g]!;
     subSteps.push(
-      <div key={`thinking-${key++}`}>
-        {turn.thinkingBlocks.map((b, i) => (
-          <ThinkingBlock key={i} block={b} />
-        ))}
-      </div>,
-    );
-  }
-
-  if (turn.textBlocks.length > 0) {
-    subSteps.push(
-      <div key={`text-${key++}`}>
-        {turn.textBlocks.map((text, i) => (
-          <MarkdownRenderer key={i} content={text} />
-        ))}
-      </div>,
-    );
-  }
-
-  for (const call of turn.toolCalls) {
-    subSteps.push(
-      <div key={`tool-${key++}`}>
-        <ToolCall call={call} sessionId={sessionId} project={project} />
+      <div key={g}>
+        {group.map((block, i) => {
+          if (block.type === "thinking") {
+            return <ThinkingBlock key={`thinking-${i}`} block={block.block} />;
+          }
+          if (block.type === "text") {
+            return <MarkdownRenderer key={`text-${i}`} content={block.text} />;
+          }
+          return (
+            <ToolCall key={`tool-${i}`} call={block.call} sessionId={sessionId} project={project} />
+          );
+        })}
       </div>,
     );
   }

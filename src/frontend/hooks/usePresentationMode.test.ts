@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { act, renderHook } from "@testing-library/react";
-import type { AssistantTurn, Turn, UserTurn } from "../../shared/types.ts";
+import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../../shared/types.ts";
 import { usePresentationMode } from "./usePresentationMode.ts";
 
 function userTurn(text = "hello"): UserTurn {
@@ -21,17 +21,20 @@ function assistantTurn(
     uuid: crypto.randomUUID(),
     timestamp: "2025-01-01T00:00:00Z",
     model: "claude-sonnet-4-20250514",
-    thinkingBlocks: Array.from({ length: thinking }, () => ({
-      text: "thinking...",
-    })),
-    textBlocks: Array.from({ length: text }, () => "response"),
-    toolCalls: Array.from({ length: tools }, (_, i) => ({
-      toolUseId: `tool-${i}`,
-      name: "Read",
-      input: {},
-      result: "ok",
-      isError: false,
-    })),
+    contentBlocks: [
+      ...Array.from({ length: thinking }, () => ({
+        type: "thinking" as const,
+        block: { text: "thinking..." },
+      })),
+      ...Array.from({ length: text }, () => ({
+        type: "text" as const,
+        text: "response",
+      })),
+      ...Array.from({ length: tools }, (_, i) => ({
+        type: "tool_call" as const,
+        call: { toolUseId: `tool-${i}`, name: "Read", input: {}, result: "ok", isError: false },
+      })),
+    ] satisfies ContentBlock[],
   };
 }
 
@@ -73,7 +76,7 @@ describe("usePresentationMode", () => {
     test("assistant turn with thinking + text + tool calls = N steps", () => {
       const turns: Turn[] = [assistantTurn({ thinking: 1, text: 1, tools: 3 })];
       const { result } = renderHook(() => usePresentationMode(turns));
-      expect(result.current.totalSteps).toBe(5); // thinking + text + 3 tools
+      expect(result.current.totalSteps).toBe(3); // thinking + text + 3 tools grouped
     });
 
     test("empty assistant turn = minimum 1 step", () => {
