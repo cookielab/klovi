@@ -21,11 +21,11 @@ export async function parseSession(sessionId: string, encodedPath: string): Prom
   // Attach subAgentId to Task tool calls
   for (const turn of turns) {
     if (turn.kind !== "assistant") continue;
-    for (const call of turn.toolCalls) {
-      if (call.name === "Task") {
-        const agentId = subAgentMap.get(call.toolUseId);
+    for (const block of turn.contentBlocks) {
+      if (block.type === "tool_call" && block.call.name === "Task") {
+        const agentId = subAgentMap.get(block.call.toolUseId);
         if (agentId) {
-          call.subAgentId = agentId;
+          block.call.subAgentId = agentId;
         }
       }
     }
@@ -63,11 +63,11 @@ export async function parseSubAgentSession(
 
   for (const turn of turns) {
     if (turn.kind !== "assistant") continue;
-    for (const call of turn.toolCalls) {
-      if (call.name === "Task") {
-        const nestedAgentId = subAgentMap.get(call.toolUseId);
+    for (const block of turn.contentBlocks) {
+      if (block.type === "tool_call" && block.call.name === "Task") {
+        const nestedAgentId = subAgentMap.get(block.call.toolUseId);
         if (nestedAgentId) {
-          call.subAgentId = nestedAgentId;
+          block.call.subAgentId = nestedAgentId;
         }
       }
     }
@@ -228,9 +228,7 @@ function createAssistantTurn(line: RawLine): AssistantTurn {
     uuid: line.uuid || "",
     timestamp: line.timestamp || "",
     model: line.message!.model || "",
-    thinkingBlocks: [],
-    textBlocks: [],
-    toolCalls: [],
+    contentBlocks: [],
   };
 }
 
@@ -257,11 +255,11 @@ function processContentBlock(
   toolResults: ToolResultMap,
 ): void {
   if (block.type === "thinking" && "thinking" in block) {
-    current.thinkingBlocks.push({ text: block.thinking });
+    current.contentBlocks.push({ type: "thinking", block: { text: block.thinking } });
   } else if (block.type === "text" && "text" in block && block.text.trim()) {
-    current.textBlocks.push(block.text);
+    current.contentBlocks.push({ type: "text", text: block.text });
   } else if (block.type === "tool_use" && "id" in block) {
-    current.toolCalls.push(buildToolCall(block, toolResults));
+    current.contentBlocks.push({ type: "tool_call", call: buildToolCall(block, toolResults) });
   }
 }
 

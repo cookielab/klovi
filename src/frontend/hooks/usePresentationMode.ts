@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { groupContentBlocks } from "../../shared/content-blocks.ts";
 import type { AssistantTurn, Turn } from "../../shared/types.ts";
 
 interface PresentationState {
@@ -20,11 +21,7 @@ interface PresentationState {
 function countSubSteps(turn: Turn): number {
   if (turn.kind !== "assistant") return 1;
   const a = turn as AssistantTurn;
-  let count = 0;
-  if (a.thinkingBlocks.length > 0) count++;
-  if (a.textBlocks.length > 0) count++;
-  count += a.toolCalls.length;
-  return Math.max(count, 1);
+  return Math.max(groupContentBlocks(a.contentBlocks).length, 1);
 }
 
 export function usePresentationMode(turns: Turn[]): PresentationState {

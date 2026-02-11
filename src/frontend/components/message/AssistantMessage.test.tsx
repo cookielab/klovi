@@ -9,9 +9,7 @@ function makeTurn(overrides: Partial<AssistantTurn> = {}): AssistantTurn {
     uuid: "a1",
     timestamp: "2024-01-15T10:00:00Z",
     model: "claude-sonnet-4-5-20250929",
-    thinkingBlocks: [],
-    textBlocks: [],
-    toolCalls: [],
+    contentBlocks: [],
     ...overrides,
   };
 }
@@ -45,7 +43,7 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage
         turn={makeTurn({
-          textBlocks: ["Hello"],
+          contentBlocks: [{ type: "text", text: "Hello" }],
           usage: {
             inputTokens: 1500,
             outputTokens: 300,
@@ -64,7 +62,9 @@ describe("AssistantMessage", () => {
   });
 
   test("token usage footer hidden when no usage", () => {
-    const { container } = render(<AssistantMessage turn={makeTurn({ textBlocks: ["Hello"] })} />);
+    const { container } = render(
+      <AssistantMessage turn={makeTurn({ contentBlocks: [{ type: "text", text: "Hello" }] })} />,
+    );
     const usage = container.querySelector(".token-usage");
     expect(usage).toBeNull();
   });
@@ -73,7 +73,7 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage
         turn={makeTurn({
-          thinkingBlocks: [{ text: "Let me think..." }],
+          contentBlocks: [{ type: "thinking", block: { text: "Let me think..." } }],
         })}
       />,
     );
@@ -85,7 +85,7 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage
         turn={makeTurn({
-          textBlocks: ["Hello **bold** world"],
+          contentBlocks: [{ type: "text", text: "Hello **bold** world" }],
         })}
       />,
     );
@@ -97,13 +97,16 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage
         turn={makeTurn({
-          toolCalls: [
+          contentBlocks: [
             {
-              toolUseId: "t1",
-              name: "Bash",
-              input: { command: "ls" },
-              result: "file.ts",
-              isError: false,
+              type: "tool_call",
+              call: {
+                toolUseId: "t1",
+                name: "Bash",
+                input: { command: "ls" },
+                result: "file.ts",
+                isError: false,
+              },
             },
           ],
         })}
