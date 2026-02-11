@@ -4,7 +4,7 @@
 
 Klovi is a **read-only** local web viewer for Claude Code session history. It:
 
-- Reads JSONL session files from `~/.claude/projects/` (or a custom directory via `--projects-dir`)
+- Reads JSONL session files from `~/.claude/projects/` (or a custom directory via `--claude-code-dir`)
 - Serves a local HTTP server (default port 3583)
 - Does **not** write, modify, or delete any files
 - Does **not** send data to external servers

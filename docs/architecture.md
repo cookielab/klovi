@@ -124,7 +124,7 @@ The frontend is built with `bun build` (HTML imports) into `dist/public/`. The s
 |---|---|
 | `--help` / `-h` | Show usage information and exit |
 | `--port <number>` | Specify server port (default: 3583) |
-| `--projects-dir <path>` | Override the Claude projects directory |
+| `--claude-code-dir <path>` | Path to Claude Code data directory |
 | `--accept-risks` | Skip the startup security warning |
 
 ## Frontend Router

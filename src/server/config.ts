@@ -1,12 +1,16 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-let projectsDir = join(homedir(), ".claude", "projects");
+let claudeCodeDir = join(homedir(), ".claude");
 
-export function getProjectsDir(): string {
-  return projectsDir;
+export function getClaudeCodeDir(): string {
+  return claudeCodeDir;
 }
 
-export function setProjectsDir(dir: string): void {
-  projectsDir = dir;
+export function setClaudeCodeDir(dir: string): void {
+  claudeCodeDir = dir;
+}
+
+export function getProjectsDir(): string {
+  return join(claudeCodeDir, "projects");
 }

@@ -86,7 +86,7 @@ bun run dev
 
 **CLI**
 - `--port <number>` — specify server port (default: 3583)
-- `--projects-dir <path>` — override the Claude projects directory
+- `--claude-code-dir <path>` — path to Claude Code data directory
 - `--accept-risks` — skip the startup security warning
 - `--help` / `-h` — show usage information
 

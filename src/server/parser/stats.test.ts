@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setProjectsDir } from "../config.ts";
+import { setClaudeCodeDir } from "../config.ts";
 import { scanStats } from "./stats.ts";
 
 function makeTmpDir(): string {
@@ -27,8 +27,8 @@ afterEach(() => {
 describe("scanStats", () => {
   test("counts projects and sessions", async () => {
     tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "proj1");
-    mkdirSync(proj);
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
     writeJsonl(join(proj, "session1.jsonl"), [
       { type: "user", message: { role: "user", content: "Hello" } },
     ]);
@@ -36,7 +36,7 @@ describe("scanStats", () => {
       { type: "user", message: { role: "user", content: "World" } },
     ]);
 
-    setProjectsDir(tmpDir);
+    setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
     expect(stats.projects).toBe(1);
     expect(stats.sessions).toBe(2);
@@ -44,8 +44,8 @@ describe("scanStats", () => {
 
   test("sums token usage from assistant messages", async () => {
     tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "proj1");
-    mkdirSync(proj);
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
     writeJsonl(join(proj, "s1.jsonl"), [
       {
         type: "assistant",
@@ -77,7 +77,7 @@ describe("scanStats", () => {
       },
     ]);
 
-    setProjectsDir(tmpDir);
+    setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
     expect(stats.inputTokens).toBe(300);
     expect(stats.outputTokens).toBe(130);
@@ -87,8 +87,8 @@ describe("scanStats", () => {
 
   test("counts tool_use blocks", async () => {
     tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "proj1");
-    mkdirSync(proj);
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
     writeJsonl(join(proj, "s1.jsonl"), [
       {
         type: "assistant",
@@ -105,15 +105,15 @@ describe("scanStats", () => {
       },
     ]);
 
-    setProjectsDir(tmpDir);
+    setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
     expect(stats.toolCalls).toBe(2);
   });
 
   test("tracks model frequency", async () => {
     tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "proj1");
-    mkdirSync(proj);
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
     writeJsonl(join(proj, "s1.jsonl"), [
       {
         type: "assistant",
@@ -144,7 +144,7 @@ describe("scanStats", () => {
       },
     ]);
 
-    setProjectsDir(tmpDir);
+    setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
     expect(stats.models["claude-opus-4-6"]).toBe(2);
     expect(stats.models["claude-sonnet-4-5-20250929"]).toBe(1);
@@ -152,8 +152,8 @@ describe("scanStats", () => {
 
   test("skips non-assistant lines", async () => {
     tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "proj1");
-    mkdirSync(proj);
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
     writeJsonl(join(proj, "s1.jsonl"), [
       { type: "user", message: { role: "user", content: "Hello" } },
       { type: "system", message: { content: "System init" } },
@@ -168,7 +168,7 @@ describe("scanStats", () => {
       },
     ]);
 
-    setProjectsDir(tmpDir);
+    setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
     expect(stats.inputTokens).toBe(50);
     expect(stats.outputTokens).toBe(25);
@@ -176,12 +176,12 @@ describe("scanStats", () => {
 
   test("handles empty and malformed files gracefully", async () => {
     tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "proj1");
-    mkdirSync(proj);
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
     writeFileSync(join(proj, "empty.jsonl"), "");
     writeFileSync(join(proj, "bad.jsonl"), "not json\n{broken");
 
-    setProjectsDir(tmpDir);
+    setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
     expect(stats.projects).toBe(1);
     expect(stats.sessions).toBe(2);
@@ -189,7 +189,7 @@ describe("scanStats", () => {
   });
 
   test("handles missing projects directory", async () => {
-    setProjectsDir("/nonexistent/path/that/does/not/exist");
+    setClaudeCodeDir("/nonexistent/path/that/does/not/exist");
     const stats = await scanStats();
     expect(stats.projects).toBe(0);
     expect(stats.sessions).toBe(0);

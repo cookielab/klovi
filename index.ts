@@ -8,7 +8,7 @@ import {
   promptSecurityWarning,
   showHelpText,
 } from "./src/server/cli.ts";
-import { getProjectsDir } from "./src/server/config.ts";
+import { getClaudeCodeDir } from "./src/server/config.ts";
 import { startServer } from "./src/server/http.ts";
 
 const { port, acceptRisks, showHelp } = parseCliArgs(process.argv);
@@ -18,10 +18,10 @@ if (showHelp) {
   process.exit(0);
 }
 
-const resolvedDir = getProjectsDir();
+const resolvedDir = getClaudeCodeDir();
 if (!existsSync(resolvedDir)) {
-  console.error(`Error: projects directory not found: ${resolvedDir}`);
-  console.error("Hint: use --projects-dir <path> to specify a custom location.");
+  console.error(`Error: Claude Code directory not found: ${resolvedDir}`);
+  console.error("Hint: use --claude-code-dir <path> to specify a custom location.");
   process.exit(1);
 }
 

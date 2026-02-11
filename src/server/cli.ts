@@ -5,7 +5,7 @@ import { handleSessions } from "./api/sessions.ts";
 import { handleStats } from "./api/stats.ts";
 import { handleSubAgent } from "./api/subagent.ts";
 import { handleVersion } from "./api/version.ts";
-import { getProjectsDir, setProjectsDir } from "./config.ts";
+import { getClaudeCodeDir, setClaudeCodeDir } from "./config.ts";
 import type { Route } from "./http.ts";
 import { appVersion } from "./version.ts";
 
@@ -34,14 +34,14 @@ export function parseCliArgs(argv: string[]): CliArgs {
   const acceptRisks = argv.includes("--accept-risks");
   const showHelp = argv.includes("--help") || argv.includes("-h");
 
-  const projectsDirIdx = argv.indexOf("--projects-dir");
-  if (projectsDirIdx !== -1) {
-    const dir = argv[projectsDirIdx + 1];
+  const claudeCodeDirIdx = argv.indexOf("--claude-code-dir");
+  if (claudeCodeDirIdx !== -1) {
+    const dir = argv[claudeCodeDirIdx + 1];
     if (!dir || dir.startsWith("-")) {
-      console.error("Error: --projects-dir requires a path argument.");
+      console.error("Error: --claude-code-dir requires a path argument.");
       process.exit(1);
     }
-    setProjectsDir(dir);
+    setClaudeCodeDir(dir);
   }
 
   return { port, acceptRisks, showHelp };
@@ -61,7 +61,7 @@ Usage:
 Options:
   --accept-risks           Skip the startup security warning
   --port <number>          Server port (default: 3583)
-  --projects-dir <path>    Override the Claude projects directory
+  --claude-code-dir <path>   Path to Claude Code data directory
   -h, --help               Show this help message
 
 The server runs on http://localhost:3583 by default.
@@ -107,7 +107,7 @@ export function printStartupBanner(port: number): void {
 }
 
 export function promptSecurityWarning(port: number): void {
-  const resolvedDir = getProjectsDir();
+  const resolvedDir = getClaudeCodeDir();
   const yellow = "\x1b[33m";
   const bold = "\x1b[1m";
   const reset = "\x1b[0m";
