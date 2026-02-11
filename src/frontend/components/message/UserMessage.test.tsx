@@ -113,4 +113,40 @@ describe("UserMessage", () => {
     const link = container.querySelector(".subagent-link");
     expect(link).toBeNull();
   });
+
+  test("renders impl session link when implSessionId and project are provided", () => {
+    const { container } = render(
+      <UserMessage
+        turn={makeTurn({ text: "Help me plan a feature" })}
+        implSessionId="impl-456"
+        project="my-project"
+      />,
+    );
+    const link = container.querySelector(".subagent-link") as HTMLAnchorElement | null;
+    expect(link).not.toBeNull();
+    expect(link!.textContent).toBe("View implementation session");
+    expect(link!.getAttribute("href")).toBe("#/my-project/impl-456");
+  });
+
+  test("does not render impl link when implSessionId is absent", () => {
+    const { container } = render(
+      <UserMessage turn={makeTurn({ text: "Help me plan a feature" })} project="my-project" />,
+    );
+    const link = container.querySelector(".subagent-link");
+    expect(link).toBeNull();
+  });
+
+  test("does not render impl link on plan-prefix messages", () => {
+    const { container } = render(
+      <UserMessage
+        turn={makeTurn({ text: "Implement the following plan:\n\n# My Plan" })}
+        implSessionId="impl-456"
+        planSessionId="plan-123"
+        project="my-project"
+      />,
+    );
+    const links = container.querySelectorAll(".subagent-link");
+    expect(links).toHaveLength(1);
+    expect(links[0]!.textContent).toBe("View planning session");
+  });
 });

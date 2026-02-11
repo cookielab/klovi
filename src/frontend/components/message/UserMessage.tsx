@@ -6,20 +6,29 @@ interface UserMessageProps {
   turn: UserTurn;
   isSubAgent?: boolean;
   planSessionId?: string;
+  implSessionId?: string;
   project?: string;
 }
 
 const STATUS_RE = /^\[.+\]$/;
 const PLAN_PREFIX = "Implement the following plan";
 
-export function UserMessage({ turn, isSubAgent, planSessionId, project }: UserMessageProps) {
+export function UserMessage({
+  turn,
+  isSubAgent,
+  planSessionId,
+  implSessionId,
+  project,
+}: UserMessageProps) {
   const isStatus = STATUS_RE.test(turn.text.trim());
 
   if (isStatus) {
     return <div className="status-notice">{turn.text}</div>;
   }
 
-  const showPlanLink = planSessionId && project && turn.text.startsWith(PLAN_PREFIX);
+  const isPlanMessage = turn.text.startsWith(PLAN_PREFIX);
+  const showPlanLink = planSessionId && project && isPlanMessage;
+  const showImplLink = implSessionId && project && !isPlanMessage;
 
   return (
     <div className={`message ${isSubAgent ? "message-root-agent" : "message-user"}`}>
@@ -28,6 +37,11 @@ export function UserMessage({ turn, isSubAgent, planSessionId, project }: UserMe
         {showPlanLink && (
           <a className="subagent-link" href={`#/${project}/${planSessionId}`}>
             View planning session
+          </a>
+        )}
+        {showImplLink && (
+          <a className="subagent-link" href={`#/${project}/${implSessionId}`}>
+            View implementation session
           </a>
         )}
         {turn.timestamp && (

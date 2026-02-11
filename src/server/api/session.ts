@@ -1,5 +1,5 @@
 import { listSessions } from "../parser/claude-dir.ts";
-import { findPlanSessionId, parseSession } from "../parser/session.ts";
+import { findImplSessionId, findPlanSessionId, parseSession } from "../parser/session.ts";
 
 export async function handleSession(sessionId: string, encodedPath: string): Promise<Response> {
   const [{ session, slug }, sessions] = await Promise.all([
@@ -8,6 +8,7 @@ export async function handleSession(sessionId: string, encodedPath: string): Pro
   ]);
 
   session.planSessionId = findPlanSessionId(session.turns, slug, sessions, sessionId);
+  session.implSessionId = findImplSessionId(slug, sessions, sessionId);
 
   return Response.json({ session });
 }

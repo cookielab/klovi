@@ -11,6 +11,7 @@ interface MessageListProps {
   project?: string;
   isSubAgent?: boolean;
   planSessionId?: string;
+  implSessionId?: string;
 }
 
 function renderTurn(
@@ -22,6 +23,7 @@ function renderTurn(
   project: string | undefined,
   isSubAgent: boolean | undefined,
   planSessionId: string | undefined,
+  implSessionId: string | undefined,
 ) {
   const activeClass = isActive ? "active-message" : "";
 
@@ -33,6 +35,7 @@ function renderTurn(
             turn={turn}
             isSubAgent={isSubAgent}
             planSessionId={planSessionId}
+            implSessionId={implSessionId}
             project={project}
           />
         </div>
@@ -72,6 +75,7 @@ export function MessageList({
   project,
   isSubAgent,
   planSessionId,
+  implSessionId,
 }: MessageListProps) {
   return (
     <div className="message-list">
@@ -86,6 +90,7 @@ export function MessageList({
           project,
           isSubAgent,
           planSessionId,
+          implSessionId,
         );
       })}
     </div>

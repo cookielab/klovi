@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type { AssistantTurn, SessionSummary, SystemTurn, UserTurn } from "../../shared/types.ts";
-import { buildTurns, extractSlug, extractSubAgentMap, findPlanSessionId } from "./session.ts";
+import {
+  buildTurns,
+  extractSlug,
+  extractSubAgentMap,
+  findImplSessionId,
+  findPlanSessionId,
+} from "./session.ts";
 import type { RawLine } from "./types.ts";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
@@ -728,5 +734,64 @@ describe("findPlanSessionId", () => {
     ]);
     const result = findPlanSessionId(turns, "prancy-pondering-deer", sessions, "impl-session-2");
     expect(result).toBe("plan-session-1");
+  });
+});
+
+describe("findImplSessionId", () => {
+  const sessions: SessionSummary[] = [
+    {
+      sessionId: "plan-session-1",
+      timestamp: "2025-01-15T09:00:00Z",
+      slug: "prancy-pondering-deer",
+      firstMessage: "Help me plan something",
+      model: "claude-opus-4-6",
+      gitBranch: "main",
+    },
+    {
+      sessionId: "impl-session-2",
+      timestamp: "2025-01-15T10:00:00Z",
+      slug: "prancy-pondering-deer",
+      firstMessage: "Implement the following plan",
+      model: "claude-opus-4-6",
+      gitBranch: "main",
+    },
+  ];
+
+  test("returns impl session ID when slug-matched session with plan prefix exists", () => {
+    const result = findImplSessionId("prancy-pondering-deer", sessions, "plan-session-1");
+    expect(result).toBe("impl-session-2");
+  });
+
+  test("returns undefined when no session with matching slug exists", () => {
+    const result = findImplSessionId("nonexistent-slug", sessions, "plan-session-1");
+    expect(result).toBeUndefined();
+  });
+
+  test("returns undefined when slug is undefined", () => {
+    const result = findImplSessionId(undefined, sessions, "plan-session-1");
+    expect(result).toBeUndefined();
+  });
+
+  test("returns undefined when no slug-matched session starts with plan prefix", () => {
+    const noImplSessions: SessionSummary[] = [
+      {
+        sessionId: "session-a",
+        timestamp: "2025-01-15T09:00:00Z",
+        slug: "some-slug",
+        firstMessage: "Help me plan something",
+        model: "claude-opus-4-6",
+        gitBranch: "main",
+      },
+      {
+        sessionId: "session-b",
+        timestamp: "2025-01-15T10:00:00Z",
+        slug: "some-slug",
+        firstMessage: "Another regular session",
+        model: "claude-opus-4-6",
+        gitBranch: "main",
+      },
+    ];
+    const result = findImplSessionId("some-slug", noImplSessions, "session-a");
+    expect(result).toBeUndefined();
   });
 });

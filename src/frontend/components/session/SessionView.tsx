@@ -45,6 +45,7 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
       sessionId={sessionId}
       project={project}
       planSessionId={session.planSessionId}
+      implSessionId={session.implSessionId}
     />
   );
 }

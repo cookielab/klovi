@@ -157,6 +157,19 @@ export function findPlanSessionId(
   return match?.sessionId;
 }
 
+export function findImplSessionId(
+  slug: string | undefined,
+  sessions: SessionSummary[],
+  currentSessionId: string,
+): string | undefined {
+  if (!slug) return undefined;
+  const match = sessions.find(
+    (s) =>
+      s.slug === slug && s.sessionId !== currentSessionId && s.firstMessage.startsWith(PLAN_PREFIX),
+  );
+  return match?.sessionId;
+}
+
 async function readJsonlLines(filePath: string): Promise<RawLine[]> {
   const { readFile } = await import("node:fs/promises");
   const text = await readFile(filePath, "utf-8");
