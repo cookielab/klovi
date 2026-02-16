@@ -1,7 +1,9 @@
 import type { ToolCallWithResult } from "../../../shared/types.ts";
+import { CodeBlock } from "../ui/CodeBlock.tsx";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
 import { DiffView } from "../ui/DiffView.tsx";
 import { BashToolContent } from "./BashToolContent.tsx";
+import { SmartToolOutput } from "./SmartToolOutput.tsx";
 
 export const MAX_OUTPUT_LENGTH = 5000;
 const MAX_CONTENT_LENGTH = 2000;
@@ -21,43 +23,29 @@ function isEditWithDiff(call: ToolCallWithResult): boolean {
   );
 }
 
+function isJsonFallbackInput(call: ToolCallWithResult): boolean {
+  return !(call.name in INPUT_FORMATTERS);
+}
+
 function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
-  const wasTruncated = call.result.length > MAX_OUTPUT_LENGTH;
+  const formattedInput = formatToolInput(call);
+  const jsonInput = isJsonFallbackInput(call);
+
   return (
     <>
       <div style={{ marginBottom: 8 }}>
         <div className="tool-section-label">Input</div>
-        <div className="tool-call-input">{formatToolInput(call)}</div>
+        {jsonInput ? (
+          <CodeBlock language="json">{formattedInput}</CodeBlock>
+        ) : (
+          <div className="tool-call-input">{formattedInput}</div>
+        )}
       </div>
-      {(call.result || (call.resultImages && call.resultImages.length > 0)) && (
-        <div>
-          <div className="tool-section-label">Output</div>
-          {call.result && (
-            <div className={`tool-call-output ${call.isError ? "tool-call-error" : ""}`}>
-              {truncateOutput(call.result)}
-            </div>
-          )}
-          {wasTruncated && <div className="tool-call-truncated">... (truncated)</div>}
-          {call.resultImages && call.resultImages.length > 0 && (
-            <div className="tool-result-images">
-              {call.resultImages.map((img, i) => (
-                <a
-                  key={i}
-                  href={`data:${img.mediaType};base64,${img.data}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    className="tool-result-image"
-                    src={`data:${img.mediaType};base64,${img.data}`}
-                    alt={`Tool result ${i + 1}`}
-                  />
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <SmartToolOutput
+        output={call.result}
+        isError={call.isError}
+        resultImages={call.resultImages}
+      />
     </>
   );
 }

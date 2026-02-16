@@ -278,7 +278,7 @@ describe("ToolCall component", () => {
     expect(labels[0]!.textContent).toBe("Command");
   });
 
-  test("non-Bash tool uses DefaultToolContent", () => {
+  test("non-Bash tool with custom formatter uses plain text input", () => {
     const { container } = render(
       <ToolCall
         call={makeCall({
@@ -292,5 +292,57 @@ describe("ToolCall component", () => {
     fireEvent.click(header);
     expect(container.querySelector(".tool-call-input")).not.toBeNull();
     expect(container.querySelector(".tool-call-output")).not.toBeNull();
+  });
+
+  test("unknown tool input rendered as JSON CodeBlock", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "SomeNewTool",
+          input: { x: 1, y: "hello" },
+          result: "done",
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    // JSON fallback input should use CodeBlock, not plain div
+    expect(container.querySelector(".tool-call-input")).toBeNull();
+    expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
+  });
+
+  test("tool with JSON output gets syntax highlighting", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Read",
+          input: { file_path: "/data.json" },
+          result: '{"name": "test", "version": "1.0.0"}',
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    // Output should use CodeBlock for JSON
+    const codeBlocks = container.querySelectorAll(".code-block-wrapper");
+    expect(codeBlocks.length).toBe(1);
+    expect(container.querySelector(".tool-call-output")).toBeNull();
+  });
+
+  test("tool with error output stays plain even if JSON", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Read",
+          input: { file_path: "/missing.json" },
+          result: '{"error": "not found"}',
+          isError: true,
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    expect(container.querySelector(".tool-call-error")).not.toBeNull();
+    expect(container.querySelector(".tool-call-output.tool-call-error")).not.toBeNull();
   });
 });
