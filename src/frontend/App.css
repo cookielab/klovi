@@ -620,6 +620,33 @@
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
+/* Diff view */
+.diff-view-wrapper {
+  position: relative;
+}
+
+.diff-view-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--bg-code);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+}
+
+.diff-view-content {
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  overflow-x: auto;
+}
+
+.diff-view-content pre {
+  margin: 0;
+  background: var(--bg-code);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
 /* Collapsible sections */
 .collapsible {
   border-radius: var(--radius-sm);

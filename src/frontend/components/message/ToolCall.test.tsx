@@ -223,4 +223,40 @@ describe("ToolCall component", () => {
     const images = container.querySelectorAll(".tool-result-image");
     expect(images.length).toBe(1);
   });
+
+  test("Edit tool renders DiffView instead of Input/Output", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Edit",
+          input: {
+            file_path: "/src/app.ts",
+            old_string: "const x = 1;",
+            new_string: "const x = 2;",
+          },
+          result: "File edited successfully",
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    expect(container.querySelector(".diff-view-wrapper")).not.toBeNull();
+    expect(container.querySelector(".tool-section-label")).toBeNull();
+  });
+
+  test("Edit tool without old_string falls back to default view", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Edit",
+          input: { file_path: "/src/app.ts", new_string: "const x = 2;" },
+          result: "File edited successfully",
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    expect(container.querySelector(".diff-view-wrapper")).toBeNull();
+    expect(container.querySelector(".tool-section-label")).not.toBeNull();
+  });
 });

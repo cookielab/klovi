@@ -1,5 +1,6 @@
 import type { ToolCallWithResult } from "../../../shared/types.ts";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
+import { DiffView } from "../ui/DiffView.tsx";
 
 const MAX_OUTPUT_LENGTH = 5000;
 const MAX_CONTENT_LENGTH = 2000;
@@ -9,6 +10,53 @@ interface ToolCallProps {
   call: ToolCallWithResult;
   sessionId?: string;
   project?: string;
+}
+
+function isEditWithDiff(call: ToolCallWithResult): boolean {
+  return (
+    call.name === "Edit" &&
+    typeof call.input.old_string === "string" &&
+    typeof call.input.new_string === "string"
+  );
+}
+
+function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
+  return (
+    <>
+      <div style={{ marginBottom: 8 }}>
+        <div className="tool-section-label">Input</div>
+        <div className="tool-call-input">{formatToolInput(call)}</div>
+      </div>
+      {(call.result || (call.resultImages && call.resultImages.length > 0)) && (
+        <div>
+          <div className="tool-section-label">Output</div>
+          {call.result && (
+            <div className={`tool-call-output ${call.isError ? "tool-call-error" : ""}`}>
+              {truncateOutput(call.result)}
+            </div>
+          )}
+          {call.resultImages && call.resultImages.length > 0 && (
+            <div className="tool-result-images">
+              {call.resultImages.map((img, i) => (
+                <a
+                  key={i}
+                  href={`data:${img.mediaType};base64,${img.data}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    className="tool-result-image"
+                    src={`data:${img.mediaType};base64,${img.data}`}
+                    alt={`Tool result ${i + 1}`}
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
 }
 
 export function ToolCall({ call, sessionId, project }: ToolCallProps) {
@@ -43,37 +91,14 @@ export function ToolCall({ call, sessionId, project }: ToolCallProps) {
           </span>
         }
       >
-        <div style={{ marginBottom: 8 }}>
-          <div className="tool-section-label">Input</div>
-          <div className="tool-call-input">{formatToolInput(call)}</div>
-        </div>
-        {(call.result || (call.resultImages && call.resultImages.length > 0)) && (
-          <div>
-            <div className="tool-section-label">Output</div>
-            {call.result && (
-              <div className={`tool-call-output ${call.isError ? "tool-call-error" : ""}`}>
-                {truncateOutput(call.result)}
-              </div>
-            )}
-            {call.resultImages && call.resultImages.length > 0 && (
-              <div className="tool-result-images">
-                {call.resultImages.map((img, i) => (
-                  <a
-                    key={i}
-                    href={`data:${img.mediaType};base64,${img.data}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img
-                      className="tool-result-image"
-                      src={`data:${img.mediaType};base64,${img.data}`}
-                      alt={`Tool result ${i + 1}`}
-                    />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
+        {isEditWithDiff(call) ? (
+          <DiffView
+            filePath={String(call.input.file_path || "")}
+            oldString={String(call.input.old_string)}
+            newString={String(call.input.new_string)}
+          />
+        ) : (
+          <DefaultToolContent call={call} />
         )}
       </CollapsibleSection>
     </div>
