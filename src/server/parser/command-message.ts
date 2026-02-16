@@ -12,6 +12,10 @@ export function cleanCommandMessage(text: string): string {
   const argsMatch = text.match(/<command-args>([\s\S]*?)<\/command-args>/);
   if (argsMatch?.[1]) return argsMatch[1].trim();
 
+  // Fallback: use command name when no args present (e.g. arg-less slash commands)
+  const nameMatch = text.match(/<command-name>([\s\S]*?)<\/command-name>/);
+  if (nameMatch?.[1]) return nameMatch[1].trim();
+
   return text
     .replace(/<command-message>[\s\S]*?<\/command-message>/g, "")
     .replace(/<command-name>[\s\S]*?<\/command-name>/g, "")

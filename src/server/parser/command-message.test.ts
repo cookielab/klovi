@@ -8,6 +8,12 @@ describe("cleanCommandMessage", () => {
     expect(cleanCommandMessage(input)).toBe("fix: resolve login bug");
   });
 
+  test("with no args → returns command name", () => {
+    const input =
+      "<command-message>superpowers:using-superpowers</command-message><command-name>/superpowers:using-superpowers</command-name>";
+    expect(cleanCommandMessage(input)).toBe("/superpowers:using-superpowers");
+  });
+
   test("with plain text → returns unchanged", () => {
     expect(cleanCommandMessage("Hello world")).toBe("Hello world");
   });
