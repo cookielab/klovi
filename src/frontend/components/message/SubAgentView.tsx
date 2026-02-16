@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import type { Session } from "../../../shared/types.ts";
+import { useFetch } from "../../hooks/useFetch.ts";
 import { MessageList } from "./MessageList.tsx";
 
 interface SubAgentViewProps {
@@ -9,37 +9,26 @@ interface SubAgentViewProps {
 }
 
 export function SubAgentView({ sessionId, project, agentId }: SubAgentViewProps) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    fetch(`/api/sessions/${sessionId}/subagents/${agentId}?project=${encodeURIComponent(project)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setSession(data.session);
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e.message);
-        setLoading(false);
-      });
-  }, [sessionId, project, agentId]);
+  const { data, loading, error, retry } = useFetch<{ session: Session }>(
+    `/api/sessions/${sessionId}/subagents/${agentId}?project=${encodeURIComponent(project)}`,
+    [sessionId, project, agentId],
+  );
 
   if (loading) return <div className="loading">Loading sub-agent conversation...</div>;
-  if (error)
+  if (error) {
     return (
-      <div className="loading" style={{ color: "var(--error)" }}>
-        Error: {error}
+      <div className="fetch-error">
+        <span className="fetch-error-message">Error: {error}</span>
+        <button type="button" className="btn btn-sm" onClick={retry}>
+          Retry
+        </button>
       </div>
     );
-  if (!session || session.turns.length === 0)
+  }
+  if (!data?.session || data.session.turns.length === 0)
     return <div className="subagent-empty">No sub-agent conversation data available.</div>;
 
-  return <MessageList turns={session.turns} sessionId={sessionId} project={project} isSubAgent />;
+  return (
+    <MessageList turns={data.session.turns} sessionId={sessionId} project={project} isSubAgent />
+  );
 }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
+import { useFetch } from "../../hooks/useFetch.ts";
 import { shortModel } from "../../utils/model.ts";
 import { formatTime } from "../../utils/time.ts";
 
@@ -11,20 +11,12 @@ interface SessionListProps {
 }
 
 export function SessionList({ project, onSelect, onBack, selectedId }: SessionListProps) {
-  const [sessions, setSessions] = useState<SessionSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error, retry } = useFetch<{ sessions: SessionSummary[] }>(
+    `/api/projects/${encodeURIComponent(project.encodedPath)}/sessions`,
+    [project.encodedPath],
+  );
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/projects/${encodeURIComponent(project.encodedPath)}/sessions`)
-      .then((r) => r.json())
-      .then((data) => {
-        setSessions(data.sessions);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [project.encodedPath]);
-
+  const sessions = data?.sessions ?? [];
   const parts = project.name.split("/").filter(Boolean);
   const displayName = parts.slice(-2).join("/");
 
@@ -35,7 +27,16 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
       </div>
       <div className="list-section-title">{displayName}</div>
       {loading && <div className="loading">Loading sessions...</div>}
+      {error && (
+        <div className="fetch-error">
+          <span className="fetch-error-message">{error}</span>
+          <button type="button" className="btn btn-sm" onClick={retry}>
+            Retry
+          </button>
+        </div>
+      )}
       {!loading &&
+        !error &&
         sessions.map((session) => (
           <div
             key={session.sessionId}
@@ -55,7 +56,7 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
             </div>
           </div>
         ))}
-      {!loading && sessions.length === 0 && (
+      {!loading && !error && sessions.length === 0 && (
         <div className="empty-list-message">No sessions found</div>
       )}
     </div>

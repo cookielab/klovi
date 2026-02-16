@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Project } from "../../../shared/types.ts";
+import { useFetch } from "../../hooks/useFetch.ts";
 import { projectDisplayName } from "../../utils/project.ts";
 import { formatRelativeTime } from "../../utils/time.ts";
 
@@ -18,20 +19,10 @@ export function ProjectList({
   onHide,
   onShowHidden,
 }: ProjectListProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { data, loading, error, retry } = useFetch<{ projects: Project[] }>("/api/projects", []);
   const [filter, setFilter] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/projects")
-      .then((r) => r.json())
-      .then((data) => {
-        setProjects(data.projects);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+  const projects = data?.projects ?? [];
   const filtered = projects.filter(
     (p) =>
       !hiddenIds.has(p.encodedPath) &&
@@ -40,6 +31,16 @@ export function ProjectList({
   );
 
   if (loading) return <div className="loading">Loading projects...</div>;
+  if (error) {
+    return (
+      <div className="fetch-error">
+        <span className="fetch-error-message">{error}</span>
+        <button type="button" className="btn btn-sm" onClick={retry}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

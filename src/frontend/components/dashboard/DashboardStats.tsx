@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import type { ModelTokenUsage, DashboardStats as Stats } from "../../../shared/types.ts";
+import { useFetch } from "../../hooks/useFetch.ts";
 
 const fmt = new Intl.NumberFormat();
 
@@ -20,16 +20,7 @@ function totalTokens(usage: ModelTokenUsage): number {
 }
 
 export function DashboardStats() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/stats")
-      .then((r) => r.json())
-      .then((data) => setStats(data.stats))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, loading, error, retry } = useFetch<{ stats: Stats }>("/api/stats", []);
 
   if (loading) {
     return (
@@ -43,6 +34,18 @@ export function DashboardStats() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="fetch-error">
+        <span className="fetch-error-message">{error}</span>
+        <button type="button" className="btn btn-sm" onClick={retry}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const stats = data?.stats;
   if (!stats) return null;
 
   const sortedModels = Object.entries(stats.models).sort(

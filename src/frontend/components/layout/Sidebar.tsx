@@ -1,6 +1,6 @@
 import type React from "react";
-import { useEffect, useState } from "react";
 import faviconUrl from "../../../../favicon.svg";
+import { useFetch } from "../../hooks/useFetch.ts";
 
 interface VersionInfo {
   version: string;
@@ -13,14 +13,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ children, onSearchClick }: SidebarProps) {
-  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
-
-  useEffect(() => {
-    fetch("/api/version")
-      .then((res) => res.json())
-      .then((data: VersionInfo) => setVersionInfo(data))
-      .catch(() => {});
-  }, []);
+  const { data: versionInfo } = useFetch<VersionInfo>("/api/version", []);
 
   return (
     <div className="sidebar">
