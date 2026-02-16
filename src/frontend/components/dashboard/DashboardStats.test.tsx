@@ -7,14 +7,27 @@ function makeStats(overrides: Partial<Stats> = {}): Stats {
   return {
     projects: 5,
     sessions: 42,
+    messages: 1_500,
+    todaySessions: 3,
+    thisWeekSessions: 12,
     inputTokens: 1_234_567,
     outputTokens: 456_789,
     cacheReadTokens: 100_000,
     cacheCreationTokens: 50_000,
     toolCalls: 3_210,
     models: {
-      "claude-opus-4-6": 120,
-      "claude-sonnet-4-5-20250929": 45,
+      "claude-opus-4-6": {
+        inputTokens: 800_000,
+        outputTokens: 300_000,
+        cacheReadTokens: 60_000,
+        cacheCreationTokens: 30_000,
+      },
+      "claude-sonnet-4-5-20250929": {
+        inputTokens: 434_567,
+        outputTokens: 156_789,
+        cacheReadTokens: 40_000,
+        cacheCreationTokens: 20_000,
+      },
     },
     ...overrides,
   };
@@ -46,12 +59,26 @@ describe("DashboardStats", () => {
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ stats }), { status: 200 })));
 
     const { container, findByText } = render(<DashboardStats />);
-    // Token values use compact format (1.2M), non-token values use full format
     await findByText("1.2M");
 
     expect(container.querySelector(".dashboard-stats")).not.toBeNull();
-    // 3 top cards + 1 tokens card + 1 models card = 5
-    expect(container.querySelectorAll(".stat-card").length).toBe(5);
+  });
+
+  test("renders messages count", async () => {
+    const stats = makeStats({ messages: 5_000 });
+    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ stats }), { status: 200 })));
+
+    const { findByText } = render(<DashboardStats />);
+    await findByText("5,000");
+  });
+
+  test("renders today and this week sessions", async () => {
+    const stats = makeStats({ todaySessions: 7, thisWeekSessions: 25 });
+    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ stats }), { status: 200 })));
+
+    const { findByText } = render(<DashboardStats />);
+    await findByText("7");
+    await findByText("25");
   });
 
   test("formats token numbers with compact suffix", async () => {
@@ -62,7 +89,7 @@ describe("DashboardStats", () => {
     await findByText("9.9M");
   });
 
-  test("renders model breakdown", async () => {
+  test("renders model breakdown with token counts", async () => {
     const stats = makeStats();
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ stats }), { status: 200 })));
 

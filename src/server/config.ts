@@ -14,3 +14,7 @@ export function setClaudeCodeDir(dir: string): void {
 export function getProjectsDir(): string {
   return join(claudeCodeDir, "projects");
 }
+
+export function getStatsCachePath(): string {
+  return join(claudeCodeDir, "stats-cache.json");
+}

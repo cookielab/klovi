@@ -96,13 +96,23 @@ export interface GlobalSessionResult extends SessionSummary {
   projectName: string;
 }
 
+export interface ModelTokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+}
+
 export interface DashboardStats {
   projects: number;
   sessions: number;
+  messages: number;
+  todaySessions: number;
+  thisWeekSessions: number;
   inputTokens: number;
   outputTokens: number;
   cacheReadTokens: number;
   cacheCreationTokens: number;
   toolCalls: number;
-  models: Record<string, number>;
+  models: Record<string, ModelTokenUsage>;
 }

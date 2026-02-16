@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { DashboardStats as Stats } from "../../../shared/types.ts";
+import type { ModelTokenUsage, DashboardStats as Stats } from "../../../shared/types.ts";
 
 const fmt = new Intl.NumberFormat();
 
@@ -13,6 +13,10 @@ function compactNumber(n: number): string {
 function simplifyModelName(model: string): string {
   const match = model.match(/claude-(\w+-[\d-]+?)(?:-\d{8})?$/);
   return match?.[1] ?? model;
+}
+
+function totalTokens(usage: ModelTokenUsage): number {
+  return usage.inputTokens + usage.outputTokens + usage.cacheReadTokens + usage.cacheCreationTokens;
 }
 
 export function DashboardStats() {
@@ -41,7 +45,9 @@ export function DashboardStats() {
 
   if (!stats) return null;
 
-  const sortedModels = Object.entries(stats.models).sort((a, b) => b[1] - a[1]);
+  const sortedModels = Object.entries(stats.models).sort(
+    (a, b) => totalTokens(b[1]) - totalTokens(a[1]),
+  );
 
   return (
     <div className="dashboard-stats">
@@ -53,6 +59,21 @@ export function DashboardStats() {
         <div className="stat-card">
           <div className="stat-value">{fmt.format(stats.sessions)}</div>
           <div className="stat-label">Sessions</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{fmt.format(stats.messages)}</div>
+          <div className="stat-label">Messages</div>
+        </div>
+      </div>
+
+      <div className="stats-row stats-row-3">
+        <div className="stat-card">
+          <div className="stat-value">{fmt.format(stats.todaySessions)}</div>
+          <div className="stat-label">Today Sessions</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{fmt.format(stats.thisWeekSessions)}</div>
+          <div className="stat-label">This Week</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{fmt.format(stats.toolCalls)}</div>
@@ -86,10 +107,10 @@ export function DashboardStats() {
         <div className="stat-card">
           <div className="stat-label">Models</div>
           <ul className="model-list">
-            {sortedModels.map(([model, count]) => (
+            {sortedModels.map(([model, usage]) => (
               <li key={model}>
                 <span className="model-name">{simplifyModelName(model)}</span>
-                <span className="model-count">{fmt.format(count)} turns</span>
+                <span className="model-count">{compactNumber(totalTokens(usage))} tokens</span>
               </li>
             ))}
           </ul>
