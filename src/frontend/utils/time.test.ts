@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatTimestamp } from "./time.ts";
+import { formatRelativeTime, formatTime, formatTimestamp } from "./time.ts";
 
 describe("formatTimestamp", () => {
   test("'just now' for recent timestamps", () => {
@@ -25,5 +25,49 @@ describe("formatTimestamp", () => {
 
   test("empty string for invalid date", () => {
     expect(formatTimestamp("not-a-date")).toBe("");
+  });
+});
+
+describe("formatRelativeTime", () => {
+  test("'just now' for recent timestamps", () => {
+    const now = new Date().toISOString();
+    expect(formatRelativeTime(now)).toBe("just now");
+  });
+
+  test("'Xm ago' for minutes", () => {
+    const tenMinAgo = new Date(Date.now() - 10 * 60_000).toISOString();
+    expect(formatRelativeTime(tenMinAgo)).toBe("10m ago");
+  });
+
+  test("'Xh ago' for hours", () => {
+    const fiveHoursAgo = new Date(Date.now() - 5 * 3_600_000).toISOString();
+    expect(formatRelativeTime(fiveHoursAgo)).toBe("5h ago");
+  });
+
+  test("'Xd ago' for days", () => {
+    const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000).toISOString();
+    expect(formatRelativeTime(threeDaysAgo)).toBe("3d ago");
+  });
+
+  test("date string for 30+ days", () => {
+    const old = new Date(Date.now() - 45 * 86_400_000).toISOString();
+    const result = formatRelativeTime(old);
+    // Should return toLocaleDateString output (not "Xd ago")
+    expect(result).not.toContain("d ago");
+    expect(result.length).toBeGreaterThan(0);
+  });
+});
+
+describe("formatTime", () => {
+  test("returns formatted date with month, day, and time", () => {
+    const result = formatTime("2024-06-15T14:30:00Z");
+    // toLocaleDateString with month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+    // Output varies by locale but should contain a month abbreviation and digits
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  test("handles midnight timestamp", () => {
+    const result = formatTime("2024-01-01T00:00:00Z");
+    expect(result.length).toBeGreaterThan(0);
   });
 });

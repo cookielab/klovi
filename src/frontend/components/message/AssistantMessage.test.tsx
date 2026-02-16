@@ -115,4 +115,80 @@ describe("AssistantMessage", () => {
     const toolCall = container.querySelector(".tool-call");
     expect(toolCall).not.toBeNull();
   });
+
+  test("visibleSubSteps limits rendered content groups", () => {
+    const { container } = render(
+      <AssistantMessage
+        turn={makeTurn({
+          contentBlocks: [
+            { type: "text", text: "First message" },
+            { type: "text", text: "Second message" },
+            { type: "text", text: "Third message" },
+          ],
+        })}
+        visibleSubSteps={2}
+      />,
+    );
+    // Each text block = 1 group, visibleSubSteps=2 means only first 2 shown
+    const markdowns = container.querySelectorAll(".markdown-content");
+    expect(markdowns).toHaveLength(2);
+  });
+
+  test("all groups shown when visibleSubSteps undefined", () => {
+    const { container } = render(
+      <AssistantMessage
+        turn={makeTurn({
+          contentBlocks: [
+            { type: "text", text: "First" },
+            { type: "text", text: "Second" },
+            { type: "text", text: "Third" },
+          ],
+        })}
+      />,
+    );
+    const markdowns = container.querySelectorAll(".markdown-content");
+    expect(markdowns).toHaveLength(3);
+  });
+
+  test("step-enter class on last visible item in presentation mode", () => {
+    const { container } = render(
+      <AssistantMessage
+        turn={makeTurn({
+          contentBlocks: [
+            { type: "text", text: "First" },
+            { type: "text", text: "Second" },
+          ],
+        })}
+        visibleSubSteps={2}
+      />,
+    );
+    const stepEnter = container.querySelector(".step-enter");
+    expect(stepEnter).not.toBeNull();
+  });
+
+  test("empty contentBlocks renders without error", () => {
+    const { container } = render(<AssistantMessage turn={makeTurn({ contentBlocks: [] })} />);
+    expect(container.querySelector(".message-assistant")).not.toBeNull();
+    expect(container.querySelector(".token-usage")).toBeNull();
+  });
+
+  test("cache tokens hidden when zero", () => {
+    const { container } = render(
+      <AssistantMessage
+        turn={makeTurn({
+          contentBlocks: [{ type: "text", text: "Hi" }],
+          usage: {
+            inputTokens: 100,
+            outputTokens: 50,
+            cacheReadTokens: 0,
+            cacheCreationTokens: 0,
+          },
+        })}
+      />,
+    );
+    const usage = container.querySelector(".token-usage");
+    expect(usage).not.toBeNull();
+    expect(usage!.textContent).not.toContain("cache read");
+    expect(usage!.textContent).not.toContain("cache write");
+  });
 });
