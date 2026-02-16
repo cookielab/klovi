@@ -14,6 +14,7 @@ import { SearchModal } from "./components/search/SearchModal.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
 import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 
@@ -332,50 +333,52 @@ function App() {
           onTogglePresentation={togglePresentation}
           showPresentationToggle={canPresent}
         />
-        {view.kind === "home" && (
-          <>
+        <ErrorBoundary>
+          {view.kind === "home" && (
+            <>
+              <div className="empty-state">
+                <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
+                <div className="empty-state-title">Welcome to Klovi</div>
+                <p>Select a project from the sidebar to browse your Claude Code sessions</p>
+              </div>
+              <DashboardStats />
+            </>
+          )}
+          {view.kind === "hidden" && (
+            <HiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
+          )}
+          {view.kind === "project" && (
             <div className="empty-state">
-              <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
-              <div className="empty-state-title">Welcome to Klovi</div>
-              <p>Select a project from the sidebar to browse your Claude Code sessions</p>
+              <div className="empty-state-title">Select a session</div>
+              <p>Choose a conversation from the sidebar</p>
             </div>
-            <DashboardStats />
-          </>
-        )}
-        {view.kind === "hidden" && (
-          <HiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
-        )}
-        {view.kind === "project" && (
-          <div className="empty-state">
-            <div className="empty-state-title">Select a session</div>
-            <p>Choose a conversation from the sidebar</p>
-          </div>
-        )}
-        {view.kind === "session" &&
-          (view.presenting ? (
-            <SessionPresentation
-              sessionId={view.session.sessionId}
-              project={view.project.encodedPath}
-              onExit={togglePresentation}
-            />
-          ) : (
-            <SessionView sessionId={view.session.sessionId} project={view.project.encodedPath} />
-          ))}
-        {view.kind === "subagent" &&
-          (view.presenting ? (
-            <SubAgentPresentation
-              sessionId={view.sessionId}
-              project={view.project.encodedPath}
-              agentId={view.agentId}
-              onExit={togglePresentation}
-            />
-          ) : (
-            <SubAgentView
-              sessionId={view.sessionId}
-              project={view.project.encodedPath}
-              agentId={view.agentId}
-            />
-          ))}
+          )}
+          {view.kind === "session" &&
+            (view.presenting ? (
+              <SessionPresentation
+                sessionId={view.session.sessionId}
+                project={view.project.encodedPath}
+                onExit={togglePresentation}
+              />
+            ) : (
+              <SessionView sessionId={view.session.sessionId} project={view.project.encodedPath} />
+            ))}
+          {view.kind === "subagent" &&
+            (view.presenting ? (
+              <SubAgentPresentation
+                sessionId={view.sessionId}
+                project={view.project.encodedPath}
+                agentId={view.agentId}
+                onExit={togglePresentation}
+              />
+            ) : (
+              <SubAgentView
+                sessionId={view.sessionId}
+                project={view.project.encodedPath}
+                agentId={view.agentId}
+              />
+            ))}
+        </ErrorBoundary>
       </Layout>
     </>
   );

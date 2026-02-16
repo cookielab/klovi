@@ -1,5 +1,6 @@
 import type { Turn } from "../../../shared/types.ts";
 import { formatTimestamp } from "../../utils/time.ts";
+import { ErrorBoundary } from "../ui/ErrorBoundary.tsx";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { AssistantMessage } from "./AssistantMessage.tsx";
 import { UserMessage } from "./UserMessage.tsx";
@@ -30,7 +31,7 @@ function renderTurn(
   switch (turn.kind) {
     case "user":
       return (
-        <div key={turn.uuid || index} className={isActive ? "active-message step-enter" : ""}>
+        <div className={isActive ? "active-message step-enter" : ""}>
           <UserMessage
             turn={turn}
             isSubAgent={isSubAgent}
@@ -42,7 +43,7 @@ function renderTurn(
       );
     case "assistant":
       return (
-        <div key={turn.uuid || index} className={activeClass}>
+        <div className={activeClass}>
           <AssistantMessage
             turn={turn}
             visibleSubSteps={visibleSubSteps?.get(index)}
@@ -53,7 +54,7 @@ function renderTurn(
       );
     case "system":
       return (
-        <div key={turn.uuid || index} className={`message message-system ${activeClass}`}>
+        <div className={`message message-system ${activeClass}`}>
           <div className="message-role">
             System
             {turn.timestamp && (
@@ -65,7 +66,7 @@ function renderTurn(
       );
     case "parse_error":
       return (
-        <div key={turn.uuid || index} className={`message message-parse-error ${activeClass}`}>
+        <div className={`message message-parse-error ${activeClass}`}>
           <div className="message-role">
             Parse Error
             {turn.lineNumber > 0 && (
@@ -107,16 +108,20 @@ export function MessageList({
     <div className="message-list">
       {turns.map((turn, index) => {
         const isActive = visibleSubSteps ? index === turns.length - 1 : false;
-        return renderTurn(
-          turn,
-          index,
-          isActive,
-          visibleSubSteps,
-          sessionId,
-          project,
-          isSubAgent,
-          planSessionId,
-          index === firstUserTurnIndex ? implSessionId : undefined,
+        return (
+          <ErrorBoundary key={turn.uuid || index} inline>
+            {renderTurn(
+              turn,
+              index,
+              isActive,
+              visibleSubSteps,
+              sessionId,
+              project,
+              isSubAgent,
+              planSessionId,
+              index === firstUserTurnIndex ? implSessionId : undefined,
+            )}
+          </ErrorBoundary>
         );
       })}
     </div>
