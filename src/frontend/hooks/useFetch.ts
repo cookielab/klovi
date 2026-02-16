@@ -17,6 +17,7 @@ export function useFetch<T>(url: string, deps: React.DependencyList): UseFetchRe
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryCount triggers refetch on retry(); deps array is spread from caller
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
     fetch(url)
@@ -25,13 +26,20 @@ export function useFetch<T>(url: string, deps: React.DependencyList): UseFetchRe
         return r.json();
       })
       .then((result) => {
-        setData(result as T);
-        setLoading(false);
+        if (!cancelled) {
+          setData(result as T);
+          setLoading(false);
+        }
       })
       .catch((e) => {
-        setError(e instanceof Error ? e.message : String(e));
-        setLoading(false);
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e));
+          setLoading(false);
+        }
       });
+    return () => {
+      cancelled = true;
+    };
   }, [url, retryCount, ...deps]);
 
   return { data, loading, error, retry };
