@@ -1,5 +1,4 @@
 import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
 import type { DashboardStats, ModelTokenUsage } from "../../shared/types.ts";
 import { getProjectsDir, getStatsCachePath } from "../config.ts";
 
@@ -103,11 +102,7 @@ export async function scanStats(): Promise<DashboardStats> {
     return buildFromCache(cache, projects);
   }
 
-  return scanJsonlFallback(projects);
-}
-
-async function scanJsonlFallback(projects: number): Promise<DashboardStats> {
-  const stats: DashboardStats = {
+  return {
     projects,
     sessions: 0,
     messages: 0,
@@ -120,99 +115,4 @@ async function scanJsonlFallback(projects: number): Promise<DashboardStats> {
     toolCalls: 0,
     models: {},
   };
-
-  const projectsDir = getProjectsDir();
-  let entries: import("node:fs").Dirent[];
-  try {
-    entries = await readdir(projectsDir, { withFileTypes: true });
-  } catch {
-    return stats;
-  }
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-
-    const projectDir = join(projectsDir, entry.name);
-    let files: string[];
-    try {
-      files = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
-    } catch {
-      continue;
-    }
-
-    if (files.length === 0) continue;
-    stats.sessions += files.length;
-
-    for (const file of files) {
-      await scanFile(join(projectDir, file), stats);
-    }
-  }
-
-  return stats;
-}
-
-function extractUsageTokens(usage: Record<string, number> | undefined): ModelTokenUsage {
-  return {
-    inputTokens: usage?.input_tokens ?? 0,
-    outputTokens: usage?.output_tokens ?? 0,
-    cacheReadTokens: usage?.cache_read_input_tokens ?? 0,
-    cacheCreationTokens: usage?.cache_creation_input_tokens ?? 0,
-  };
-}
-
-function addModelTokens(target: ModelTokenUsage, source: ModelTokenUsage): void {
-  target.inputTokens += source.inputTokens;
-  target.outputTokens += source.outputTokens;
-  target.cacheReadTokens += source.cacheReadTokens;
-  target.cacheCreationTokens += source.cacheCreationTokens;
-}
-
-function processAssistantLine(msg: Record<string, unknown>, stats: DashboardStats): void {
-  const usage = msg.usage as Record<string, number> | undefined;
-  const tokens = extractUsageTokens(usage);
-
-  stats.inputTokens += tokens.inputTokens;
-  stats.outputTokens += tokens.outputTokens;
-  stats.cacheReadTokens += tokens.cacheReadTokens;
-  stats.cacheCreationTokens += tokens.cacheCreationTokens;
-
-  const model = msg.model as string | undefined;
-  if (model) {
-    const existing = stats.models[model];
-    if (existing) {
-      addModelTokens(existing, tokens);
-    } else {
-      stats.models[model] = { ...tokens };
-    }
-  }
-
-  const content = msg.content;
-  if (Array.isArray(content)) {
-    for (const block of content) {
-      if (block.type === "tool_use") {
-        stats.toolCalls++;
-      }
-    }
-  }
-}
-
-async function scanFile(filePath: string, stats: DashboardStats): Promise<void> {
-  let text: string;
-  try {
-    text = await readFile(filePath, "utf-8");
-  } catch {
-    return;
-  }
-
-  for (const line of text.split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const obj = JSON.parse(line);
-      if (obj.type === "assistant" && obj.message) {
-        processAssistantLine(obj.message, stats);
-      }
-    } catch {
-      // skip malformed lines
-    }
-  }
 }
