@@ -259,4 +259,38 @@ describe("ToolCall component", () => {
     expect(container.querySelector(".diff-view-wrapper")).toBeNull();
     expect(container.querySelector(".tool-section-label")).not.toBeNull();
   });
+
+  test("Bash tool renders BashToolContent with code block", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Bash",
+          input: { command: "echo hello" },
+          result: "hello",
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    // BashToolContent uses CodeBlock for command, shows "Command" label
+    expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
+    const labels = container.querySelectorAll(".tool-section-label");
+    expect(labels[0]!.textContent).toBe("Command");
+  });
+
+  test("non-Bash tool uses DefaultToolContent", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Grep",
+          input: { pattern: "foo", path: "/src" },
+          result: "src/app.ts:3:foo",
+        })}
+      />,
+    );
+    const header = container.querySelector(".collapsible-header")!;
+    fireEvent.click(header);
+    expect(container.querySelector(".tool-call-input")).not.toBeNull();
+    expect(container.querySelector(".tool-call-output")).not.toBeNull();
+  });
 });

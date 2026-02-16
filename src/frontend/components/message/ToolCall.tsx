@@ -1,8 +1,9 @@
 import type { ToolCallWithResult } from "../../../shared/types.ts";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
 import { DiffView } from "../ui/DiffView.tsx";
+import { BashToolContent } from "./BashToolContent.tsx";
 
-const MAX_OUTPUT_LENGTH = 5000;
+export const MAX_OUTPUT_LENGTH = 5000;
 const MAX_CONTENT_LENGTH = 2000;
 export const MAX_THINKING_PREVIEW = 100;
 
@@ -21,6 +22,7 @@ function isEditWithDiff(call: ToolCallWithResult): boolean {
 }
 
 function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
+  const wasTruncated = call.result.length > MAX_OUTPUT_LENGTH;
   return (
     <>
       <div style={{ marginBottom: 8 }}>
@@ -35,6 +37,7 @@ function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
               {truncateOutput(call.result)}
             </div>
           )}
+          {wasTruncated && <div className="tool-call-truncated">... (truncated)</div>}
           {call.resultImages && call.resultImages.length > 0 && (
             <div className="tool-result-images">
               {call.resultImages.map((img, i) => (
@@ -97,6 +100,8 @@ export function ToolCall({ call, sessionId, project }: ToolCallProps) {
             oldString={String(call.input.old_string)}
             newString={String(call.input.new_string)}
           />
+        ) : call.name === "Bash" ? (
+          <BashToolContent call={call} />
         ) : (
           <DefaultToolContent call={call} />
         )}
@@ -270,7 +275,7 @@ function truncate(s: string, max: number): string {
   return `${s.slice(0, max)}...`;
 }
 
-function truncateOutput(s: string): string {
+export function truncateOutput(s: string): string {
   if (s.length <= MAX_OUTPUT_LENGTH) return s;
-  return `${s.slice(0, MAX_OUTPUT_LENGTH)}\n\n... (truncated)`;
+  return s.slice(0, MAX_OUTPUT_LENGTH);
 }
