@@ -63,6 +63,25 @@ function renderTurn(
           <MarkdownRenderer content={turn.text} />
         </div>
       );
+    case "parse_error":
+      return (
+        <div key={turn.uuid || index} className={`message message-parse-error ${activeClass}`}>
+          <div className="message-role">
+            Parse Error
+            {turn.lineNumber > 0 && (
+              <span className="parse-error-line">line {turn.lineNumber}</span>
+            )}
+          </div>
+          <div className="parse-error-type">
+            {turn.errorType === "json_parse" ? "Invalid JSON" : "Invalid Structure"}
+          </div>
+          {turn.errorDetails && <div className="parse-error-details">{turn.errorDetails}</div>}
+          <details className="parse-error-raw">
+            <summary>Raw content</summary>
+            <pre>{turn.rawLine}</pre>
+          </details>
+        </div>
+      );
     default:
       return null;
   }

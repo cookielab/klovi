@@ -24,7 +24,7 @@ export interface Session {
   implSessionId?: string;
 }
 
-export type Turn = UserTurn | AssistantTurn | SystemTurn;
+export type Turn = UserTurn | AssistantTurn | SystemTurn | ParseErrorTurn;
 
 export interface Attachment {
   type: "image";
@@ -70,6 +70,16 @@ export interface SystemTurn {
   uuid: string;
   timestamp: string;
   text: string;
+}
+
+export interface ParseErrorTurn {
+  kind: "parse_error";
+  uuid: string;
+  timestamp: string;
+  lineNumber: number;
+  rawLine: string;
+  errorType: "json_parse" | "invalid_structure";
+  errorDetails?: string;
 }
 
 export interface ThinkingBlock {

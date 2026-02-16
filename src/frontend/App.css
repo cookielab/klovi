@@ -442,6 +442,61 @@
   color: var(--text-secondary);
 }
 
+.message-parse-error {
+  background: var(--bg-primary);
+  border: 1px solid var(--error);
+  border-left: 4px solid var(--error);
+  font-size: 0.85rem;
+}
+
+.message-parse-error .message-role {
+  color: var(--error);
+}
+
+.parse-error-line {
+  margin-left: 8px;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.parse-error-type {
+  display: inline-block;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--error);
+  margin-bottom: 4px;
+}
+
+.parse-error-details {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 4px;
+}
+
+.parse-error-raw {
+  margin-top: 8px;
+}
+
+.parse-error-raw summary {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.parse-error-raw pre {
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 0.8em;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 /* Status notices (e.g. [Request interrupted by user]) */
 .status-notice {
   text-align: center;

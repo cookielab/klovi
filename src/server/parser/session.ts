@@ -2,6 +2,7 @@ import { join } from "node:path";
 import type {
   AssistantTurn,
   Attachment,
+  ParseErrorTurn,
   Session,
   SessionSummary,
   ToolCallWithResult,
@@ -19,11 +20,13 @@ interface ParsedSession {
 }
 
 export async function parseSession(sessionId: string, encodedPath: string): Promise<ParsedSession> {
-  const rawLines = await readJsonlLines(join(getProjectsDir(), encodedPath, `${sessionId}.jsonl`));
+  const { rawLines, parseErrors } = await readJsonlLines(
+    join(getProjectsDir(), encodedPath, `${sessionId}.jsonl`),
+  );
 
   const subAgentMap = extractSubAgentMap(rawLines);
   const slug = extractSlug(rawLines);
-  const turns = buildTurns(rawLines);
+  const turns = buildTurns(rawLines, parseErrors);
 
   // Attach subAgentId to Task tool calls
   for (const turn of turns) {
@@ -61,15 +64,15 @@ export async function parseSubAgentSession(
     `agent-${agentId}.jsonl`,
   );
 
-  let rawLines: RawLine[];
+  let parsed: ParsedLines;
   try {
-    rawLines = await readJsonlLines(filePath);
+    parsed = await readJsonlLines(filePath);
   } catch {
     return { sessionId, project: encodedPath, turns: [] };
   }
 
-  const subAgentMap = extractSubAgentMap(rawLines);
-  const turns = buildTurns(rawLines);
+  const subAgentMap = extractSubAgentMap(parsed.rawLines);
+  const turns = buildTurns(parsed.rawLines, parsed.parseErrors);
 
   for (const turn of turns) {
     if (turn.kind !== "assistant") continue;
@@ -170,20 +173,38 @@ export function findImplSessionId(
   return match?.sessionId;
 }
 
-async function readJsonlLines(filePath: string): Promise<RawLine[]> {
+interface ParsedLines {
+  rawLines: RawLine[];
+  parseErrors: ParseErrorTurn[];
+}
+
+async function readJsonlLines(filePath: string): Promise<ParsedLines> {
   const { readFile } = await import("node:fs/promises");
   const text = await readFile(filePath, "utf-8");
-  return text
-    .split("\n")
-    .filter((l) => l.trim())
-    .map((l) => {
-      try {
-        return JSON.parse(l) as RawLine;
-      } catch {
-        return null;
-      }
-    })
-    .filter((l): l is RawLine => l !== null);
+  const lines = text.split("\n");
+
+  const rawLines: RawLine[] = [];
+  const parseErrors: ParseErrorTurn[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (!line.trim()) continue;
+    try {
+      rawLines.push(JSON.parse(line) as RawLine);
+    } catch (err) {
+      parseErrors.push({
+        kind: "parse_error",
+        uuid: `parse-error-line-${i + 1}`,
+        timestamp: rawLines[rawLines.length - 1]?.timestamp ?? "",
+        lineNumber: i + 1,
+        rawLine: line.length > 500 ? `${line.slice(0, 500)}… (truncated)` : line,
+        errorType: "json_parse",
+        errorDetails: err instanceof Error ? err.message : undefined,
+      });
+    }
+  }
+
+  return { rawLines, parseErrors };
 }
 
 function isDisplayableLine(l: RawLine): boolean {
@@ -355,8 +376,21 @@ function handleAssistantLine(
   line: RawLine,
   currentAssistant: AssistantTurn | null,
   toolResults: ToolResultMap,
+  structureErrors: ParseErrorTurn[],
 ): AssistantTurn | null {
-  if (!line.message || !Array.isArray(line.message.content)) return currentAssistant;
+  if (!line.message) return currentAssistant;
+  if (!Array.isArray(line.message.content)) {
+    structureErrors.push({
+      kind: "parse_error",
+      uuid: `parse-error-${line.uuid || "unknown"}`,
+      timestamp: line.timestamp || "",
+      lineNumber: 0,
+      rawLine: JSON.stringify(line.message.content).slice(0, 500),
+      errorType: "invalid_structure",
+      errorDetails: `Assistant message content is ${typeof line.message.content}, expected array`,
+    });
+    return currentAssistant;
+  }
   const current = currentAssistant ?? createAssistantTurn(line);
   processAssistantLine(line, current, toolResults);
   return current;
@@ -379,24 +413,31 @@ function handleSystemLine(
   return null;
 }
 
-export function buildTurns(lines: RawLine[]): Turn[] {
+export function buildTurns(lines: RawLine[], parseErrors: ParseErrorTurn[] = []): Turn[] {
   const displayable = lines.filter(isDisplayableLine);
   const toolResults = collectToolResults(displayable);
 
   const turns: Turn[] = [];
   let currentAssistant: AssistantTurn | null = null;
+  const structureErrors: ParseErrorTurn[] = [];
 
   for (const line of displayable) {
     if (line.type === "user") {
       currentAssistant = handleUserLine(line, currentAssistant, turns);
     } else if (line.type === "assistant") {
-      currentAssistant = handleAssistantLine(line, currentAssistant, toolResults);
+      currentAssistant = handleAssistantLine(line, currentAssistant, toolResults, structureErrors);
     } else if (line.type === "system") {
       currentAssistant = handleSystemLine(line, currentAssistant, turns);
     }
   }
 
   flushAssistant(currentAssistant, turns);
+
+  const allErrors = [...parseErrors, ...structureErrors];
+  if (allErrors.length > 0) {
+    turns.push(...allErrors);
+  }
+
   return turns;
 }
 

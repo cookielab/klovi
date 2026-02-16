@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { render } from "@testing-library/react";
-import type { AssistantTurn, SystemTurn, Turn, UserTurn } from "../../../shared/types.ts";
+import type {
+  AssistantTurn,
+  ParseErrorTurn,
+  SystemTurn,
+  Turn,
+  UserTurn,
+} from "../../../shared/types.ts";
 import { MessageList } from "./MessageList.tsx";
 
 function userTurn(overrides: Partial<UserTurn> = {}): UserTurn {
@@ -30,6 +36,19 @@ function systemTurn(overrides: Partial<SystemTurn> = {}): SystemTurn {
     uuid: "s1",
     timestamp: "2024-01-15T10:02:00Z",
     text: "System message",
+    ...overrides,
+  };
+}
+
+function parseErrorTurn(overrides: Partial<ParseErrorTurn> = {}): ParseErrorTurn {
+  return {
+    kind: "parse_error",
+    uuid: "pe1",
+    timestamp: "",
+    lineNumber: 42,
+    rawLine: '{"invalid json',
+    errorType: "json_parse",
+    errorDetails: "Unexpected token",
     ...overrides,
   };
 }
@@ -105,5 +124,24 @@ describe("MessageList", () => {
     // In sub-agent mode, user turns show "Root Agent" instead of "You"
     const role = container.querySelector(".message-role");
     expect(role!.textContent).toContain("Root Agent");
+  });
+
+  test("renders parse error messages", () => {
+    const turns: Turn[] = [parseErrorTurn()];
+    const { container } = render(<MessageList turns={turns} />);
+    const el = container.querySelector(".message-parse-error");
+    expect(el).not.toBeNull();
+    expect(el!.textContent).toContain("Parse Error");
+    expect(el!.textContent).toContain("line 42");
+    expect(el!.textContent).toContain("Invalid JSON");
+  });
+
+  test("renders parse error without line number when lineNumber is 0", () => {
+    const turns: Turn[] = [parseErrorTurn({ lineNumber: 0, errorType: "invalid_structure" })];
+    const { container } = render(<MessageList turns={turns} />);
+    const el = container.querySelector(".message-parse-error");
+    expect(el).not.toBeNull();
+    expect(el!.textContent).toContain("Invalid Structure");
+    expect(el!.textContent).not.toContain("line 0");
   });
 });

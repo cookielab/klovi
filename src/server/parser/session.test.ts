@@ -500,8 +500,65 @@ describe("buildTurns", () => {
       }),
     ];
     const turns = buildTurns(lines);
-    expect(turns).toHaveLength(1);
+    expect(turns).toHaveLength(2);
     expect((turns[0] as UserTurn).text).toBe("After malformed");
+    expect(turns[1]!.kind).toBe("parse_error");
+    const parseError = turns[1] as import("../../shared/types.ts").ParseErrorTurn;
+    expect(parseError.errorType).toBe("invalid_structure");
+    expect(parseError.rawLine).toContain("just a string");
+  });
+
+  test("parse errors from readJsonlLines are appended to turns", () => {
+    const parseErrors: import("../../shared/types.ts").ParseErrorTurn[] = [
+      {
+        kind: "parse_error",
+        uuid: "parse-error-line-5",
+        timestamp: "",
+        lineNumber: 5,
+        rawLine: "{invalid json",
+        errorType: "json_parse",
+        errorDetails: "Unexpected token",
+      },
+    ];
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "Hello" },
+      }),
+    ];
+    const turns = buildTurns(lines, parseErrors);
+    expect(turns).toHaveLength(2);
+    expect(turns[0]!.kind).toBe("user");
+    expect(turns[1]!.kind).toBe("parse_error");
+    const error = turns[1] as import("../../shared/types.ts").ParseErrorTurn;
+    expect(error.lineNumber).toBe(5);
+    expect(error.rawLine).toBe("{invalid json");
+    expect(error.errorType).toBe("json_parse");
+  });
+
+  test("multiple parse errors are all preserved", () => {
+    const parseErrors: import("../../shared/types.ts").ParseErrorTurn[] = [
+      {
+        kind: "parse_error",
+        uuid: "parse-error-line-1",
+        timestamp: "",
+        lineNumber: 1,
+        rawLine: "not json at all",
+        errorType: "json_parse",
+      },
+      {
+        kind: "parse_error",
+        uuid: "parse-error-line-3",
+        timestamp: "",
+        lineNumber: 3,
+        rawLine: "{broken",
+        errorType: "json_parse",
+      },
+    ];
+    const turns = buildTurns([], parseErrors);
+    expect(turns).toHaveLength(2);
+    expect(turns[0]!.kind).toBe("parse_error");
+    expect(turns[1]!.kind).toBe("parse_error");
   });
 });
 

@@ -93,7 +93,9 @@ async function extractCwd(filePath: string): Promise<string> {
     try {
       const obj: RawLine = JSON.parse(line);
       if (obj.cwd) return obj.cwd;
-    } catch {}
+    } catch {
+      // Malformed lines skipped here; full errors reported by parseSession()
+    }
   }
   return "";
 }
@@ -156,7 +158,9 @@ async function extractSessionMeta(
       const obj: RawLine = JSON.parse(line);
       processMetaLine(obj, meta);
       if (isMetaComplete(meta)) break;
-    } catch {}
+    } catch {
+      // Malformed lines skipped here; full errors reported by parseSession()
+    }
   }
 
   if (!meta.timestamp || !meta.firstMessage) return null;
