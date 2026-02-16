@@ -1,5 +1,6 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useTheme } from "../../hooks/useTheme.ts";
 
 interface CodeBlockProps {
   language?: string;
@@ -7,7 +8,9 @@ interface CodeBlockProps {
 }
 
 export function CodeBlock({ language, children }: CodeBlockProps) {
+  const { resolved: theme } = useTheme();
   const lang = language || "text";
+  const style = theme === "dark" ? oneDark : oneLight;
 
   return (
     <div className="code-block-wrapper">
@@ -19,7 +22,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
       <div className="code-block-content">
         <SyntaxHighlighter
           language={lang}
-          style={oneDark}
+          style={style}
           customStyle={{
             margin: 0,
             fontSize: "0.85em",

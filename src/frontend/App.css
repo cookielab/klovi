@@ -10,12 +10,12 @@
   --bg-system: #fff8c5;
   --bg-tool: #eaeef2;
   --bg-thinking: #eef6ee;
-  --bg-code: #24292f;
+  --bg-code: hsl(230, 1%, 98%);
 
   --text-primary: #1f2328;
   --text-secondary: #59636e;
   --text-muted: #57606a;
-  --text-code: #e0e0e0;
+  --text-code: hsl(230, 8%, 24%);
   --text-inverse: #ffffff;
 
   --accent: #1a7f37;
@@ -59,12 +59,12 @@
   --bg-system: #1a1610;
   --bg-tool: #161b22;
   --bg-thinking: #11151a;
-  --bg-code: #080b10;
+  --bg-code: hsl(220, 13%, 18%);
 
   --text-primary: #c9d1d9;
   --text-secondary: #8b949e;
   --text-muted: #848d97;
-  --text-code: #c9d1d9;
+  --text-code: hsl(220, 14%, 71%);
   --text-inverse: #0d1117;
 
   --accent: #3fb950;
