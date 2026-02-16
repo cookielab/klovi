@@ -13,7 +13,7 @@ export interface EmbeddedAsset {
   contentType: string;
 }
 
-function matchRoute(pattern: string, pathname: string): Record<string, string> | null {
+export function matchRoute(pattern: string, pathname: string): Record<string, string> | null {
   const patternParts = pattern.split("/");
   const pathParts = pathname.split("/");
   if (patternParts.length !== pathParts.length) return null;
@@ -41,7 +41,7 @@ const MIME_TYPES: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
 };
 
-async function serveStatic(pathname: string, staticDir: string): Promise<Response | null> {
+export async function serveStatic(pathname: string, staticDir: string): Promise<Response | null> {
   const requestedPath = pathname === "/" ? "index.html" : pathname.slice(1);
   const absoluteStaticDir = resolve(staticDir);
   const absoluteFilePath = resolve(staticDir, requestedPath);
@@ -78,7 +78,10 @@ async function serveStatic(pathname: string, staticDir: string): Promise<Respons
   }
 }
 
-function serveEmbedded(pathname: string, assets: Map<string, EmbeddedAsset>): Response | null {
+export function serveEmbedded(
+  pathname: string,
+  assets: Map<string, EmbeddedAsset>,
+): Response | null {
   const key = pathname === "/" ? "index.html" : pathname.slice(1);
   const asset = assets.get(key);
   if (asset) {
