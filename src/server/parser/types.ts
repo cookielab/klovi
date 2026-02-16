@@ -15,7 +15,7 @@ export interface RawLine {
   data?: { type?: string; agentId?: string; [key: string]: unknown };
 }
 
-export interface RawMessage {
+interface RawMessage {
   role: "user" | "assistant";
   model?: string;
   content: string | RawContentBlock[];
@@ -35,17 +35,17 @@ export type RawContentBlock =
   | RawToolResultBlock
   | RawImageBlock;
 
-export interface RawTextBlock {
+interface RawTextBlock {
   type: "text";
   text: string;
 }
 
-export interface RawThinkingBlock {
+interface RawThinkingBlock {
   type: "thinking";
   thinking: string;
 }
 
-export interface RawToolUseBlock {
+interface RawToolUseBlock {
   type: "tool_use";
   id: string;
   name: string;
@@ -59,7 +59,7 @@ export interface RawToolResultBlock {
   is_error?: boolean;
 }
 
-export interface RawImageBlock {
+interface RawImageBlock {
   type: "image";
   source: {
     type: "base64";
@@ -68,14 +68,14 @@ export interface RawImageBlock {
   };
 }
 
-export type RawToolResultContent = RawToolResultTextContent | RawToolResultImageContent;
+type RawToolResultContent = RawToolResultTextContent | RawToolResultImageContent;
 
-export interface RawToolResultTextContent {
+interface RawToolResultTextContent {
   type: "text";
   text: string;
 }
 
-export interface RawToolResultImageContent {
+interface RawToolResultImageContent {
   type: "image";
   source: {
     type: "base64";

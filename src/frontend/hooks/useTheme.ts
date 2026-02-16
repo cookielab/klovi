@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type ThemeSetting = "system" | "light" | "dark";
-export type ResolvedTheme = "light" | "dark";
+type ThemeSetting = "system" | "light" | "dark";
+type ResolvedTheme = "light" | "dark";
 
 function getSystemTheme(): ResolvedTheme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";

@@ -10,7 +10,7 @@ import { getClaudeCodeDir, setClaudeCodeDir } from "./config.ts";
 import type { Route } from "./http.ts";
 import { appVersion } from "./version.ts";
 
-export interface CliArgs {
+interface CliArgs {
   port: number;
   acceptRisks: boolean;
   showHelp: boolean;
