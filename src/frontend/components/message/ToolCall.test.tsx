@@ -345,4 +345,38 @@ describe("ToolCall component", () => {
     expect(container.querySelector(".tool-call-error")).not.toBeNull();
     expect(container.querySelector(".tool-call-output.tool-call-error")).not.toBeNull();
   });
+
+  test("Skill tool shows skill badge with skill name as display name", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Skill",
+          input: { skill: "verify" },
+          result: "All checks passed!",
+        })}
+      />,
+    );
+    const badge = container.querySelector(".tool-skill-badge");
+    expect(badge).not.toBeNull();
+    expect(badge!.textContent).toBe("skill");
+    const name = container.querySelector(".tool-call-name");
+    expect(name!.textContent).toBe("verify");
+    // Summary is hidden when skill badge is shown (name IS the summary)
+    expect(container.querySelector(".tool-call-summary")).toBeNull();
+  });
+
+  test("Skill tool without skill name falls back to Skill display name", () => {
+    const { container } = render(
+      <ToolCall
+        call={makeCall({
+          name: "Skill",
+          input: {},
+          result: "done",
+        })}
+      />,
+    );
+    expect(container.querySelector(".tool-skill-badge")).toBeNull();
+    const name = container.querySelector(".tool-call-name");
+    expect(name!.textContent).toBe("Skill");
+  });
 });

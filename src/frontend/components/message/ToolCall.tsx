@@ -53,13 +53,14 @@ function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
 export function ToolCall({ call, sessionId, project }: ToolCallProps) {
   const summary = getToolSummary(call);
   const mcpServer = getMcpServer(call.name);
+  const skillName = getSkillName(call);
   const hasSubAgent = call.name === "Task" && call.subAgentId && sessionId && project;
 
   const displayName = hasSubAgent
     ? "Sub-Agent"
     : mcpServer
       ? call.name.split("__").slice(1).join("__").replace(/__/g, " > ")
-      : call.name;
+      : (skillName ?? call.name);
 
   return (
     <div className="tool-call">
@@ -67,8 +68,9 @@ export function ToolCall({ call, sessionId, project }: ToolCallProps) {
         title={
           <span>
             {mcpServer && <span className="tool-mcp-server">{mcpServer}</span>}
+            {skillName && <span className="tool-skill-badge">skill</span>}
             <span className="tool-call-name">{displayName}</span>
-            {summary && <span className="tool-call-summary"> — {summary}</span>}
+            {summary && !skillName && <span className="tool-call-summary"> — {summary}</span>}
             {call.isError && <span className="tool-call-error"> (error)</span>}
             {hasSubAgent && (
               <a
@@ -102,6 +104,11 @@ function getMcpServer(name: string): string | null {
   if (!name.startsWith("mcp__")) return null;
   const parts = name.split("__");
   return parts[1] || null;
+}
+
+function getSkillName(call: ToolCallWithResult): string | null {
+  if (call.name !== "Skill") return null;
+  return String(call.input.skill || "") || null;
 }
 
 type Input = Record<string, unknown>;

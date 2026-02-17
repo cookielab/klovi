@@ -792,12 +792,6 @@
   color: var(--text-muted);
 }
 
-.command-call::before {
-  content: ">";
-  color: var(--accent);
-  font-weight: 700;
-}
-
 .command-call-label {
   color: var(--accent);
   font-weight: 600;
@@ -1207,6 +1201,19 @@
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tool-skill-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }

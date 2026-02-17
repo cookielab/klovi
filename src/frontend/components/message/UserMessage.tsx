@@ -77,6 +77,7 @@ export function UserMessage({
       <div className={`message ${isSubAgent ? "message-root-agent" : "message-user"}`}>
         {turn.command && (
           <div className="command-call">
+            <span className="tool-skill-badge">skill</span>
             <span className="command-call-label">{turn.command.name}</span>
           </div>
         )}

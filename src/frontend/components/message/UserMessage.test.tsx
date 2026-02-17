@@ -35,6 +35,9 @@ describe("UserMessage", () => {
     const badge = container.querySelector(".command-call-label");
     expect(badge).not.toBeNull();
     expect(badge!.textContent).toBe("/commit");
+    const skillBadge = container.querySelector(".tool-skill-badge");
+    expect(skillBadge).not.toBeNull();
+    expect(skillBadge!.textContent).toBe("skill");
   });
 
   test("attachment badges for images", () => {
