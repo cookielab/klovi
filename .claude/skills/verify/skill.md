@@ -36,4 +36,4 @@ Run all three checks in parallel:
 - NEVER skip verification after a code change
 - NEVER tell the user "everything looks good" without actually running the checks
 - Fix all new errors you introduced — pre-existing warnings are acceptable
-- Run checks from the project root: `/Users/vrtak-cz/Workspace/Cookielab/CCvie`
+- Run checks from the project root: `/Users/vrtak-cz/Workspace/Cookielab/Klovi`
