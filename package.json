@@ -1,7 +1,7 @@
 {
   "name": "@cookielab.io/klovi",
   "version": "0.0.0",
-  "description": "A local web app for browsing and presenting Claude Code session history",
+  "description": "A local web app for browsing and presenting AI coding session history",
   "module": "index.ts",
   "type": "module",
   "license": "MIT",

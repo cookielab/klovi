@@ -17,6 +17,7 @@ import { SubAgentPresentation } from "./components/session/SubAgentPresentation.
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
+import { isClaudeModel } from "./utils/model.ts";
 
 type ViewState =
   | { kind: "home" }
@@ -318,7 +319,9 @@ function App() {
           title={headerTitle}
           breadcrumb={breadcrumb}
           copyCommand={
-            view.kind === "session" ? `claude --resume ${view.session.sessionId}` : undefined
+            view.kind === "session" && isClaudeModel(view.session.model)
+              ? `claude --resume ${view.session.sessionId}`
+              : undefined
           }
           backHref={
             view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined
@@ -339,7 +342,7 @@ function App() {
               <div className="empty-state">
                 <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
                 <div className="empty-state-title">Welcome to Klovi</div>
-                <p>Select a project from the sidebar to browse your Claude Code sessions</p>
+                <p>Select a project from the sidebar to browse your AI coding sessions</p>
               </div>
               <DashboardStats />
             </>
