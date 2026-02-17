@@ -1,5 +1,5 @@
 import type { UserTurn } from "../../../shared/types.ts";
-import { formatTimestamp } from "../../utils/time.ts";
+import { formatFullDateTime, formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 
 interface UserMessageProps {
@@ -48,7 +48,13 @@ export function UserMessage({
           </a>
         )}
         {turn.timestamp && (
-          <span className="turn-timestamp">{formatTimestamp(turn.timestamp)}</span>
+          <time
+            className="turn-timestamp"
+            dateTime={turn.timestamp}
+            data-tooltip={formatFullDateTime(turn.timestamp)}
+          >
+            {formatTimestamp(turn.timestamp)}
+          </time>
         )}
       </div>
       <div className={`message ${isSubAgent ? "message-root-agent" : "message-user"}`}>

@@ -1,7 +1,7 @@
 import type { Project, SessionSummary } from "../../../shared/types.ts";
 import { useFetch } from "../../hooks/useFetch.ts";
 import { shortModel } from "../../utils/model.ts";
-import { formatTime } from "../../utils/time.ts";
+import { formatFullDateTime, formatTime } from "../../utils/time.ts";
 
 interface SessionListProps {
   project: Project;
@@ -52,7 +52,9 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
               )}{" "}
               {session.model && <span>{shortModel(session.model)} · </span>}
               {session.gitBranch && <span>{session.gitBranch} · </span>}
-              {formatTime(session.timestamp)}
+              <time dateTime={session.timestamp} title={formatFullDateTime(session.timestamp)}>
+                {formatTime(session.timestamp)}
+              </time>
             </div>
           </div>
         ))}

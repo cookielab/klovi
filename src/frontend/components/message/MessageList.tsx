@@ -1,5 +1,5 @@
 import type { Turn } from "../../../shared/types.ts";
-import { formatTimestamp } from "../../utils/time.ts";
+import { formatFullDateTime, formatTimestamp } from "../../utils/time.ts";
 import { ErrorBoundary } from "../ui/ErrorBoundary.tsx";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { AssistantMessage } from "./AssistantMessage.tsx";
@@ -58,7 +58,13 @@ function renderTurn(
           <div className="turn-header">
             <span className="turn-badge turn-badge-system">System</span>
             {turn.timestamp && (
-              <span className="turn-timestamp">{formatTimestamp(turn.timestamp)}</span>
+              <time
+                className="turn-timestamp"
+                dateTime={turn.timestamp}
+                data-tooltip={formatFullDateTime(turn.timestamp)}
+              >
+                {formatTimestamp(turn.timestamp)}
+              </time>
             )}
           </div>
           <div className="message message-system">

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GlobalSessionResult } from "../../../shared/types.ts";
 import { shortModel } from "../../utils/model.ts";
-import { formatRelativeTime } from "../../utils/time.ts";
+import { formatFullDateTime, formatRelativeTime } from "../../utils/time.ts";
 
 interface SearchModalProps {
   sessions: GlobalSessionResult[];
@@ -119,7 +119,9 @@ export function SearchModal({ sessions, onSelect, onClose }: SearchModalProps) {
                 <div className="search-result-meta">
                   {result.projectName} &middot; {shortModel(result.model)}
                   {result.gitBranch ? ` \u00b7 ${result.gitBranch}` : ""} &middot;{" "}
-                  {formatRelativeTime(result.timestamp)}
+                  <time dateTime={result.timestamp} title={formatFullDateTime(result.timestamp)}>
+                    {formatRelativeTime(result.timestamp)}
+                  </time>
                 </div>
               </div>
             ))

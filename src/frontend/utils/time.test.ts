@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatRelativeTime, formatTime, formatTimestamp } from "./time.ts";
+import { formatFullDateTime, formatRelativeTime, formatTime, formatTimestamp } from "./time.ts";
 
 describe("formatTimestamp", () => {
   test("'just now' for recent timestamps", () => {
@@ -68,6 +68,24 @@ describe("formatTime", () => {
 
   test("handles midnight timestamp", () => {
     const result = formatTime("2024-01-01T00:00:00Z");
+    expect(result.length).toBeGreaterThan(0);
+  });
+});
+
+describe("formatFullDateTime", () => {
+  test("returns full date and time string", () => {
+    const result = formatFullDateTime("2024-06-15T14:30:45Z");
+    // Should contain year, month name, day, and time with seconds
+    expect(result).toContain("2024");
+    expect(result.length).toBeGreaterThan(10);
+  });
+
+  test("returns empty string for invalid date", () => {
+    expect(formatFullDateTime("not-a-date")).toBe("");
+  });
+
+  test("handles current timestamp", () => {
+    const result = formatFullDateTime(new Date().toISOString());
     expect(result.length).toBeGreaterThan(0);
   });
 });

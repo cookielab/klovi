@@ -1,7 +1,7 @@
 import { groupContentBlocks } from "../../../shared/content-blocks.ts";
 import type { AssistantTurn, ContentBlock, TokenUsage } from "../../../shared/types.ts";
 import { shortModel } from "../../utils/model.ts";
-import { formatTimestamp } from "../../utils/time.ts";
+import { formatFullDateTime, formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { ThinkingBlock } from "./ThinkingBlock.tsx";
 import { ToolCall } from "./ToolCall.tsx";
@@ -71,7 +71,13 @@ export function AssistantMessage({
           <span className="turn-badge turn-badge-model">{shortModel(turn.model)}</span>
         )}
         {turn.timestamp && (
-          <span className="turn-timestamp">{formatTimestamp(turn.timestamp)}</span>
+          <time
+            className="turn-timestamp"
+            dateTime={turn.timestamp}
+            data-tooltip={formatFullDateTime(turn.timestamp)}
+          >
+            {formatTimestamp(turn.timestamp)}
+          </time>
         )}
       </div>
       <div className="message message-assistant">

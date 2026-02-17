@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Project } from "../../../shared/types.ts";
 import { useFetch } from "../../hooks/useFetch.ts";
 import { projectDisplayName } from "../../utils/project.ts";
-import { formatRelativeTime } from "../../utils/time.ts";
+import { formatFullDateTime, formatRelativeTime } from "../../utils/time.ts";
 
 interface ProjectListProps {
   onSelect: (project: Project) => void;
@@ -62,7 +62,12 @@ export function ProjectList({
             <div className="list-item-meta">
               {project.sessionCount} session{project.sessionCount !== 1 ? "s" : ""}
               {" · "}
-              {formatRelativeTime(project.lastActivity)}
+              <time
+                dateTime={project.lastActivity}
+                title={formatFullDateTime(project.lastActivity)}
+              >
+                {formatRelativeTime(project.lastActivity)}
+              </time>
             </div>
           </div>
           <button

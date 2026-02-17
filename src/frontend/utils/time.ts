@@ -47,6 +47,19 @@ export function formatRelativeTime(iso: string): string {
   return date.toLocaleDateString();
 }
 
+export function formatFullDateTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 export function formatTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, {
