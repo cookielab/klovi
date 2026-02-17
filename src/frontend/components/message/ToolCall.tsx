@@ -107,18 +107,32 @@ function getMcpServer(name: string): string | null {
 type Input = Record<string, unknown>;
 type SummaryExtractor = (input: Input) => string;
 
-const SUMMARY_EXTRACTORS: Record<string, SummaryExtractor> = {
+function getAskUserQuestionSummary(input: Input): string {
+  if (Array.isArray(input.questions) && input.questions.length > 0) {
+    const q = input.questions[0] as Record<string, unknown>;
+    return truncate(String(q.question || ""), 60);
+  }
+  return "";
+}
+
+// --- Summary extractors by category ---
+
+const fileSummaryExtractors: Record<string, SummaryExtractor> = {
   Read: (i) => String(i.file_path || ""),
   Write: (i) => String(i.file_path || ""),
   Edit: (i) => String(i.file_path || ""),
-  Bash: (i) => truncate(String(i.command || ""), 80),
   Glob: (i) => String(i.pattern || ""),
   Grep: (i) => truncate(String(i.pattern || ""), 60),
+  NotebookEdit: (i) => String(i.notebook_path || ""),
+  NotebookRead: (i) => String(i.notebook_path || ""),
+};
+
+const shellSummaryExtractors: Record<string, SummaryExtractor> = {
+  Bash: (i) => truncate(String(i.command || ""), 80),
+};
+
+const agentSummaryExtractors: Record<string, SummaryExtractor> = {
   Task: (i) => truncate(String(i.description || ""), 60),
-  WebFetch: (i) => truncate(String(i.url || ""), 60),
-  WebSearch: (i) => truncate(String(i.query || ""), 60),
-  AskUserQuestion: (i) => getAskUserQuestionSummary(i),
-  Skill: (i) => String(i.skill || ""),
   TaskCreate: (i) => truncate(String(i.subject || ""), 60),
   TaskUpdate: (i) => `#${i.taskId || "?"}${i.status ? ` → ${i.status}` : ""}`,
   TaskList: () => "List all tasks",
@@ -128,18 +142,26 @@ const SUMMARY_EXTRACTORS: Record<string, SummaryExtractor> = {
   KillShell: (i) => String(i.task_id || i.shell_id || ""),
   EnterPlanMode: () => "Enter plan mode",
   ExitPlanMode: () => "Exit plan mode",
-  NotebookEdit: (i) => String(i.notebook_path || ""),
-  NotebookRead: (i) => String(i.notebook_path || ""),
   TodoWrite: (i) => truncate(String(i.subject || ""), 60),
 };
 
-function getAskUserQuestionSummary(input: Input): string {
-  if (Array.isArray(input.questions) && input.questions.length > 0) {
-    const q = input.questions[0] as Record<string, unknown>;
-    return truncate(String(q.question || ""), 60);
-  }
-  return "";
-}
+const webSummaryExtractors: Record<string, SummaryExtractor> = {
+  WebFetch: (i) => truncate(String(i.url || ""), 60),
+  WebSearch: (i) => truncate(String(i.query || ""), 60),
+};
+
+const interactionSummaryExtractors: Record<string, SummaryExtractor> = {
+  AskUserQuestion: (i) => getAskUserQuestionSummary(i),
+  Skill: (i) => String(i.skill || ""),
+};
+
+const SUMMARY_EXTRACTORS: Record<string, SummaryExtractor> = {
+  ...fileSummaryExtractors,
+  ...shellSummaryExtractors,
+  ...agentSummaryExtractors,
+  ...webSummaryExtractors,
+  ...interactionSummaryExtractors,
+};
 
 export function getToolSummary(call: ToolCallWithResult): string {
   if (call.name.startsWith("mcp__")) {
@@ -148,6 +170,8 @@ export function getToolSummary(call: ToolCallWithResult): string {
   const extractor = SUMMARY_EXTRACTORS[call.name];
   return extractor ? extractor(call.input) : "";
 }
+
+// --- Input formatters by category ---
 
 type InputFormatter = (input: Input) => string;
 
@@ -211,8 +235,7 @@ function formatEmptyInput(input: Input): string {
   return Object.keys(input).length === 0 ? "(no input)" : JSON.stringify(input, null, 2);
 }
 
-const INPUT_FORMATTERS: Record<string, InputFormatter> = {
-  Bash: (i) => String(i.command || JSON.stringify(i, null, 2)),
+const fileInputFormatters: Record<string, InputFormatter> = {
   Edit: formatEditInput,
   Read: (i) => String(i.file_path || JSON.stringify(i, null, 2)),
   Write: formatWriteInput,
@@ -227,12 +250,14 @@ const INPUT_FORMATTERS: Record<string, InputFormatter> = {
       ["path", "Path"],
       ["output_mode", "Mode"],
     ]),
-  AskUserQuestion: formatAskUserInput,
-  Skill: (i) =>
-    formatFieldParts(i, [
-      ["skill", "Skill"],
-      ["args", "Args"],
-    ]),
+  NotebookEdit: formatNotebookEditInput,
+};
+
+const shellInputFormatters: Record<string, InputFormatter> = {
+  Bash: (i) => String(i.command || JSON.stringify(i, null, 2)),
+};
+
+const agentInputFormatters: Record<string, InputFormatter> = {
   TaskCreate: (i) =>
     formatFieldParts(i, [
       ["subject", "Subject"],
@@ -249,8 +274,23 @@ const INPUT_FORMATTERS: Record<string, InputFormatter> = {
   TaskList: formatEmptyInput,
   EnterPlanMode: formatEmptyInput,
   ExitPlanMode: formatEmptyInput,
-  NotebookEdit: formatNotebookEditInput,
   TodoWrite: formatTodoWriteInput,
+};
+
+const interactionInputFormatters: Record<string, InputFormatter> = {
+  AskUserQuestion: formatAskUserInput,
+  Skill: (i) =>
+    formatFieldParts(i, [
+      ["skill", "Skill"],
+      ["args", "Args"],
+    ]),
+};
+
+const INPUT_FORMATTERS: Record<string, InputFormatter> = {
+  ...fileInputFormatters,
+  ...shellInputFormatters,
+  ...agentInputFormatters,
+  ...interactionInputFormatters,
 };
 
 export function formatToolInput(call: ToolCallWithResult): string {
