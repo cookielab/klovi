@@ -7,7 +7,8 @@
 
 A local web app for browsing and presenting Claude Code session history. Built for showing AI coding workflows at meetups and conferences.
 
-![Klovi screenshot](docs/example.png)
+![Klovi homepage screenshot](docs/screenshot-homepage.png)
+![Klovi homepage screenshot](docs/screenshot-session.png)
 
 ## Why Klovi?
 
