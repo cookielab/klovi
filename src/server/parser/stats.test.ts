@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setClaudeCodeDir } from "../config.ts";
@@ -16,11 +16,6 @@ function makeTmpDir(): string {
 
 function writeCacheFile(dir: string, cache: object): void {
   writeFileSync(join(dir, "stats-cache.json"), JSON.stringify(cache));
-}
-
-function todayString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 let tmpDir: string;
@@ -100,18 +95,21 @@ describe("scanStats with cache file", () => {
     expect(stats.models["claude-sonnet-4-5-20250929"]!.outputTokens).toBe(80);
   });
 
-  test("computes todaySessions from dailyActivity", async () => {
+  test("computes todaySessions from jsonl file mtimes", async () => {
     tmpDir = makeTmpDir();
-    mkdirSync(join(tmpDir, "projects"), { recursive: true });
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
+
+    // Create 5 .jsonl files with today's mtime (default)
+    for (let i = 0; i < 5; i++) {
+      writeFileSync(join(proj, `session-${i}.jsonl`), "");
+    }
 
     writeCacheFile(tmpDir, {
       version: 2,
       totalSessions: 10,
       totalMessages: 100,
-      dailyActivity: [
-        { date: todayString(), sessionCount: 5, toolCallCount: 10, messageCount: 20 },
-        { date: "2025-01-01", sessionCount: 3, toolCallCount: 5, messageCount: 10 },
-      ],
+      dailyActivity: [],
       modelUsage: {},
     });
 
@@ -120,31 +118,42 @@ describe("scanStats with cache file", () => {
     expect(stats.todaySessions).toBe(5);
   });
 
-  test("computes thisWeekSessions from dailyActivity", async () => {
+  test("computes thisWeekSessions from jsonl file mtimes", async () => {
     tmpDir = makeTmpDir();
-    mkdirSync(join(tmpDir, "projects"), { recursive: true });
+    const proj = join(tmpDir, "projects", "proj1");
+    mkdirSync(proj, { recursive: true });
 
     const today = new Date();
     const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-    const lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10);
+    const tenDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10);
 
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    // 2 files with today's mtime (default)
+    writeFileSync(join(proj, "today-1.jsonl"), "");
+    writeFileSync(join(proj, "today-2.jsonl"), "");
+
+    // 3 files with yesterday's mtime (within last week)
+    for (let i = 0; i < 3; i++) {
+      const filePath = join(proj, `yesterday-${i}.jsonl`);
+      writeFileSync(filePath, "");
+      utimesSync(filePath, yesterday, yesterday);
+    }
+
+    // 1 file from 10 days ago (outside last week)
+    const oldFile = join(proj, "old.jsonl");
+    writeFileSync(oldFile, "");
+    utimesSync(oldFile, tenDaysAgo, tenDaysAgo);
 
     writeCacheFile(tmpDir, {
       version: 2,
       totalSessions: 10,
       totalMessages: 100,
-      dailyActivity: [
-        { date: fmt(today), sessionCount: 2, toolCallCount: 0, messageCount: 0 },
-        { date: fmt(yesterday), sessionCount: 3, toolCallCount: 0, messageCount: 0 },
-        { date: fmt(lastWeek), sessionCount: 100, toolCallCount: 0, messageCount: 0 },
-      ],
+      dailyActivity: [],
       modelUsage: {},
     });
 
     setClaudeCodeDir(tmpDir);
     const stats = await scanStats();
+    expect(stats.todaySessions).toBe(2);
     expect(stats.thisWeekSessions).toBe(5);
   });
 

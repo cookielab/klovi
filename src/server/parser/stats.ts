@@ -1,4 +1,5 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { join } from "node:path";
 import type { DashboardStats, ModelTokenUsage } from "../../shared/types.ts";
 import { getProjectsDir, getStatsCachePath } from "../config.ts";
 
@@ -42,9 +43,12 @@ async function countProjects(): Promise<number> {
   }
 }
 
-function todayDateString(): string {
-  const d = new Date();
+function toDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function todayDateString(): string {
+  return toDateString(new Date());
 }
 
 function isWithinLastWeek(dateStr: string): boolean {
@@ -52,6 +56,32 @@ function isWithinLastWeek(dateStr: string): boolean {
   const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
   const weekAgoStr = `${weekAgo.getFullYear()}-${String(weekAgo.getMonth() + 1).padStart(2, "0")}-${String(weekAgo.getDate()).padStart(2, "0")}`;
   return dateStr >= weekAgoStr;
+}
+
+async function countRecentSessions(): Promise<{ todaySessions: number; thisWeekSessions: number }> {
+  const today = todayDateString();
+  const projectsDir = getProjectsDir();
+  let todaySessions = 0;
+  let thisWeekSessions = 0;
+
+  try {
+    const projectDirs = await readdir(projectsDir, { withFileTypes: true });
+    for (const dir of projectDirs) {
+      if (!dir.isDirectory()) continue;
+      const projectPath = join(projectsDir, dir.name);
+      const files = (await readdir(projectPath)).filter((f) => f.endsWith(".jsonl"));
+      for (const file of files) {
+        const fileStat = await stat(join(projectPath, file));
+        const mtimeDate = toDateString(fileStat.mtime);
+        if (mtimeDate === today) todaySessions++;
+        if (isWithinLastWeek(mtimeDate)) thisWeekSessions++;
+      }
+    }
+  } catch {
+    // projects dir doesn't exist or is inaccessible
+  }
+
+  return { todaySessions, thisWeekSessions };
 }
 
 function buildFromCache(cache: StatsCacheFile, projects: number): DashboardStats {
@@ -96,23 +126,31 @@ function buildFromCache(cache: StatsCacheFile, projects: number): DashboardStats
 }
 
 export async function scanStats(): Promise<DashboardStats> {
-  const [cache, projects] = await Promise.all([loadStatsCache(), countProjects()]);
+  const [cache, projects, recent] = await Promise.all([
+    loadStatsCache(),
+    countProjects(),
+    countRecentSessions(),
+  ]);
 
-  if (cache) {
-    return buildFromCache(cache, projects);
-  }
+  const base = cache
+    ? buildFromCache(cache, projects)
+    : {
+        projects,
+        sessions: 0,
+        messages: 0,
+        todaySessions: 0,
+        thisWeekSessions: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        toolCalls: 0,
+        models: {},
+      };
 
   return {
-    projects,
-    sessions: 0,
-    messages: 0,
-    todaySessions: 0,
-    thisWeekSessions: 0,
-    inputTokens: 0,
-    outputTokens: 0,
-    cacheReadTokens: 0,
-    cacheCreationTokens: 0,
-    toolCalls: 0,
-    models: {},
+    ...base,
+    todaySessions: recent.todaySessions,
+    thisWeekSessions: recent.thisWeekSessions,
   };
 }
