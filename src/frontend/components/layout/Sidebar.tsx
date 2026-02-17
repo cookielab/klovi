@@ -40,7 +40,11 @@ export function Sidebar({ children, onSearchClick }: SidebarProps) {
       <div className="sidebar-content">{children}</div>
       <div className="sidebar-footer">
         Made by{" "}
-        <a href="https://cookielab.io" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://cookielab.io?utm_source=opensource&utm_medium=klovi"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           cookielab.io
         </a>
       </div>
