@@ -64,7 +64,7 @@ describe("UserMessage", () => {
     const message = container.querySelector(".message-user");
     expect(message).not.toBeNull();
     expect(container.querySelector(".message-root-agent")).toBeNull();
-    const role = container.querySelector(".message-role");
+    const role = container.querySelector(".turn-badge");
     expect(role!.textContent).toContain("User");
   });
 
@@ -73,7 +73,7 @@ describe("UserMessage", () => {
     const message = container.querySelector(".message-root-agent");
     expect(message).not.toBeNull();
     expect(container.querySelector(".message-user")).toBeNull();
-    const role = container.querySelector(".message-role");
+    const role = container.querySelector(".turn-badge");
     expect(role!.textContent).toContain("Root Agent");
   });
 

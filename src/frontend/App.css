@@ -1,94 +1,130 @@
 :root {
   --font-size-base: 15px;
 
-  /* Hacker Light */
-  --bg-primary: #f6f8fa;
-  --bg-secondary: #eaeef2;
-  --bg-tertiary: #d0d7de;
-  --bg-user: #dafbe1;
-  --bg-assistant: #f6f8fa;
-  --bg-system: #fff8c5;
-  --bg-tool: #eaeef2;
-  --bg-thinking: #eef6ee;
-  --bg-code: hsl(230, 1%, 98%);
+  /* Typography */
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
 
-  --text-primary: #1f2328;
-  --text-secondary: #59636e;
-  --text-muted: #57606a;
-  --text-code: hsl(230, 8%, 24%);
-  --text-inverse: #ffffff;
+  /* Backgrounds */
+  --bg-primary: #f2f4f8;
+  --bg-secondary: #e8eaef;
+  --bg-tertiary: #d8dce6;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-system: #f0ede8;
+  --bg-thinking: #ece9f4;
+  --bg-code: #eceef4;
 
-  --accent: #1a7f37;
-  --accent-hover: #218c3a;
-  --accent-subtle: #dafbe1;
-  --highlight: #0969da;
+  /* Text */
+  --text-primary: #1a1e2a;
+  --text-secondary: #3a4255;
+  --text-muted: #7a8499;
+  --text-code: #3a4060;
+  --text-inverse: #f2f4f8;
 
-  --border: #d0d7de;
-  --border-light: #e1e4e8;
+  /* Role colors — consistent across themes */
+  --role-user: #3a7a96;
+  --role-assistant: #6a58a0;
+  --role-tool: #4a6880;
+  --role-subagent: #7a5888;
+  --role-agent: #8a6828;
+  --role-user-bg: rgba(58, 122, 150, 0.1);
+  --role-assistant-bg: rgba(106, 88, 160, 0.1);
+  --role-agent-bg: rgba(138, 104, 40, 0.1);
 
-  --agent: #9a6700;
-  --bg-agent: #fff8c5;
+  /* Accent = assistant purple (primary interactive color) */
+  --accent: #6a58a0;
+  --accent-hover: #5a4890;
+  --accent-subtle: #ede9f8;
+  --highlight: #3a7a96;
 
-  --plan-color: #8250df;
-  --plan-subtle: #ede6f6;
-  --impl-color: #bf5700;
-  --impl-subtle: #fff1e0;
+  /* Borders */
+  --border: #c8ccda;
+  --border-light: #dce0ea;
 
-  --error: #cf222e;
-  --success: #1a7f37;
+  /* Tree */
+  --tree-line: #c0c8d8;
 
-  --shadow-sm: 0 1px 2px rgba(27, 31, 36, 0.05);
-  --shadow-md: 0 2px 8px rgba(27, 31, 36, 0.08);
-  --shadow-lg: 0 4px 16px rgba(27, 31, 36, 0.12);
+  /* Session types */
+  --plan-color: #6a58a0;
+  --plan-subtle: #ede9f8;
+  --impl-color: #8a5830;
+  --impl-subtle: #f8ede3;
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* Status */
+  --error: #985050;
+  --success: #3a7858;
 
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(20, 25, 40, 0.06);
+  --shadow-md: 0 2px 8px rgba(20, 25, 40, 0.1);
+  --shadow-lg: 0 4px 16px rgba(20, 25, 40, 0.14);
+
+  /* Radius — all zero for sharp corners */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  /* Layout */
   --sidebar-width: 320px;
   --header-height: 52px;
 }
 
-/* Hacker Dark */
 [data-theme="dark"] {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-user: #0f1a12;
-  --bg-assistant: #0d1117;
-  --bg-system: #1a1610;
-  --bg-tool: #161b22;
-  --bg-thinking: #11151a;
-  --bg-code: hsl(220, 13%, 18%);
+  /* Backgrounds */
+  --bg-primary: #0c0e14;
+  --bg-secondary: #11141c;
+  --bg-tertiary: #161a24;
+  --bg-elevated: #1c2130;
+  --bg-card: #161a24;
+  --bg-system: #15120e;
+  --bg-thinking: #12101c;
+  --bg-code: #12151e;
 
-  --text-primary: #c9d1d9;
-  --text-secondary: #8b949e;
-  --text-muted: #848d97;
-  --text-code: hsl(220, 14%, 71%);
-  --text-inverse: #0d1117;
+  /* Text */
+  --text-primary: #c0c8d4;
+  --text-secondary: #8890a0;
+  --text-muted: #555e70;
+  --text-code: #a8b4c4;
+  --text-inverse: #0c0e14;
 
-  --accent: #3fb950;
-  --accent-hover: #56d364;
-  --accent-subtle: #122117;
-  --highlight: #58a6ff;
+  /* Role colors */
+  --role-user: #4a90a8;
+  --role-assistant: #7c68b0;
+  --role-tool: #5a7890;
+  --role-subagent: #8a6898;
+  --role-agent: #a08840;
+  --role-user-bg: rgba(74, 144, 168, 0.1);
+  --role-assistant-bg: rgba(124, 104, 176, 0.1);
+  --role-agent-bg: rgba(160, 136, 64, 0.1);
 
-  --border: #30363d;
-  --border-light: #21262d;
+  /* Accent = assistant purple */
+  --accent: #7c68b0;
+  --accent-hover: #9080c0;
+  --accent-subtle: #1a1630;
+  --highlight: #4a90a8;
 
-  --agent: #d29922;
-  --bg-agent: #1a1610;
+  /* Borders */
+  --border: #1e2430;
+  --border-light: #2a3040;
 
-  --plan-color: #bc8cff;
-  --plan-subtle: #1e1535;
-  --impl-color: #e09b50;
+  /* Tree */
+  --tree-line: #2a3040;
+
+  /* Session types */
+  --plan-color: #9080c0;
+  --plan-subtle: #1a1530;
+  --impl-color: #c09060;
   --impl-subtle: #1e1510;
 
-  --error: #f85149;
-  --success: #3fb950;
+  /* Status */
+  --error: #a85050;
+  --success: #508868;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.45);
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
 /* Layout */
@@ -413,33 +449,136 @@
   width: 100%;
 }
 
+/* Turn wrapper: badge row + card */
+.turn {
+  margin-bottom: 20px;
+}
+
+.turn-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.turn-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.turn-badge-user {
+  color: var(--role-user);
+  background: var(--role-user-bg);
+}
+
+.turn-badge-agent {
+  color: var(--role-agent);
+  background: var(--role-agent-bg);
+}
+
+.turn-badge-assistant {
+  color: var(--role-assistant);
+  background: var(--role-assistant-bg);
+}
+
+.turn-badge-model {
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  font-size: 0.65rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.turn-badge-system {
+  color: var(--text-muted);
+  background: rgba(122, 132, 153, 0.1);
+}
+
+.turn-badge-error {
+  color: var(--error);
+  background: rgba(168, 80, 80, 0.1);
+}
+
+.turn-timestamp {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Message card */
 .message {
-  margin-bottom: 16px;
   border-radius: var(--radius-md);
-  padding: 16px 20px;
-  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
 }
 
 .message-user {
-  background: var(--bg-user);
-  border-left: 3px solid var(--accent);
+  border-left-color: var(--role-user);
 }
 
 .message-root-agent {
-  background: var(--bg-agent);
-  border-left: 3px solid var(--agent);
+  border-left-color: var(--role-agent);
 }
 
 .message-assistant {
-  background: var(--bg-assistant);
-  border: 1px solid var(--border-light);
+  border-left-color: var(--role-assistant);
 }
 
 .message-system {
-  background: var(--bg-system);
-  border: 1px solid var(--border-light);
+  border-left-color: var(--border);
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+
+/* Execution tree — inside assistant message cards */
+.exec-tree {
+  margin-top: 12px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.exec-tree::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--tree-line);
+}
+
+.tree-node {
+  position: relative;
+  padding: 5px 0;
+}
+
+.tree-node::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 17px;
+  width: 11px;
+  height: 1px;
+  background: var(--tree-line);
+}
+
+/* Hide the vertical line below the last node */
+.tree-node:last-child::after {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 17px;
+  bottom: 0;
+  width: 2px;
+  background: var(--bg-card);
 }
 
 .message-parse-error {
@@ -447,10 +586,6 @@
   border: 1px solid var(--error);
   border-left: 4px solid var(--error);
   font-size: 0.85rem;
-}
-
-.message-parse-error .message-role {
-  color: var(--error);
 }
 
 .parse-error-line {
@@ -471,7 +606,7 @@
 .parse-error-details {
   color: var(--text-secondary);
   font-size: 0.85em;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   margin-bottom: 4px;
 }
 
@@ -631,15 +766,6 @@
   color: var(--accent);
 }
 
-.message-role {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
 /* Markdown content */
 .markdown-content {
   font-size: 0.95rem;
@@ -687,7 +813,7 @@
 .markdown-content code:not(pre code) {
   background: var(--bg-tertiary);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.88em;
 }
 
@@ -772,7 +898,7 @@
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   font-size: 0.75rem;
   color: var(--text-muted);
-  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 .diff-view-content {
@@ -840,14 +966,14 @@
 
 .tool-call-name {
   font-weight: 600;
-  color: var(--accent);
+  color: var(--role-tool);
   font-size: 0.82rem;
 }
 
 .tool-call-input,
 .tool-call-output {
   font-size: 0.78rem;
-  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+  font-family: var(--font-mono);
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--text-secondary);
@@ -868,7 +994,7 @@
 .tool-call-summary {
   font-size: 0.78rem;
   color: var(--text-muted);
-  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 /* Thinking blocks */
@@ -925,7 +1051,7 @@
   width: 200px;
   height: 4px;
   background: var(--bg-tertiary);
-  border-radius: 2px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -985,21 +1111,13 @@
 
 /* Token usage footer */
 .token-usage {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
   color: var(--text-muted);
   margin-top: 12px;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--border-light);
-}
-
-/* Message timestamps */
-.message-timestamp {
-  float: right;
-  font-weight: 400;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  text-transform: none;
-  letter-spacing: normal;
+  text-align: right;
 }
 
 /* Tool result images */
@@ -1081,7 +1199,7 @@
 .session-type-badge {
   display: inline-block;
   padding: 1px 6px;
-  border-radius: 9px;
+  border-radius: 0;
   font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1188,7 +1306,7 @@
 
 .model-name {
   color: var(--text-secondary);
-  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.78rem;
 }
 

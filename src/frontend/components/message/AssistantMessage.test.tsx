@@ -19,7 +19,7 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ model: "claude-opus-4-6" })} />,
     );
-    const role = container.querySelector(".message-role");
+    const role = container.querySelector(".turn-badge-model");
     expect(role!.textContent).toContain("Opus");
   });
 
@@ -27,7 +27,7 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ model: "claude-sonnet-4-5-20250929" })} />,
     );
-    const role = container.querySelector(".message-role");
+    const role = container.querySelector(".turn-badge-model");
     expect(role!.textContent).toContain("Sonnet");
   });
 
@@ -35,7 +35,7 @@ describe("AssistantMessage", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ model: "claude-haiku-4-5-20251001" })} />,
     );
-    const role = container.querySelector(".message-role");
+    const role = container.querySelector(".turn-badge-model");
     expect(role!.textContent).toContain("Haiku");
   });
 

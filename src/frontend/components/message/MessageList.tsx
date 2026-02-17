@@ -54,33 +54,37 @@ function renderTurn(
       );
     case "system":
       return (
-        <div className={`message message-system ${activeClass}`}>
-          <div className="message-role">
-            System
+        <div className={`turn ${activeClass}`}>
+          <div className="turn-header">
+            <span className="turn-badge turn-badge-system">System</span>
             {turn.timestamp && (
-              <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
+              <span className="turn-timestamp">{formatTimestamp(turn.timestamp)}</span>
             )}
           </div>
-          <MarkdownRenderer content={turn.text} />
+          <div className="message message-system">
+            <MarkdownRenderer content={turn.text} />
+          </div>
         </div>
       );
     case "parse_error":
       return (
-        <div className={`message message-parse-error ${activeClass}`}>
-          <div className="message-role">
-            Parse Error
+        <div className={`turn ${activeClass}`}>
+          <div className="turn-header">
+            <span className="turn-badge turn-badge-error">Parse Error</span>
             {turn.lineNumber > 0 && (
               <span className="parse-error-line">line {turn.lineNumber}</span>
             )}
           </div>
-          <div className="parse-error-type">
-            {turn.errorType === "json_parse" ? "Invalid JSON" : "Invalid Structure"}
+          <div className="message message-parse-error">
+            <div className="parse-error-type">
+              {turn.errorType === "json_parse" ? "Invalid JSON" : "Invalid Structure"}
+            </div>
+            {turn.errorDetails && <div className="parse-error-details">{turn.errorDetails}</div>}
+            <details className="parse-error-raw">
+              <summary>Raw content</summary>
+              <pre>{turn.rawLine}</pre>
+            </details>
           </div>
-          {turn.errorDetails && <div className="parse-error-details">{turn.errorDetails}</div>}
-          <details className="parse-error-raw">
-            <summary>Raw content</summary>
-            <pre>{turn.rawLine}</pre>
-          </details>
         </div>
       );
     default:

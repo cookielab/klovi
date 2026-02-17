@@ -1,6 +1,5 @@
-import type React from "react";
 import { groupContentBlocks } from "../../../shared/content-blocks.ts";
-import type { AssistantTurn } from "../../../shared/types.ts";
+import type { AssistantTurn, ContentBlock, TokenUsage } from "../../../shared/types.ts";
 import { shortModel } from "../../utils/model.ts";
 import { formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
@@ -14,69 +13,95 @@ interface AssistantMessageProps {
   project?: string;
 }
 
+function renderGroup(
+  group: ContentBlock[],
+  sessionId: string | undefined,
+  project: string | undefined,
+) {
+  return group.map((block, i) => {
+    if (block.type === "thinking") {
+      return <ThinkingBlock key={`thinking-${i}`} block={block.block} />;
+    }
+    if (block.type === "text") {
+      return <MarkdownRenderer key={`text-${i}`} content={block.text} />;
+    }
+    return <ToolCall key={`tool-${i}`} call={block.call} sessionId={sessionId} project={project} />;
+  });
+}
+
+function UsageFooter({ usage }: { usage: TokenUsage }) {
+  return (
+    <div className="token-usage">
+      {usage.inputTokens.toLocaleString()} in / {usage.outputTokens.toLocaleString()} out
+      {usage.cacheReadTokens && usage.cacheReadTokens > 0 && (
+        <span> · {usage.cacheReadTokens.toLocaleString()} cache read</span>
+      )}
+      {usage.cacheCreationTokens && usage.cacheCreationTokens > 0 && (
+        <span> · {usage.cacheCreationTokens.toLocaleString()} cache write</span>
+      )}
+    </div>
+  );
+}
+
 export function AssistantMessage({
   turn,
   visibleSubSteps,
   sessionId,
   project,
 }: AssistantMessageProps) {
-  // Group consecutive non-text blocks into single steps
   const groups = groupContentBlocks(turn.contentBlocks);
-  const subSteps: React.ReactNode[] = [];
+  const limit = visibleSubSteps !== undefined ? visibleSubSteps : groups.length;
+  const visibleGroups = groups.slice(0, limit);
+  const isPresentation = visibleSubSteps !== undefined;
 
-  for (let g = 0; g < groups.length; g++) {
-    const group = groups[g]!;
-    subSteps.push(
-      <div key={g}>
-        {group.map((block, i) => {
-          if (block.type === "thinking") {
-            return <ThinkingBlock key={`thinking-${i}`} block={block.block} />;
-          }
-          if (block.type === "text") {
-            return <MarkdownRenderer key={`text-${i}`} content={block.text} />;
-          }
-          return (
-            <ToolCall key={`tool-${i}`} call={block.call} sessionId={sessionId} project={project} />
-          );
-        })}
-      </div>,
-    );
-  }
+  // Exec-tree for turns with non-text blocks (tools, thinking)
+  const hasNonText = turn.contentBlocks.some((b) => b.type !== "text");
+  const firstIsText = groups.length > 0 && groups[0]![0]?.type === "text";
 
-  const limit = visibleSubSteps !== undefined ? visibleSubSteps : subSteps.length;
-  const visible = subSteps.slice(0, limit);
+  // Split: intro text before tree, rest in tree nodes
+  const introGroup = hasNonText && firstIsText ? visibleGroups[0] : null;
+  const treeGroups = hasNonText ? (introGroup ? visibleGroups.slice(1) : visibleGroups) : [];
+  const flatGroups = hasNonText ? [] : visibleGroups;
 
   return (
-    <div className="message message-assistant">
-      <div className="message-role">
-        Assistant
+    <div className="turn">
+      <div className="turn-header">
+        <span className="turn-badge turn-badge-assistant">Assistant</span>
         {turn.model && (
-          <span style={{ fontWeight: 400, marginLeft: 8 }}>{shortModel(turn.model)}</span>
+          <span className="turn-badge turn-badge-model">{shortModel(turn.model)}</span>
         )}
         {turn.timestamp && (
-          <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
+          <span className="turn-timestamp">{formatTimestamp(turn.timestamp)}</span>
         )}
       </div>
-      {visible.map((node, i) => (
-        <div
-          key={i}
-          className={visibleSubSteps !== undefined && i === visible.length - 1 ? "step-enter" : ""}
-        >
-          {node}
-        </div>
-      ))}
-      {turn.usage && (
-        <div className="token-usage">
-          {turn.usage.inputTokens.toLocaleString()} in / {turn.usage.outputTokens.toLocaleString()}{" "}
-          out
-          {turn.usage.cacheReadTokens && turn.usage.cacheReadTokens > 0 && (
-            <span> · {turn.usage.cacheReadTokens.toLocaleString()} cache read</span>
-          )}
-          {turn.usage.cacheCreationTokens && turn.usage.cacheCreationTokens > 0 && (
-            <span> · {turn.usage.cacheCreationTokens.toLocaleString()} cache write</span>
-          )}
-        </div>
-      )}
+      <div className="message message-assistant">
+        {introGroup && (
+          <div className={isPresentation && treeGroups.length === 0 ? "step-enter" : ""}>
+            {renderGroup(introGroup, sessionId, project)}
+          </div>
+        )}
+        {treeGroups.length > 0 && (
+          <div className="exec-tree">
+            {treeGroups.map((group, i) => (
+              <div
+                key={i}
+                className={`tree-node${isPresentation && i === treeGroups.length - 1 ? " step-enter" : ""}`}
+              >
+                {renderGroup(group, sessionId, project)}
+              </div>
+            ))}
+          </div>
+        )}
+        {flatGroups.map((group, i) => (
+          <div
+            key={i}
+            className={isPresentation && i === flatGroups.length - 1 ? "step-enter" : ""}
+          >
+            {renderGroup(group, sessionId, project)}
+          </div>
+        ))}
+        {turn.usage && <UsageFooter usage={turn.usage} />}
+      </div>
     </div>
   );
 }

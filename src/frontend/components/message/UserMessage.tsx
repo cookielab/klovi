@@ -30,10 +30,13 @@ export function UserMessage({
   const showPlanLink = planSessionId && project && isPlanMessage;
   const showImplLink = implSessionId && project && !isPlanMessage;
 
+  const role = isSubAgent ? "Root Agent" : "User";
+  const badgeClass = isSubAgent ? "turn-badge-agent" : "turn-badge-user";
+
   return (
-    <div className={`message ${isSubAgent ? "message-root-agent" : "message-user"}`}>
-      <div className="message-role">
-        {isSubAgent ? "Root Agent" : "User"}
+    <div className="turn">
+      <div className="turn-header">
+        <span className={`turn-badge ${badgeClass}`}>{role}</span>
         {showPlanLink && (
           <a className="subagent-link" href={`#/${project}/${planSessionId}`}>
             View planning session
@@ -45,24 +48,26 @@ export function UserMessage({
           </a>
         )}
         {turn.timestamp && (
-          <span className="message-timestamp">{formatTimestamp(turn.timestamp)}</span>
+          <span className="turn-timestamp">{formatTimestamp(turn.timestamp)}</span>
         )}
       </div>
-      {turn.command && (
-        <div className="command-call">
-          <span className="command-call-label">{turn.command.name}</span>
-        </div>
-      )}
-      <MarkdownRenderer content={turn.text} />
-      {turn.attachments && turn.attachments.length > 0 && (
-        <div className="attachments">
-          {turn.attachments.map((a, i) => (
-            <span key={i} className="attachment-badge">
-              image/{a.mediaType.replace(/^image\//, "")}
-            </span>
-          ))}
-        </div>
-      )}
+      <div className={`message ${isSubAgent ? "message-root-agent" : "message-user"}`}>
+        {turn.command && (
+          <div className="command-call">
+            <span className="command-call-label">{turn.command.name}</span>
+          </div>
+        )}
+        <MarkdownRenderer content={turn.text} />
+        {turn.attachments && turn.attachments.length > 0 && (
+          <div className="attachments">
+            {turn.attachments.map((a, i) => (
+              <span key={i} className="attachment-badge">
+                image/{a.mediaType.replace(/^image\//, "")}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

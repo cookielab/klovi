@@ -58,7 +58,7 @@ export interface AssistantTurn {
   stopReason?: string;
 }
 
-interface TokenUsage {
+export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
   cacheReadTokens?: number;

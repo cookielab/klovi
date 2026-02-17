@@ -122,17 +122,19 @@ describe("MessageList", () => {
     const turns: Turn[] = [userTurn()];
     const { container } = render(<MessageList turns={turns} isSubAgent />);
     // In sub-agent mode, user turns show "Root Agent" instead of "You"
-    const role = container.querySelector(".message-role");
+    const role = container.querySelector(".turn-badge");
     expect(role!.textContent).toContain("Root Agent");
   });
 
   test("renders parse error messages", () => {
     const turns: Turn[] = [parseErrorTurn()];
     const { container } = render(<MessageList turns={turns} />);
+    const turn = container.querySelector(".turn");
+    expect(turn).not.toBeNull();
+    expect(turn!.textContent).toContain("Parse Error");
+    expect(turn!.textContent).toContain("line 42");
     const el = container.querySelector(".message-parse-error");
     expect(el).not.toBeNull();
-    expect(el!.textContent).toContain("Parse Error");
-    expect(el!.textContent).toContain("line 42");
     expect(el!.textContent).toContain("Invalid JSON");
   });
 
