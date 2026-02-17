@@ -270,6 +270,21 @@ function isSkippedUserText(text: string): boolean {
   );
 }
 
+const BASH_INPUT_RE = /<bash-input>([\s\S]*?)<\/bash-input>/;
+const IDE_OPENED_FILE_RE =
+  /<ide_opened_file>[\s\S]*?opened the file (.*?) in the IDE[\s\S]*?<\/ide_opened_file>/;
+function parseSpecialUserContent(
+  text: string,
+): { bashInput: string } | { ideOpenedFile: string } | null {
+  const bashMatch = BASH_INPUT_RE.exec(text);
+  if (bashMatch?.[1] !== undefined) return { bashInput: bashMatch[1] };
+
+  const ideMatch = IDE_OPENED_FILE_RE.exec(text);
+  if (ideMatch?.[1] !== undefined) return { ideOpenedFile: ideMatch[1] };
+
+  return null;
+}
+
 function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
   if (!line.message) return null;
   const content = line.message.content;
@@ -279,6 +294,18 @@ function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
   }
 
   const { text, attachments } = extractUserContent(content);
+
+  const special = parseSpecialUserContent(text);
+  if (special) {
+    return {
+      kind: "user",
+      uuid: line.uuid || "",
+      timestamp: line.timestamp || "",
+      text: "",
+      ...special,
+    };
+  }
+
   if (isSkippedUserText(text)) return null;
 
   const command = parseCommandMessage(text);

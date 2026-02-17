@@ -51,6 +51,31 @@ describe("UserMessage", () => {
     expect(badge!.textContent).toBe("image/png");
   });
 
+  test("bash-input renders with terminal styling", () => {
+    const { container } = render(
+      <UserMessage turn={makeTurn({ text: "", bashInput: "bun run dev" })} />,
+    );
+    const notice = container.querySelector(".bash-input-notice");
+    expect(notice).not.toBeNull();
+    const prompt = container.querySelector(".bash-input-prompt");
+    expect(prompt).not.toBeNull();
+    expect(prompt!.textContent).toBe("$");
+    const command = container.querySelector(".bash-input-command");
+    expect(command).not.toBeNull();
+    expect(command!.textContent).toBe("bun run dev");
+  });
+
+  test("ide_opened_file renders with file path styling", () => {
+    const { container } = render(
+      <UserMessage turn={makeTurn({ text: "", ideOpenedFile: "/Users/dev/project/.env" })} />,
+    );
+    const notice = container.querySelector(".ide-opened-file-notice");
+    expect(notice).not.toBeNull();
+    const path = container.querySelector(".ide-opened-file-path");
+    expect(path).not.toBeNull();
+    expect(path!.textContent).toBe("/Users/dev/project/.env");
+  });
+
   test("regular markdown text renders", () => {
     const { container } = render(<UserMessage turn={makeTurn({ text: "Hello **world**" })} />);
     const message = container.querySelector(".message-user");

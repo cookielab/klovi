@@ -229,6 +229,61 @@ describe("buildTurns", () => {
     expect((turns[0] as UserTurn).text).toBe("Visible message");
   });
 
+  test("bash-input user message → UserTurn with bashInput", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: "<bash-input>bun run dev</bash-input>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.kind).toBe("user");
+    expect(turn.bashInput).toBe("bun run dev");
+    expect(turn.text).toBe("");
+  });
+
+  test("ide_opened_file user message → UserTurn with ideOpenedFile (path extracted)", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content:
+            "<ide_opened_file>The user opened the file /Users/dev/project/.env in the IDE. This may or may not be related to the current task.</ide_opened_file>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.kind).toBe("user");
+    expect(turn.ideOpenedFile).toBe("/Users/dev/project/.env");
+    expect(turn.text).toBe("");
+  });
+
+  test("ide_opened_file with unrecognized format renders as plain text", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: "<ide_opened_file>Some unexpected format</ide_opened_file>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.kind).toBe("user");
+    expect(turn.ideOpenedFile).toBeUndefined();
+    expect(turn.text).toBe("<ide_opened_file>Some unexpected format</ide_opened_file>");
+  });
+
   test("system-reminder user messages skipped", () => {
     const lines: RawLine[] = [
       line({

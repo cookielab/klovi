@@ -753,6 +753,35 @@
   margin-bottom: 16px;
 }
 
+/* Bash input notices */
+.bash-input-notice {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  font-style: normal;
+}
+
+.bash-input-prompt {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.bash-input-command,
+.ide-opened-file-path {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: none;
+  padding: 0;
+}
+
+/* IDE opened file notices */
+.ide-opened-file-notice {
+  font-style: normal;
+}
+
 /* Command calls (slash commands) */
 .command-call {
   display: flex;

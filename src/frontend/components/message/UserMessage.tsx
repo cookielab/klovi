@@ -20,6 +20,23 @@ export function UserMessage({
   implSessionId,
   project,
 }: UserMessageProps) {
+  if (turn.bashInput !== undefined) {
+    return (
+      <div className="status-notice bash-input-notice">
+        <span className="bash-input-prompt">$</span>
+        <code className="bash-input-command">{turn.bashInput}</code>
+      </div>
+    );
+  }
+
+  if (turn.ideOpenedFile !== undefined) {
+    return (
+      <div className="status-notice ide-opened-file-notice">
+        Opened <code className="ide-opened-file-path">{turn.ideOpenedFile}</code>
+      </div>
+    );
+  }
+
   const isStatus = STATUS_RE.test(turn.text.trim());
 
   if (isStatus) {

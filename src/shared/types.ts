@@ -41,6 +41,8 @@ export interface UserTurn {
     args: string;
   };
   attachments?: Attachment[];
+  bashInput?: string;
+  ideOpenedFile?: string;
 }
 
 export type ContentBlock =
