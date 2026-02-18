@@ -3,14 +3,6 @@ import type { DashboardStats, ModelTokenUsage, SessionSummary, Turn } from "../.
 import type { PluginRegistry } from "../plugin-registry.ts";
 import { createRegistry } from "../registry.ts";
 
-const STATS_CACHE_TTL_MS = 5 * 60 * 1000;
-
-let statsCache: { expiresAt: number; stats: DashboardStats } | null = null;
-
-export function clearStatsCacheForTests(): void {
-  statsCache = null;
-}
-
 function emptyStats(projects = 0): DashboardStats {
   return {
     projects,
@@ -127,15 +119,5 @@ async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
 }
 
 export async function scanStats(registry: PluginRegistry = createRegistry()): Promise<DashboardStats> {
-  const now = Date.now();
-  if (statsCache && statsCache.expiresAt > now) {
-    return statsCache.stats;
-  }
-
-  const stats = await computeStats(registry);
-  statsCache = {
-    expiresAt: now + STATS_CACHE_TTL_MS,
-    stats,
-  };
-  return stats;
+  return computeStats(registry);
 }

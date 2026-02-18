@@ -1,8 +1,8 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import type { ToolPlugin } from "../../shared/plugin-types.ts";
 import type { Session, SessionSummary } from "../../shared/types.ts";
 import { PluginRegistry } from "../plugin-registry.ts";
-import { clearStatsCacheForTests, scanStats } from "./stats.ts";
+import { scanStats } from "./stats.ts";
 
 function isoDaysAgo(days: number): string {
   const d = new Date();
@@ -88,10 +88,6 @@ function createMockPlugin(
   };
 }
 
-afterEach(() => {
-  clearStatsCacheForTests();
-});
-
 describe("scanStats", () => {
   test("aggregates multi-tool style stats from registry sessions", async () => {
     const registry = new PluginRegistry();
@@ -158,7 +154,7 @@ describe("scanStats", () => {
     expect(stats.inputTokens).toBe(0);
   });
 
-  test("uses in-memory cache between calls", async () => {
+  test("recomputes stats on each call", async () => {
     const registry = new PluginRegistry();
     let session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 10, 5);
 
@@ -186,10 +182,6 @@ describe("scanStats", () => {
     expect(first.inputTokens).toBe(10);
 
     session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 999, 5);
-    const second = await scanStats(registry);
-    expect(second.inputTokens).toBe(10);
-
-    clearStatsCacheForTests();
     registry.register(
       createMockPlugin(
         {
@@ -198,8 +190,7 @@ describe("scanStats", () => {
         list,
       ),
     );
-
-    const third = await scanStats(registry);
-    expect(third.inputTokens).toBe(999);
+    const second = await scanStats(registry);
+    expect(second.inputTokens).toBe(999);
   });
 });
