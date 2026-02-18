@@ -73,7 +73,7 @@ export async function parseSubAgentSession(
   try {
     parsed = await readJsonlLines(filePath);
   } catch {
-    return { sessionId, project: encodedPath, turns: [] };
+    return { sessionId, project: encodedPath, turns: [], pluginId: "claude-code" };
   }
 
   const subAgentMap = extractSubAgentMap(parsed.rawLines);
@@ -91,7 +91,7 @@ export async function parseSubAgentSession(
     }
   }
 
-  return { sessionId, project: encodedPath, turns };
+  return { sessionId, project: encodedPath, turns, pluginId: "claude-code" };
 }
 
 const AGENT_ID_RE = /agentId:\s*(\w+)/;
