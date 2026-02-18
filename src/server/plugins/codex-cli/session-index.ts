@@ -18,12 +18,6 @@ export interface SessionFileInfo {
   mtime: string;
 }
 
-interface SessionIndexCache {
-  sessionsDir: string;
-  bySessionId: Map<string, string>;
-}
-
-let cache: SessionIndexCache | null = null;
 const FIRST_LINE_SCAN_BYTES = 64 * 1024;
 
 export function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
@@ -80,20 +74,8 @@ async function walkJsonlFiles(
   }
 }
 
-function upsertCache(sessionsDir: string, sessionId: string, filePath: string): void {
-  if (!cache || cache.sessionsDir !== sessionsDir) {
-    cache = {
-      sessionsDir,
-      bySessionId: new Map([[sessionId, filePath]]),
-    };
-    return;
-  }
-  cache.bySessionId.set(sessionId, filePath);
-}
-
 export async function scanCodexSessions(): Promise<SessionFileInfo[]> {
   const sessionsDir = join(getCodexCliDir(), "sessions");
-  const bySessionId = new Map<string, string>();
   const sessions: SessionFileInfo[] = [];
 
   await walkJsonlFiles(sessionsDir, async (filePath) => {
@@ -108,10 +90,8 @@ export async function scanCodexSessions(): Promise<SessionFileInfo[]> {
       meta,
       mtime: fileStat.mtime.toISOString(),
     });
-    bySessionId.set(meta.uuid, filePath);
   });
 
-  cache = { sessionsDir, bySessionId };
   return sessions;
 }
 
@@ -136,17 +116,9 @@ async function walkForFile(dir: string, targetFilename: string): Promise<string 
 
 export async function findCodexSessionFileById(sessionId: string): Promise<string | null> {
   const sessionsDir = join(getCodexCliDir(), "sessions");
-
-  if (cache?.sessionsDir === sessionsDir) {
-    const cachedPath = cache.bySessionId.get(sessionId);
-    if (cachedPath) {
-      const fileStat = await stat(cachedPath).catch(() => null);
-      if (fileStat?.isFile()) return cachedPath;
-      cache.bySessionId.delete(sessionId);
-    }
-  }
-
   const filePath = await walkForFile(sessionsDir, `${sessionId}.jsonl`);
-  if (filePath) upsertCache(sessionsDir, sessionId, filePath);
-  return filePath;
+  if (!filePath) return null;
+
+  const fileStat = await stat(filePath).catch(() => null);
+  return fileStat?.isFile() ? filePath : null;
 }
