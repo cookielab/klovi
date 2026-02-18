@@ -1,7 +1,9 @@
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { PluginRegistry } from "./plugin-registry.ts";
 import { claudeCodePlugin } from "./plugins/claude-code/index.ts";
 import { codexCliPlugin } from "./plugins/codex-cli/index.ts";
+import { openCodePlugin } from "./plugins/opencode/index.ts";
 
 export function createRegistry(): PluginRegistry {
   const registry = new PluginRegistry();
@@ -17,7 +19,11 @@ export function createRegistry(): PluginRegistry {
     registry.register(codexCliPlugin);
   }
 
-  // OpenCode plugin will be added here later
+  // OpenCode: check for the actual DB file, not just the directory
+  const openCodeDir = openCodePlugin.getDefaultDataDir();
+  if (openCodeDir && existsSync(join(openCodeDir, "opencode.db"))) {
+    registry.register(openCodePlugin);
+  }
 
   return registry;
 }
