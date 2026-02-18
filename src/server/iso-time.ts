@@ -9,3 +9,11 @@ export function maxIso(values: readonly string[]): string {
   }
   return latest;
 }
+
+export function epochMsToIso(epochMs: number): string {
+  return new Date(epochMs).toISOString();
+}
+
+export function epochSecondsToIso(epochSeconds: number): string {
+  return new Date(epochSeconds * 1000).toISOString();
+}

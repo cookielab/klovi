@@ -7,6 +7,7 @@ import type {
   Turn,
   UserTurn,
 } from "../../../shared/types.ts";
+import { epochMsToIso } from "../../iso-time.ts";
 import { openOpenCodeDb, type SqliteDb } from "./db.ts";
 
 // --- DB row types ---
@@ -299,7 +300,7 @@ export function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
   const turns: Turn[] = [];
 
   for (const msg of messages) {
-    const timestamp = new Date(msg.timeCreated).toISOString();
+    const timestamp = epochMsToIso(msg.timeCreated);
     if (msg.data.role === "user") {
       turns.push(buildUserTurn(msg, timestamp));
     } else if (msg.data.role === "assistant") {
