@@ -1,6 +1,7 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { getCodexCliDir } from "../../config.ts";
+import { readTextPrefix } from "../shared/discovery-utils.ts";
 
 export interface CodexSessionMeta {
   uuid: string;
@@ -23,6 +24,7 @@ interface SessionIndexCache {
 }
 
 let cache: SessionIndexCache | null = null;
+const FIRST_LINE_SCAN_BYTES = 64 * 1024;
 
 export function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
   return (
@@ -37,7 +39,7 @@ export function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
 }
 
 async function readFirstLine(filePath: string): Promise<string | null> {
-  const text = await readFile(filePath, "utf-8");
+  const text = await readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES);
   const firstNewline = text.indexOf("\n");
   const firstLine = firstNewline === -1 ? text : text.slice(0, firstNewline);
   return firstLine.trim() ? firstLine : null;
