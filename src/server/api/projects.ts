@@ -1,6 +1,6 @@
-import { discoverProjects } from "../parser/claude-dir.ts";
+import type { PluginRegistry } from "../plugin-registry.ts";
 
-export async function handleProjects(): Promise<Response> {
-  const projects = await discoverProjects();
+export async function handleProjects(registry: PluginRegistry): Promise<Response> {
+  const projects = await registry.discoverAllProjects();
   return Response.json({ projects });
 }

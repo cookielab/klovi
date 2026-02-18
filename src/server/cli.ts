@@ -15,6 +15,7 @@ import {
   setOpenCodeDir,
 } from "./config.ts";
 import type { Route } from "./http.ts";
+import { createRegistry } from "./registry.ts";
 import { appVersion } from "./version.ts";
 
 interface CliArgs {
@@ -161,14 +162,15 @@ export function promptSecurityWarning(port: number): void {
 }
 
 export function createRoutes(): Route[] {
+  const registry = createRegistry();
   return [
     { pattern: "/api/version", handler: () => handleVersion() },
     { pattern: "/api/stats", handler: () => handleStats() },
-    { pattern: "/api/search/sessions", handler: () => handleSearchSessions() },
-    { pattern: "/api/projects", handler: () => handleProjects() },
+    { pattern: "/api/search/sessions", handler: () => handleSearchSessions(registry) },
+    { pattern: "/api/projects", handler: () => handleProjects(registry) },
     {
       pattern: "/api/projects/:encodedPath/sessions",
-      handler: (_req, p) => handleSessions(p.encodedPath!),
+      handler: (_req, p) => handleSessions(p.encodedPath!, registry),
     },
     {
       pattern: "/api/sessions/:sessionId",
@@ -177,7 +179,7 @@ export function createRoutes(): Route[] {
         if (!project) {
           return Response.json({ error: "project query parameter required" }, { status: 400 });
         }
-        return handleSession(p.sessionId!, project);
+        return handleSession(p.sessionId!, project, registry);
       },
     },
     {
