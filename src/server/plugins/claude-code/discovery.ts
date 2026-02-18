@@ -6,8 +6,8 @@ import { cleanCommandMessage } from "../../parser/command-message.ts";
 import type { RawContentBlock, RawLine } from "../../parser/types.ts";
 import {
   decodeEncodedPath,
-  getLatestMtime,
   listFilesBySuffix,
+  listFilesWithMtime,
   readTextPrefix,
   readDirEntriesSafe,
 } from "../shared/discovery-utils.ts";
@@ -17,13 +17,13 @@ const SESSION_META_SCAN_BYTES = 1024 * 1024;
 
 async function inspectProjectSessions(
   projectDir: string,
-  sessionFiles: string[],
+  sessionFiles: { fileName: string; mtime: string }[],
 ): Promise<{ lastActivity: string; resolvedPath: string }> {
-  const lastActivity = await getLatestMtime(projectDir, sessionFiles);
+  const lastActivity = sessionFiles[0]?.mtime || "";
   let resolvedPath = "";
 
   for (const sessionFile of sessionFiles) {
-    const filePath = join(projectDir, sessionFile);
+    const filePath = join(projectDir, sessionFile.fileName);
     if (!resolvedPath) {
       resolvedPath = await extractCwd(filePath);
     }
@@ -41,7 +41,7 @@ export async function discoverClaudeProjects(): Promise<PluginProject[]> {
     if (!entry.isDirectory()) continue;
 
     const projectDir = join(projectsDir, entry.name);
-    const sessionFiles = await listFilesBySuffix(projectDir, ".jsonl");
+    const sessionFiles = await listFilesWithMtime(projectDir, ".jsonl");
     if (sessionFiles.length === 0) continue;
 
     const projectInfo = await inspectProjectSessions(projectDir, sessionFiles);
