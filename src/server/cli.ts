@@ -20,6 +20,7 @@ import { appVersion } from "./version.ts";
 
 interface CliArgs {
   port: number;
+  host: string;
   acceptRisks: boolean;
   showHelp: boolean;
 }
@@ -51,6 +52,17 @@ export function parseCliArgs(argv: string[]): CliArgs {
     }
   }
 
+  const hostIdx = argv.indexOf("--host");
+  let host = "127.0.0.1";
+  if (hostIdx !== -1) {
+    const val = argv[hostIdx + 1];
+    if (!val || val.startsWith("-")) {
+      console.error("Error: --host requires an address argument.");
+      process.exit(1);
+    }
+    host = val;
+  }
+
   const acceptRisks = argv.includes("--accept-risks");
   const showHelp = argv.includes("--help") || argv.includes("-h");
 
@@ -58,7 +70,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
   parseDirFlag(argv, "--codex-cli-dir", setCodexCliDir);
   parseDirFlag(argv, "--opencode-dir", setOpenCodeDir);
 
-  return { port, acceptRisks, showHelp };
+  return { port, host, acceptRisks, showHelp };
 }
 
 export function showHelpText(): void {
@@ -74,24 +86,25 @@ Usage:
 
 Options:
   --accept-risks             Skip the startup security warning
+  --host <address>           Bind address (default: 127.0.0.1)
   --port <number>            Server port (default: 3583)
   --claude-code-dir <path>   Path to Claude Code data directory
   --codex-cli-dir <path>     Path to Codex CLI data directory
   --opencode-dir <path>      Path to OpenCode data directory
   -h, --help                 Show this help message
 
-The server runs on http://localhost:3583 by default.
+The server binds to 127.0.0.1:3583 by default.
 `);
 }
 
-export function printStartupBanner(port: number): void {
+export function printStartupBanner(port: number, host: string): void {
   const dim = "\x1b[2m";
   const bold = "\x1b[1m";
   const green = "\x1b[32m";
   const reset = "\x1b[0m";
 
   const version = appVersion.version;
-  const url = `http://localhost:${port}`;
+  const url = `http://${host}:${port}`;
 
   const line1 = `   ${bold}${green}{K>  Klovi${reset} ${dim}v${version}${reset}`;
   const line2 = `        ${dim}by cookielab.io${reset}`;
@@ -122,7 +135,7 @@ export function printStartupBanner(port: number): void {
   console.log(bot);
 }
 
-export function promptSecurityWarning(port: number): void {
+export function promptSecurityWarning(port: number, host: string): void {
   const claudeDir = getClaudeCodeDir();
   const codexDir = getCodexCliDir();
   const openDir = getOpenCodeDir();
@@ -142,7 +155,7 @@ export function promptSecurityWarning(port: number): void {
   console.log("  Session data may contain sensitive information such as API keys,");
   console.log("  credentials, or private code snippets.");
   console.log("");
-  console.log(`  The server will expose this data on ${bold}http://localhost:${port}${reset}.`);
+  console.log(`  The server will expose this data on ${bold}http://${host}:${port}${reset}.`);
   console.log("");
   console.log(`  ${dim}To skip this prompt, pass --accept-risks${reset}`);
   console.log("");

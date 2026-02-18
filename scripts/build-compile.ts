@@ -92,7 +92,7 @@ import { getClaudeCodeDir } from "../src/server/config.ts";
 import { startServer } from "../src/server/http.ts";
 import { embeddedAssets } from "./embedded-assets.ts";
 
-const { port, acceptRisks, showHelp } = parseCliArgs(process.argv);
+const { port, host, acceptRisks, showHelp } = parseCliArgs(process.argv);
 
 if (showHelp) {
   showHelpText();
@@ -107,12 +107,12 @@ if (!existsSync(resolvedDir)) {
 }
 
 if (!acceptRisks) {
-  promptSecurityWarning(port);
+  promptSecurityWarning(port, host);
 }
 
-startServer(port, createRoutes(), "", embeddedAssets);
+startServer(port, host, createRoutes(), "", embeddedAssets);
 
-console.log(\`Klovi running at http://localhost:\${port}\`);
+console.log(\`Klovi running at http://\${host}:\${port}\`);
 `;
 
 const entryPath = join(import.meta.dir, "..", "dist", "compile-entry.ts");

@@ -11,7 +11,7 @@ import {
 import { getClaudeCodeDir } from "./src/server/config.ts";
 import { startServer } from "./src/server/http.ts";
 
-const { port, acceptRisks, showHelp } = parseCliArgs(process.argv);
+const { port, host, acceptRisks, showHelp } = parseCliArgs(process.argv);
 
 if (showHelp) {
   showHelpText();
@@ -24,7 +24,7 @@ if (!existsSync(resolvedDir)) {
 }
 
 if (!acceptRisks) {
-  promptSecurityWarning(port);
+  promptSecurityWarning(port, host);
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,6 @@ const staticDir = existsSync(join(__dirname, "public", "index.html"))
   ? join(__dirname, "public")
   : join(__dirname, "dist", "public");
 
-startServer(port, createRoutes(), staticDir);
+startServer(port, host, createRoutes(), staticDir);
 
-printStartupBanner(port);
+printStartupBanner(port, host);

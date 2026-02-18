@@ -5,6 +5,7 @@ describe("parseCliArgs", () => {
   test("returns defaults with no arguments", () => {
     const result = parseCliArgs([]);
     expect(result.port).toBe(3583);
+    expect(result.host).toBe("127.0.0.1");
     expect(result.acceptRisks).toBe(false);
     expect(result.showHelp).toBe(false);
   });
@@ -12,6 +13,11 @@ describe("parseCliArgs", () => {
   test("parses --port", () => {
     const result = parseCliArgs(["--port", "8080"]);
     expect(result.port).toBe(8080);
+  });
+
+  test("parses --host", () => {
+    const result = parseCliArgs(["--host", "localhost"]);
+    expect(result.host).toBe("localhost");
   });
 
   test("parses --accept-risks", () => {
@@ -30,8 +36,9 @@ describe("parseCliArgs", () => {
   });
 
   test("parses multiple flags together", () => {
-    const result = parseCliArgs(["--accept-risks", "--port", "9000", "--help"]);
+    const result = parseCliArgs(["--accept-risks", "--host", "localhost", "--port", "9000", "--help"]);
     expect(result.port).toBe(9000);
+    expect(result.host).toBe("localhost");
     expect(result.acceptRisks).toBe(true);
     expect(result.showHelp).toBe(true);
   });
