@@ -1,3 +1,4 @@
+import type { Dirent } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
@@ -6,32 +7,58 @@ import { getProjectsDir } from "../../config.ts";
 import { cleanCommandMessage } from "../../parser/command-message.ts";
 import type { RawContentBlock, RawLine } from "../../parser/types.ts";
 
+async function readDirEntriesSafe(dir: string): Promise<Dirent[]> {
+  try {
+    return await readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+}
+
+async function listJsonlFiles(dir: string): Promise<string[]> {
+  try {
+    const files = await readdir(dir);
+    return files.filter((file) => file.endsWith(".jsonl"));
+  } catch {
+    return [];
+  }
+}
+
+async function inspectProjectSessions(
+  projectDir: string,
+  sessionFiles: string[],
+): Promise<{ lastActivity: string; resolvedPath: string }> {
+  let lastActivity = "";
+  let resolvedPath = "";
+
+  for (const sessionFile of sessionFiles) {
+    const filePath = join(projectDir, sessionFile);
+    const fileStat = await stat(filePath).catch(() => null);
+    const mtime = fileStat?.mtime.toISOString();
+    if (mtime && mtime > lastActivity) lastActivity = mtime;
+
+    if (!resolvedPath) {
+      resolvedPath = await extractCwd(filePath);
+    }
+  }
+
+  return { lastActivity, resolvedPath };
+}
+
 export async function discoverClaudeProjects(): Promise<PluginProject[]> {
-  const entries = await readdir(getProjectsDir(), { withFileTypes: true });
+  const projectsDir = getProjectsDir();
+  const entries = await readDirEntriesSafe(projectsDir);
   const projects: PluginProject[] = [];
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
 
-    const projectDir = join(getProjectsDir(), entry.name);
-    const sessionFiles = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
+    const projectDir = join(projectsDir, entry.name);
+    const sessionFiles = await listJsonlFiles(projectDir);
     if (sessionFiles.length === 0) continue;
 
-    let lastActivity = "";
-    let fullPath = "";
-
-    // Read first session to get cwd for the real path
-    for (const sf of sessionFiles) {
-      const fileStat = await stat(join(projectDir, sf));
-      const mtime = fileStat.mtime.toISOString();
-      if (mtime > lastActivity) lastActivity = mtime;
-
-      if (!fullPath) {
-        fullPath = await extractCwd(join(projectDir, sf));
-      }
-    }
-
-    const resolvedPath = fullPath || decodeEncodedPath(entry.name);
+    const projectInfo = await inspectProjectSessions(projectDir, sessionFiles);
+    const resolvedPath = projectInfo.resolvedPath || decodeEncodedPath(entry.name);
 
     projects.push({
       pluginId: "claude-code",
@@ -39,7 +66,7 @@ export async function discoverClaudeProjects(): Promise<PluginProject[]> {
       resolvedPath,
       displayName: resolvedPath,
       sessionCount: sessionFiles.length,
-      lastActivity,
+      lastActivity: projectInfo.lastActivity,
     });
   }
 
@@ -51,7 +78,7 @@ const PLAN_PREFIX = "Implement the following plan";
 
 export async function listClaudeSessions(nativeId: string): Promise<SessionSummary[]> {
   const projectDir = join(getProjectsDir(), nativeId);
-  const files = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
+  const files = await listJsonlFiles(projectDir);
   const sessions: SessionSummary[] = [];
 
   for (const file of files) {
@@ -86,7 +113,12 @@ export function classifySessionTypes(sessions: SessionSummary[]): void {
 }
 
 export async function extractCwd(filePath: string): Promise<string> {
-  const text = await readFile(filePath, "utf-8");
+  let text = "";
+  try {
+    text = await readFile(filePath, "utf-8");
+  } catch {
+    return "";
+  }
   const lines = text.split("\n");
 
   for (const line of lines.slice(0, 20)) {
@@ -148,7 +180,12 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 export async function extractSessionMeta(
   filePath: string,
 ): Promise<Omit<SessionSummary, "sessionId"> | null> {
-  const text = await readFile(filePath, "utf-8");
+  let text = "";
+  try {
+    text = await readFile(filePath, "utf-8");
+  } catch {
+    return null;
+  }
   const lines = text.split("\n");
 
   const meta: MetaFields = { timestamp: "", slug: "", firstMessage: "", model: "", gitBranch: "" };
