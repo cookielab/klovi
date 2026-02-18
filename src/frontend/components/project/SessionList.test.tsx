@@ -115,6 +115,18 @@ describe("SessionList", () => {
     await findByText(/Opus/);
   });
 
+  test("renders plugin display name instead of model when pluginId is set", async () => {
+    const sessions = [makeSession({ pluginId: "claude-code", model: "claude-opus-4-6" })];
+    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+
+    const { findByText, container } = render(
+      <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
+    );
+    await findByText(/Claude Code/);
+    const meta = container.querySelector(".list-item-meta")!;
+    expect(meta.textContent).not.toMatch(/Opus/);
+  });
+
   test("renders git branch", async () => {
     const sessions = [makeSession({ gitBranch: "feature/test" })];
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
