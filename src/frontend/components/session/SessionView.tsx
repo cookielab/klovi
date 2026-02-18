@@ -1,5 +1,6 @@
 import { useSessionData } from "../../hooks/useSessionData.ts";
 import { MessageList } from "../message/MessageList.tsx";
+import { FetchError } from "../ui/FetchError.tsx";
 
 interface SessionViewProps {
   sessionId: string;
@@ -10,16 +11,7 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
   const { data, loading, error, retry } = useSessionData(sessionId, project);
 
   if (loading) return <div className="loading">Loading session...</div>;
-  if (error) {
-    return (
-      <div className="fetch-error">
-        <span className="fetch-error-message">Error: {error}</span>
-        <button type="button" className="btn btn-sm" onClick={retry}>
-          Retry
-        </button>
-      </div>
-    );
-  }
+  if (error) return <FetchError error={error} onRetry={retry} showPrefix />;
   if (!data?.session) return null;
 
   const session = data.session;
