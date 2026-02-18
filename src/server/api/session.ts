@@ -18,6 +18,12 @@ export async function handleSession(
       { status: 400 },
     );
   }
+  if (!parsed.rawSessionId) {
+    return Response.json(
+      { error: "sessionId must include a raw session id after <plugin>::" },
+      { status: 400 },
+    );
+  }
 
   const pluginId = parsed.pluginId;
   const rawSessionId = parsed.rawSessionId;

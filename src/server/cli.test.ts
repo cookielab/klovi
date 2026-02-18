@@ -114,6 +114,17 @@ describe("createRoutes", () => {
     expect(body.error).toContain("plugin prefix");
   });
 
+  test("session route rejects empty raw session ID", async () => {
+    const routes = createRoutes();
+    const sessionRoute = routes.find((r) => r.pattern === "/api/sessions/:sessionId")!;
+
+    const req = new Request("http://localhost/api/sessions/claude-code%3A%3A?project=-Users-demo");
+    const response = await sessionRoute.handler(req, { sessionId: "claude-code::" });
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toContain("raw session id");
+  });
+
   test("subagent route requires project query parameter", async () => {
     const routes = createRoutes();
     const subagentRoute = routes.find(
