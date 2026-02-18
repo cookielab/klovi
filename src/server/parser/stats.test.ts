@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setClaudeCodeDir } from "../config.ts";
+import { setClaudeCodeDir, setCodexCliDir, setOpenCodeDir } from "../config.ts";
 import { scanStats } from "./stats.ts";
 
 function makeTmpDir(): string {
@@ -19,6 +19,13 @@ function writeCacheFile(dir: string, cache: object): void {
 }
 
 let tmpDir: string;
+
+function isolateToolDirs(claudeDir: string): void {
+  setClaudeCodeDir(claudeDir);
+  // Prevent other plugins from registering during tests
+  setCodexCliDir("/nonexistent/codex-cli-dir");
+  setOpenCodeDir("/nonexistent/opencode-dir");
+}
 
 afterEach(() => {
   if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
@@ -48,7 +55,7 @@ describe("scanStats with cache file", () => {
       },
     });
 
-    setClaudeCodeDir(tmpDir);
+    isolateToolDirs(tmpDir);
     const stats = await scanStats();
     expect(stats.projects).toBe(1);
     expect(stats.sessions).toBe(42);
@@ -85,7 +92,7 @@ describe("scanStats with cache file", () => {
       },
     });
 
-    setClaudeCodeDir(tmpDir);
+    isolateToolDirs(tmpDir);
     const stats = await scanStats();
     expect(stats.inputTokens).toBe(300);
     expect(stats.outputTokens).toBe(130);
@@ -113,7 +120,7 @@ describe("scanStats with cache file", () => {
       modelUsage: {},
     });
 
-    setClaudeCodeDir(tmpDir);
+    isolateToolDirs(tmpDir);
     const stats = await scanStats();
     expect(stats.todaySessions).toBe(5);
   });
@@ -151,7 +158,7 @@ describe("scanStats with cache file", () => {
       modelUsage: {},
     });
 
-    setClaudeCodeDir(tmpDir);
+    isolateToolDirs(tmpDir);
     const stats = await scanStats();
     expect(stats.todaySessions).toBe(2);
     expect(stats.thisWeekSessions).toBe(5);
@@ -163,7 +170,7 @@ describe("scanStats with cache file", () => {
 
     writeCacheFile(tmpDir, { version: 999, totalSessions: 0 });
 
-    setClaudeCodeDir(tmpDir);
+    isolateToolDirs(tmpDir);
     const stats = await scanStats();
     expect(stats.inputTokens).toBe(0);
     expect(stats.sessions).toBe(0);
@@ -175,14 +182,14 @@ describe("scanStats with cache file", () => {
 
     writeFileSync(join(tmpDir, "stats-cache.json"), "not valid json");
 
-    setClaudeCodeDir(tmpDir);
+    isolateToolDirs(tmpDir);
     const stats = await scanStats();
     expect(stats.inputTokens).toBe(0);
     expect(stats.sessions).toBe(0);
   });
 
   test("handles missing projects directory", async () => {
-    setClaudeCodeDir("/nonexistent/path/that/does/not/exist");
+    isolateToolDirs("/nonexistent/path/that/does/not/exist");
     const stats = await scanStats();
     expect(stats.projects).toBe(0);
     expect(stats.sessions).toBe(0);

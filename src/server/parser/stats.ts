@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { DashboardStats, ModelTokenUsage } from "../../shared/types.ts";
 import { getProjectsDir, getStatsCachePath } from "../config.ts";
+import { createRegistry } from "../registry.ts";
 
 interface StatsCacheFile {
   version: number;
@@ -36,8 +37,9 @@ async function loadStatsCache(): Promise<StatsCacheFile | null> {
 
 async function countProjects(): Promise<number> {
   try {
-    const entries = await readdir(getProjectsDir(), { withFileTypes: true });
-    return entries.filter((e) => e.isDirectory()).length;
+    const registry = createRegistry();
+    const projects = await registry.discoverAllProjects();
+    return projects.length;
   } catch {
     return 0;
   }
