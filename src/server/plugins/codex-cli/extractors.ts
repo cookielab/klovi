@@ -1,3 +1,5 @@
+import { truncate } from "../shared/text-utils.ts";
+
 export const codexSummaryExtractors: Record<string, (input: Record<string, unknown>) => string> = {
   command_execution: (i) => truncate(String(i.command || ""), 80),
   file_change: (i) => {
@@ -23,7 +25,3 @@ export const codexInputFormatters: Record<string, (input: Record<string, unknown
   },
   web_search: (i) => `Query: ${String(i.query || "")}`,
 };
-
-function truncate(s: string, max: number): string {
-  return s.length <= max ? s : `${s.slice(0, max)}...`;
-}
