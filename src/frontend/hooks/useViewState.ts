@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useState } from "react";
 import type { Project, SessionSummary } from "../../shared/types.ts";
-import { restoreFromHash, viewToHash, type ViewState } from "../view-state.ts";
+import { restoreFromHash, type ViewState, viewToHash } from "../view-state.ts";
 
 interface UseViewStateResult {
   view: ViewState;

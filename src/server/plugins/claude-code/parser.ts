@@ -197,15 +197,15 @@ async function readJsonlLines(filePath: string): Promise<ParsedLines> {
     },
     {
       onMalformed: (line, lineNumber, error) => {
-      parseErrors.push({
-        kind: "parse_error",
-        uuid: `parse-error-line-${lineNumber}`,
-        timestamp: rawLines[rawLines.length - 1]?.timestamp ?? "",
-        lineNumber,
-        rawLine: line.length > 500 ? `${line.slice(0, 500)}\u2026 (truncated)` : line,
-        errorType: "json_parse",
-        errorDetails: error instanceof Error ? error.message : undefined,
-      });
+        parseErrors.push({
+          kind: "parse_error",
+          uuid: `parse-error-line-${lineNumber}`,
+          timestamp: rawLines[rawLines.length - 1]?.timestamp ?? "",
+          lineNumber,
+          rawLine: line.length > 500 ? `${line.slice(0, 500)}\u2026 (truncated)` : line,
+          errorType: "json_parse",
+          errorDetails: error instanceof Error ? error.message : undefined,
+        });
       },
     },
   );
