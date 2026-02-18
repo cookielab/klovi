@@ -13,13 +13,15 @@ export interface JsonlIterateOptions {
 
 export function iterateJsonl(
   text: string,
-  visitor: (context: JsonlLineContext) => void | false,
+  visitor: (context: JsonlLineContext) => unknown,
   options: JsonlIterateOptions = {},
 ): void {
   const lines = text.split("\n");
   const start = Math.max(0, options.startAt ?? 0);
   const end =
-    options.maxLines === undefined ? lines.length : Math.min(lines.length, start + options.maxLines);
+    options.maxLines === undefined
+      ? lines.length
+      : Math.min(lines.length, start + options.maxLines);
 
   for (let i = start; i < end; i++) {
     const line = lines[i];
