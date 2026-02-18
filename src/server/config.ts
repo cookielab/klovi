@@ -15,10 +15,6 @@ export function getProjectsDir(): string {
   return join(claudeCodeDir, "projects");
 }
 
-export function getStatsCachePath(): string {
-  return join(claudeCodeDir, "stats-cache.json");
-}
-
 // Codex CLI
 let codexCliDir = join(homedir(), ".codex");
 

@@ -4,7 +4,6 @@ import {
   getCodexCliDir,
   getOpenCodeDir,
   getProjectsDir,
-  getStatsCachePath,
   setClaudeCodeDir,
   setCodexCliDir,
   setOpenCodeDir,
@@ -39,11 +38,6 @@ describe("config", () => {
   test("getProjectsDir returns projects subdirectory", () => {
     setClaudeCodeDir("/tmp/test-claude");
     expect(getProjectsDir()).toBe("/tmp/test-claude/projects");
-  });
-
-  test("getStatsCachePath returns stats-cache.json path", () => {
-    setClaudeCodeDir("/tmp/test-claude");
-    expect(getStatsCachePath()).toBe("/tmp/test-claude/stats-cache.json");
   });
 
   test("getCodexCliDir returns default ~/.codex", () => {
