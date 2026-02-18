@@ -2,6 +2,7 @@ import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import faviconUrl from "../../favicon.svg";
+import { parseSessionId } from "../shared/session-id.ts";
 import type { GlobalSessionResult, Project, SessionSummary } from "../shared/types.ts";
 import { DashboardStats } from "./components/dashboard/DashboardStats.tsx";
 import { Header } from "./components/layout/Header.tsx";
@@ -241,7 +242,7 @@ function App() {
     try {
       const [projectsRes, sessionsRes] = await Promise.all([
         fetch("/api/projects"),
-        fetch(`/api/projects/${encodedPath}/sessions`),
+        fetch(`/api/projects/${encodeURIComponent(encodedPath)}/sessions`),
       ]);
       const projectsData = await projectsRes.json();
       const sessionsData = await sessionsRes.json();
@@ -329,11 +330,14 @@ function App() {
         <Header
           title={headerTitle}
           breadcrumb={breadcrumb}
-          copyCommand={
-            view.kind === "session"
-              ? getResumeCommand(view.session.pluginId, view.session.sessionId)
-              : undefined
-          }
+              copyCommand={
+                view.kind === "session"
+                  ? getResumeCommand(
+                      view.session.pluginId,
+                      parseSessionId(view.session.sessionId).rawSessionId,
+                    )
+                  : undefined
+              }
           backHref={
             view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined
           }

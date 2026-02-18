@@ -10,7 +10,7 @@ interface SessionPresentationProps {
 
 export function SessionPresentation({ sessionId, project, onExit }: SessionPresentationProps) {
   const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${sessionId}?project=${encodeURIComponent(project)}`,
+    `/api/sessions/${encodeURIComponent(sessionId)}?project=${encodeURIComponent(project)}`,
     [sessionId, project],
   );
 

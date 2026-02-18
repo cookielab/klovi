@@ -16,7 +16,7 @@ export function SubAgentPresentation({
   onExit,
 }: SubAgentPresentationProps) {
   const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${sessionId}/subagents/${agentId}?project=${encodeURIComponent(project)}`,
+    `/api/sessions/${encodeURIComponent(sessionId)}/subagents/${encodeURIComponent(agentId)}?project=${encodeURIComponent(project)}`,
     [sessionId, project, agentId],
   );
 
