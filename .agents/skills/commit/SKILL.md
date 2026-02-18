@@ -24,8 +24,6 @@ Create atomic, well-scoped conventional commits following the Conventional Commi
 <type>(<scope>): <short description>
 
 <optional body>
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
 Always pass the message via HEREDOC:
@@ -34,8 +32,6 @@ git commit -m "$(cat <<'EOF'
 <type>(<scope>): <short description>
 
 <optional body>
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
 )"
 ```
