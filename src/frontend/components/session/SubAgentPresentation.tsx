@@ -1,5 +1,4 @@
-import type { Session } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { PresentationShell } from "./PresentationShell.tsx";
 
 interface SubAgentPresentationProps {
@@ -15,10 +14,7 @@ export function SubAgentPresentation({
   agentId,
   onExit,
 }: SubAgentPresentationProps) {
-  const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${encodeURIComponent(sessionId)}/subagents/${encodeURIComponent(agentId)}?project=${encodeURIComponent(project)}`,
-    [sessionId, project, agentId],
-  );
+  const { data, loading, error, retry } = useSubAgentSessionData(sessionId, project, agentId);
 
   if (loading) return <div className="loading">Loading sub-agent conversation...</div>;
   if (error) {
