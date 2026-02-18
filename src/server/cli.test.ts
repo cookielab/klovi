@@ -96,6 +96,17 @@ describe("createRoutes", () => {
     expect(body.error).toBe("project query parameter required");
   });
 
+  test("session route requires plugin-prefixed session ID", async () => {
+    const routes = createRoutes();
+    const sessionRoute = routes.find((r) => r.pattern === "/api/sessions/:sessionId")!;
+
+    const req = new Request("http://localhost/api/sessions/abc123?project=-Users-demo");
+    const response = await sessionRoute.handler(req, { sessionId: "abc123" });
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toContain("plugin prefix");
+  });
+
   test("subagent route requires project query parameter", async () => {
     const routes = createRoutes();
     const subagentRoute = routes.find(

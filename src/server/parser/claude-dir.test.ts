@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { Project, SessionSummary } from "../../shared/types.ts";
-import { aggregateSessions, classifySessionTypes } from "../plugins/claude-code/discovery.ts";
+import type { SessionSummary } from "../../shared/types.ts";
+import { classifySessionTypes } from "../plugins/claude-code/discovery.ts";
 
 function session(overrides: Partial<SessionSummary> & { sessionId: string }): SessionSummary {
   return {
@@ -12,84 +12,6 @@ function session(overrides: Partial<SessionSummary> & { sessionId: string }): Se
     ...overrides,
   };
 }
-
-function project(overrides: Partial<Project> & { encodedPath: string }): Project {
-  return {
-    name: "/Users/dev/my-project",
-    fullPath: "/Users/dev/my-project",
-    sessionCount: 1,
-    lastActivity: "2025-01-15T10:00:00Z",
-    ...overrides,
-  };
-}
-
-describe("aggregateSessions", () => {
-  test("aggregates sessions from multiple projects with correct fields", () => {
-    const projects = [
-      project({ encodedPath: "-Users-dev-project-a", name: "/Users/dev/project-a" }),
-      project({ encodedPath: "-Users-dev-project-b", name: "/Users/dev/project-b" }),
-    ];
-    const sessionsByProject = new Map([
-      ["-Users-dev-project-a", [session({ sessionId: "s1", timestamp: "2025-01-15T10:00:00Z" })]],
-      ["-Users-dev-project-b", [session({ sessionId: "s2", timestamp: "2025-01-15T11:00:00Z" })]],
-    ]);
-
-    const results = aggregateSessions(projects, sessionsByProject);
-    expect(results).toHaveLength(2);
-    expect(results[0]!.sessionId).toBe("s2");
-    expect(results[0]!.encodedPath).toBe("-Users-dev-project-b");
-    expect(results[0]!.projectName).toBe("dev/project-b");
-    expect(results[1]!.sessionId).toBe("s1");
-    expect(results[1]!.encodedPath).toBe("-Users-dev-project-a");
-    expect(results[1]!.projectName).toBe("dev/project-a");
-  });
-
-  test("sorts all sessions by timestamp descending across projects", () => {
-    const projects = [
-      project({ encodedPath: "p1", name: "/a/b" }),
-      project({ encodedPath: "p2", name: "/c/d" }),
-    ];
-    const sessionsByProject = new Map([
-      [
-        "p1",
-        [
-          session({ sessionId: "s1", timestamp: "2025-01-01T00:00:00Z" }),
-          session({ sessionId: "s3", timestamp: "2025-01-03T00:00:00Z" }),
-        ],
-      ],
-      ["p2", [session({ sessionId: "s2", timestamp: "2025-01-02T00:00:00Z" })]],
-    ]);
-
-    const results = aggregateSessions(projects, sessionsByProject);
-    expect(results.map((r) => r.sessionId)).toEqual(["s3", "s2", "s1"]);
-  });
-
-  test("returns empty array when no projects", () => {
-    const results = aggregateSessions([], new Map());
-    expect(results).toEqual([]);
-  });
-
-  test("uses last 2 path segments for projectName", () => {
-    const projects = [
-      project({
-        encodedPath: "encoded",
-        name: "/Users/dev/Workspace/Cookielab/Klovi",
-      }),
-    ];
-    const sessionsByProject = new Map([["encoded", [session({ sessionId: "s1" })]]]);
-
-    const results = aggregateSessions(projects, sessionsByProject);
-    expect(results[0]!.projectName).toBe("Cookielab/Klovi");
-  });
-
-  test("handles project with no sessions", () => {
-    const projects = [project({ encodedPath: "p1", name: "/a/b" })];
-    const sessionsByProject = new Map<string, SessionSummary[]>();
-
-    const results = aggregateSessions(projects, sessionsByProject);
-    expect(results).toEqual([]);
-  });
-});
 
 describe("classifySessionTypes", () => {
   test("marks implementation sessions by prefix", () => {

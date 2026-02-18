@@ -12,15 +12,19 @@ export async function handleSession(
   registry: PluginRegistry,
 ): Promise<Response> {
   const parsed = parseSessionId(sessionId);
+  if (!parsed.pluginId) {
+    return Response.json(
+      { error: "sessionId must include plugin prefix (e.g. claude-code::<id>)" },
+      { status: 400 },
+    );
+  }
+
+  const pluginId = parsed.pluginId;
   const rawSessionId = parsed.rawSessionId;
 
   const projects = await registry.discoverAllProjects();
   const project = projects.find((p) => p.encodedPath === encodedPath);
   if (!project) return Response.json({ error: "Project not found" }, { status: 404 });
-
-  // Backward compatibility: if plugin prefix is missing, infer when possible.
-  const pluginId =
-    parsed.pluginId ?? (project.sources.length === 1 ? project.sources[0]!.pluginId : "claude-code");
 
   const source = project.sources.find((s) => s.pluginId === pluginId);
   if (!source) return Response.json({ error: "Plugin source not found" }, { status: 404 });
