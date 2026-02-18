@@ -1,17 +1,7 @@
-import { readdir, readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
-import { getCodexCliDir } from "../../config.ts";
-
-interface CodexSessionMeta {
-  uuid: string;
-  name?: string;
-  cwd: string;
-  timestamps: { created: number; updated: number };
-  model: string;
-  provider_id: string;
-}
+import { scanCodexSessions, type SessionFileInfo } from "./session-index.ts";
 
 interface CodexEvent {
   type: string;
@@ -21,85 +11,8 @@ interface CodexEvent {
   };
 }
 
-function isSessionMeta(obj: unknown): obj is CodexSessionMeta {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "uuid" in obj &&
-    "cwd" in obj &&
-    "timestamps" in obj &&
-    typeof (obj as CodexSessionMeta).uuid === "string" &&
-    typeof (obj as CodexSessionMeta).cwd === "string"
-  );
-}
-
-async function readFirstLine(filePath: string): Promise<CodexSessionMeta | null> {
-  const text = await readFile(filePath, "utf-8");
-  const firstNewline = text.indexOf("\n");
-  const firstLine = firstNewline === -1 ? text : text.slice(0, firstNewline);
-  if (!firstLine.trim()) return null;
-  try {
-    const parsed: unknown = JSON.parse(firstLine);
-    if (isSessionMeta(parsed)) return parsed;
-  } catch {
-    // Malformed first line
-  }
-  return null;
-}
-
-async function findAllJsonlFiles(dir: string): Promise<string[]> {
-  const results: string[] = [];
-
-  async function walk(current: string): Promise<void> {
-    let names: string[];
-    try {
-      names = await readdir(current);
-    } catch {
-      return;
-    }
-    for (const name of names) {
-      const fullPath = join(current, name);
-      const s = await stat(fullPath).catch(() => null);
-      if (!s) continue;
-      if (s.isDirectory()) {
-        await walk(fullPath);
-      } else if (name.endsWith(".jsonl")) {
-        results.push(fullPath);
-      }
-    }
-  }
-
-  await walk(dir);
-  return results;
-}
-
-interface SessionFileInfo {
-  filePath: string;
-  meta: CodexSessionMeta;
-  mtime: string;
-}
-
-async function scanAllSessions(): Promise<SessionFileInfo[]> {
-  const sessionsDir = join(getCodexCliDir(), "sessions");
-  const files = await findAllJsonlFiles(sessionsDir);
-  const results: SessionFileInfo[] = [];
-
-  for (const filePath of files) {
-    const meta = await readFirstLine(filePath);
-    if (!meta) continue;
-    const fileStat = await stat(filePath);
-    results.push({
-      filePath,
-      meta,
-      mtime: fileStat.mtime.toISOString(),
-    });
-  }
-
-  return results;
-}
-
 export async function discoverCodexProjects(): Promise<PluginProject[]> {
-  const sessions = await scanAllSessions();
+  const sessions = await scanCodexSessions();
 
   // Group by cwd
   const byCwd = new Map<string, SessionFileInfo[]>();
@@ -154,7 +67,7 @@ function extractFirstUserMessage(text: string): string | null {
 }
 
 export async function listCodexSessions(nativeId: string): Promise<SessionSummary[]> {
-  const allSessions = await scanAllSessions();
+  const allSessions = await scanCodexSessions();
   const matching = allSessions.filter((s) => s.meta.cwd === nativeId);
 
   const sessions: SessionSummary[] = [];

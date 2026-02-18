@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import type {
   AssistantTurn,
   ContentBlock,
@@ -9,16 +8,7 @@ import type {
   Turn,
   UserTurn,
 } from "../../../shared/types.ts";
-import { getCodexCliDir } from "../../config.ts";
-
-interface CodexSessionMeta {
-  uuid: string;
-  name?: string;
-  cwd: string;
-  timestamps: { created: number; updated: number };
-  model: string;
-  provider_id: string;
-}
+import { findCodexSessionFileById, isCodexSessionMeta, type CodexSessionMeta } from "./session-index.ts";
 
 interface CodexItemCommand {
   type: "command_execution";
@@ -71,43 +61,6 @@ export interface CodexEvent {
     cached_input_tokens?: number;
     output_tokens?: number;
   };
-}
-
-function isSessionMeta(obj: unknown): obj is CodexSessionMeta {
-  return (
-    typeof obj === "object" && obj !== null && "uuid" in obj && "cwd" in obj && "timestamps" in obj
-  );
-}
-
-async function readDirSafe(dir: string): Promise<string[]> {
-  const { readdir } = await import("node:fs/promises");
-  try {
-    return await readdir(dir);
-  } catch {
-    return [];
-  }
-}
-
-async function walkForFile(dir: string, targetFilename: string): Promise<string | null> {
-  const { stat } = await import("node:fs/promises");
-  const names = await readDirSafe(dir);
-
-  for (const name of names) {
-    const fullPath = join(dir, name);
-    if (name === targetFilename) return fullPath;
-
-    const s = await stat(fullPath).catch(() => null);
-    if (s?.isDirectory()) {
-      const found = await walkForFile(fullPath, targetFilename);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-async function findSessionFile(sessionId: string): Promise<string | null> {
-  const sessionsDir = join(getCodexCliDir(), "sessions");
-  return walkForFile(sessionsDir, `${sessionId}.jsonl`);
 }
 
 let toolUseCounter = 0;
@@ -265,7 +218,7 @@ export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: 
 }
 
 export async function loadCodexSession(_nativeId: string, sessionId: string): Promise<Session> {
-  const filePath = await findSessionFile(sessionId);
+  const filePath = await findCodexSessionFileById(sessionId);
   if (!filePath) {
     return {
       sessionId,
@@ -287,7 +240,7 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
 
     try {
       const parsed: unknown = JSON.parse(line);
-      if (i === 0 && isSessionMeta(parsed)) {
+      if (i === 0 && isCodexSessionMeta(parsed)) {
         meta = parsed;
         continue;
       }
