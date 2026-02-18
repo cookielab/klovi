@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
+import { sortByIsoDesc } from "../../iso-time.ts";
 import { scanCodexSessions, type SessionFileInfo } from "./session-index.ts";
 import { readTextPrefix } from "../shared/discovery-utils.ts";
 
@@ -45,7 +46,7 @@ export async function discoverCodexProjects(): Promise<PluginProject[]> {
     });
   }
 
-  projects.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
+  sortByIsoDesc(projects, (project) => project.lastActivity);
   return projects;
 }
 
@@ -99,6 +100,6 @@ export async function listCodexSessions(nativeId: string): Promise<SessionSummar
     });
   }
 
-  sessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  sortByIsoDesc(sessions, (session) => session.timestamp);
   return sessions;
 }

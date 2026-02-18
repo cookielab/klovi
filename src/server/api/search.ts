@@ -1,4 +1,5 @@
 import type { PluginRegistry } from "../plugin-registry.ts";
+import { sortByIsoDesc } from "../iso-time.ts";
 
 export async function handleSearchSessions(registry: PluginRegistry): Promise<Response> {
   const projects = await registry.discoverAllProjects();
@@ -16,7 +17,7 @@ export async function handleSearchSessions(registry: PluginRegistry): Promise<Re
     }
   }
 
-  allSessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  sortByIsoDesc(allSessions, (session) => session.timestamp);
   return Response.json({ sessions: allSessions });
 }
 
