@@ -122,4 +122,42 @@ describe("createRoutes", () => {
     const body = await response.json();
     expect(body.error).toBe("project query parameter required");
   });
+
+  test("subagent route requires claude-code-prefixed session ID", async () => {
+    const routes = createRoutes();
+    const subagentRoute = routes.find(
+      (r) => r.pattern === "/api/sessions/:sessionId/subagents/:agentId",
+    )!;
+
+    const req = new Request(
+      "http://localhost/api/sessions/codex-cli%3A%3Aabc123/subagents/agent-1?project=-Users-demo",
+    );
+    const response = await subagentRoute.handler(req, {
+      sessionId: "codex-cli::abc123",
+      agentId: "agent-1",
+    });
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toContain("claude-code prefix");
+  });
+
+  test("subagent route rejects empty raw session ID", async () => {
+    const routes = createRoutes();
+    const subagentRoute = routes.find(
+      (r) => r.pattern === "/api/sessions/:sessionId/subagents/:agentId",
+    )!;
+
+    const req = new Request(
+      "http://localhost/api/sessions/claude-code%3A%3A/subagents/agent-1?project=-Users-demo",
+    );
+    const response = await subagentRoute.handler(req, {
+      sessionId: "claude-code::",
+      agentId: "agent-1",
+    });
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toContain("raw session id");
+  });
 });
