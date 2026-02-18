@@ -1,6 +1,11 @@
 import type { Dirent } from "node:fs";
-import { readdir, stat } from "node:fs/promises";
+import { open, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
+
+export interface FileWithMtime {
+  fileName: string;
+  mtime: string;
+}
 
 export async function readDirEntriesSafe(dir: string): Promise<Dirent[]> {
   try {
@@ -30,6 +35,36 @@ export async function getLatestMtime(
     if (mtime && mtime > lastActivity) lastActivity = mtime;
   }
   return lastActivity;
+}
+
+export async function listFilesWithMtime(
+  dir: string,
+  suffix: string,
+): Promise<FileWithMtime[]> {
+  const files = await listFilesBySuffix(dir, suffix);
+  const results: FileWithMtime[] = [];
+
+  for (const fileName of files) {
+    const fileStat = await stat(join(dir, fileName)).catch(() => null);
+    const mtime = fileStat?.mtime.toISOString();
+    if (mtime) {
+      results.push({ fileName, mtime });
+    }
+  }
+
+  results.sort((a, b) => b.mtime.localeCompare(a.mtime));
+  return results;
+}
+
+export async function readTextPrefix(filePath: string, maxBytes: number): Promise<string> {
+  const handle = await open(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(maxBytes);
+    const { bytesRead } = await handle.read(buffer, 0, maxBytes, 0);
+    return buffer.toString("utf-8", 0, bytesRead);
+  } finally {
+    await handle.close();
+  }
 }
 
 export function decodeEncodedPath(encoded: string): string {
