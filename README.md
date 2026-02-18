@@ -70,7 +70,7 @@ bun run dev
 - Collapsible thinking/reasoning blocks
 - Token usage display (input/output/cache tokens per assistant message)
 - Timestamps on messages (relative time format)
-- Tool result images rendered as clickable thumbnails
+- Tool result images rendered as clickable thumbnails with fullscreen lightbox
 - File references (`@filepath.ext`) highlighted as green badges
 - Image attachments displayed as media-type badges
 - Slash commands shown with green `> /command` badge

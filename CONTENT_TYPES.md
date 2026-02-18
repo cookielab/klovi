@@ -164,7 +164,7 @@ Arrive as user messages with content array:
 | Text result | `content` is string | Handled | Monospace, truncated at 5000 chars |
 | Error result | `is_error: true` | Handled | Red text (`.tool-call-error`) |
 | Array content | `content` is array of objects | Partially | Joins text items |
-| Image in result | `content[].type === "image"` | Handled | Rendered as clickable thumbnails |
+| Image in result | `content[].type === "image"` | Handled | Rendered as clickable thumbnails with fullscreen lightbox |
 | Empty result | `content` is empty/null | Handled | Shows nothing |
 
 ---
@@ -285,7 +285,7 @@ Fields available on message lines for potential display:
 
 - **Token usage** - Input/output/cache token counts shown as footer on assistant messages
 - **Timestamps** - Relative timestamps shown on user and assistant messages
-- **Image results in tool output** - Rendered as clickable thumbnails
+- **Image results in tool output** - Rendered as clickable thumbnails with fullscreen lightbox (ImageLightbox component)
 - **`AskUserQuestion`** - Summary shows first question text
 - **`Skill`** - Summary shows skill name
 - **`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet` / `TaskOutput` / `TaskStop`** - Summaries for all task management tools
