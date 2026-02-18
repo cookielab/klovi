@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GlobalSessionResult } from "../../../shared/types.ts";
 import { shortModel } from "../../utils/model.ts";
+import { pluginDisplayName } from "../../utils/plugin.ts";
 import { formatFullDateTime, formatRelativeTime } from "../../utils/time.ts";
 
 interface SearchModalProps {
@@ -117,7 +118,8 @@ export function SearchModal({ sessions, onSelect, onClose }: SearchModalProps) {
                   )}
                 </div>
                 <div className="search-result-meta">
-                  {result.projectName} &middot; {shortModel(result.model)}
+                  {result.projectName} &middot;{" "}
+                  {result.pluginId ? pluginDisplayName(result.pluginId) : shortModel(result.model)}
                   {result.gitBranch ? ` \u00b7 ${result.gitBranch}` : ""} &middot;{" "}
                   <time dateTime={result.timestamp} title={formatFullDateTime(result.timestamp)}>
                     {formatRelativeTime(result.timestamp)}
