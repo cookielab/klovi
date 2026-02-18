@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
 import { scanCodexSessions, type SessionFileInfo } from "./session-index.ts";
+import { readTextPrefix } from "../shared/discovery-utils.ts";
 
 interface CodexEvent {
   type: string;
@@ -10,6 +11,8 @@ interface CodexEvent {
     text?: string;
   };
 }
+
+const SESSION_TITLE_SCAN_BYTES = 256 * 1024;
 
 export async function discoverCodexProjects(): Promise<PluginProject[]> {
   const sessions = await scanCodexSessions();
@@ -74,8 +77,13 @@ export async function listCodexSessions(nativeId: string): Promise<SessionSummar
   for (const s of matching) {
     let firstMessage = s.meta.name || "";
     if (!firstMessage) {
-      const text = await readFile(s.filePath, "utf-8");
-      firstMessage = extractFirstUserMessage(text) || "Codex session";
+      const prefix = await readTextPrefix(s.filePath, SESSION_TITLE_SCAN_BYTES);
+      firstMessage = extractFirstUserMessage(prefix) || "";
+      if (!firstMessage) {
+        const fullText = await readFile(s.filePath, "utf-8");
+        firstMessage = extractFirstUserMessage(fullText) || "";
+      }
+      firstMessage ||= "Codex session";
     }
 
     const timestamp = new Date(s.meta.timestamps.created * 1000).toISOString();
