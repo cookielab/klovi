@@ -1,7 +1,18 @@
 import { parseSessionId } from "../../shared/session-id.ts";
-import type { DashboardStats, ModelTokenUsage, SessionSummary, Turn } from "../../shared/types.ts";
+import type {
+  DashboardStats,
+  ModelTokenUsage,
+  SessionSummary,
+  TokenUsage,
+  Turn,
+} from "../../shared/types.ts";
 import type { PluginRegistry } from "../plugin-registry.ts";
 import { createRegistry } from "../registry.ts";
+
+interface SessionWithProject {
+  project: Awaited<ReturnType<PluginRegistry["discoverAllProjects"]>>[number];
+  session: SessionSummary;
+}
 
 function emptyStats(projects = 0): DashboardStats {
   return {
@@ -23,7 +34,10 @@ function toDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function countRecentSessions(sessions: SessionSummary[]): { todaySessions: number; thisWeekSessions: number } {
+function countRecentSessions(sessions: SessionSummary[]): {
+  todaySessions: number;
+  thisWeekSessions: number;
+} {
   const today = toDateString(new Date());
   const now = new Date();
   const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
@@ -59,15 +73,14 @@ function countVisibleMessages(turns: Turn[]): number {
   return turns.filter((turn) => turn.kind !== "parse_error").length;
 }
 
-async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
+async function collectSessionsWithProjects(
+  registry: PluginRegistry,
+  stats: DashboardStats,
+): Promise<SessionWithProject[]> {
   const projects = await registry.discoverAllProjects().catch(() => []);
-  const stats = emptyStats(projects.length);
+  stats.projects = projects.length;
 
-  const sessionsWithProject: Array<{
-    project: (typeof projects)[number];
-    session: SessionSummary;
-  }> = [];
-
+  const sessionsWithProject: SessionWithProject[] = [];
   for (const project of projects) {
     const sessions = await registry.listAllSessions(project).catch(() => []);
     stats.sessions += sessions.length;
@@ -76,48 +89,81 @@ async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
     }
   }
 
-  const recent = countRecentSessions(sessionsWithProject.map((s) => s.session));
+  return sessionsWithProject;
+}
+
+function applyRecentSessionStats(
+  stats: DashboardStats,
+  sessionsWithProject: SessionWithProject[],
+): void {
+  const recent = countRecentSessions(sessionsWithProject.map((item) => item.session));
   stats.todaySessions = recent.todaySessions;
   stats.thisWeekSessions = recent.thisWeekSessions;
+}
 
-  for (const { project, session } of sessionsWithProject) {
-    if (!session.pluginId) continue;
+async function loadSessionForStats(
+  registry: PluginRegistry,
+  project: SessionWithProject["project"],
+  session: SessionSummary,
+): Promise<Turn[] | null> {
+  if (!session.pluginId) return null;
 
-    const source = project.sources.find((s) => s.pluginId === session.pluginId);
-    if (!source) continue;
+  const source = project.sources.find((item) => item.pluginId === session.pluginId);
+  if (!source) return null;
 
-    const plugin = registry.getPlugin(session.pluginId);
-    const { rawSessionId } = parseSessionId(session.sessionId);
-    const loaded = await plugin.loadSession(source.nativeId, rawSessionId).catch(() => null);
-    if (!loaded) continue;
+  const plugin = registry.getPlugin(session.pluginId);
+  const { rawSessionId } = parseSessionId(session.sessionId);
+  const loaded = await plugin.loadSession(source.nativeId, rawSessionId).catch(() => null);
+  return loaded?.turns ?? null;
+}
 
-    stats.messages += countVisibleMessages(loaded.turns);
+function applyUsageStats(
+  stats: DashboardStats,
+  modelUsage: ModelTokenUsage,
+  usage: TokenUsage,
+): void {
+  stats.inputTokens += usage.inputTokens;
+  stats.outputTokens += usage.outputTokens;
+  stats.cacheReadTokens += usage.cacheReadTokens ?? 0;
+  stats.cacheCreationTokens += usage.cacheCreationTokens ?? 0;
 
-    for (const turn of loaded.turns) {
-      if (turn.kind !== "assistant") continue;
+  modelUsage.inputTokens += usage.inputTokens;
+  modelUsage.outputTokens += usage.outputTokens;
+  modelUsage.cacheReadTokens += usage.cacheReadTokens ?? 0;
+  modelUsage.cacheCreationTokens += usage.cacheCreationTokens ?? 0;
+}
 
-      stats.toolCalls += turn.contentBlocks.filter((b) => b.type === "tool_call").length;
+function applyTurnStats(stats: DashboardStats, turns: Turn[], fallbackModel: string): void {
+  stats.messages += countVisibleMessages(turns);
 
-      const model = turn.model || session.model || "unknown";
-      const modelUsage = ensureModelUsage(stats.models, model);
+  for (const turn of turns) {
+    if (turn.kind !== "assistant") continue;
 
-      if (!turn.usage) continue;
+    stats.toolCalls += turn.contentBlocks.filter((block) => block.type === "tool_call").length;
+    const modelUsage = ensureModelUsage(stats.models, turn.model || fallbackModel || "unknown");
 
-      stats.inputTokens += turn.usage.inputTokens;
-      stats.outputTokens += turn.usage.outputTokens;
-      stats.cacheReadTokens += turn.usage.cacheReadTokens ?? 0;
-      stats.cacheCreationTokens += turn.usage.cacheCreationTokens ?? 0;
+    if (!turn.usage) continue;
+    applyUsageStats(stats, modelUsage, turn.usage);
+  }
+}
 
-      modelUsage.inputTokens += turn.usage.inputTokens;
-      modelUsage.outputTokens += turn.usage.outputTokens;
-      modelUsage.cacheReadTokens += turn.usage.cacheReadTokens ?? 0;
-      modelUsage.cacheCreationTokens += turn.usage.cacheCreationTokens ?? 0;
-    }
+async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
+  const stats = emptyStats();
+  const sessionsWithProject = await collectSessionsWithProjects(registry, stats);
+
+  applyRecentSessionStats(stats, sessionsWithProject);
+
+  for (const item of sessionsWithProject) {
+    const turns = await loadSessionForStats(registry, item.project, item.session);
+    if (!turns) continue;
+    applyTurnStats(stats, turns, item.session.model);
   }
 
   return stats;
 }
 
-export async function scanStats(registry: PluginRegistry = createRegistry()): Promise<DashboardStats> {
+export async function scanStats(
+  registry: PluginRegistry = createRegistry(),
+): Promise<DashboardStats> {
   return computeStats(registry);
 }

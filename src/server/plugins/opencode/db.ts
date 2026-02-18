@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { getOpenCodeDir } from "../../config.ts";
 
 export interface SqliteQuery<T = unknown> {
-  all(...params: any[]): any[];
-  get(...params: any[]): any;
+  all(...params: unknown[]): T[];
+  get(...params: unknown[]): T | undefined;
 }
 
 export interface SqliteDb {
@@ -22,7 +22,7 @@ export async function openOpenCodeDb(): Promise<SqliteDb | null> {
 
   try {
     const sqlite = await import("bun:sqlite");
-    return new sqlite.Database(dbPath, { readonly: true });
+    return new sqlite.Database(dbPath, { readonly: true }) as unknown as SqliteDb;
   } catch {
     return null;
   }

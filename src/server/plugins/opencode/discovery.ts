@@ -224,8 +224,7 @@ export async function listOpenCodeSessions(nativeId: string): Promise<SessionSum
 }
 
 function getSessionPreview(db: SqliteDb, sessionId: string): SessionPreview {
-  let firstMessage = "";
-  let model = "";
+  const preview: SessionPreview = { firstMessage: "", model: "" };
 
   const msgRow = db
     .query<MessageRow>(
@@ -238,33 +237,43 @@ function getSessionPreview(db: SqliteDb, sessionId: string): SessionPreview {
 
   for (const msg of msgRow) {
     const data = tryParseJson<MessageDataJson>(msg.data);
-    if (!data) {
-      continue;
-    }
+    if (!data) continue;
 
-    if (!model && data.role === "assistant" && data.modelID) {
-      model = data.modelID;
-    }
+    assignPreviewModel(preview, data);
+    assignPreviewFirstMessage(preview, data, db, msg.id);
 
-    if (!firstMessage && data.role === "user") {
-      // Get text parts for this message
-      const parts = db
-        .query<{ data: string }>("SELECT data FROM part WHERE message_id = ? ORDER BY id ASC")
-        .all(msg.id);
+    if (preview.firstMessage && preview.model) break;
+  }
 
-      for (const part of parts) {
-        const partData = tryParseJson<PartDataJson>(part.data);
-        if (partData?.type === "text" && partData.text) {
-          firstMessage = partData.text.slice(0, 200);
-          break;
-        }
-      }
-    }
+  return preview;
+}
 
-    if (firstMessage && model) {
-      break;
+function assignPreviewModel(preview: SessionPreview, data: MessageDataJson): void {
+  if (preview.model || data.role !== "assistant" || !data.modelID) return;
+  preview.model = data.modelID;
+}
+
+function assignPreviewFirstMessage(
+  preview: SessionPreview,
+  data: MessageDataJson,
+  db: SqliteDb,
+  messageId: string,
+): void {
+  if (preview.firstMessage || data.role !== "user") return;
+  preview.firstMessage = getFirstUserTextPart(db, messageId);
+}
+
+function getFirstUserTextPart(db: SqliteDb, messageId: string): string {
+  const parts = db
+    .query<{ data: string }>("SELECT data FROM part WHERE message_id = ? ORDER BY id ASC")
+    .all(messageId);
+
+  for (const part of parts) {
+    const partData = tryParseJson<PartDataJson>(part.data);
+    if (partData?.type === "text" && partData.text) {
+      return partData.text.slice(0, 200);
     }
   }
 
-  return { firstMessage, model };
+  return "";
 }
