@@ -107,44 +107,32 @@ function buildToolCallFromItem(
   }
 }
 
-function createUserTurn(text: string, timestamp: string): UserTurn {
+function createUserTurn(text: string, timestamp: string, uuid: string): UserTurn {
   return {
     kind: "user",
-    uuid: `codex-user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    uuid,
     timestamp,
     text,
   };
 }
 
-function createAssistantTurn(model: string, timestamp: string): AssistantTurn {
+function createAssistantTurn(model: string, timestamp: string, uuid: string): AssistantTurn {
   return {
     kind: "assistant",
-    uuid: `codex-assistant-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    uuid,
     timestamp,
     model,
     contentBlocks: [],
   };
 }
 
-function itemToContentBlock(item: CodexItem): ContentBlock | null {
+function itemToContentBlock(item: CodexItem, nextToolUseId: () => string): ContentBlock | null {
   if (item.type === "agent_message") {
     return { type: "text", text: item.text };
   }
   if (item.type === "reasoning") {
     return { type: "thinking", block: { text: item.text } };
   }
-  return null;
-}
-
-function itemToContentBlockWithToolIds(
-  item: CodexItem,
-  nextToolUseId: () => string,
-): ContentBlock | null {
-  const basicBlock = itemToContentBlock(item);
-  if (basicBlock) {
-    return basicBlock;
-  }
-
   const toolCall = buildToolCallFromItem(item, nextToolUseId);
   if (toolCall) {
     return { type: "tool_call", call: toolCall };
@@ -152,11 +140,15 @@ function itemToContentBlockWithToolIds(
   return null;
 }
 
-function handleTurnStarted(state: TurnBuilderState, timestamp: string): void {
+function handleTurnStarted(
+  state: TurnBuilderState,
+  timestamp: string,
+  nextUserTurnId: () => string,
+): void {
   flushAssistant(state);
   state.turnCount++;
   if (state.turnCount > 1) {
-    state.turns.push(createUserTurn("", timestamp));
+    state.turns.push(createUserTurn("", timestamp, nextUserTurnId()));
   }
 }
 
@@ -178,14 +170,15 @@ function handleItemCompleted(
   model: string,
   timestamp: string,
   nextToolUseId: () => string,
+  nextAssistantTurnId: () => string,
 ): void {
   if (!event.item) return;
 
   if (!state.currentAssistant) {
-    state.currentAssistant = createAssistantTurn(model, timestamp);
+    state.currentAssistant = createAssistantTurn(model, timestamp, nextAssistantTurnId());
   }
 
-  const block = itemToContentBlockWithToolIds(event.item, nextToolUseId);
+  const block = itemToContentBlock(event.item, nextToolUseId);
   if (block) {
     state.currentAssistant.contentBlocks.push(block);
   }
@@ -206,9 +199,20 @@ interface TurnBuilderState {
 
 export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string): Turn[] {
   let toolUseCounter = 0;
+  let userTurnCounter = 0;
+  let assistantTurnCounter = 0;
+
   const nextToolUseId = () => {
     toolUseCounter++;
     return `codex-tool-${toolUseCounter}`;
+  };
+  const nextUserTurnId = () => {
+    userTurnCounter++;
+    return `codex-user-${userTurnCounter}`;
+  };
+  const nextAssistantTurnId = () => {
+    assistantTurnCounter++;
+    return `codex-assistant-${assistantTurnCounter}`;
   };
 
   const state: TurnBuilderState = {
@@ -219,11 +223,11 @@ export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: 
 
   for (const event of events) {
     if (event.type === "turn.started") {
-      handleTurnStarted(state, timestamp);
+      handleTurnStarted(state, timestamp, nextUserTurnId);
     } else if (event.type === "turn.completed") {
       handleTurnCompleted(state, event);
     } else if (event.type === "item.completed") {
-      handleItemCompleted(state, event, model, timestamp, nextToolUseId);
+      handleItemCompleted(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
     }
   }
 

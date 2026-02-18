@@ -221,6 +221,24 @@ describe("buildCodexTurns", () => {
     }
   });
 
+  test("uses deterministic generated UUIDs per parsed session", () => {
+    const events: CodexEvent[] = [
+      { type: "turn.started" },
+      { type: "item.completed", item: { type: "agent_message", text: "First response" } },
+      { type: "turn.completed" },
+      { type: "turn.started" },
+      { type: "item.completed", item: { type: "agent_message", text: "Second response" } },
+      { type: "turn.completed" },
+    ];
+
+    const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
+
+    expect(turns).toHaveLength(3);
+    expect(turns[0]).toMatchObject({ kind: "assistant", uuid: "codex-assistant-1" });
+    expect(turns[1]).toMatchObject({ kind: "user", uuid: "codex-user-1" });
+    expect(turns[2]).toMatchObject({ kind: "assistant", uuid: "codex-assistant-2" });
+  });
+
   test("handles multiple turns", () => {
     const events: CodexEvent[] = [
       { type: "turn.started" },
