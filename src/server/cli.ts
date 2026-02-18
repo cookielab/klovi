@@ -6,7 +6,14 @@ import { handleSessions } from "./api/sessions.ts";
 import { handleStats } from "./api/stats.ts";
 import { handleSubAgent } from "./api/subagent.ts";
 import { handleVersion } from "./api/version.ts";
-import { getClaudeCodeDir, setClaudeCodeDir } from "./config.ts";
+import {
+  getClaudeCodeDir,
+  getCodexCliDir,
+  getOpenCodeDir,
+  setClaudeCodeDir,
+  setCodexCliDir,
+  setOpenCodeDir,
+} from "./config.ts";
 import type { Route } from "./http.ts";
 import { appVersion } from "./version.ts";
 
@@ -14,6 +21,17 @@ interface CliArgs {
   port: number;
   acceptRisks: boolean;
   showHelp: boolean;
+}
+
+function parseDirFlag(argv: string[], flag: string, setter: (dir: string) => void): void {
+  const idx = argv.indexOf(flag);
+  if (idx === -1) return;
+  const dir = argv[idx + 1];
+  if (!dir || dir.startsWith("-")) {
+    console.error(`Error: ${flag} requires a path argument.`);
+    process.exit(1);
+  }
+  setter(dir);
 }
 
 export function parseCliArgs(argv: string[]): CliArgs {
@@ -35,15 +53,9 @@ export function parseCliArgs(argv: string[]): CliArgs {
   const acceptRisks = argv.includes("--accept-risks");
   const showHelp = argv.includes("--help") || argv.includes("-h");
 
-  const claudeCodeDirIdx = argv.indexOf("--claude-code-dir");
-  if (claudeCodeDirIdx !== -1) {
-    const dir = argv[claudeCodeDirIdx + 1];
-    if (!dir || dir.startsWith("-")) {
-      console.error("Error: --claude-code-dir requires a path argument.");
-      process.exit(1);
-    }
-    setClaudeCodeDir(dir);
-  }
+  parseDirFlag(argv, "--claude-code-dir", setClaudeCodeDir);
+  parseDirFlag(argv, "--codex-cli-dir", setCodexCliDir);
+  parseDirFlag(argv, "--opencode-dir", setOpenCodeDir);
 
   return { port, acceptRisks, showHelp };
 }
@@ -53,17 +65,19 @@ export function showHelpText(): void {
   const reset = "\x1b[0m";
 
   console.log(`
-Klovi — a web viewer for Claude Code sessions
+Klovi — a web viewer for AI coding sessions
 ${dim}by cookielab.io${reset}
 
 Usage:
   klovi [options]
 
 Options:
-  --accept-risks           Skip the startup security warning
-  --port <number>          Server port (default: 3583)
+  --accept-risks             Skip the startup security warning
+  --port <number>            Server port (default: 3583)
   --claude-code-dir <path>   Path to Claude Code data directory
-  -h, --help               Show this help message
+  --codex-cli-dir <path>     Path to Codex CLI data directory
+  --opencode-dir <path>      Path to OpenCode data directory
+  -h, --help                 Show this help message
 
 The server runs on http://localhost:3583 by default.
 `);
@@ -108,7 +122,9 @@ export function printStartupBanner(port: number): void {
 }
 
 export function promptSecurityWarning(port: number): void {
-  const resolvedDir = getClaudeCodeDir();
+  const claudeDir = getClaudeCodeDir();
+  const codexDir = getCodexCliDir();
+  const openDir = getOpenCodeDir();
   const yellow = "\x1b[33m";
   const bold = "\x1b[1m";
   const reset = "\x1b[0m";
@@ -117,7 +133,11 @@ export function promptSecurityWarning(port: number): void {
   console.log("");
   console.log(`${yellow}${bold}  ⚠  WARNING${reset}`);
   console.log("");
-  console.log(`  Klovi reads Claude Code session history from ${resolvedDir}.`);
+  console.log("  Klovi reads AI coding session history from:");
+  console.log(`    - Claude Code: ${claudeDir}`);
+  console.log(`    - Codex CLI:   ${codexDir}`);
+  console.log(`    - OpenCode:    ${openDir}`);
+  console.log("");
   console.log("  Session data may contain sensitive information such as API keys,");
   console.log("  credentials, or private code snippets.");
   console.log("");
