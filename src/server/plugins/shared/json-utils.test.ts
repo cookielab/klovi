@@ -3,7 +3,7 @@ import { tryParseJson } from "./json-utils.ts";
 
 describe("tryParseJson", () => {
   test("returns parsed value for valid JSON", () => {
-    expect(tryParseJson<{ ok: boolean }>("{\"ok\":true}")).toEqual({ ok: true });
+    expect(tryParseJson<{ ok: boolean }>('{"ok":true}')).toEqual({ ok: true });
   });
 
   test("returns undefined for malformed JSON", () => {

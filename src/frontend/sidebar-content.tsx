@@ -29,7 +29,13 @@ export function getSidebarContent(
   }
 
   if (view.kind === "project") {
-    return <SessionList project={view.project} onSelect={actions.selectSession} onBack={actions.goHome} />;
+    return (
+      <SessionList
+        project={view.project}
+        onSelect={actions.selectSession}
+        onBack={actions.goHome}
+      />
+    );
   }
 
   if (view.kind === "subagent") {

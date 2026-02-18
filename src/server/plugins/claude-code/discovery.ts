@@ -9,8 +9,8 @@ import {
   decodeEncodedPath,
   listFilesBySuffix,
   listFilesWithMtime,
-  readTextPrefix,
   readDirEntriesSafe,
+  readTextPrefix,
 } from "../shared/discovery-utils.ts";
 import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
@@ -173,7 +173,13 @@ export async function extractSessionMeta(
 ): Promise<Omit<SessionSummary, "sessionId"> | null> {
   try {
     const text = await readTextPrefix(filePath, SESSION_META_SCAN_BYTES);
-    const meta: MetaFields = { timestamp: "", slug: "", firstMessage: "", model: "", gitBranch: "" };
+    const meta: MetaFields = {
+      timestamp: "",
+      slug: "",
+      firstMessage: "",
+      model: "",
+      gitBranch: "",
+    };
 
     iterateJsonl(
       text,
@@ -185,7 +191,7 @@ export async function extractSessionMeta(
       {
         maxLines: 50,
         onMalformed: () => {
-        // Malformed lines skipped here; full errors reported by loadClaudeSession()
+          // Malformed lines skipped here; full errors reported by loadClaudeSession()
         },
       },
     );

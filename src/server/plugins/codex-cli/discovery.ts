@@ -2,9 +2,9 @@ import { readFile } from "node:fs/promises";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
 import { epochSecondsToIso, sortByIsoDesc } from "../../iso-time.ts";
-import { scanCodexSessions, type SessionFileInfo } from "./session-index.ts";
 import { readTextPrefix } from "../shared/discovery-utils.ts";
 import { iterateJsonl } from "../shared/jsonl-utils.ts";
+import { type SessionFileInfo, scanCodexSessions } from "./session-index.ts";
 
 interface CodexEvent {
   type: string;

@@ -54,7 +54,12 @@ function App() {
       setSearchOpen(false);
       const resolved = await resolveProjectAndSession(encodedPath, sessionId);
       if (resolved) {
-        setView({ kind: "session", project: resolved.project, session: resolved.session, presenting: false });
+        setView({
+          kind: "session",
+          project: resolved.project,
+          session: resolved.session,
+          presenting: false,
+        });
       }
     },
     [setView],
@@ -113,7 +118,8 @@ function App() {
     hide,
   });
 
-  const isPresenting = view.kind === "session" || view.kind === "subagent" ? view.presenting : false;
+  const isPresenting =
+    view.kind === "session" || view.kind === "subagent" ? view.presenting : false;
 
   if (!ready) {
     return <div className="loading">Loading...</div>;
@@ -137,7 +143,9 @@ function App() {
               ? getResumeCommand(view.session.pluginId, view.session.sessionId)
               : undefined
           }
-          backHref={view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined}
+          backHref={
+            view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined
+          }
           sessionType={view.kind === "session" ? view.session.sessionType : undefined}
           themeSetting={themeSetting}
           onCycleTheme={cycleTheme}

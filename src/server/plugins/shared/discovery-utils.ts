@@ -25,10 +25,7 @@ export async function listFilesBySuffix(dir: string, suffix: string): Promise<st
   }
 }
 
-export async function getLatestMtime(
-  dir: string,
-  files: string[],
-): Promise<string> {
+export async function getLatestMtime(dir: string, files: string[]): Promise<string> {
   let lastActivity = "";
   for (const file of files) {
     const fileStat = await stat(join(dir, file)).catch(() => null);
@@ -38,10 +35,7 @@ export async function getLatestMtime(
   return lastActivity;
 }
 
-export async function listFilesWithMtime(
-  dir: string,
-  suffix: string,
-): Promise<FileWithMtime[]> {
+export async function listFilesWithMtime(dir: string, suffix: string): Promise<FileWithMtime[]> {
   const files = await listFilesBySuffix(dir, suffix);
   const results: FileWithMtime[] = [];
 

@@ -1,5 +1,5 @@
-import type { PluginRegistry } from "../plugin-registry.ts";
 import { sortByIsoDesc } from "../iso-time.ts";
+import type { PluginRegistry } from "../plugin-registry.ts";
 
 export async function handleSearchSessions(registry: PluginRegistry): Promise<Response> {
   const projects = await registry.discoverAllProjects();

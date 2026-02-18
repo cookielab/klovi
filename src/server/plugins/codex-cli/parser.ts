@@ -9,8 +9,8 @@ import type {
   UserTurn,
 } from "../../../shared/types.ts";
 import { epochSecondsToIso } from "../../iso-time.ts";
-import { findCodexSessionFileById, isCodexSessionMeta } from "./session-index.ts";
 import { iterateJsonl } from "../shared/jsonl-utils.ts";
+import { findCodexSessionFileById, isCodexSessionMeta } from "./session-index.ts";
 
 interface CodexItemCommand {
   type: "command_execution";
@@ -237,8 +237,8 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
 
   iterateJsonl(text, ({ parsed, lineIndex }) => {
     if (lineIndex === 0 && isCodexSessionMeta(parsed)) {
-        meta = parsed;
-        return;
+      meta = parsed;
+      return;
     }
 
     if (typeof parsed === "object" && parsed !== null && "type" in parsed) {

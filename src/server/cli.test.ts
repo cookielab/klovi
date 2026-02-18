@@ -36,7 +36,14 @@ describe("parseCliArgs", () => {
   });
 
   test("parses multiple flags together", () => {
-    const result = parseCliArgs(["--accept-risks", "--host", "localhost", "--port", "9000", "--help"]);
+    const result = parseCliArgs([
+      "--accept-risks",
+      "--host",
+      "localhost",
+      "--port",
+      "9000",
+      "--help",
+    ]);
     expect(result.port).toBe(9000);
     expect(result.host).toBe("localhost");
     expect(result.acceptRisks).toBe(true);
