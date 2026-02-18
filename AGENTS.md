@@ -18,6 +18,14 @@ If any check fails, fix the issue and re-run until all pass. Never skip this ste
 
 ---
 
+## Project Rule: No Caching (MANDATORY)
+
+- Never implement caching in this project.
+- Do not add in-memory caches, file-based caches, DB cache tables, HTTP cache layers, memoization caches, or TTL-based cache logic.
+- Prefer direct computation and source-of-truth reads over cache invalidation strategies.
+
+---
+
 Default to using Bun instead of Node.js.
 
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
