@@ -18,3 +18,25 @@ export function getProjectsDir(): string {
 export function getStatsCachePath(): string {
   return join(claudeCodeDir, "stats-cache.json");
 }
+
+// Codex CLI
+let codexCliDir = join(homedir(), ".codex");
+
+export function getCodexCliDir(): string {
+  return codexCliDir;
+}
+
+export function setCodexCliDir(dir: string): void {
+  codexCliDir = dir;
+}
+
+// OpenCode
+let openCodeDir = join(homedir(), ".local", "share", "opencode");
+
+export function getOpenCodeDir(): string {
+  return openCodeDir;
+}
+
+export function setOpenCodeDir(dir: string): void {
+  openCodeDir = dir;
+}
