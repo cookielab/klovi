@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Project, SessionSummary } from "../../shared/types.ts";
-import { aggregateSessions, classifySessionTypes } from "./claude-dir.ts";
+import { aggregateSessions, classifySessionTypes } from "../plugins/claude-code/discovery.ts";
 
 function session(overrides: Partial<SessionSummary> & { sessionId: string }): SessionSummary {
   return {

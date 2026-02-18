@@ -6,7 +6,7 @@ import {
   extractSubAgentMap,
   findImplSessionId,
   findPlanSessionId,
-} from "./session.ts";
+} from "../plugins/claude-code/parser.ts";
 import type { RawLine } from "./types.ts";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
