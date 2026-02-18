@@ -1,6 +1,6 @@
 # Klovi Content Types & Formatting Guide
 
-Catalog of all distinct content types found in Claude Code JSONL session files and their visual treatment needs.
+Catalog of all distinct content types found in AI coding session data and their visual treatment needs. Covers Claude Code (JSONL), Codex CLI (JSONL), and OpenCode (SQLite).
 
 ---
 
@@ -296,7 +296,85 @@ Fields available on message lines for potential display:
 
 ---
 
-## 10. Content Structure Reference
+## 10. Codex CLI Content Types
+
+Codex CLI stores sessions as JSONL files in `~/.codex/sessions/`. The first line is a session metadata object; subsequent lines are events.
+
+### 10.1 Session Metadata (first line)
+
+```json
+{
+  "uuid": "abc-123",
+  "cwd": "/Users/user/project",
+  "timestamps": { "created": 1700000000, "updated": 1700001000 },
+  "model": "o4-mini",
+  "provider_id": "openai"
+}
+```
+
+### 10.2 Event Types
+
+| Event Type | Description | Mapped To | Status |
+|---|---|---|---|
+| `turn.started` | Marks beginning of a conversation turn | Triggers new user/assistant turn boundary | Handled |
+| `turn.completed` | Marks end of a turn, includes usage data | Finalizes assistant turn with token usage | Handled |
+| `item.completed` | Contains a completed item (tool output, message, etc.) | Dispatched by item type (see below) | Handled |
+
+### 10.3 Item Types (within `item.completed` events)
+
+| Item Type | Description | Rendered As | Summary |
+|---|---|---|---|
+| `agent_message` | Text response from the model | Text content block | Text shown directly |
+| `reasoning` | Model's internal reasoning | Thinking block (collapsible) | Preview shown |
+| `command_execution` | Shell command executed | Tool call: `command_execution` | Command string (80 chars) |
+| `file_change` | File modifications | Tool call: `file_change` | File path from first change |
+| `mcp_tool_call` | MCP tool invocation | Tool call (by tool name) | JSON input |
+| `web_search` | Web search query | Tool call: `web_search` | Query string (60 chars) |
+
+---
+
+## 11. OpenCode Content Types
+
+OpenCode stores sessions in a SQLite database (`~/.local/share/opencode/opencode.db`) with `session`, `message`, and `part` tables.
+
+### 11.1 Message Roles
+
+| Role | Description | Mapped To |
+|---|---|---|
+| `user` | User input | UserTurn |
+| `assistant` | Model response | AssistantTurn (with model, tokens, finish reason) |
+
+### 11.2 Part Types (within messages)
+
+| Part Type | Description | Rendered As | Status |
+|---|---|---|---|
+| `text` | Text content | Text content block (or user text for user messages) | Handled |
+| `reasoning` | Model reasoning | Thinking block (collapsible) | Handled |
+| `tool` | Tool invocation with state | Tool call (collapsible) | Handled |
+| `file` | File attachment | Skipped (not rendered) | Ignored |
+| `snapshot` | State snapshot | Skipped | Ignored |
+| `step-finish` | Step completion with token usage | Token usage extracted | Handled |
+| `step-start` | Step start marker | Skipped | Ignored |
+| `patch` | Code patch | Skipped | Ignored |
+| `agent` | Sub-agent marker | Skipped | Ignored |
+| `compaction` | Context compaction | Skipped | Ignored |
+| `subtask` | Subtask marker | Skipped | Ignored |
+| `retry` | Retry marker | Skipped | Ignored |
+
+### 11.3 Tool States
+
+Tool parts have a `state` field with one of these statuses:
+
+| Status | Description | Display |
+|---|---|---|
+| `completed` | Tool finished successfully | Shows input + output |
+| `error` | Tool finished with error | Shows input + error (red text) |
+| `pending` | Tool not yet started | Shows "[Tool execution was interrupted]" |
+| `running` | Tool still running | Shows "[Tool execution was interrupted]" |
+
+---
+
+## 12. Claude Code Content Structure Reference
 
 ### Full assistant message line:
 ```json
