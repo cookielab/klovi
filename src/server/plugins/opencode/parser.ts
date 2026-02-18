@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import type {
   AssistantTurn,
   ContentBlock,
@@ -8,17 +7,7 @@ import type {
   Turn,
   UserTurn,
 } from "../../../shared/types.ts";
-import { getDbPath } from "./discovery.ts";
-
-interface SqliteQuery<T = unknown> {
-  all(...params: any[]): any[];
-  get(...params: any[]): any;
-}
-
-interface SqliteDb {
-  query<T = unknown>(sql: string): SqliteQuery<T>;
-  close(): void;
-}
+import { openOpenCodeDb, type SqliteDb } from "./db.ts";
 
 // --- DB row types ---
 
@@ -403,16 +392,8 @@ function loadSessionFromDb(db: SqliteDb, nativeId: string, sessionId: string): S
 }
 
 export async function loadOpenCodeSession(nativeId: string, sessionId: string): Promise<Session> {
-  const dbPath = getDbPath();
-  if (!existsSync(dbPath)) {
-    return emptySession(nativeId, sessionId);
-  }
-
-  let db: SqliteDb;
-  try {
-    const sqlite = await import("bun:sqlite");
-    db = new sqlite.Database(dbPath, { readonly: true });
-  } catch {
+  const db = await openOpenCodeDb();
+  if (!db) {
     return emptySession(nativeId, sessionId);
   }
 
