@@ -18,9 +18,10 @@ export function useFetch<T>(url: string, deps: React.DependencyList): UseFetchRe
   // biome-ignore lint/correctness/useExhaustiveDependencies: retryCount triggers refetch on retry(); deps array is spread from caller
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(url)
+    fetch(url, { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -32,13 +33,14 @@ export function useFetch<T>(url: string, deps: React.DependencyList): UseFetchRe
         }
       })
       .catch((e) => {
-        if (!cancelled) {
+        if (!cancelled && !controller.signal.aborted) {
           setError(e instanceof Error ? e.message : String(e));
           setLoading(false);
         }
       });
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [url, retryCount, ...deps]);
 

@@ -5,7 +5,9 @@ import { useFetch } from "./useFetch.ts";
 
 let originalFetch: typeof globalThis.fetch;
 
-function mockFetch(response: () => Promise<Response>): void {
+function mockFetch(
+  response: (input: string | URL | Request, init?: RequestInit) => Promise<Response>,
+): void {
   Object.assign(globalThis, {
     fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
   });
@@ -73,5 +75,21 @@ describe("useFetch", () => {
 
     await waitFor(() => expect(result.current.data).toEqual({ ok: true }));
     expect(result.current.error).toBeNull();
+  });
+
+  test("aborts in-flight request on unmount", () => {
+    let capturedSignal: AbortSignal | null | undefined;
+
+    mockFetch((_input, init) => {
+      capturedSignal = init?.signal;
+      return new Promise(() => {});
+    });
+
+    const { unmount } = renderHook(() => useFetch("/api/test", []));
+    expect(capturedSignal).toBeDefined();
+    expect(capturedSignal!.aborted).toBe(false);
+
+    unmount();
+    expect(capturedSignal!.aborted).toBe(true);
   });
 });
