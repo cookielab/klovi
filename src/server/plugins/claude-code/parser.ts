@@ -13,6 +13,7 @@ import type {
 import { getProjectsDir } from "../../config.ts";
 import { parseCommandMessage } from "../../parser/command-message.ts";
 import type { RawContentBlock, RawLine, RawToolResultBlock } from "../../parser/types.ts";
+import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
 interface ParsedSession {
   session: Session;
@@ -185,28 +186,29 @@ interface ParsedLines {
 async function readJsonlLines(filePath: string): Promise<ParsedLines> {
   const { readFile } = await import("node:fs/promises");
   const text = await readFile(filePath, "utf-8");
-  const lines = text.split("\n");
 
   const rawLines: RawLine[] = [];
   const parseErrors: ParseErrorTurn[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
-    if (!line.trim()) continue;
-    try {
-      rawLines.push(JSON.parse(line) as RawLine);
-    } catch (err) {
+  iterateJsonl(
+    text,
+    ({ parsed }) => {
+      rawLines.push(parsed as RawLine);
+    },
+    {
+      onMalformed: (line, lineNumber, error) => {
       parseErrors.push({
         kind: "parse_error",
-        uuid: `parse-error-line-${i + 1}`,
+        uuid: `parse-error-line-${lineNumber}`,
         timestamp: rawLines[rawLines.length - 1]?.timestamp ?? "",
-        lineNumber: i + 1,
+        lineNumber,
         rawLine: line.length > 500 ? `${line.slice(0, 500)}\u2026 (truncated)` : line,
         errorType: "json_parse",
-        errorDetails: err instanceof Error ? err.message : undefined,
+        errorDetails: error instanceof Error ? error.message : undefined,
       });
-    }
-  }
+      },
+    },
+  );
 
   return { rawLines, parseErrors };
 }
