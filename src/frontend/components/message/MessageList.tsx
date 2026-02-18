@@ -10,6 +10,7 @@ interface MessageListProps {
   visibleSubSteps?: Map<number, number>;
   sessionId?: string;
   project?: string;
+  pluginId?: string;
   isSubAgent?: boolean;
   planSessionId?: string;
   implSessionId?: string;
@@ -22,6 +23,7 @@ function renderTurn(
   visibleSubSteps: Map<number, number> | undefined,
   sessionId: string | undefined,
   project: string | undefined,
+  pluginId: string | undefined,
   isSubAgent: boolean | undefined,
   planSessionId: string | undefined,
   implSessionId: string | undefined,
@@ -49,6 +51,7 @@ function renderTurn(
             visibleSubSteps={visibleSubSteps?.get(index)}
             sessionId={sessionId}
             project={project}
+            pluginId={pluginId}
           />
         </div>
       );
@@ -105,6 +108,7 @@ export function MessageList({
   visibleSubSteps,
   sessionId,
   project,
+  pluginId,
   isSubAgent,
   planSessionId,
   implSessionId,
@@ -127,6 +131,7 @@ export function MessageList({
               visibleSubSteps,
               sessionId,
               project,
+              pluginId,
               isSubAgent,
               planSessionId,
               index === firstUserTurnIndex ? implSessionId : undefined,

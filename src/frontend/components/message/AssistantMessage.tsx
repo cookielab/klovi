@@ -11,12 +11,14 @@ interface AssistantMessageProps {
   visibleSubSteps?: number; // how many sub-steps to show (presentation mode)
   sessionId?: string;
   project?: string;
+  pluginId?: string;
 }
 
 function renderGroup(
   group: ContentBlock[],
   sessionId: string | undefined,
   project: string | undefined,
+  pluginId: string | undefined,
 ) {
   return group.map((block, i) => {
     if (block.type === "thinking") {
@@ -25,7 +27,15 @@ function renderGroup(
     if (block.type === "text") {
       return <MarkdownRenderer key={`text-${i}`} content={block.text} />;
     }
-    return <ToolCall key={`tool-${i}`} call={block.call} sessionId={sessionId} project={project} />;
+    return (
+      <ToolCall
+        key={`tool-${i}`}
+        call={block.call}
+        sessionId={sessionId}
+        project={project}
+        pluginId={pluginId}
+      />
+    );
   });
 }
 
@@ -48,6 +58,7 @@ export function AssistantMessage({
   visibleSubSteps,
   sessionId,
   project,
+  pluginId,
 }: AssistantMessageProps) {
   const groups = groupContentBlocks(turn.contentBlocks);
   const limit = visibleSubSteps !== undefined ? visibleSubSteps : groups.length;
@@ -83,7 +94,7 @@ export function AssistantMessage({
       <div className="message message-assistant">
         {introGroup && (
           <div className={isPresentation && treeGroups.length === 0 ? "step-enter" : ""}>
-            {renderGroup(introGroup, sessionId, project)}
+            {renderGroup(introGroup, sessionId, project, pluginId)}
           </div>
         )}
         {treeGroups.length > 0 && (
@@ -93,7 +104,7 @@ export function AssistantMessage({
                 key={i}
                 className={`tree-node${isPresentation && i === treeGroups.length - 1 ? " step-enter" : ""}`}
               >
-                {renderGroup(group, sessionId, project)}
+                {renderGroup(group, sessionId, project, pluginId)}
               </div>
             ))}
           </div>
@@ -103,7 +114,7 @@ export function AssistantMessage({
             key={i}
             className={isPresentation && i === flatGroups.length - 1 ? "step-enter" : ""}
           >
-            {renderGroup(group, sessionId, project)}
+            {renderGroup(group, sessionId, project, pluginId)}
           </div>
         ))}
         {turn.usage && <UsageFooter usage={turn.usage} />}

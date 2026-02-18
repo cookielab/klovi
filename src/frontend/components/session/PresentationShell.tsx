@@ -9,6 +9,7 @@ interface PresentationShellProps {
   onExit: () => void;
   sessionId: string;
   project: string;
+  pluginId?: string;
   isSubAgent?: boolean;
 }
 
@@ -17,6 +18,7 @@ export function PresentationShell({
   onExit,
   sessionId,
   project,
+  pluginId,
   isSubAgent,
 }: PresentationShellProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -65,6 +67,7 @@ export function PresentationShell({
         visibleSubSteps={presentation.visibleSubSteps}
         sessionId={sessionId}
         project={project}
+        pluginId={pluginId}
         isSubAgent={isSubAgent}
       />
       <div className="presentation-progress">

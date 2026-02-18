@@ -33,6 +33,7 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
       onExit={onExit}
       sessionId={sessionId}
       project={project}
+      pluginId={data.session.pluginId}
     />
   );
 }
