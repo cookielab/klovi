@@ -8,6 +8,7 @@ import type {
   UserTurn,
 } from "../../../shared/types.ts";
 import { epochMsToIso } from "../../iso-time.ts";
+import { tryParseJson } from "../shared/json-utils.ts";
 import { openOpenCodeDb, type SqliteDb } from "./db.ts";
 
 // --- DB row types ---
@@ -329,10 +330,9 @@ function groupPartsByMessage(partRows: PartRow[]): Map<string, PartRow[]> {
 function parsePartRows(rawParts: PartRow[]): PartData[] {
   const parts: PartData[] = [];
   for (const rawPart of rawParts) {
-    try {
-      parts.push(JSON.parse(rawPart.data) as PartData);
-    } catch {
-      // Skip malformed parts
+    const parsedPart = tryParseJson<PartData>(rawPart.data);
+    if (parsedPart) {
+      parts.push(parsedPart);
     }
   }
   return parts;
@@ -344,8 +344,8 @@ function buildMessagesFromRows(
 ): OpenCodeMessage[] {
   const messages: OpenCodeMessage[] = [];
   for (const row of messageRows) {
-    try {
-      const data = JSON.parse(row.data) as MessageData;
+    const data = tryParseJson<MessageData>(row.data);
+    if (data) {
       const rawParts = partsByMessage.get(row.id) ?? [];
       messages.push({
         id: row.id,
@@ -353,8 +353,6 @@ function buildMessagesFromRows(
         timeCreated: row.time_created,
         parts: parsePartRows(rawParts),
       });
-    } catch {
-      // Skip messages with malformed data
     }
   }
   return messages;

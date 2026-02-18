@@ -1,6 +1,7 @@
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
 import { epochMsToIso } from "../../iso-time.ts";
+import { tryParseJson } from "../shared/json-utils.ts";
 import { openOpenCodeDb, type SqliteDb } from "./db.ts";
 
 export { getOpenCodeDbPath as getDbPath } from "./db.ts";
@@ -236,39 +237,32 @@ function getSessionPreview(db: SqliteDb, sessionId: string): SessionPreview {
     .all(sessionId);
 
   for (const msg of msgRow) {
-    try {
-      const data = JSON.parse(msg.data) as MessageDataJson;
+    const data = tryParseJson<MessageDataJson>(msg.data);
+    if (!data) {
+      continue;
+    }
 
-      if (!model && data.role === "assistant" && data.modelID) {
-        model = data.modelID;
-      }
+    if (!model && data.role === "assistant" && data.modelID) {
+      model = data.modelID;
+    }
 
-      if (!firstMessage && data.role === "user") {
-        // Get text parts for this message
-        const parts = db
-          .query<{ data: string }>(
-            "SELECT data FROM part WHERE message_id = ? ORDER BY id ASC",
-          )
-          .all(msg.id);
+    if (!firstMessage && data.role === "user") {
+      // Get text parts for this message
+      const parts = db
+        .query<{ data: string }>("SELECT data FROM part WHERE message_id = ? ORDER BY id ASC")
+        .all(msg.id);
 
-        for (const part of parts) {
-          try {
-            const partData = JSON.parse(part.data) as PartDataJson;
-            if (partData.type === "text" && partData.text) {
-              firstMessage = partData.text.slice(0, 200);
-              break;
-            }
-          } catch {
-            // Skip malformed part data
-          }
+      for (const part of parts) {
+        const partData = tryParseJson<PartDataJson>(part.data);
+        if (partData?.type === "text" && partData.text) {
+          firstMessage = partData.text.slice(0, 200);
+          break;
         }
       }
+    }
 
-      if (firstMessage && model) {
-        break;
-      }
-    } catch {
-      // Skip malformed data
+    if (firstMessage && model) {
+      break;
     }
   }
 
