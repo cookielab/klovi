@@ -120,6 +120,15 @@ describe("getToolSummary", () => {
   test("Unknown → empty string", () => {
     expect(getToolSummary(makeCall({ name: "SomeNewTool", input: {} }))).toBe("");
   });
+
+  test("uses plugin summary extractor when pluginId is provided", () => {
+    expect(
+      getToolSummary(
+        makeCall({ name: "command_execution", input: { command: "echo 'hello world'" } }),
+        "codex-cli",
+      ),
+    ).toBe("echo 'hello world'");
+  });
 });
 
 describe("formatToolInput", () => {
@@ -149,6 +158,15 @@ describe("formatToolInput", () => {
     expect(formatToolInput(makeCall({ name: "Read", input: { file_path: "/b.ts" } }))).toBe(
       "/b.ts",
     );
+  });
+
+  test("uses plugin input formatter when pluginId is provided", () => {
+    expect(
+      formatToolInput(
+        makeCall({ name: "command_execution", input: { command: "ls -la" } }),
+        "codex-cli",
+      ),
+    ).toBe("ls -la");
   });
 
   test("Write → file + truncated content", () => {

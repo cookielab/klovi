@@ -1,4 +1,5 @@
 import type { ToolCallWithResult } from "../../../shared/types.ts";
+import { getFrontendPlugin } from "../../plugin-registry.ts";
 import { CodeBlock } from "../ui/CodeBlock.tsx";
 import { CollapsibleSection } from "../ui/CollapsibleSection.tsx";
 import { DiffView } from "../ui/DiffView.tsx";
@@ -24,13 +25,21 @@ function isEditWithDiff(call: ToolCallWithResult): boolean {
   );
 }
 
-function isJsonFallbackInput(call: ToolCallWithResult): boolean {
-  return !(call.name in INPUT_FORMATTERS);
+function hasInputFormatter(call: ToolCallWithResult, pluginId?: string): boolean {
+  if (pluginId) {
+    const plugin = getFrontendPlugin(pluginId);
+    if (plugin?.inputFormatters[call.name]) return true;
+  }
+  return call.name in INPUT_FORMATTERS;
 }
 
-function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
-  const formattedInput = formatToolInput(call);
-  const jsonInput = isJsonFallbackInput(call);
+function isJsonFallbackInput(call: ToolCallWithResult, pluginId?: string): boolean {
+  return !hasInputFormatter(call, pluginId);
+}
+
+function DefaultToolContent({ call, pluginId }: { call: ToolCallWithResult; pluginId?: string }) {
+  const formattedInput = formatToolInput(call, pluginId);
+  const jsonInput = isJsonFallbackInput(call, pluginId);
 
   return (
     <>
@@ -51,8 +60,8 @@ function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
   );
 }
 
-export function ToolCall({ call, sessionId, project, pluginId: _pluginId }: ToolCallProps) {
-  const summary = getToolSummary(call);
+export function ToolCall({ call, sessionId, project, pluginId }: ToolCallProps) {
+  const summary = getToolSummary(call, pluginId);
   const mcpServer = getMcpServer(call.name);
   const skillName = getSkillName(call);
   const hasSubAgent = call.name === "Task" && call.subAgentId && sessionId && project;
@@ -94,7 +103,7 @@ export function ToolCall({ call, sessionId, project, pluginId: _pluginId }: Tool
         ) : call.name === "Bash" ? (
           <BashToolContent call={call} />
         ) : (
-          <DefaultToolContent call={call} />
+          <DefaultToolContent call={call} pluginId={pluginId} />
         )}
       </CollapsibleSection>
     </div>
@@ -171,7 +180,12 @@ const SUMMARY_EXTRACTORS: Record<string, SummaryExtractor> = {
   ...interactionSummaryExtractors,
 };
 
-export function getToolSummary(call: ToolCallWithResult): string {
+export function getToolSummary(call: ToolCallWithResult, pluginId?: string): string {
+  if (pluginId) {
+    const plugin = getFrontendPlugin(pluginId);
+    const pluginExtractor = plugin?.summaryExtractors[call.name];
+    if (pluginExtractor) return pluginExtractor(call.input);
+  }
   if (call.name.startsWith("mcp__")) {
     return call.name.split("__").slice(2).join(" > ") || "";
   }
@@ -301,7 +315,12 @@ const INPUT_FORMATTERS: Record<string, InputFormatter> = {
   ...interactionInputFormatters,
 };
 
-export function formatToolInput(call: ToolCallWithResult): string {
+export function formatToolInput(call: ToolCallWithResult, pluginId?: string): string {
+  if (pluginId) {
+    const plugin = getFrontendPlugin(pluginId);
+    const pluginFormatter = plugin?.inputFormatters[call.name];
+    if (pluginFormatter) return pluginFormatter(call.input);
+  }
   const formatter = INPUT_FORMATTERS[call.name];
   return formatter ? formatter(call.input) : JSON.stringify(call.input, null, 2);
 }

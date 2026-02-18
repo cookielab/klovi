@@ -32,6 +32,7 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
       turns={session.turns}
       sessionId={sessionId}
       project={project}
+      pluginId={session.pluginId}
       planSessionId={session.planSessionId}
       implSessionId={session.implSessionId}
     />

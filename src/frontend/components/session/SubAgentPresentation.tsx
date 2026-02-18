@@ -39,6 +39,7 @@ export function SubAgentPresentation({
       onExit={onExit}
       sessionId={sessionId}
       project={project}
+      pluginId={data.session.pluginId}
       isSubAgent
     />
   );

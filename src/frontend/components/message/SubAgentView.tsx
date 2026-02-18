@@ -29,6 +29,12 @@ export function SubAgentView({ sessionId, project, agentId }: SubAgentViewProps)
     return <div className="subagent-empty">No sub-agent conversation data available.</div>;
 
   return (
-    <MessageList turns={data.session.turns} sessionId={sessionId} project={project} isSubAgent />
+    <MessageList
+      turns={data.session.turns}
+      sessionId={sessionId}
+      project={project}
+      pluginId={data.session.pluginId}
+      isSubAgent
+    />
   );
 }
