@@ -14,6 +14,7 @@ export interface SessionSummary {
   model: string;
   gitBranch: string;
   sessionType?: "plan" | "implementation";
+  pluginId?: string;
 }
 
 export interface Session {
@@ -22,6 +23,7 @@ export interface Session {
   turns: Turn[];
   planSessionId?: string;
   implSessionId?: string;
+  pluginId?: string;
 }
 
 export type Turn = UserTurn | AssistantTurn | SystemTurn | ParseErrorTurn;
@@ -106,6 +108,7 @@ export interface ToolResultImage {
 export interface GlobalSessionResult extends SessionSummary {
   encodedPath: string;
   projectName: string;
+  pluginId?: string;
 }
 
 export interface ModelTokenUsage {
