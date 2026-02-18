@@ -10,22 +10,36 @@ interface TableColumn {
   name: string;
 }
 
-function tableExists(db: SqliteDb, tableName: string): boolean {
-  const row = db
-    .query<{ cnt: number }>(
-      "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name=?",
-    )
-    .get(tableName);
-  return (row?.cnt ?? 0) > 0;
-}
-
-function getColumns(db: SqliteDb, tableName: string): string[] {
+function getColumns(db: SqliteDb, tableName: string): Set<string> {
   const rows = db.query<TableColumn>(`PRAGMA table_info(${tableName})`).all();
-  return rows.map((r) => r.name);
+  return new Set(rows.map((r) => r.name));
 }
 
-function hasRequiredTables(db: SqliteDb): boolean {
-  return tableExists(db, "session") && tableExists(db, "message") && tableExists(db, "part");
+interface OpenCodeSchema {
+  hasProjectTable: boolean;
+  hasRequiredTables: boolean;
+  projectColumns: Set<string>;
+  sessionColumns: Set<string>;
+}
+
+function inspectSchema(db: SqliteDb): OpenCodeSchema {
+  const tableRows = db
+    .query<{ name: string }>("SELECT name FROM sqlite_master WHERE type='table'")
+    .all();
+  const tables = new Set(tableRows.map((row) => row.name));
+
+  const hasSessionTable = tables.has("session");
+  const hasMessageTable = tables.has("message");
+  const hasPartTable = tables.has("part");
+  const hasProjectTable = tables.has("project");
+  const hasRequiredTables = hasSessionTable && hasMessageTable && hasPartTable;
+
+  return {
+    hasProjectTable,
+    hasRequiredTables,
+    projectColumns: hasProjectTable ? getColumns(db, "project") : new Set<string>(),
+    sessionColumns: hasSessionTable ? getColumns(db, "session") : new Set<string>(),
+  };
 }
 
 // --- Row types ---
@@ -73,17 +87,16 @@ export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
   if (!db) return [];
 
   try {
-    if (!hasRequiredTables(db)) return [];
-
-    const hasProjectTable = tableExists(db, "project");
+    const schema = inspectSchema(db);
+    if (!schema.hasRequiredTables) return [];
 
     // Try to discover projects from the project table first
-    if (hasProjectTable) {
-      return discoverFromProjectTable(db);
+    if (schema.hasProjectTable) {
+      return discoverFromProjectTable(db, schema);
     }
 
     // Fallback: discover from session directories
-    return discoverFromSessions(db);
+    return discoverFromSessions(db, schema);
   } catch {
     return [];
   } finally {
@@ -91,14 +104,13 @@ export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
   }
 }
 
-function discoverFromProjectTable(db: SqliteDb): PluginProject[] {
-  const cols = getColumns(db, "project");
-  const hasWorktree = cols.includes("worktree");
-  const hasName = cols.includes("name");
+function discoverFromProjectTable(db: SqliteDb, schema: OpenCodeSchema): PluginProject[] {
+  const hasWorktree = schema.projectColumns.has("worktree");
+  const hasName = schema.projectColumns.has("name");
 
   if (!hasWorktree) {
     // Can't determine project paths without worktree
-    return discoverFromSessions(db);
+    return discoverFromSessions(db, schema);
   }
 
   const selectName = hasName ? "p.name" : "NULL as name";
@@ -126,10 +138,9 @@ function discoverFromProjectTable(db: SqliteDb): PluginProject[] {
   }));
 }
 
-function discoverFromSessions(db: SqliteDb): PluginProject[] {
-  const cols = getColumns(db, "session");
-  const hasDirectory = cols.includes("directory");
-  const hasProjectId = cols.includes("project_id");
+function discoverFromSessions(db: SqliteDb, schema: OpenCodeSchema): PluginProject[] {
+  const hasDirectory = schema.sessionColumns.has("directory");
+  const hasProjectId = schema.sessionColumns.has("project_id");
 
   if (!hasDirectory && !hasProjectId) return [];
 
@@ -158,12 +169,10 @@ function discoverFromSessions(db: SqliteDb): PluginProject[] {
 
 // --- Session listing ---
 
-function querySessionRows(db: SqliteDb, nativeId: string): SessionRow[] {
-  const hasProjectTable = tableExists(db, "project");
-  const sessionCols = getColumns(db, "session");
-  const titleCol = sessionCols.includes("title") ? "title" : "''";
-  const slugCol = sessionCols.includes("slug") ? "slug" : "id";
-  const whereCol = hasProjectTable ? "project_id" : "directory";
+function querySessionRows(db: SqliteDb, schema: OpenCodeSchema, nativeId: string): SessionRow[] {
+  const titleCol = schema.sessionColumns.has("title") ? "title" : "''";
+  const slugCol = schema.sessionColumns.has("slug") ? "slug" : "id";
+  const whereCol = schema.hasProjectTable ? "project_id" : "directory";
 
   return db
     .query<SessionRow>(
@@ -196,8 +205,9 @@ export async function listOpenCodeSessions(nativeId: string): Promise<SessionSum
   if (!db) return [];
 
   try {
-    if (!hasRequiredTables(db)) return [];
-    const sessionRows = querySessionRows(db, nativeId);
+    const schema = inspectSchema(db);
+    if (!schema.hasRequiredTables) return [];
+    const sessionRows = querySessionRows(db, schema, nativeId);
     return sessionRows.map((row) => sessionRowToSummary(db, row));
   } catch {
     return [];
