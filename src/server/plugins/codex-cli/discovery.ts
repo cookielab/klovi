@@ -4,6 +4,7 @@ import type { SessionSummary } from "../../../shared/types.ts";
 import { sortByIsoDesc } from "../../iso-time.ts";
 import { scanCodexSessions, type SessionFileInfo } from "./session-index.ts";
 import { readTextPrefix } from "../shared/discovery-utils.ts";
+import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
 interface CodexEvent {
   type: string;
@@ -51,23 +52,25 @@ export async function discoverCodexProjects(): Promise<PluginProject[]> {
 }
 
 function extractFirstUserMessage(text: string): string | null {
-  const lines = text.split("\n");
-  for (const line of lines.slice(1)) {
-    if (!line.trim()) continue;
-    try {
-      const event = JSON.parse(line) as CodexEvent;
+  let message: string | null = null;
+
+  iterateJsonl(
+    text,
+    ({ parsed }) => {
+      const event = parsed as CodexEvent;
       if (
         event.type === "item.completed" &&
         event.item?.type === "agent_message" &&
         event.item.text
       ) {
-        return event.item.text.slice(0, 200);
+        message = event.item.text.slice(0, 200);
+        return false;
       }
-    } catch {
-      // Skip malformed lines
-    }
-  }
-  return null;
+    },
+    { startAt: 1 },
+  );
+
+  return message;
 }
 
 export async function listCodexSessions(nativeId: string): Promise<SessionSummary[]> {
