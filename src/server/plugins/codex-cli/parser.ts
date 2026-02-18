@@ -8,6 +8,7 @@ import type {
   Turn,
   UserTurn,
 } from "../../../shared/types.ts";
+import { epochSecondsToIso } from "../../iso-time.ts";
 import { findCodexSessionFileById, isCodexSessionMeta } from "./session-index.ts";
 import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
@@ -247,7 +248,7 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
 
   const metaInfo = isCodexSessionMeta(meta) ? meta : null;
   const model = metaInfo?.model || "unknown";
-  const timestamp = metaInfo ? new Date(metaInfo.timestamps.created * 1000).toISOString() : "";
+  const timestamp = metaInfo ? epochSecondsToIso(metaInfo.timestamps.created) : "";
 
   const turns = buildCodexTurns(events, model, timestamp);
 

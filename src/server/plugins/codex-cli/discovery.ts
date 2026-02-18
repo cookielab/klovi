@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
-import { sortByIsoDesc } from "../../iso-time.ts";
+import { epochSecondsToIso, sortByIsoDesc } from "../../iso-time.ts";
 import { scanCodexSessions, type SessionFileInfo } from "./session-index.ts";
 import { readTextPrefix } from "../shared/discovery-utils.ts";
 import { iterateJsonl } from "../shared/jsonl-utils.ts";
@@ -90,7 +90,7 @@ export async function listCodexSessions(nativeId: string): Promise<SessionSummar
       firstMessage ||= "Codex session";
     }
 
-    const timestamp = new Date(s.meta.timestamps.created * 1000).toISOString();
+    const timestamp = epochSecondsToIso(s.meta.timestamps.created);
 
     sessions.push({
       sessionId: s.meta.uuid,

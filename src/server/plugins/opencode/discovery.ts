@@ -1,5 +1,6 @@
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
+import { epochMsToIso } from "../../iso-time.ts";
 import { openOpenCodeDb, type SqliteDb } from "./db.ts";
 
 export { getOpenCodeDbPath as getDbPath } from "./db.ts";
@@ -139,7 +140,7 @@ function discoverFromProjectTable(db: SqliteDb, schema: OpenCodeSchema): PluginP
     resolvedPath: row.worktree,
     displayName: row.name || row.worktree,
     sessionCount: row.session_count,
-    lastActivity: new Date(row.last_activity).toISOString(),
+    lastActivity: epochMsToIso(row.last_activity),
   }));
 }
 
@@ -168,7 +169,7 @@ function discoverFromSessions(db: SqliteDb, schema: OpenCodeSchema): PluginProje
     resolvedPath: row.group_key,
     displayName: row.group_key,
     sessionCount: row.session_count,
-    lastActivity: new Date(row.last_activity).toISOString(),
+    lastActivity: epochMsToIso(row.last_activity),
   }));
 }
 
@@ -196,7 +197,7 @@ function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
 
   return {
     sessionId: row.id,
-    timestamp: new Date(row.time_created).toISOString(),
+    timestamp: epochMsToIso(row.time_created),
     slug: row.slug,
     firstMessage,
     model: preview.model || "unknown",
