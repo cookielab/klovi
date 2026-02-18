@@ -59,6 +59,8 @@ Klovi/
         │   │   ├── UserMessage.tsx   # User bubble: text, commands, attachments
         │   │   ├── AssistantMessage.tsx  # Assistant: thinking + text + tool calls
         │   │   ├── ToolCall.tsx      # Collapsible tool call with smart summary
+        │   │   ├── SmartToolOutput.tsx  # Tool output: format detection, images, lightbox
+        │   │   ├── BashToolContent.tsx  # Bash tool input/output display
         │   │   ├── ThinkingBlock.tsx # Collapsible thinking/reasoning block
         │   │   └── SubAgentView.tsx  # Inline sub-agent session display
         │   ├── session/
@@ -70,19 +72,26 @@ Klovi/
         │   │   ├── ProjectList.tsx   # Home view: all projects
         │   │   ├── SessionList.tsx   # Sidebar: sessions for selected project
         │   │   └── HiddenProjectList.tsx  # Hidden projects management view
+        │   ├── search/
+        │   │   └── SearchModal.tsx   # Global session search (Cmd+K)
         │   └── ui/
         │       ├── MarkdownRenderer.tsx  # react-markdown + GFM + file ref detection
         │       ├── CodeBlock.tsx     # Syntax-highlighted code (Prism)
-        │       └── CollapsibleSection.tsx  # Reusable expand/collapse
+        │       ├── CollapsibleSection.tsx  # Reusable expand/collapse
+        │       ├── DiffView.tsx      # Side-by-side diff display for Edit tool
+        │       ├── ErrorBoundary.tsx  # React error boundary with retry
+        │       └── ImageLightbox.tsx  # Fullscreen image lightbox overlay
         ├── hooks/
         │   ├── useTheme.ts          # Light/dark/system theme + font size persistence
+        │   ├── useFetch.ts          # Generic data fetching hook with loading/error state
         │   ├── useHiddenProjects.ts  # Hidden projects state + localStorage persistence
         │   ├── usePresentationMode.ts   # Step-through state machine
         │   └── useKeyboard.ts       # Arrow/Space/Esc/F key bindings
         └── utils/
             ├── time.ts              # Relative time formatting + timestamp display
             ├── model.ts             # Model name shortening (Opus/Sonnet/Haiku)
-            └── project.ts           # Project path utilities
+            ├── project.ts           # Project path utilities
+            └── format-detector.ts   # Auto-detect output format (JSON, XML, diff, etc.)
 ```
 
 ## Data Flow
@@ -169,6 +178,7 @@ App
 │       │       │   ├── ThinkingBlock(s)
 │       │       │   ├── MarkdownRenderer (text blocks)
 │       │       │   ├── ToolCall(s)
+│       │       │   │   └── SmartToolOutput (format detection, images → ImageLightbox)
 │       │       │   └── SubAgentView (inline sub-agent)
 │       │       └── SystemMessage (inline)
 │       ├── SubAgentView         (sub-agent route, normal mode)

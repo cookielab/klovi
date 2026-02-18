@@ -54,7 +54,7 @@ Collapsible tool call display. Key features:
 - **Input display** - JSON-formatted tool input
 - **Result display** - monospace text, truncated at 5000 chars
 - **Error styling** - red text for `isError: true` results
-- **Image results** - base64 images rendered as thumbnails with zoom
+- **Image results** - base64 images rendered as thumbnails, click to open in `ImageLightbox`
 
 #### Tool Summary Mapping
 
@@ -173,6 +173,20 @@ Syntax-highlighted code using `react-syntax-highlighter` with Prism (oneDark the
 ### CollapsibleSection (`src/frontend/components/ui/CollapsibleSection.tsx`)
 
 Reusable expand/collapse wrapper with animated disclosure. Max height 500px with scroll when expanded.
+
+### ImageLightbox (`src/frontend/components/ui/ImageLightbox.tsx`)
+
+Fullscreen image lightbox overlay. Displays an image centered on a dark backdrop. Click anywhere or press Escape to dismiss. Animates in/out with fade + scale transition (200ms).
+
+Used by `SmartToolOutput` for tool result images (e.g. screenshots from chrome-devtools).
+
+### DiffView (`src/frontend/components/ui/DiffView.tsx`)
+
+Side-by-side diff display for Edit tool results. Shows old and new strings with syntax highlighting.
+
+### ErrorBoundary (`src/frontend/components/ui/ErrorBoundary.tsx`)
+
+React error boundary with retry functionality. Two variants: view-level (full-page fallback) and inline (per-component fallback with retry button).
 
 ## Hooks
 
