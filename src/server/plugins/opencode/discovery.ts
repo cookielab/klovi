@@ -1,35 +1,8 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
-import { getOpenCodeDir } from "../../config.ts";
+import { openOpenCodeDb, type SqliteDb } from "./db.ts";
 
-// --- DB path helpers ---
-
-export function getDbPath(): string {
-  return join(getOpenCodeDir(), "opencode.db");
-}
-
-interface SqliteQuery<T = unknown> {
-  all(...params: any[]): any[];
-  get(...params: any[]): any;
-}
-
-interface SqliteDb {
-  query<T = unknown>(sql: string): SqliteQuery<T>;
-  close(): void;
-}
-
-async function openDb(): Promise<SqliteDb | null> {
-  const dbPath = getDbPath();
-  if (!existsSync(dbPath)) return null;
-  try {
-    const sqlite = await import("bun:sqlite");
-    return new sqlite.Database(dbPath, { readonly: true });
-  } catch {
-    return null;
-  }
-}
+export { getOpenCodeDbPath as getDbPath } from "./db.ts";
 
 // --- Schema introspection ---
 
@@ -96,7 +69,7 @@ interface PartDataJson {
 // --- Discovery ---
 
 export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
-  const db = await openDb();
+  const db = await openOpenCodeDb();
   if (!db) return [];
 
   try {
@@ -130,9 +103,9 @@ function discoverFromProjectTable(db: SqliteDb): PluginProject[] {
 
   const selectName = hasName ? "p.name" : "NULL as name";
 
-    const rows = db
-      .query<ProjectRow & { session_count: number; last_activity: number }>(
-        `SELECT p.id, p.worktree, ${selectName},
+  const rows = db
+    .query<ProjectRow & { session_count: number; last_activity: number }>(
+      `SELECT p.id, p.worktree, ${selectName},
               count(s.id) as session_count,
               coalesce(max(s.time_updated), max(s.time_created), p.time_created) as last_activity
        FROM project p
@@ -219,7 +192,7 @@ function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
 }
 
 export async function listOpenCodeSessions(nativeId: string): Promise<SessionSummary[]> {
-  const db = await openDb();
+  const db = await openOpenCodeDb();
   if (!db) return [];
 
   try {
