@@ -138,6 +138,7 @@ async function handleRequest(
 
 export function startServer(
   port: number,
+  host: string,
   routes: Route[],
   staticDir: string,
   embeddedAssets?: Map<string, EmbeddedAsset>,
@@ -164,7 +165,7 @@ export function startServer(
     }
   });
 
-  server.listen(port);
+  server.listen(port, host);
 }
 
 async function writeResponse(
