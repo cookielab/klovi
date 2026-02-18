@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
-import type { GlobalSessionResult, Project, SessionSummary } from "../../../shared/types.ts";
+import type { SessionSummary } from "../../../shared/types.ts";
 import { getProjectsDir } from "../../config.ts";
 import { cleanCommandMessage } from "../../parser/command-message.ts";
 import type { RawContentBlock, RawLine } from "../../parser/types.ts";
@@ -47,48 +47,6 @@ export async function discoverClaudeProjects(): Promise<PluginProject[]> {
   return projects;
 }
 
-/** @deprecated Use discoverClaudeProjects() instead — kept for backward compatibility */
-export async function discoverProjects(): Promise<Project[]> {
-  const entries = await readdir(getProjectsDir(), { withFileTypes: true });
-  const projects: Project[] = [];
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-
-    const projectDir = join(getProjectsDir(), entry.name);
-    const sessionFiles = (await readdir(projectDir)).filter((f) => f.endsWith(".jsonl"));
-    if (sessionFiles.length === 0) continue;
-
-    let lastActivity = "";
-    let fullPath = "";
-
-    // Read first session to get cwd for the real path
-    for (const sf of sessionFiles) {
-      const fileStat = await stat(join(projectDir, sf));
-      const mtime = fileStat.mtime.toISOString();
-      if (mtime > lastActivity) lastActivity = mtime;
-
-      if (!fullPath) {
-        fullPath = await extractCwd(join(projectDir, sf));
-      }
-    }
-
-    // Decode the encoded path back to a readable name
-    const name = fullPath || decodeEncodedPath(entry.name);
-
-    projects.push({
-      encodedPath: entry.name,
-      name,
-      fullPath: fullPath || decodeEncodedPath(entry.name),
-      sessionCount: sessionFiles.length,
-      lastActivity,
-    });
-  }
-
-  projects.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
-  return projects;
-}
-
 const PLAN_PREFIX = "Implement the following plan";
 
 export async function listClaudeSessions(nativeId: string): Promise<SessionSummary[]> {
@@ -107,11 +65,6 @@ export async function listClaudeSessions(nativeId: string): Promise<SessionSumma
 
   sessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   return sessions;
-}
-
-/** @deprecated Use listClaudeSessions() instead — kept for backward compatibility */
-export async function listSessions(encodedPath: string): Promise<SessionSummary[]> {
-  return listClaudeSessions(encodedPath);
 }
 
 export function classifySessionTypes(sessions: SessionSummary[]): void {
@@ -142,7 +95,7 @@ export async function extractCwd(filePath: string): Promise<string> {
       const obj: RawLine = JSON.parse(line);
       if (obj.cwd) return obj.cwd;
     } catch {
-      // Malformed lines skipped here; full errors reported by parseSession()
+      // Malformed lines skipped here; full errors reported by loadClaudeSession()
     }
   }
   return "";
@@ -207,7 +160,7 @@ export async function extractSessionMeta(
       processMetaLine(obj, meta);
       if (isMetaComplete(meta)) break;
     } catch {
-      // Malformed lines skipped here; full errors reported by parseSession()
+      // Malformed lines skipped here; full errors reported by loadClaudeSession()
     }
   }
 
@@ -221,47 +174,6 @@ export async function extractSessionMeta(
     gitBranch: meta.gitBranch || "",
   };
 }
-
-function projectNameFromPath(fullPath: string): string {
-  const parts = fullPath.split("/").filter(Boolean);
-  return parts.slice(-2).join("/");
-}
-
-export function aggregateSessions(
-  projects: Project[],
-  sessionsByProject: Map<string, SessionSummary[]>,
-): GlobalSessionResult[] {
-  const results: GlobalSessionResult[] = [];
-
-  for (const project of projects) {
-    const sessions = sessionsByProject.get(project.encodedPath) ?? [];
-    const projectName = projectNameFromPath(project.name);
-
-    for (const session of sessions) {
-      results.push({
-        ...session,
-        encodedPath: project.encodedPath,
-        projectName,
-      });
-    }
-  }
-
-  results.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-  return results;
-}
-
-export async function listAllSessions(): Promise<GlobalSessionResult[]> {
-  const projects = await discoverProjects();
-  const sessionsByProject = new Map<string, SessionSummary[]>();
-
-  for (const project of projects) {
-    const sessions = await listSessions(project.encodedPath);
-    sessionsByProject.set(project.encodedPath, sessions);
-  }
-
-  return aggregateSessions(projects, sessionsByProject);
-}
-
 export function decodeEncodedPath(encoded: string): string {
   // Encoded path has leading dash and dashes for slashes
   // e.g. "-Users-foo-Workspace-bar" -> "/Users/foo/Workspace/bar"

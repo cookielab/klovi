@@ -55,11 +55,6 @@ export async function loadClaudeSession(
   };
 }
 
-/** @deprecated Use loadClaudeSession() instead -- kept for backward compatibility */
-export async function parseSession(sessionId: string, encodedPath: string): Promise<ParsedSession> {
-  return loadClaudeSession(encodedPath, sessionId);
-}
-
 export async function parseSubAgentSession(
   sessionId: string,
   encodedPath: string,
