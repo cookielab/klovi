@@ -20,9 +20,7 @@ if (showHelp) {
 
 const resolvedDir = getClaudeCodeDir();
 if (!existsSync(resolvedDir)) {
-  console.error(`Error: Claude Code directory not found: ${resolvedDir}`);
-  console.error("Hint: use --claude-code-dir <path> to specify a custom location.");
-  process.exit(1);
+  console.warn(`Warning: Claude Code directory not found: ${resolvedDir}`);
 }
 
 if (!acceptRisks) {

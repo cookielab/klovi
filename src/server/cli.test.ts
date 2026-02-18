@@ -35,6 +35,28 @@ describe("parseCliArgs", () => {
     expect(result.acceptRisks).toBe(true);
     expect(result.showHelp).toBe(true);
   });
+
+  test("parses --codex-cli-dir without crashing", () => {
+    const result = parseCliArgs(["--codex-cli-dir", "/tmp/codex"]);
+    expect(result.port).toBe(3583);
+  });
+
+  test("parses --opencode-dir without crashing", () => {
+    const result = parseCliArgs(["--opencode-dir", "/tmp/opencode"]);
+    expect(result.port).toBe(3583);
+  });
+
+  test("parses all tool dir flags together", () => {
+    const result = parseCliArgs([
+      "--claude-code-dir",
+      "/tmp/claude",
+      "--codex-cli-dir",
+      "/tmp/codex",
+      "--opencode-dir",
+      "/tmp/opencode",
+    ]);
+    expect(result.port).toBe(3583);
+  });
 });
 
 describe("createRoutes", () => {
