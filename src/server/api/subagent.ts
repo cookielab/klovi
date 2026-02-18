@@ -6,8 +6,22 @@ export async function handleSubAgent(
   agentId: string,
   encodedPath: string,
 ): Promise<Response> {
+  const parsed = parseSessionId(sessionId);
+  if (parsed.pluginId !== "claude-code") {
+    return Response.json(
+      { error: "sessionId must include claude-code prefix for sub-agent sessions" },
+      { status: 400 },
+    );
+  }
+
+  if (!parsed.rawSessionId) {
+    return Response.json(
+      { error: "sessionId must include a raw session id after claude-code::" },
+      { status: 400 },
+    );
+  }
+
   try {
-    const parsed = parseSessionId(sessionId);
     const session = await parseSubAgentSession(parsed.rawSessionId, encodedPath, agentId);
     return Response.json({ session });
   } catch {
