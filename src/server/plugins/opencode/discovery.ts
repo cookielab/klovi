@@ -80,6 +80,11 @@ interface PartDataJson {
   text?: string;
 }
 
+interface SessionPreview {
+  firstMessage: string;
+  model: string;
+}
+
 // --- Discovery ---
 
 export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
@@ -186,15 +191,15 @@ function querySessionRows(db: SqliteDb, schema: OpenCodeSchema, nativeId: string
 }
 
 function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
-  const firstMessage = row.title || getFirstUserMessage(db, row.id) || "OpenCode session";
-  const model = getSessionModel(db, row.id);
+  const preview = getSessionPreview(db, row.id);
+  const firstMessage = row.title || preview.firstMessage || "OpenCode session";
 
   return {
     sessionId: row.id,
     timestamp: new Date(row.time_created).toISOString(),
     slug: row.slug,
     firstMessage,
-    model: model || "unknown",
+    model: preview.model || "unknown",
     gitBranch: "",
     pluginId: "opencode",
   };
@@ -216,48 +221,10 @@ export async function listOpenCodeSessions(nativeId: string): Promise<SessionSum
   }
 }
 
-function getFirstUserMessage(db: SqliteDb, sessionId: string): string | null {
-  // Get the first message for this session
-  const msgRow = db
-    .query<MessageRow>(
-      `SELECT id, session_id, time_created, data FROM message
-       WHERE session_id = ?
-       ORDER BY time_created ASC
-       LIMIT 5`,
-    )
-    .all(sessionId);
+function getSessionPreview(db: SqliteDb, sessionId: string): SessionPreview {
+  let firstMessage = "";
+  let model = "";
 
-  for (const msg of msgRow) {
-    try {
-      const data = JSON.parse(msg.data) as MessageDataJson;
-      if (data.role !== "user") continue;
-
-      // Get text parts for this message
-      const parts = db
-        .query<{ data: string }>(
-          "SELECT data FROM part WHERE message_id = ? ORDER BY id ASC",
-        )
-        .all(msg.id);
-
-      for (const part of parts) {
-        try {
-          const partData = JSON.parse(part.data) as PartDataJson;
-          if (partData.type === "text" && partData.text) {
-            return partData.text.slice(0, 200);
-          }
-        } catch {
-          // Skip malformed part data
-        }
-      }
-    } catch {
-      // Skip malformed message data
-    }
-  }
-
-  return null;
-}
-
-function getSessionModel(db: SqliteDb, sessionId: string): string {
   const msgRow = db
     .query<MessageRow>(
       `SELECT id, session_id, time_created, data FROM message
@@ -270,13 +237,39 @@ function getSessionModel(db: SqliteDb, sessionId: string): string {
   for (const msg of msgRow) {
     try {
       const data = JSON.parse(msg.data) as MessageDataJson;
-      if (data.role === "assistant" && data.modelID) {
-        return data.modelID;
+
+      if (!model && data.role === "assistant" && data.modelID) {
+        model = data.modelID;
+      }
+
+      if (!firstMessage && data.role === "user") {
+        // Get text parts for this message
+        const parts = db
+          .query<{ data: string }>(
+            "SELECT data FROM part WHERE message_id = ? ORDER BY id ASC",
+          )
+          .all(msg.id);
+
+        for (const part of parts) {
+          try {
+            const partData = JSON.parse(part.data) as PartDataJson;
+            if (partData.type === "text" && partData.text) {
+              firstMessage = partData.text.slice(0, 200);
+              break;
+            }
+          } catch {
+            // Skip malformed part data
+          }
+        }
+      }
+
+      if (firstMessage && model) {
+        break;
       }
     } catch {
       // Skip malformed data
     }
   }
 
-  return "";
+  return { firstMessage, model };
 }
