@@ -65,14 +65,10 @@ export interface CodexEvent {
   };
 }
 
-let toolUseCounter = 0;
-
-function nextToolUseId(): string {
-  toolUseCounter++;
-  return `codex-tool-${toolUseCounter}`;
-}
-
-function buildToolCallFromItem(item: CodexItem): ToolCallWithResult | null {
+function buildToolCallFromItem(
+  item: CodexItem,
+  nextToolUseId: () => string,
+): ToolCallWithResult | null {
   switch (item.type) {
     case "command_execution":
       return {
@@ -137,7 +133,19 @@ function itemToContentBlock(item: CodexItem): ContentBlock | null {
   if (item.type === "reasoning") {
     return { type: "thinking", block: { text: item.text } };
   }
-  const toolCall = buildToolCallFromItem(item);
+  return null;
+}
+
+function itemToContentBlockWithToolIds(
+  item: CodexItem,
+  nextToolUseId: () => string,
+): ContentBlock | null {
+  const basicBlock = itemToContentBlock(item);
+  if (basicBlock) {
+    return basicBlock;
+  }
+
+  const toolCall = buildToolCallFromItem(item, nextToolUseId);
   if (toolCall) {
     return { type: "tool_call", call: toolCall };
   }
@@ -169,6 +177,7 @@ function handleItemCompleted(
   event: CodexEvent,
   model: string,
   timestamp: string,
+  nextToolUseId: () => string,
 ): void {
   if (!event.item) return;
 
@@ -176,7 +185,7 @@ function handleItemCompleted(
     state.currentAssistant = createAssistantTurn(model, timestamp);
   }
 
-  const block = itemToContentBlock(event.item);
+  const block = itemToContentBlockWithToolIds(event.item, nextToolUseId);
   if (block) {
     state.currentAssistant.contentBlocks.push(block);
   }
@@ -196,8 +205,11 @@ interface TurnBuilderState {
 }
 
 export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string): Turn[] {
-  // Reset counter for each session parse
-  toolUseCounter = 0;
+  let toolUseCounter = 0;
+  const nextToolUseId = () => {
+    toolUseCounter++;
+    return `codex-tool-${toolUseCounter}`;
+  };
 
   const state: TurnBuilderState = {
     turns: [],
@@ -211,7 +223,7 @@ export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: 
     } else if (event.type === "turn.completed") {
       handleTurnCompleted(state, event);
     } else if (event.type === "item.completed") {
-      handleItemCompleted(state, event, model, timestamp);
+      handleItemCompleted(state, event, model, timestamp, nextToolUseId);
     }
   }
 
