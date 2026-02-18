@@ -1,6 +1,8 @@
+import { useCallback, useState } from "react";
 import type { ToolResultImage } from "../../../shared/types.ts";
 import { detectOutputFormat } from "../../utils/format-detector.ts";
 import { CodeBlock } from "../ui/CodeBlock.tsx";
+import { ImageLightbox } from "../ui/ImageLightbox.tsx";
 import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCall.tsx";
 
 interface SmartToolOutputProps {
@@ -13,6 +15,9 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
   const truncated = truncateOutput(output);
   const wasTruncated = output.length > MAX_OUTPUT_LENGTH;
   const detectedLang = truncated ? detectOutputFormat(truncated) : null;
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  const closeLightbox = useCallback(() => setLightboxSrc(null), []);
 
   if (!output && (!resultImages || resultImages.length === 0)) return null;
 
@@ -29,21 +34,17 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
       {resultImages && resultImages.length > 0 && (
         <div className="tool-result-images">
           {resultImages.map((img, i) => (
-            <a
+            <img
               key={i}
-              href={`data:${img.mediaType};base64,${img.data}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                className="tool-result-image"
-                src={`data:${img.mediaType};base64,${img.data}`}
-                alt={`Tool result ${i + 1}`}
-              />
-            </a>
+              className="tool-result-image"
+              src={`data:${img.mediaType};base64,${img.data}`}
+              alt={`Tool result ${i + 1}`}
+              onClick={() => setLightboxSrc(`data:${img.mediaType};base64,${img.data}`)}
+            />
           ))}
         </div>
       )}
+      {lightboxSrc && <ImageLightbox src={lightboxSrc} onClose={closeLightbox} />}
     </div>
   );
 }
