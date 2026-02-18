@@ -2,6 +2,10 @@ import {
   codexInputFormatters,
   codexSummaryExtractors,
 } from "../server/plugins/codex-cli/extractors.ts";
+import {
+  openCodeInputFormatters,
+  openCodeSummaryExtractors,
+} from "../server/plugins/opencode/extractors.ts";
 
 export type SummaryExtractor = (input: Record<string, unknown>) => string;
 export type InputFormatter = (input: Record<string, unknown>) => string;
@@ -27,4 +31,11 @@ registerFrontendPlugin("codex-cli", {
   displayName: "Codex",
   summaryExtractors: codexSummaryExtractors,
   inputFormatters: codexInputFormatters,
+});
+
+// Register OpenCode frontend plugin
+registerFrontendPlugin("opencode", {
+  displayName: "OpenCode",
+  summaryExtractors: openCodeSummaryExtractors,
+  inputFormatters: openCodeInputFormatters,
 });
