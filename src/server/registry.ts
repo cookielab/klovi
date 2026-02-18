@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { PluginRegistry } from "./plugin-registry.ts";
 import { claudeCodePlugin } from "./plugins/claude-code/index.ts";
+import { codexCliPlugin } from "./plugins/codex-cli/index.ts";
 
 export function createRegistry(): PluginRegistry {
   const registry = new PluginRegistry();
@@ -11,7 +12,12 @@ export function createRegistry(): PluginRegistry {
     registry.register(claudeCodePlugin);
   }
 
-  // Codex CLI and OpenCode plugins will be added here later
+  const codexDir = codexCliPlugin.getDefaultDataDir();
+  if (codexDir && existsSync(codexDir)) {
+    registry.register(codexCliPlugin);
+  }
+
+  // OpenCode plugin will be added here later
 
   return registry;
 }
