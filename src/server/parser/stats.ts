@@ -1,158 +1,141 @@
-import { readdir, readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
-import type { DashboardStats, ModelTokenUsage } from "../../shared/types.ts";
-import { getProjectsDir, getStatsCachePath } from "../config.ts";
+import { parseSessionId } from "../../shared/session-id.ts";
+import type { DashboardStats, ModelTokenUsage, SessionSummary, Turn } from "../../shared/types.ts";
+import type { PluginRegistry } from "../plugin-registry.ts";
 import { createRegistry } from "../registry.ts";
 
-interface StatsCacheFile {
-  version: number;
-  totalSessions: number;
-  totalMessages: number;
-  dailyActivity: Array<{
-    date: string;
-    sessionCount: number;
-    toolCallCount: number;
-  }>;
-  modelUsage: Record<
-    string,
-    {
-      inputTokens: number;
-      outputTokens: number;
-      cacheReadInputTokens: number;
-      cacheCreationInputTokens: number;
-    }
-  >;
+const STATS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let statsCache: { expiresAt: number; stats: DashboardStats } | null = null;
+
+export function clearStatsCacheForTests(): void {
+  statsCache = null;
 }
 
-async function loadStatsCache(): Promise<StatsCacheFile | null> {
-  try {
-    const text = await readFile(getStatsCachePath(), "utf-8");
-    const data = JSON.parse(text) as StatsCacheFile;
-    if (data.version !== 2) return null;
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-async function countProjects(): Promise<number> {
-  try {
-    const registry = createRegistry();
-    const projects = await registry.discoverAllProjects();
-    return projects.length;
-  } catch {
-    return 0;
-  }
+function emptyStats(projects = 0): DashboardStats {
+  return {
+    projects,
+    sessions: 0,
+    messages: 0,
+    todaySessions: 0,
+    thisWeekSessions: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheCreationTokens: 0,
+    toolCalls: 0,
+    models: {},
+  };
 }
 
 function toDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function todayDateString(): string {
-  return toDateString(new Date());
-}
-
-function isWithinLastWeek(dateStr: string): boolean {
+function countRecentSessions(sessions: SessionSummary[]): { todaySessions: number; thisWeekSessions: number } {
+  const today = toDateString(new Date());
   const now = new Date();
   const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-  const weekAgoStr = `${weekAgo.getFullYear()}-${String(weekAgo.getMonth() + 1).padStart(2, "0")}-${String(weekAgo.getDate()).padStart(2, "0")}`;
-  return dateStr >= weekAgoStr;
-}
+  const weekAgoStr = toDateString(weekAgo);
 
-async function countRecentSessions(): Promise<{ todaySessions: number; thisWeekSessions: number }> {
-  const today = todayDateString();
-  const projectsDir = getProjectsDir();
   let todaySessions = 0;
   let thisWeekSessions = 0;
 
-  try {
-    const projectDirs = await readdir(projectsDir, { withFileTypes: true });
-    for (const dir of projectDirs) {
-      if (!dir.isDirectory()) continue;
-      const projectPath = join(projectsDir, dir.name);
-      const files = (await readdir(projectPath)).filter((f) => f.endsWith(".jsonl"));
-      for (const file of files) {
-        const fileStat = await stat(join(projectPath, file));
-        const mtimeDate = toDateString(fileStat.mtime);
-        if (mtimeDate === today) todaySessions++;
-        if (isWithinLastWeek(mtimeDate)) thisWeekSessions++;
-      }
-    }
-  } catch {
-    // projects dir doesn't exist or is inaccessible
+  for (const session of sessions) {
+    const d = new Date(session.timestamp);
+    if (Number.isNaN(d.getTime())) continue;
+    const sessionDay = toDateString(d);
+    if (sessionDay === today) todaySessions++;
+    if (sessionDay >= weekAgoStr) thisWeekSessions++;
   }
 
   return { todaySessions, thisWeekSessions };
 }
 
-function buildFromCache(cache: StatsCacheFile, projects: number): DashboardStats {
-  const today = todayDateString();
-  const todayEntry = cache.dailyActivity.find((d) => d.date === today);
-  const thisWeekEntries = cache.dailyActivity.filter((d) => isWithinLastWeek(d.date));
-
-  let inputTokens = 0;
-  let outputTokens = 0;
-  let cacheReadTokens = 0;
-  let cacheCreationTokens = 0;
-  const models: Record<string, ModelTokenUsage> = {};
-
-  for (const [model, usage] of Object.entries(cache.modelUsage)) {
-    inputTokens += usage.inputTokens;
-    outputTokens += usage.outputTokens;
-    cacheReadTokens += usage.cacheReadInputTokens;
-    cacheCreationTokens += usage.cacheCreationInputTokens;
+function ensureModelUsage(models: Record<string, ModelTokenUsage>, model: string): ModelTokenUsage {
+  if (!models[model]) {
     models[model] = {
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-      cacheReadTokens: usage.cacheReadInputTokens,
-      cacheCreationTokens: usage.cacheCreationInputTokens,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
     };
   }
-
-  const toolCalls = cache.dailyActivity.reduce((sum, d) => sum + d.toolCallCount, 0);
-
-  return {
-    projects,
-    sessions: cache.totalSessions,
-    messages: cache.totalMessages,
-    todaySessions: todayEntry?.sessionCount ?? 0,
-    thisWeekSessions: thisWeekEntries.reduce((sum, d) => sum + d.sessionCount, 0),
-    inputTokens,
-    outputTokens,
-    cacheReadTokens,
-    cacheCreationTokens,
-    toolCalls,
-    models,
-  };
+  return models[model]!;
 }
 
-export async function scanStats(): Promise<DashboardStats> {
-  const [cache, projects, recent] = await Promise.all([
-    loadStatsCache(),
-    countProjects(),
-    countRecentSessions(),
-  ]);
+function countVisibleMessages(turns: Turn[]): number {
+  return turns.filter((turn) => turn.kind !== "parse_error").length;
+}
 
-  const base = cache
-    ? buildFromCache(cache, projects)
-    : {
-        projects,
-        sessions: 0,
-        messages: 0,
-        todaySessions: 0,
-        thisWeekSessions: 0,
-        inputTokens: 0,
-        outputTokens: 0,
-        cacheReadTokens: 0,
-        cacheCreationTokens: 0,
-        toolCalls: 0,
-        models: {},
-      };
+async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
+  const projects = await registry.discoverAllProjects().catch(() => []);
+  const stats = emptyStats(projects.length);
 
-  return {
-    ...base,
-    todaySessions: recent.todaySessions,
-    thisWeekSessions: recent.thisWeekSessions,
+  const sessionsWithProject: Array<{
+    project: (typeof projects)[number];
+    session: SessionSummary;
+  }> = [];
+
+  for (const project of projects) {
+    const sessions = await registry.listAllSessions(project).catch(() => []);
+    stats.sessions += sessions.length;
+    for (const session of sessions) {
+      sessionsWithProject.push({ project, session });
+    }
+  }
+
+  const recent = countRecentSessions(sessionsWithProject.map((s) => s.session));
+  stats.todaySessions = recent.todaySessions;
+  stats.thisWeekSessions = recent.thisWeekSessions;
+
+  for (const { project, session } of sessionsWithProject) {
+    if (!session.pluginId) continue;
+
+    const source = project.sources.find((s) => s.pluginId === session.pluginId);
+    if (!source) continue;
+
+    const plugin = registry.getPlugin(session.pluginId);
+    const { rawSessionId } = parseSessionId(session.sessionId);
+    const loaded = await plugin.loadSession(source.nativeId, rawSessionId).catch(() => null);
+    if (!loaded) continue;
+
+    stats.messages += countVisibleMessages(loaded.turns);
+
+    for (const turn of loaded.turns) {
+      if (turn.kind !== "assistant") continue;
+
+      stats.toolCalls += turn.contentBlocks.filter((b) => b.type === "tool_call").length;
+
+      const model = turn.model || session.model || "unknown";
+      const modelUsage = ensureModelUsage(stats.models, model);
+
+      if (!turn.usage) continue;
+
+      stats.inputTokens += turn.usage.inputTokens;
+      stats.outputTokens += turn.usage.outputTokens;
+      stats.cacheReadTokens += turn.usage.cacheReadTokens ?? 0;
+      stats.cacheCreationTokens += turn.usage.cacheCreationTokens ?? 0;
+
+      modelUsage.inputTokens += turn.usage.inputTokens;
+      modelUsage.outputTokens += turn.usage.outputTokens;
+      modelUsage.cacheReadTokens += turn.usage.cacheReadTokens ?? 0;
+      modelUsage.cacheCreationTokens += turn.usage.cacheCreationTokens ?? 0;
+    }
+  }
+
+  return stats;
+}
+
+export async function scanStats(registry: PluginRegistry = createRegistry()): Promise<DashboardStats> {
+  const now = Date.now();
+  if (statsCache && statsCache.expiresAt > now) {
+    return statsCache.stats;
+  }
+
+  const stats = await computeStats(registry);
+  statsCache = {
+    expiresAt: now + STATS_CACHE_TTL_MS,
+    stats,
   };
+  return stats;
 }
