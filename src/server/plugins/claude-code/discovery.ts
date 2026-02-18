@@ -1,42 +1,26 @@
-import type { Dirent } from "node:fs";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
 import { getProjectsDir } from "../../config.ts";
 import { cleanCommandMessage } from "../../parser/command-message.ts";
 import type { RawContentBlock, RawLine } from "../../parser/types.ts";
-
-async function readDirEntriesSafe(dir: string): Promise<Dirent[]> {
-  try {
-    return await readdir(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
-
-async function listJsonlFiles(dir: string): Promise<string[]> {
-  try {
-    const files = await readdir(dir);
-    return files.filter((file) => file.endsWith(".jsonl"));
-  } catch {
-    return [];
-  }
-}
+import {
+  decodeEncodedPath,
+  getLatestMtime,
+  listFilesBySuffix,
+  readDirEntriesSafe,
+} from "../shared/discovery-utils.ts";
 
 async function inspectProjectSessions(
   projectDir: string,
   sessionFiles: string[],
 ): Promise<{ lastActivity: string; resolvedPath: string }> {
-  let lastActivity = "";
+  const lastActivity = await getLatestMtime(projectDir, sessionFiles);
   let resolvedPath = "";
 
   for (const sessionFile of sessionFiles) {
     const filePath = join(projectDir, sessionFile);
-    const fileStat = await stat(filePath).catch(() => null);
-    const mtime = fileStat?.mtime.toISOString();
-    if (mtime && mtime > lastActivity) lastActivity = mtime;
-
     if (!resolvedPath) {
       resolvedPath = await extractCwd(filePath);
     }
@@ -54,7 +38,7 @@ export async function discoverClaudeProjects(): Promise<PluginProject[]> {
     if (!entry.isDirectory()) continue;
 
     const projectDir = join(projectsDir, entry.name);
-    const sessionFiles = await listJsonlFiles(projectDir);
+    const sessionFiles = await listFilesBySuffix(projectDir, ".jsonl");
     if (sessionFiles.length === 0) continue;
 
     const projectInfo = await inspectProjectSessions(projectDir, sessionFiles);
@@ -78,7 +62,7 @@ const PLAN_PREFIX = "Implement the following plan";
 
 export async function listClaudeSessions(nativeId: string): Promise<SessionSummary[]> {
   const projectDir = join(getProjectsDir(), nativeId);
-  const files = await listJsonlFiles(projectDir);
+  const files = await listFilesBySuffix(projectDir, ".jsonl");
   const sessions: SessionSummary[] = [];
 
   for (const file of files) {
@@ -210,18 +194,4 @@ export async function extractSessionMeta(
     model: meta.model || "unknown",
     gitBranch: meta.gitBranch || "",
   };
-}
-export function decodeEncodedPath(encoded: string): string {
-  // Encoded path has leading dash and dashes for slashes
-  // e.g. "-Users-foo-Workspace-bar" -> "/Users/foo/Workspace/bar"
-  // Windows: "-C-Users-foo-bar" -> "C:/Users/foo/bar"
-  if (encoded.startsWith("-")) {
-    const withSlashes = encoded.slice(1).replace(/-/g, "/");
-    // On Windows, detect single-letter drive prefix (e.g. "C/Users/...")
-    if (process.platform === "win32" && /^[A-Za-z]\//.test(withSlashes)) {
-      return `${withSlashes[0]}:${withSlashes.slice(1)}`;
-    }
-    return `/${withSlashes}`;
-  }
-  return encoded.replace(/-/g, "/");
 }
