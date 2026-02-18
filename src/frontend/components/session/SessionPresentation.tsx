@@ -1,4 +1,5 @@
 import { useSessionData } from "../../hooks/useSessionData.ts";
+import { FetchError } from "../ui/FetchError.tsx";
 import { PresentationShell } from "./PresentationShell.tsx";
 
 interface SessionPresentationProps {
@@ -11,16 +12,7 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
   const { data, loading, error, retry } = useSessionData(sessionId, project);
 
   if (loading) return <div className="loading">Loading session...</div>;
-  if (error) {
-    return (
-      <div className="fetch-error">
-        <span className="fetch-error-message">Error: {error}</span>
-        <button type="button" className="btn btn-sm" onClick={retry}>
-          Retry
-        </button>
-      </div>
-    );
-  }
+  if (error) return <FetchError error={error} onRetry={retry} showPrefix />;
   if (!data?.session) return null;
 
   return (
