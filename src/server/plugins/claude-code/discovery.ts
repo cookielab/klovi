@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
@@ -9,8 +8,12 @@ import {
   decodeEncodedPath,
   getLatestMtime,
   listFilesBySuffix,
+  readTextPrefix,
   readDirEntriesSafe,
 } from "../shared/discovery-utils.ts";
+
+const CWD_SCAN_BYTES = 64 * 1024;
+const SESSION_META_SCAN_BYTES = 1024 * 1024;
 
 async function inspectProjectSessions(
   projectDir: string,
@@ -97,22 +100,21 @@ export function classifySessionTypes(sessions: SessionSummary[]): void {
 }
 
 export async function extractCwd(filePath: string): Promise<string> {
-  let text = "";
   try {
-    text = await readFile(filePath, "utf-8");
+    const text = await readTextPrefix(filePath, CWD_SCAN_BYTES);
+    const lines = text.split("\n");
+
+    for (const line of lines.slice(0, 20)) {
+      if (!line.trim()) continue;
+      try {
+        const obj: RawLine = JSON.parse(line);
+        if (obj.cwd) return obj.cwd;
+      } catch {
+        // Malformed lines skipped here; full errors reported by loadClaudeSession()
+      }
+    }
   } catch {
     return "";
-  }
-  const lines = text.split("\n");
-
-  for (const line of lines.slice(0, 20)) {
-    if (!line.trim()) continue;
-    try {
-      const obj: RawLine = JSON.parse(line);
-      if (obj.cwd) return obj.cwd;
-    } catch {
-      // Malformed lines skipped here; full errors reported by loadClaudeSession()
-    }
   }
   return "";
 }
@@ -164,34 +166,33 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 export async function extractSessionMeta(
   filePath: string,
 ): Promise<Omit<SessionSummary, "sessionId"> | null> {
-  let text = "";
   try {
-    text = await readFile(filePath, "utf-8");
+    const text = await readTextPrefix(filePath, SESSION_META_SCAN_BYTES);
+    const lines = text.split("\n");
+
+    const meta: MetaFields = { timestamp: "", slug: "", firstMessage: "", model: "", gitBranch: "" };
+
+    for (const line of lines.slice(0, 50)) {
+      if (!line.trim()) continue;
+      try {
+        const obj: RawLine = JSON.parse(line);
+        processMetaLine(obj, meta);
+        if (isMetaComplete(meta)) break;
+      } catch {
+        // Malformed lines skipped here; full errors reported by loadClaudeSession()
+      }
+    }
+
+    if (!meta.timestamp || !meta.firstMessage) return null;
+
+    return {
+      timestamp: meta.timestamp,
+      slug: meta.slug || "unknown",
+      firstMessage: meta.firstMessage,
+      model: meta.model || "unknown",
+      gitBranch: meta.gitBranch || "",
+    };
   } catch {
     return null;
   }
-  const lines = text.split("\n");
-
-  const meta: MetaFields = { timestamp: "", slug: "", firstMessage: "", model: "", gitBranch: "" };
-
-  for (const line of lines.slice(0, 50)) {
-    if (!line.trim()) continue;
-    try {
-      const obj: RawLine = JSON.parse(line);
-      processMetaLine(obj, meta);
-      if (isMetaComplete(meta)) break;
-    } catch {
-      // Malformed lines skipped here; full errors reported by loadClaudeSession()
-    }
-  }
-
-  if (!meta.timestamp || !meta.firstMessage) return null;
-
-  return {
-    timestamp: meta.timestamp,
-    slug: meta.slug || "unknown",
-    firstMessage: meta.firstMessage,
-    model: meta.model || "unknown",
-    gitBranch: meta.gitBranch || "",
-  };
 }
