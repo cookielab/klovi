@@ -1,6 +1,26 @@
-import { listAllSessions } from "../parser/claude-dir.ts";
+import type { PluginRegistry } from "../plugin-registry.ts";
 
-export async function handleSearchSessions(): Promise<Response> {
-  const sessions = await listAllSessions();
-  return Response.json({ sessions });
+export async function handleSearchSessions(registry: PluginRegistry): Promise<Response> {
+  const projects = await registry.discoverAllProjects();
+  const allSessions = [];
+
+  for (const project of projects) {
+    const sessions = await registry.listAllSessions(project);
+    const projectName = projectNameFromPath(project.name);
+    for (const session of sessions) {
+      allSessions.push({
+        ...session,
+        encodedPath: project.encodedPath,
+        projectName,
+      });
+    }
+  }
+
+  allSessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  return Response.json({ sessions: allSessions });
+}
+
+function projectNameFromPath(fullPath: string): string {
+  const parts = fullPath.split("/").filter(Boolean);
+  return parts.slice(-2).join("/");
 }

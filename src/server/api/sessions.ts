@@ -1,6 +1,12 @@
-import { listSessions } from "../parser/claude-dir.ts";
+import type { PluginRegistry } from "../plugin-registry.ts";
 
-export async function handleSessions(encodedPath: string): Promise<Response> {
-  const sessions = await listSessions(encodedPath);
+export async function handleSessions(
+  encodedPath: string,
+  registry: PluginRegistry,
+): Promise<Response> {
+  const projects = await registry.discoverAllProjects();
+  const project = projects.find((p) => p.encodedPath === encodedPath);
+  if (!project) return Response.json({ sessions: [] });
+  const sessions = await registry.listAllSessions(project);
   return Response.json({ sessions });
 }
