@@ -1,6 +1,7 @@
 import type { Dirent } from "node:fs";
 import { open, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { sortByIsoDesc } from "../../iso-time.ts";
 
 export interface FileWithMtime {
   fileName: string;
@@ -52,7 +53,7 @@ export async function listFilesWithMtime(
     }
   }
 
-  results.sort((a, b) => b.mtime.localeCompare(a.mtime));
+  sortByIsoDesc(results, (item) => item.mtime);
   return results;
 }
 

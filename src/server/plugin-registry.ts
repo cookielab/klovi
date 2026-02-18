@@ -1,6 +1,7 @@
 import type { MergedProject, PluginProject, ToolPlugin } from "../shared/plugin-types.ts";
 import { encodeSessionId } from "../shared/session-id.ts";
 import type { SessionSummary } from "../shared/types.ts";
+import { maxIso, sortByIsoDesc } from "./iso-time.ts";
 
 function encodeResolvedPath(resolvedPath: string): string {
   // Convert /Users/foo/bar → -Users-foo-bar (same scheme as Claude Code)
@@ -50,11 +51,7 @@ export class PluginRegistry {
     const merged: MergedProject[] = [];
     for (const [resolvedPath, projects] of byPath) {
       const totalSessions = projects.reduce((sum, p) => sum + p.sessionCount, 0);
-      const latestActivity =
-        projects
-          .map((p) => p.lastActivity)
-          .sort()
-          .pop() ?? "";
+      const latestActivity = maxIso(projects.map((p) => p.lastActivity));
 
       merged.push({
         encodedPath: encodeResolvedPath(resolvedPath),
@@ -70,7 +67,7 @@ export class PluginRegistry {
       });
     }
 
-    merged.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
+    sortByIsoDesc(merged, (project) => project.lastActivity);
     return merged;
   }
 
@@ -94,7 +91,7 @@ export class PluginRegistry {
       }
     }
 
-    allSessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    sortByIsoDesc(allSessions, (session) => session.timestamp);
     return allSessions;
   }
 }

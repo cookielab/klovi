@@ -2,6 +2,7 @@ import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
 import type { SessionSummary } from "../../../shared/types.ts";
 import { getProjectsDir } from "../../config.ts";
+import { sortByIsoDesc } from "../../iso-time.ts";
 import { cleanCommandMessage } from "../../parser/command-message.ts";
 import type { RawContentBlock, RawLine } from "../../parser/types.ts";
 import {
@@ -57,7 +58,7 @@ export async function discoverClaudeProjects(): Promise<PluginProject[]> {
     });
   }
 
-  projects.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
+  sortByIsoDesc(projects, (project) => project.lastActivity);
   return projects;
 }
 
@@ -77,7 +78,7 @@ export async function listClaudeSessions(nativeId: string): Promise<SessionSumma
 
   classifySessionTypes(sessions);
 
-  sessions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  sortByIsoDesc(sessions, (session) => session.timestamp);
   return sessions;
 }
 
