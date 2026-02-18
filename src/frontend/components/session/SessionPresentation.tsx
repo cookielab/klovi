@@ -1,5 +1,4 @@
-import type { Session } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useSessionData } from "../../hooks/useSessionData.ts";
 import { PresentationShell } from "./PresentationShell.tsx";
 
 interface SessionPresentationProps {
@@ -9,10 +8,7 @@ interface SessionPresentationProps {
 }
 
 export function SessionPresentation({ sessionId, project, onExit }: SessionPresentationProps) {
-  const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${encodeURIComponent(sessionId)}?project=${encodeURIComponent(project)}`,
-    [sessionId, project],
-  );
+  const { data, loading, error, retry } = useSessionData(sessionId, project);
 
   if (loading) return <div className="loading">Loading session...</div>;
   if (error) {

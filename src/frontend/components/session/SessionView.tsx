@@ -1,5 +1,4 @@
-import type { Session } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useSessionData } from "../../hooks/useSessionData.ts";
 import { MessageList } from "../message/MessageList.tsx";
 
 interface SessionViewProps {
@@ -8,10 +7,7 @@ interface SessionViewProps {
 }
 
 export function SessionView({ sessionId, project }: SessionViewProps) {
-  const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${encodeURIComponent(sessionId)}?project=${encodeURIComponent(project)}`,
-    [sessionId, project],
-  );
+  const { data, loading, error, retry } = useSessionData(sessionId, project);
 
   if (loading) return <div className="loading">Loading session...</div>;
   if (error) {
