@@ -143,14 +143,7 @@ type PartData =
 
 // --- Turn building ---
 
-let toolUseCounter = 0;
-
-function nextToolUseId(): string {
-  toolUseCounter++;
-  return `opencode-tool-${toolUseCounter}`;
-}
-
-function partToContentBlock(partData: PartData): ContentBlock | null {
+function partToContentBlock(partData: PartData, nextToolUseId: () => string): ContentBlock | null {
   switch (partData.type) {
     case "text": {
       const textPart = partData as PartDataText;
@@ -163,14 +156,14 @@ function partToContentBlock(partData: PartData): ContentBlock | null {
     }
     case "tool": {
       const toolPart = partData as PartDataTool;
-      return { type: "tool_call", call: buildToolCall(toolPart) };
+      return { type: "tool_call", call: buildToolCall(toolPart, nextToolUseId) };
     }
     default:
       return null;
   }
 }
 
-function buildToolCall(toolPart: PartDataTool): ToolCallWithResult {
+function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): ToolCallWithResult {
   const state = toolPart.state;
   const toolId = toolPart.callID || nextToolUseId();
 
@@ -250,10 +243,10 @@ function collectUserText(parts: PartData[]): string {
   return texts.join("\n");
 }
 
-function collectContentBlocks(parts: PartData[]): ContentBlock[] {
+function collectContentBlocks(parts: PartData[], nextToolUseId: () => string): ContentBlock[] {
   const blocks: ContentBlock[] = [];
   for (const part of parts) {
-    const block = partToContentBlock(part);
+    const block = partToContentBlock(part, nextToolUseId);
     if (block) blocks.push(block);
   }
   return blocks;
@@ -288,16 +281,25 @@ function buildUserTurn(msg: OpenCodeMessage, timestamp: string): UserTurn {
   return createUserTurn(collectUserText(msg.parts), timestamp, msg.id);
 }
 
-function buildAssistantTurnFromMsg(msg: OpenCodeMessage, timestamp: string): AssistantTurn {
+function buildAssistantTurnFromMsg(
+  msg: OpenCodeMessage,
+  timestamp: string,
+  nextToolUseId: () => string,
+): AssistantTurn {
   const data = msg.data as MessageDataAssistant;
   const model = data.modelID || "unknown";
-  const contentBlocks = collectContentBlocks(msg.parts);
+  const contentBlocks = collectContentBlocks(msg.parts, nextToolUseId);
   const usage = tokensToUsage(data.tokens) ?? extractStepFinishUsage(msg.parts);
   return createAssistantTurn(model, timestamp, msg.id, contentBlocks, usage, data.finish);
 }
 
 export function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
-  toolUseCounter = 0;
+  let toolUseCounter = 0;
+  const nextToolUseId = () => {
+    toolUseCounter++;
+    return `opencode-tool-${toolUseCounter}`;
+  };
+
   const turns: Turn[] = [];
 
   for (const msg of messages) {
@@ -305,7 +307,7 @@ export function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
     if (msg.data.role === "user") {
       turns.push(buildUserTurn(msg, timestamp));
     } else if (msg.data.role === "assistant") {
-      turns.push(buildAssistantTurnFromMsg(msg, timestamp));
+      turns.push(buildAssistantTurnFromMsg(msg, timestamp, nextToolUseId));
     }
   }
 
