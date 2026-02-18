@@ -1,4 +1,3 @@
-import { Database } from "bun:sqlite";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { PluginProject } from "../../../shared/plugin-types.ts";
@@ -11,11 +10,22 @@ export function getDbPath(): string {
   return join(getOpenCodeDir(), "opencode.db");
 }
 
-function openDb(): Database | null {
+interface SqliteQuery<T = unknown> {
+  all(...params: any[]): any[];
+  get(...params: any[]): any;
+}
+
+interface SqliteDb {
+  query<T = unknown>(sql: string): SqliteQuery<T>;
+  close(): void;
+}
+
+async function openDb(): Promise<SqliteDb | null> {
   const dbPath = getDbPath();
   if (!existsSync(dbPath)) return null;
   try {
-    return new Database(dbPath, { readonly: true });
+    const sqlite = await import("bun:sqlite");
+    return new sqlite.Database(dbPath, { readonly: true });
   } catch {
     return null;
   }
@@ -27,21 +37,21 @@ interface TableColumn {
   name: string;
 }
 
-function tableExists(db: Database, tableName: string): boolean {
+function tableExists(db: SqliteDb, tableName: string): boolean {
   const row = db
-    .query<{ cnt: number }, [string]>(
+    .query<{ cnt: number }>(
       "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name=?",
     )
     .get(tableName);
   return (row?.cnt ?? 0) > 0;
 }
 
-function getColumns(db: Database, tableName: string): string[] {
-  const rows = db.query<TableColumn, []>(`PRAGMA table_info(${tableName})`).all();
+function getColumns(db: SqliteDb, tableName: string): string[] {
+  const rows = db.query<TableColumn>(`PRAGMA table_info(${tableName})`).all();
   return rows.map((r) => r.name);
 }
 
-function hasRequiredTables(db: Database): boolean {
+function hasRequiredTables(db: SqliteDb): boolean {
   return tableExists(db, "session") && tableExists(db, "message") && tableExists(db, "part");
 }
 
@@ -86,7 +96,7 @@ interface PartDataJson {
 // --- Discovery ---
 
 export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
-  const db = openDb();
+  const db = await openDb();
   if (!db) return [];
 
   try {
@@ -108,7 +118,7 @@ export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
   }
 }
 
-function discoverFromProjectTable(db: Database): PluginProject[] {
+function discoverFromProjectTable(db: SqliteDb): PluginProject[] {
   const cols = getColumns(db, "project");
   const hasWorktree = cols.includes("worktree");
   const hasName = cols.includes("name");
@@ -120,9 +130,9 @@ function discoverFromProjectTable(db: Database): PluginProject[] {
 
   const selectName = hasName ? "p.name" : "NULL as name";
 
-  const rows = db
-    .query<ProjectRow & { session_count: number; last_activity: number }, []>(
-      `SELECT p.id, p.worktree, ${selectName},
+    const rows = db
+      .query<ProjectRow & { session_count: number; last_activity: number }>(
+        `SELECT p.id, p.worktree, ${selectName},
               count(s.id) as session_count,
               coalesce(max(s.time_updated), max(s.time_created), p.time_created) as last_activity
        FROM project p
@@ -143,7 +153,7 @@ function discoverFromProjectTable(db: Database): PluginProject[] {
   }));
 }
 
-function discoverFromSessions(db: Database): PluginProject[] {
+function discoverFromSessions(db: SqliteDb): PluginProject[] {
   const cols = getColumns(db, "session");
   const hasDirectory = cols.includes("directory");
   const hasProjectId = cols.includes("project_id");
@@ -153,7 +163,7 @@ function discoverFromSessions(db: Database): PluginProject[] {
   const groupCol = hasDirectory ? "directory" : "project_id";
 
   const rows = db
-    .query<{ group_key: string; session_count: number; last_activity: number }, []>(
+    .query<{ group_key: string; session_count: number; last_activity: number }>(
       `SELECT ${groupCol} as group_key,
               count(*) as session_count,
               coalesce(max(time_updated), max(time_created)) as last_activity
@@ -175,7 +185,7 @@ function discoverFromSessions(db: Database): PluginProject[] {
 
 // --- Session listing ---
 
-function querySessionRows(db: Database, nativeId: string): SessionRow[] {
+function querySessionRows(db: SqliteDb, nativeId: string): SessionRow[] {
   const hasProjectTable = tableExists(db, "project");
   const sessionCols = getColumns(db, "session");
   const titleCol = sessionCols.includes("title") ? "title" : "''";
@@ -183,7 +193,7 @@ function querySessionRows(db: Database, nativeId: string): SessionRow[] {
   const whereCol = hasProjectTable ? "project_id" : "directory";
 
   return db
-    .query<SessionRow, [string]>(
+    .query<SessionRow>(
       `SELECT id, project_id, directory, ${titleCol} as title,
               ${slugCol} as slug, time_created, time_updated
        FROM session
@@ -193,7 +203,7 @@ function querySessionRows(db: Database, nativeId: string): SessionRow[] {
     .all(nativeId);
 }
 
-function sessionRowToSummary(db: Database, row: SessionRow): SessionSummary {
+function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
   const firstMessage = row.title || getFirstUserMessage(db, row.id) || "OpenCode session";
   const model = getSessionModel(db, row.id);
 
@@ -209,7 +219,7 @@ function sessionRowToSummary(db: Database, row: SessionRow): SessionSummary {
 }
 
 export async function listOpenCodeSessions(nativeId: string): Promise<SessionSummary[]> {
-  const db = openDb();
+  const db = await openDb();
   if (!db) return [];
 
   try {
@@ -223,10 +233,10 @@ export async function listOpenCodeSessions(nativeId: string): Promise<SessionSum
   }
 }
 
-function getFirstUserMessage(db: Database, sessionId: string): string | null {
+function getFirstUserMessage(db: SqliteDb, sessionId: string): string | null {
   // Get the first message for this session
   const msgRow = db
-    .query<MessageRow, [string]>(
+    .query<MessageRow>(
       `SELECT id, session_id, time_created, data FROM message
        WHERE session_id = ?
        ORDER BY time_created ASC
@@ -241,7 +251,7 @@ function getFirstUserMessage(db: Database, sessionId: string): string | null {
 
       // Get text parts for this message
       const parts = db
-        .query<{ data: string }, [string]>(
+        .query<{ data: string }>(
           "SELECT data FROM part WHERE message_id = ? ORDER BY id ASC",
         )
         .all(msg.id);
@@ -264,9 +274,9 @@ function getFirstUserMessage(db: Database, sessionId: string): string | null {
   return null;
 }
 
-function getSessionModel(db: Database, sessionId: string): string {
+function getSessionModel(db: SqliteDb, sessionId: string): string {
   const msgRow = db
-    .query<MessageRow, [string]>(
+    .query<MessageRow>(
       `SELECT id, session_id, time_created, data FROM message
        WHERE session_id = ?
        ORDER BY time_created ASC

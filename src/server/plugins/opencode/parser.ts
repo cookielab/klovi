@@ -1,4 +1,3 @@
-import { Database } from "bun:sqlite";
 import { existsSync } from "node:fs";
 import type {
   AssistantTurn,
@@ -10,6 +9,16 @@ import type {
   UserTurn,
 } from "../../../shared/types.ts";
 import { getDbPath } from "./discovery.ts";
+
+interface SqliteQuery<T = unknown> {
+  all(...params: any[]): any[];
+  get(...params: any[]): any;
+}
+
+interface SqliteDb {
+  query<T = unknown>(sql: string): SqliteQuery<T>;
+  close(): void;
+}
 
 // --- DB row types ---
 
@@ -361,15 +370,15 @@ function buildMessagesFromRows(
   return messages;
 }
 
-function loadSessionFromDb(db: Database, nativeId: string, sessionId: string): Session {
+function loadSessionFromDb(db: SqliteDb, nativeId: string, sessionId: string): Session {
   const sessionRow = db
-    .query<{ directory: string }, [string]>("SELECT directory FROM session WHERE id = ?")
+    .query<{ directory: string }>("SELECT directory FROM session WHERE id = ?")
     .get(sessionId);
 
   const project = sessionRow?.directory || nativeId;
 
   const messageRows = db
-    .query<MessageRow, [string]>(
+    .query<MessageRow>(
       `SELECT id, session_id, time_created, data
        FROM message WHERE session_id = ? ORDER BY time_created ASC`,
     )
@@ -380,7 +389,7 @@ function loadSessionFromDb(db: Database, nativeId: string, sessionId: string): S
   }
 
   const partRows = db
-    .query<PartRow, [string]>(
+    .query<PartRow>(
       `SELECT id, message_id, session_id, time_created, data
        FROM part WHERE session_id = ? ORDER BY message_id, id ASC`,
     )
@@ -399,9 +408,10 @@ export async function loadOpenCodeSession(nativeId: string, sessionId: string): 
     return emptySession(nativeId, sessionId);
   }
 
-  let db: Database;
+  let db: SqliteDb;
   try {
-    db = new Database(dbPath, { readonly: true });
+    const sqlite = await import("bun:sqlite");
+    db = new sqlite.Database(dbPath, { readonly: true });
   } catch {
     return emptySession(nativeId, sessionId);
   }
