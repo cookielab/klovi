@@ -1,3 +1,4 @@
+import { parseSessionId } from "../../shared/session-id.ts";
 import { parseSubAgentSession } from "../plugins/claude-code/parser.ts";
 
 export async function handleSubAgent(
@@ -6,7 +7,8 @@ export async function handleSubAgent(
   encodedPath: string,
 ): Promise<Response> {
   try {
-    const session = await parseSubAgentSession(sessionId, encodedPath, agentId);
+    const parsed = parseSessionId(sessionId);
+    const session = await parseSubAgentSession(parsed.rawSessionId, encodedPath, agentId);
     return Response.json({ session });
   } catch {
     return Response.json({ error: "Sub-agent not found" }, { status: 404 });

@@ -9,7 +9,7 @@ interface SessionViewProps {
 
 export function SessionView({ sessionId, project }: SessionViewProps) {
   const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${sessionId}?project=${encodeURIComponent(project)}`,
+    `/api/sessions/${encodeURIComponent(sessionId)}?project=${encodeURIComponent(project)}`,
     [sessionId, project],
   );
 

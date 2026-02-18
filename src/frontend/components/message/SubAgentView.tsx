@@ -10,7 +10,7 @@ interface SubAgentViewProps {
 
 export function SubAgentView({ sessionId, project, agentId }: SubAgentViewProps) {
   const { data, loading, error, retry } = useFetch<{ session: Session }>(
-    `/api/sessions/${sessionId}/subagents/${agentId}?project=${encodeURIComponent(project)}`,
+    `/api/sessions/${encodeURIComponent(sessionId)}/subagents/${encodeURIComponent(agentId)}?project=${encodeURIComponent(project)}`,
     [sessionId, project, agentId],
   );
 

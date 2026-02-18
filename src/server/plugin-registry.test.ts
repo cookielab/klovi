@@ -279,11 +279,11 @@ describe("PluginRegistry", () => {
     expect(sessions).toHaveLength(3);
 
     // Sorted by timestamp descending
-    expect(sessions[0]!.sessionId).toBe("session-3");
+    expect(sessions[0]!.sessionId).toBe("plugin-b::session-3");
     expect(sessions[0]!.timestamp).toBe("2025-01-03T10:00:00Z");
-    expect(sessions[1]!.sessionId).toBe("session-2");
+    expect(sessions[1]!.sessionId).toBe("plugin-a::session-2");
     expect(sessions[1]!.timestamp).toBe("2025-01-02T10:00:00Z");
-    expect(sessions[2]!.sessionId).toBe("session-1");
+    expect(sessions[2]!.sessionId).toBe("plugin-a::session-1");
     expect(sessions[2]!.timestamp).toBe("2025-01-01T10:00:00Z");
   });
 
@@ -323,6 +323,6 @@ describe("PluginRegistry", () => {
 
     const sessions = await registry.listAllSessions(mergedProject);
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.sessionId).toBe("session-ok");
+    expect(sessions[0]!.sessionId).toBe("working-plugin::session-ok");
   });
 });

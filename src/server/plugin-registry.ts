@@ -1,4 +1,5 @@
 import type { MergedProject, PluginProject, ToolPlugin } from "../shared/plugin-types.ts";
+import { encodeSessionId } from "../shared/session-id.ts";
 import type { SessionSummary } from "../shared/types.ts";
 
 function encodeResolvedPath(resolvedPath: string): string {
@@ -81,7 +82,13 @@ export class PluginRegistry {
       if (!plugin) continue;
       try {
         const sessions = await plugin.listSessions(source.nativeId);
-        allSessions.push(...sessions);
+        allSessions.push(
+          ...sessions.map((session) => ({
+            ...session,
+            sessionId: encodeSessionId(source.pluginId, session.sessionId),
+            pluginId: source.pluginId,
+          })),
+        );
       } catch {
         // Plugin session listing failed, skip it
       }
