@@ -8,7 +8,8 @@ import type {
   Turn,
   UserTurn,
 } from "../../../shared/types.ts";
-import { findCodexSessionFileById, isCodexSessionMeta, type CodexSessionMeta } from "./session-index.ts";
+import { findCodexSessionFileById, isCodexSessionMeta } from "./session-index.ts";
+import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
 interface CodexItemCommand {
   type: "command_execution";
@@ -229,31 +230,24 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
   }
 
   const text = await readFile(filePath, "utf-8");
-  const lines = text.split("\n");
 
-  let meta: CodexSessionMeta | null = null;
+  let meta: unknown = null;
   const events: CodexEvent[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
-    if (!line.trim()) continue;
-
-    try {
-      const parsed: unknown = JSON.parse(line);
-      if (i === 0 && isCodexSessionMeta(parsed)) {
+  iterateJsonl(text, ({ parsed, lineIndex }) => {
+    if (lineIndex === 0 && isCodexSessionMeta(parsed)) {
         meta = parsed;
-        continue;
-      }
-      if (typeof parsed === "object" && parsed !== null && "type" in parsed) {
-        events.push(parsed as CodexEvent);
-      }
-    } catch {
-      // Skip malformed lines
+        return;
     }
-  }
 
-  const model = meta?.model || "unknown";
-  const timestamp = meta ? new Date(meta.timestamps.created * 1000).toISOString() : "";
+    if (typeof parsed === "object" && parsed !== null && "type" in parsed) {
+      events.push(parsed as CodexEvent);
+    }
+  });
+
+  const metaInfo = isCodexSessionMeta(meta) ? meta : null;
+  const model = metaInfo?.model || "unknown";
+  const timestamp = metaInfo ? new Date(metaInfo.timestamps.created * 1000).toISOString() : "";
 
   const turns = buildCodexTurns(events, model, timestamp);
 
