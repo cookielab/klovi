@@ -48,10 +48,11 @@ In presentation mode, limits visible step groups based on `visibleSubSteps` coun
 
 ### ToolCall (`src/frontend/components/message/ToolCall.tsx`)
 
-Collapsible tool call display. Key features:
+Collapsible tool call display. Accepts an optional `pluginId` prop for tool-specific rendering. Key features:
 
 - **Smart summary** via `getToolSummary()` - shows the most relevant field per tool type
-- **Input display** - JSON-formatted tool input
+- **Plugin-aware summaries** — when `pluginId` is provided, consults the frontend plugin registry for custom summary extractors (e.g., Codex CLI's `command_execution`, `file_change`, `web_search`)
+- **Input display** - JSON-formatted tool input, or plugin-specific formatting via `inputFormatters`
 - **Result display** - monospace text, truncated at 5000 chars
 - **Error styling** - red text for `isError: true` results
 - **Image results** - base64 images rendered as thumbnails, click to open in `ImageLightbox`
@@ -127,7 +128,9 @@ Fetches `/api/projects` and renders a filterable list. Each project shows name (
 
 ### SessionList (`src/frontend/components/project/SessionList.tsx`)
 
-Fetches `/api/projects/:path/sessions` and renders session cards. Each shows first message preview, model, git branch, and relative timestamp. Highlights selected session. Sessions with a detected `sessionType` display a colored badge ("Plan" or "Impl") and get a corresponding CSS class for visual distinction.
+Fetches `/api/projects/:path/sessions` and renders session cards. Each shows first message preview, tool name badge (via `pluginDisplayName()`), git branch, and relative timestamp. Highlights selected session. Sessions with a detected `sessionType` display a colored badge ("Plan" or "Impl") and get a corresponding CSS class for visual distinction.
+
+The sidebar shows the tool name (e.g., "Claude Code", "Codex", "OpenCode") instead of the model name, using the `pluginId` from the session summary.
 
 ### HiddenProjectList (`src/frontend/components/project/HiddenProjectList.tsx`)
 
@@ -187,6 +190,23 @@ Side-by-side diff display for Edit tool results. Shows old and new strings with 
 ### ErrorBoundary (`src/frontend/components/ui/ErrorBoundary.tsx`)
 
 React error boundary with retry functionality. Two variants: view-level (full-page fallback) and inline (per-component fallback with retry button).
+
+## Frontend Plugin Registry (`src/frontend/plugin-registry.ts`)
+
+The frontend plugin registry provides tool-specific rendering for ToolCall components. Each registered frontend plugin can provide:
+
+- **`summaryExtractors`** — map of tool name to function that extracts a concise summary string from tool input
+- **`inputFormatters`** — map of tool name to function that formats tool input for display
+
+Currently registered plugins:
+- **Codex CLI** (`codex-cli`) — extractors for `command_execution`, `file_change`, `web_search`
+- **OpenCode** (`opencode`) — empty extractors (uses standard Claude Code tool names)
+
+The `pluginId` prop flows from session data through `AssistantMessage` into each `ToolCall`, where it's used to look up the appropriate plugin for rendering.
+
+## Plugin Utilities (`src/frontend/utils/plugin.ts`)
+
+`pluginDisplayName(pluginId)` maps plugin IDs to human-readable names: `"claude-code"` → `"Claude Code"`, `"codex-cli"` → `"Codex"`, `"opencode"` → `"OpenCode"`.
 
 ## Hooks
 

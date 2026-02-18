@@ -5,16 +5,16 @@
 [![npm downloads](https://img.shields.io/npm/dm/@cookielab.io/klovi)](https://www.npmjs.com/package/@cookielab.io/klovi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
-A local web app for browsing and presenting Claude Code session history. Built for showing AI coding workflows at meetups and conferences.
+A local web app for browsing and presenting AI coding session history. Supports Claude Code, Codex CLI, and OpenCode. Built for showing AI coding workflows at meetups and conferences.
 
 ![Klovi homepage screenshot](docs/screenshot-homepage.png)
 ![Klovi homepage screenshot](docs/screenshot-session.png)
 
 ## Why Klovi?
 
-Claude Code stores every conversation as JSONL files in `~/.claude/projects/`, but there's no built-in way to browse, search, or present them. Klovi fills that gap: run a single command and get a local web UI to explore your full session history, review what Claude did across projects, and step through conversations in a presentation mode perfect for demos and talks.
+AI coding tools like Claude Code, Codex CLI, and OpenCode store conversation history locally, but there's no unified way to browse, search, or present them. Klovi fills that gap: run a single command and get a local web UI to explore your full session history across all tools, review what AI assistants did across projects, and step through conversations in a presentation mode perfect for demos and talks.
 
-Klovi reads session data directly from `~/.claude/projects/` (JSONL files) and renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode.
+Klovi auto-discovers sessions from Claude Code (`~/.claude/projects/`), Codex CLI (`~/.codex/sessions/`), and OpenCode (`~/.local/share/opencode/opencode.db`), then renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode. Projects from different tools that share the same working directory are merged automatically.
 
 ## Quick Start
 
@@ -52,8 +52,14 @@ bun run dev
 
 ## Features
 
+**Multi-Tool Support**
+- Claude Code, Codex CLI, and OpenCode sessions in one unified viewer
+- Plugin-based architecture — auto-discovers tools from their default data directories
+- Projects from different tools sharing the same working directory are merged
+- Tool name badge shown on each session in the sidebar
+
 **Session Browsing**
-- Auto-discovers all projects from `~/.claude/projects/`
+- Auto-discovers all projects across registered tools
 - Dashboard statistics: project/session/tool counts, token usage breakdown, model distribution
 - Filterable project list with session counts and last activity
 - Hide/unhide projects to declutter the list
@@ -61,7 +67,7 @@ bun run dev
 - Plan/implementation session detection with colored badges and cross-session navigation links
 - Full conversation rendering with user/assistant/system messages
 - Sub-agent browsing: navigate into Task tool sub-agent sessions
-- Copy resume command (`claude --resume <id>`) from session header
+- Copy resume command from session header (tool-specific: `claude --resume <id>`, `codex resume <id>`)
 
 **Message Rendering**
 - Markdown with GFM support (tables, strikethrough, task lists)
@@ -89,7 +95,9 @@ bun run dev
 
 **CLI**
 - `--port <number>` — specify server port (default: 3583)
-- `--claude-code-dir <path>` — path to Claude Code data directory
+- `--claude-code-dir <path>` — path to Claude Code data directory (default: `~/.claude`)
+- `--codex-cli-dir <path>` — path to Codex CLI data directory (default: `~/.codex`)
+- `--opencode-dir <path>` — path to OpenCode data directory (default: `~/.local/share/opencode`)
 - `--accept-risks` — skip the startup security warning
 - `--help` / `-h` — show usage information
 
@@ -136,7 +144,7 @@ bun run dev
 See [docs/](docs/) for detailed documentation:
 
 - [Architecture](docs/architecture.md) - project structure, data flow, component hierarchy
-- [JSONL Format](docs/jsonl-format.md) - Claude Code session file format specification
+- [JSONL Format](docs/jsonl-format.md) - session file format specification
 - [Components](docs/components.md) - frontend component guide and patterns
 - [Testing](docs/testing.md) - test setup, patterns, and conventions
 - [Content Types](CONTENT_TYPES.md) - catalog of all JSONL content types and rendering status
@@ -153,4 +161,4 @@ This project was built with love using [Claude Code](https://claude.ai/claude-co
 
 ## Trademark Notice
 
-"Claude" and "Claude Code" are trademarks of Anthropic, PBC. This project is not affiliated with, endorsed by, or sponsored by Anthropic. All trademarks and registered trademarks are the property of their respective owners.
+"Claude" and "Claude Code" are trademarks of Anthropic, PBC. "Codex" is a trademark of OpenAI. This project is not affiliated with, endorsed by, or sponsored by Anthropic, OpenAI, or any other AI tool vendor. All trademarks and registered trademarks are the property of their respective owners.

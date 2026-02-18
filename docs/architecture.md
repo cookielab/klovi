@@ -21,32 +21,51 @@ Klovi/
 └── src/
     ├── shared/
     │   ├── types.ts                 # Shared type definitions (Turn, Session, Project, etc.)
+    │   ├── plugin-types.ts          # ToolPlugin, PluginProject, MergedProject interfaces
     │   └── content-blocks.ts        # ContentBlock grouping for presentation steps
     │
     ├── server/
     │   ├── cli.ts                   # CLI arg parsing, help text, startup banner, route wiring
-    │   ├── config.ts                # Projects directory configuration
+    │   ├── config.ts                # Directory configuration for all tools
     │   ├── http.ts                  # HTTP server (node:http), route matching, static files
     │   ├── version.ts               # Version info from package.json
+    │   ├── plugin-registry.ts       # PluginRegistry: merge projects, aggregate sessions
+    │   ├── registry.ts              # createRegistry(): auto-discovers and registers plugins
     │   ├── api/
-    │   │   ├── projects.ts          # GET /api/projects
-    │   │   ├── sessions.ts          # GET /api/projects/:path/sessions
-    │   │   ├── session.ts           # GET /api/sessions/:id?project=...
+    │   │   ├── projects.ts          # GET /api/projects (uses registry)
+    │   │   ├── sessions.ts          # GET /api/projects/:path/sessions (uses registry)
+    │   │   ├── session.ts           # GET /api/sessions/:id?project=... (uses registry)
     │   │   ├── stats.ts             # GET /api/stats (dashboard statistics, 5-min cache)
     │   │   ├── subagent.ts          # GET /api/sessions/:id/subagents/:agentId?project=...
     │   │   └── version.ts           # GET /api/version
-    │   └── parser/
-    │       ├── claude-dir.ts        # Project/session discovery from ~/.claude/projects/
-    │       ├── session.ts           # JSONL parser: parseSession(), buildTurns()
-    │       ├── stats.ts             # Scans all sessions for aggregate statistics
-    │       ├── command-message.ts   # Slash command XML extraction
-    │       └── types.ts             # Raw JSONL line types (RawLine, RawMessage, etc.)
+    │   ├── parser/
+    │   │   ├── claude-dir.ts        # Claude Code project/session discovery
+    │   │   ├── session.ts           # Claude Code JSONL parser: parseSession(), buildTurns()
+    │   │   ├── stats.ts             # Scans all sessions for aggregate statistics
+    │   │   ├── command-message.ts   # Slash command XML extraction
+    │   │   └── types.ts             # Raw JSONL line types (RawLine, RawMessage, etc.)
+    │   └── plugins/
+    │       ├── claude-code/
+    │       │   ├── index.ts         # Claude Code ToolPlugin implementation
+    │       │   ├── discovery.ts     # Project/session discovery from ~/.claude/projects/
+    │       │   └── parser.ts        # JSONL session parser (delegates to shared parser)
+    │       ├── codex-cli/
+    │       │   ├── index.ts         # Codex CLI ToolPlugin implementation
+    │       │   ├── discovery.ts     # Project/session discovery from ~/.codex/sessions/
+    │       │   ├── parser.ts        # JSONL event parser (turn.started/item.completed)
+    │       │   └── extractors.ts    # Tool summary extractors & input formatters
+    │       └── opencode/
+    │           ├── index.ts         # OpenCode ToolPlugin implementation
+    │           ├── discovery.ts     # Project/session discovery from SQLite DB
+    │           ├── parser.ts        # SQLite message/part parser
+    │           └── extractors.ts    # Tool summary extractors & input formatters
     │
     └── frontend/
         ├── App.tsx                  # Root component: router, state, hash navigation
         ├── App.css                  # All styles + CSS custom properties (light/dark)
         ├── index.css                # Global reset + base styles
         ├── svg.d.ts                 # SVG module declarations for TypeScript
+        ├── plugin-registry.ts       # Frontend plugin registry (summary extractors, input formatters)
         ├── components/
         │   ├── dashboard/
         │   │   └── DashboardStats.tsx  # Homepage statistics (projects, sessions, tokens, models)
@@ -91,30 +110,39 @@ Klovi/
             ├── time.ts              # Relative time formatting + timestamp display
             ├── model.ts             # Model name shortening (Opus/Sonnet/Haiku)
             ├── project.ts           # Project path utilities
-            └── format-detector.ts   # Auto-detect output format (JSON, XML, diff, etc.)
+            ├── format-detector.ts   # Auto-detect output format (JSON, XML, diff, etc.)
+            └── plugin.ts            # Plugin display name mapping
 ```
 
 ## Data Flow
 
 ```
-~/.claude/projects/                     # Source: Claude Code session files
-  └── -Users-foo-Workspace-bar/         # Encoded project path
-      └── abc123.jsonl                  # Session file (one JSON object per line)
+Data Sources                            # Each tool stores sessions differently
+  ~/.claude/projects/**/*.jsonl         # Claude Code: JSONL files in encoded-path dirs
+  ~/.codex/sessions/**/*.jsonl          # Codex CLI: JSONL files in nested dirs
+  ~/.local/share/opencode/opencode.db   # OpenCode: SQLite database (messages + parts)
           │
           ▼
-   claude-dir.ts                        # Discovery: finds projects + sessions
-   session.ts: parseSession()           # Reads JSONL, calls buildTurns()
-   session.ts: buildTurns()             # Filters, merges, structures raw lines → Turn[]
+   Plugin Layer                         # Each plugin implements ToolPlugin interface
+     plugins/claude-code/               #   discovery.ts + parser.ts
+     plugins/codex-cli/                 #   discovery.ts + parser.ts
+     plugins/opencode/                  #   discovery.ts + parser.ts (SQLite)
           │
           ▼
-   API handlers (projects.ts,           # Serve as JSON responses
+   PluginRegistry                       # Merges projects by resolved filesystem path
+     registry.ts: createRegistry()      # Auto-discovers plugins whose data dirs exist
+     plugin-registry.ts                 # discoverAllProjects() → MergedProject[]
+                                        # listAllSessions() → SessionSummary[]
+          │
+          ▼
+   API handlers (projects.ts,           # Serve as JSON responses via registry
    sessions.ts, session.ts)
           │
           ▼
    App.tsx                              # Frontend: fetches, manages view state
    MessageList.tsx                      # Maps Turn[] to components
    UserMessage / AssistantMessage       # Render each turn type
-   ToolCall / ThinkingBlock             # Render sub-elements
+   ToolCall / ThinkingBlock             # Render sub-elements (pluginId-aware)
 ```
 
 ## Server
@@ -141,7 +169,9 @@ The frontend is built with `bun build` (HTML imports) into `dist/public/`. The s
 |---|---|
 | `--help` / `-h` | Show usage information and exit |
 | `--port <number>` | Specify server port (default: 3583) |
-| `--claude-code-dir <path>` | Path to Claude Code data directory |
+| `--claude-code-dir <path>` | Path to Claude Code data directory (default: `~/.claude`) |
+| `--codex-cli-dir <path>` | Path to Codex CLI data directory (default: `~/.codex`) |
+| `--opencode-dir <path>` | Path to OpenCode data directory (default: `~/.local/share/opencode`) |
 | `--accept-risks` | Skip the startup security warning |
 
 ## Frontend Router
@@ -233,9 +263,43 @@ Two themes defined via CSS variables on `:root` (light) and `[data-theme="dark"]
 
 Theme selection persisted to `localStorage` key `klovi-theme`. Font size to `klovi-font-size`. Hidden projects to `klovi-hidden-projects`.
 
+## Plugin System
+
+Klovi uses a plugin architecture to support multiple AI coding tools. Each tool is a `ToolPlugin` that implements a common interface for project discovery, session listing, and session parsing.
+
+### ToolPlugin Interface (`src/shared/plugin-types.ts`)
+
+```typescript
+interface ToolPlugin {
+  id: string;                           // "claude-code", "codex-cli", "opencode"
+  displayName: string;                  // "Claude Code", "Codex", "OpenCode"
+  getDefaultDataDir(): string | null;   // Default filesystem path for tool data
+  discoverProjects(): Promise<PluginProject[]>;
+  listSessions(nativeId: string): Promise<SessionSummary[]>;
+  loadSession(nativeId: string, sessionId: string): Promise<Session>;
+  getResumeCommand?(sessionId: string): string | null;
+}
+```
+
+### PluginRegistry (`src/server/plugin-registry.ts`)
+
+The `PluginRegistry` class manages registered plugins and handles cross-tool merging:
+
+- **`register(plugin)`** — adds a plugin to the registry
+- **`discoverAllProjects()`** — calls each plugin's `discoverProjects()`, then merges results by `resolvedPath` (so the same filesystem project discovered by multiple tools becomes one `MergedProject` with multiple `sources`)
+- **`listAllSessions(project)`** — aggregates sessions from all sources for a merged project
+
+### Auto-Discovery (`src/server/registry.ts`)
+
+`createRegistry()` checks whether each tool's data directory exists on disk and only registers plugins whose data is available. OpenCode additionally checks for the `opencode.db` file.
+
+### Frontend Plugin Registry (`src/frontend/plugin-registry.ts`)
+
+The frontend has its own plugin registry for tool-specific rendering: custom summary extractors and input formatters per tool. Codex CLI tools like `command_execution`, `file_change`, and `web_search` get custom summaries. The registry is keyed by `pluginId`, which flows through from the session data.
+
 ## Key Design Decisions
 
-1. **No database** - reads JSONL files directly from `~/.claude/projects/`
+1. **No server-side database** - reads JSONL files directly for Claude Code and Codex CLI; reads OpenCode's existing SQLite DB
 2. **No build tool** - Bun's native HTML import bundling
 3. **No CSS framework** - custom design system with CSS variables
 4. **Turn merging** - consecutive assistant messages merged into one logical turn (tool_result user messages don't break the turn)
