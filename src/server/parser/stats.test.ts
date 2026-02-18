@@ -1,197 +1,205 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { setClaudeCodeDir, setCodexCliDir, setOpenCodeDir } from "../config.ts";
-import { scanStats } from "./stats.ts";
+import type { ToolPlugin } from "../../shared/plugin-types.ts";
+import type { Session, SessionSummary } from "../../shared/types.ts";
+import { PluginRegistry } from "../plugin-registry.ts";
+import { clearStatsCacheForTests, scanStats } from "./stats.ts";
 
-function makeTmpDir(): string {
-  const dir = join(
-    tmpdir(),
-    `klovi-stats-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  );
-  mkdirSync(dir, { recursive: true });
-  return dir;
+function isoDaysAgo(days: number): string {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
 }
 
-function writeCacheFile(dir: string, cache: object): void {
-  writeFileSync(join(dir, "stats-cache.json"), JSON.stringify(cache));
+function makeSession(
+  id: string,
+  project: string,
+  timestamp: string,
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): Session {
+  return {
+    sessionId: id,
+    project,
+    pluginId: "mock-plugin",
+    turns: [
+      {
+        kind: "user",
+        uuid: `${id}-user`,
+        timestamp,
+        text: "hello",
+      },
+      {
+        kind: "assistant",
+        uuid: `${id}-assistant`,
+        timestamp,
+        model,
+        usage: {
+          inputTokens,
+          outputTokens,
+          cacheReadTokens: 3,
+          cacheCreationTokens: 2,
+        },
+        contentBlocks: [
+          { type: "text", text: "result" },
+          {
+            type: "tool_call",
+            call: {
+              toolUseId: `${id}-tool-1`,
+              name: "Read",
+              input: { file_path: "README.md" },
+              result: "ok",
+              isError: false,
+            },
+          },
+        ],
+      },
+    ],
+  };
 }
 
-let tmpDir: string;
-
-function isolateToolDirs(claudeDir: string): void {
-  setClaudeCodeDir(claudeDir);
-  // Prevent other plugins from registering during tests
-  setCodexCliDir("/nonexistent/codex-cli-dir");
-  setOpenCodeDir("/nonexistent/opencode-dir");
+function createMockPlugin(
+  sessionsById: Record<string, Session>,
+  list: SessionSummary[],
+  options?: { failLoad?: boolean },
+): ToolPlugin {
+  return {
+    id: "mock-plugin",
+    displayName: "Mock",
+    getDefaultDataDir: () => null,
+    discoverProjects: async () => [
+      {
+        pluginId: "mock-plugin",
+        nativeId: "project-1",
+        resolvedPath: "/tmp/project-1",
+        displayName: "project-1",
+        sessionCount: list.length,
+        lastActivity: list[0]?.timestamp ?? "",
+      },
+    ],
+    listSessions: async () => list,
+    loadSession: async (_nativeId, sessionId) => {
+      if (options?.failLoad) throw new Error("load failed");
+      const session = sessionsById[sessionId];
+      if (!session) throw new Error("missing session");
+      return session;
+    },
+  };
 }
 
 afterEach(() => {
-  if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
+  clearStatsCacheForTests();
 });
 
-describe("scanStats with cache file", () => {
-  test("loads stats from valid cache file", async () => {
-    tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "projects", "proj1");
-    mkdirSync(proj, { recursive: true });
-    writeFileSync(join(proj, "s1.jsonl"), "");
+describe("scanStats", () => {
+  test("aggregates multi-tool style stats from registry sessions", async () => {
+    const registry = new PluginRegistry();
 
-    writeCacheFile(tmpDir, {
-      version: 2,
-      totalSessions: 42,
-      totalMessages: 1000,
-      dailyActivity: [
-        { date: "2026-01-01", sessionCount: 3, toolCallCount: 50, messageCount: 100 },
-      ],
-      modelUsage: {
-        "claude-opus-4-6": {
-          inputTokens: 100,
-          outputTokens: 50,
-          cacheReadInputTokens: 20,
-          cacheCreationInputTokens: 10,
-        },
+    const s1 = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 100, 40);
+    const s2 = makeSession("s2", "project-1", isoDaysAgo(8), "gpt-5", 60, 20);
+
+    const list: SessionSummary[] = [
+      {
+        sessionId: "s1",
+        timestamp: s1.turns[0]!.timestamp,
+        slug: "s1",
+        firstMessage: "session 1",
+        model: "claude-opus",
+        gitBranch: "main",
       },
-    });
+      {
+        sessionId: "s2",
+        timestamp: s2.turns[0]!.timestamp,
+        slug: "s2",
+        firstMessage: "session 2",
+        model: "gpt-5",
+        gitBranch: "main",
+      },
+    ];
 
-    isolateToolDirs(tmpDir);
-    const stats = await scanStats();
+    registry.register(createMockPlugin({ s1, s2 }, list));
+
+    const stats = await scanStats(registry);
     expect(stats.projects).toBe(1);
-    expect(stats.sessions).toBe(42);
-    expect(stats.messages).toBe(1000);
-    expect(stats.inputTokens).toBe(100);
-    expect(stats.outputTokens).toBe(50);
-    expect(stats.cacheReadTokens).toBe(20);
-    expect(stats.cacheCreationTokens).toBe(10);
-    expect(stats.toolCalls).toBe(50);
+    expect(stats.sessions).toBe(2);
+    expect(stats.todaySessions).toBe(1);
+    expect(stats.thisWeekSessions).toBe(1);
+    expect(stats.messages).toBe(4);
+    expect(stats.toolCalls).toBe(2);
+    expect(stats.inputTokens).toBe(160);
+    expect(stats.outputTokens).toBe(60);
+    expect(stats.cacheReadTokens).toBe(6);
+    expect(stats.cacheCreationTokens).toBe(4);
+    expect(stats.models["claude-opus"]?.inputTokens).toBe(100);
+    expect(stats.models["gpt-5"]?.outputTokens).toBe(20);
   });
 
-  test("sums tokens from multiple models", async () => {
-    tmpDir = makeTmpDir();
-    mkdirSync(join(tmpDir, "projects"), { recursive: true });
+  test("keeps project/session counts when session loading fails", async () => {
+    const registry = new PluginRegistry();
 
-    writeCacheFile(tmpDir, {
-      version: 2,
-      totalSessions: 10,
-      totalMessages: 500,
-      dailyActivity: [],
-      modelUsage: {
-        "claude-opus-4-6": {
-          inputTokens: 100,
-          outputTokens: 50,
-          cacheReadInputTokens: 20,
-          cacheCreationInputTokens: 10,
-        },
-        "claude-sonnet-4-5-20250929": {
-          inputTokens: 200,
-          outputTokens: 80,
-          cacheReadInputTokens: 30,
-          cacheCreationInputTokens: 5,
-        },
+    const list: SessionSummary[] = [
+      {
+        sessionId: "s1",
+        timestamp: isoDaysAgo(0),
+        slug: "s1",
+        firstMessage: "session 1",
+        model: "unknown",
+        gitBranch: "",
       },
-    });
+    ];
 
-    isolateToolDirs(tmpDir);
-    const stats = await scanStats();
-    expect(stats.inputTokens).toBe(300);
-    expect(stats.outputTokens).toBe(130);
-    expect(stats.cacheReadTokens).toBe(50);
-    expect(stats.cacheCreationTokens).toBe(15);
-    expect(stats.models["claude-opus-4-6"]!.inputTokens).toBe(100);
-    expect(stats.models["claude-sonnet-4-5-20250929"]!.outputTokens).toBe(80);
-  });
+    registry.register(createMockPlugin({}, list, { failLoad: true }));
 
-  test("computes todaySessions from jsonl file mtimes", async () => {
-    tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "projects", "proj1");
-    mkdirSync(proj, { recursive: true });
-
-    // Create 5 .jsonl files with today's mtime (default)
-    for (let i = 0; i < 5; i++) {
-      writeFileSync(join(proj, `session-${i}.jsonl`), "");
-    }
-
-    writeCacheFile(tmpDir, {
-      version: 2,
-      totalSessions: 10,
-      totalMessages: 100,
-      dailyActivity: [],
-      modelUsage: {},
-    });
-
-    isolateToolDirs(tmpDir);
-    const stats = await scanStats();
-    expect(stats.todaySessions).toBe(5);
-  });
-
-  test("computes thisWeekSessions from jsonl file mtimes", async () => {
-    tmpDir = makeTmpDir();
-    const proj = join(tmpDir, "projects", "proj1");
-    mkdirSync(proj, { recursive: true });
-
-    const today = new Date();
-    const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-    const tenDaysAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10);
-
-    // 2 files with today's mtime (default)
-    writeFileSync(join(proj, "today-1.jsonl"), "");
-    writeFileSync(join(proj, "today-2.jsonl"), "");
-
-    // 3 files with yesterday's mtime (within last week)
-    for (let i = 0; i < 3; i++) {
-      const filePath = join(proj, `yesterday-${i}.jsonl`);
-      writeFileSync(filePath, "");
-      utimesSync(filePath, yesterday, yesterday);
-    }
-
-    // 1 file from 10 days ago (outside last week)
-    const oldFile = join(proj, "old.jsonl");
-    writeFileSync(oldFile, "");
-    utimesSync(oldFile, tenDaysAgo, tenDaysAgo);
-
-    writeCacheFile(tmpDir, {
-      version: 2,
-      totalSessions: 10,
-      totalMessages: 100,
-      dailyActivity: [],
-      modelUsage: {},
-    });
-
-    isolateToolDirs(tmpDir);
-    const stats = await scanStats();
-    expect(stats.todaySessions).toBe(2);
-    expect(stats.thisWeekSessions).toBe(5);
-  });
-
-  test("returns empty stats when cache has wrong version", async () => {
-    tmpDir = makeTmpDir();
-    mkdirSync(join(tmpDir, "projects"), { recursive: true });
-
-    writeCacheFile(tmpDir, { version: 999, totalSessions: 0 });
-
-    isolateToolDirs(tmpDir);
-    const stats = await scanStats();
+    const stats = await scanStats(registry);
+    expect(stats.projects).toBe(1);
+    expect(stats.sessions).toBe(1);
+    expect(stats.messages).toBe(0);
     expect(stats.inputTokens).toBe(0);
-    expect(stats.sessions).toBe(0);
   });
 
-  test("returns empty stats when cache is malformed", async () => {
-    tmpDir = makeTmpDir();
-    mkdirSync(join(tmpDir, "projects"), { recursive: true });
+  test("uses in-memory cache between calls", async () => {
+    const registry = new PluginRegistry();
+    let session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 10, 5);
 
-    writeFileSync(join(tmpDir, "stats-cache.json"), "not valid json");
+    const list: SessionSummary[] = [
+      {
+        sessionId: "s1",
+        timestamp: isoDaysAgo(0),
+        slug: "s1",
+        firstMessage: "session 1",
+        model: "claude-opus",
+        gitBranch: "",
+      },
+    ];
 
-    isolateToolDirs(tmpDir);
-    const stats = await scanStats();
-    expect(stats.inputTokens).toBe(0);
-    expect(stats.sessions).toBe(0);
-  });
+    registry.register(
+      createMockPlugin(
+        {
+          s1: session,
+        },
+        list,
+      ),
+    );
 
-  test("handles missing projects directory", async () => {
-    isolateToolDirs("/nonexistent/path/that/does/not/exist");
-    const stats = await scanStats();
-    expect(stats.projects).toBe(0);
-    expect(stats.sessions).toBe(0);
+    const first = await scanStats(registry);
+    expect(first.inputTokens).toBe(10);
+
+    session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 999, 5);
+    const second = await scanStats(registry);
+    expect(second.inputTokens).toBe(10);
+
+    clearStatsCacheForTests();
+    registry.register(
+      createMockPlugin(
+        {
+          s1: session,
+        },
+        list,
+      ),
+    );
+
+    const third = await scanStats(registry);
+    expect(third.inputTokens).toBe(999);
   });
 });
