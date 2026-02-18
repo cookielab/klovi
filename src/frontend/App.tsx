@@ -17,7 +17,18 @@ import { SubAgentPresentation } from "./components/session/SubAgentPresentation.
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
-import { isClaudeModel } from "./utils/model.ts";
+
+// Plugin-aware resume command builder
+function getResumeCommand(pluginId: string | undefined, sessionId: string): string | undefined {
+  switch (pluginId) {
+    case "claude-code":
+      return `claude --resume ${sessionId}`;
+    case "codex-cli":
+      return `codex resume ${sessionId}`;
+    default:
+      return undefined;
+  }
+}
 
 type ViewState =
   | { kind: "home" }
@@ -319,8 +330,8 @@ function App() {
           title={headerTitle}
           breadcrumb={breadcrumb}
           copyCommand={
-            view.kind === "session" && isClaudeModel(view.session.model)
-              ? `claude --resume ${view.session.sessionId}`
+            view.kind === "session"
+              ? getResumeCommand(view.session.pluginId, view.session.sessionId)
               : undefined
           }
           backHref={

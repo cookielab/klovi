@@ -13,6 +13,7 @@ interface ToolCallProps {
   call: ToolCallWithResult;
   sessionId?: string;
   project?: string;
+  pluginId?: string;
 }
 
 function isEditWithDiff(call: ToolCallWithResult): boolean {
@@ -50,7 +51,7 @@ function DefaultToolContent({ call }: { call: ToolCallWithResult }) {
   );
 }
 
-export function ToolCall({ call, sessionId, project }: ToolCallProps) {
+export function ToolCall({ call, sessionId, project, pluginId: _pluginId }: ToolCallProps) {
   const summary = getToolSummary(call);
   const mcpServer = getMcpServer(call.name);
   const skillName = getSkillName(call);
