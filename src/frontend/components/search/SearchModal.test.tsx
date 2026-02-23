@@ -65,10 +65,10 @@ describe("SearchModal", () => {
     expect(modal.queryByText(/other\/project/)).toBeNull();
   });
 
-  test("filters by gitBranch", () => {
+  test("filters by gitBranch even though branch is not displayed", () => {
     const sessions = [
-      makeResult({ sessionId: "s1", gitBranch: "feature/search" }),
-      makeResult({ sessionId: "s2", gitBranch: "main" }),
+      makeResult({ sessionId: "s1", gitBranch: "feature/search", firstMessage: "Branch work" }),
+      makeResult({ sessionId: "s2", gitBranch: "main", firstMessage: "Main work" }),
     ];
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
@@ -79,9 +79,9 @@ describe("SearchModal", () => {
       target: { value: "feature/search" },
     });
 
-    expect(modal.getByText(/feature\/search/)).toBeTruthy();
     const items = container.querySelectorAll("[data-search-item]");
     expect(items.length).toBe(1);
+    expect(modal.getByText("Branch work")).toBeTruthy();
   });
 
   test("shows 'No results found' when query matches nothing", () => {

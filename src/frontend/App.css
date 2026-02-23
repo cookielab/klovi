@@ -441,6 +441,22 @@
   text-decoration: underline;
 }
 
+/* Session branch bar */
+.session-branch-bar {
+  padding: 6px 20px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-light);
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.session-branch-icon {
+  font-size: 0.8rem;
+}
+
 /* Message styles */
 .message-list {
   padding: 20px;
@@ -1312,6 +1328,20 @@
 .session-type-badge.implementation {
   background: var(--impl-subtle);
   color: var(--impl-color);
+}
+
+/* Plugin badge (session list & search) */
+.plugin-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--bg-tertiary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  vertical-align: middle;
 }
 
 .list-item.plan {

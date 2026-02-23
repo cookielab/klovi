@@ -5,9 +5,10 @@ import { FetchError } from "../ui/FetchError.tsx";
 interface SessionViewProps {
   sessionId: string;
   project: string;
+  gitBranch?: string;
 }
 
-export function SessionView({ sessionId, project }: SessionViewProps) {
+export function SessionView({ sessionId, project, gitBranch }: SessionViewProps) {
   const { data, loading, error, retry } = useSessionData(sessionId, project);
 
   if (loading) return <div className="loading">Loading session...</div>;
@@ -16,13 +17,20 @@ export function SessionView({ sessionId, project }: SessionViewProps) {
 
   const session = data.session;
   return (
-    <MessageList
-      turns={session.turns}
-      sessionId={sessionId}
-      project={project}
-      pluginId={session.pluginId}
-      planSessionId={session.planSessionId}
-      implSessionId={session.implSessionId}
-    />
+    <>
+      {gitBranch && (
+        <div className="session-branch-bar">
+          <span className="session-branch-icon">⎇</span> {gitBranch}
+        </div>
+      )}
+      <MessageList
+        turns={session.turns}
+        sessionId={sessionId}
+        project={project}
+        pluginId={session.pluginId}
+        planSessionId={session.planSessionId}
+        implSessionId={session.implSessionId}
+      />
+    </>
   );
 }
