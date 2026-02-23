@@ -105,36 +105,43 @@ describe("SessionList", () => {
     await findByText("Plan");
   });
 
-  test("renders model name", async () => {
+  test("does not render model name in session list", async () => {
     const sessions = [makeSession({ model: "claude-opus-4-6" })];
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
 
-    const { findByText } = render(
+    const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
     );
-    await findByText(/Opus/);
-  });
-
-  test("renders plugin display name instead of model when pluginId is set", async () => {
-    const sessions = [makeSession({ pluginId: "claude-code", model: "claude-opus-4-6" })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
-
-    const { findByText, container } = render(
-      <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
-    );
-    await findByText(/Claude Code/);
+    await findByText("Hello world");
     const meta = container.querySelector(".list-item-meta")!;
     expect(meta.textContent).not.toMatch(/Opus/);
   });
 
-  test("renders git branch", async () => {
+  test("renders plugin badge with correct class when pluginId is set", async () => {
+    const sessions = [makeSession({ pluginId: "claude-code", model: "claude-opus-4-6" })];
+    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+
+    const { container, findByText } = render(
+      <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
+    );
+    await findByText(/Claude Code/);
+    const badge = container.querySelector(".plugin-badge")!;
+    expect(badge).not.toBeNull();
+    expect(badge.textContent).toMatch(/Claude Code/);
+    const meta = container.querySelector(".list-item-meta")!;
+    expect(meta.textContent).not.toMatch(/Opus/);
+  });
+
+  test("does not render git branch in session list", async () => {
     const sessions = [makeSession({ gitBranch: "feature/test" })];
     mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
 
-    const { findByText } = render(
+    const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
     );
-    await findByText(/feature\/test/);
+    await findByText("Hello world");
+    const meta = container.querySelector(".list-item-meta")!;
+    expect(meta.textContent).not.toMatch(/feature\/test/);
   });
 
   test("shows empty message when no sessions", async () => {

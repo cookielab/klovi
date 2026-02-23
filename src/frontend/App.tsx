@@ -184,7 +184,11 @@ function App() {
                 onExit={togglePresentation}
               />
             ) : (
-              <SessionView sessionId={view.session.sessionId} project={view.project.encodedPath} />
+              <SessionView
+                sessionId={view.session.sessionId}
+                project={view.project.encodedPath}
+                gitBranch={view.session.gitBranch}
+              />
             ))}
           {view.kind === "subagent" &&
             (view.presenting ? (
