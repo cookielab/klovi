@@ -20,6 +20,7 @@
         "@types/react": "^19.2.13",
         "@types/react-dom": "^19.2.3",
         "@types/react-syntax-highlighter": "^15.5.13",
+        "chrome-devtools-mcp": "^0.17.3",
         "happy-dom": "^20.5.0",
       },
       "peerDependencies": {
@@ -113,6 +114,8 @@
     "character-entities-legacy": ["character-entities-legacy@3.0.0", "", {}, "sha512-RpPp0asT/6ufRm//AJVwpViZbGM/MkjQFxJccQRHmISF/22NBtsHqAWmL+/pmkPWoIUJdWyeVleTl1wydHATVQ=="],
 
     "character-reference-invalid": ["character-reference-invalid@2.0.1", "", {}, "sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw=="],
+
+    "chrome-devtools-mcp": ["chrome-devtools-mcp@0.17.3", "", { "bin": { "chrome-devtools-mcp": "build/src/index.js" } }, "sha512-TcJIkvr5GXaVPAbsB0bpSVa0YiM694TvkdAN2TTKO94PXnZga2/2nmgIAVDm41QjJexhMCR+vO7J1rF8LwmiiQ=="],
 
     "comma-separated-tokens": ["comma-separated-tokens@2.0.3", "", {}, "sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg=="],
 
