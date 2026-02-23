@@ -1,6 +1,19 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { SmartToolOutput } from "./SmartToolOutput.tsx";
+
+let origRAF: typeof globalThis.requestAnimationFrame;
+beforeEach(() => {
+  origRAF = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
+    cb(0);
+    return 0;
+  };
+});
+afterEach(() => {
+  globalThis.requestAnimationFrame = origRAF;
+  cleanup();
+});
 
 describe("SmartToolOutput", () => {
   test("returns null when no output and no images", () => {
@@ -80,5 +93,51 @@ describe("SmartToolOutput", () => {
     const { container } = render(<SmartToolOutput output="hello" isError={false} />);
     const label = container.querySelector(".tool-section-label");
     expect(label!.textContent).toBe("Output");
+  });
+
+  test("clicking an image opens the lightbox", () => {
+    const { container } = render(
+      <SmartToolOutput
+        output="output"
+        isError={false}
+        resultImages={[{ mediaType: "image/png", data: "AAAA" }]}
+      />,
+    );
+
+    expect(container.querySelector(".lightbox-overlay")).toBeNull();
+
+    const img = container.querySelector(".tool-result-image")!;
+    fireEvent.click(img);
+
+    const overlay = container.querySelector(".lightbox-overlay");
+    expect(overlay).not.toBeNull();
+
+    const lightboxImg = container.querySelector(".lightbox-image") as HTMLImageElement;
+    expect(lightboxImg.src).toBe("data:image/png;base64,AAAA");
+  });
+
+  test("lightbox closes on overlay click", () => {
+    const { container } = render(
+      <SmartToolOutput
+        output="output"
+        isError={false}
+        resultImages={[{ mediaType: "image/png", data: "AAAA" }]}
+      />,
+    );
+
+    // Open lightbox
+    fireEvent.click(container.querySelector(".tool-result-image")!);
+    expect(container.querySelector(".lightbox-overlay")).not.toBeNull();
+
+    // Click overlay to close
+    fireEvent.click(container.querySelector(".lightbox-overlay")!);
+
+    // The lightbox state clears after the 200ms setTimeout
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        expect(container.querySelector(".lightbox-overlay")).toBeNull();
+        resolve();
+      }, 250);
+    });
   });
 });
