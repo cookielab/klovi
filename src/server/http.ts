@@ -23,7 +23,7 @@ export function matchRoute(pattern: string, pathname: string): Record<string, st
     const pat = patternParts[i]!;
     const val = pathParts[i]!;
     if (pat.startsWith(":")) {
-      params[pat.slice(1)] = val;
+      params[pat.slice(1)] = decodeURIComponent(val);
     } else if (pat !== val) {
       return null;
     }
