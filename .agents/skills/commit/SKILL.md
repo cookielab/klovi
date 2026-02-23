@@ -26,15 +26,25 @@ Create atomic, well-scoped conventional commits following the Conventional Commi
 <optional body>
 ```
 
-Always pass the message via HEREDOC:
+Always pass the message via HEREDOC and include a `Co-Authored-By` trailer identifying the AI that produced the changes:
 ```bash
 git commit -m "$(cat <<'EOF'
 <type>(<scope>): <short description>
 
 <optional body>
+
+Co-Authored-By: <ai-trailer>
 EOF
 )"
 ```
+
+### Co-Authored-By trailers by AI
+| AI | Trailer |
+|----|---------|
+| Claude | `Claude Opus 4.6 <noreply@anthropic.com>` |
+| Codex | `chatgpt-codex-connector[bot] <199175422+chatgpt-codex-connector[bot]@users.noreply.github.com>` |
+
+Use the trailer matching the AI that made the changes being committed.
 
 ### Types
 - `feat` — new feature or capability
