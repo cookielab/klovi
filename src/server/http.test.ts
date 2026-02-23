@@ -39,8 +39,16 @@ describe("matchRoute", () => {
 
   test("param with encoded characters", () => {
     expect(matchRoute("/api/projects/:path", "/api/projects/foo%2Fbar")).toEqual({
-      path: "foo%2Fbar",
+      path: "foo/bar",
     });
+  });
+
+  test("param with encoded :: separator", () => {
+    expect(matchRoute("/api/sessions/:sessionId", "/api/sessions/claude-code%3A%3Aabc123")).toEqual(
+      {
+        sessionId: "claude-code::abc123",
+      },
+    );
   });
 });
 
