@@ -91,6 +91,8 @@ ApplicationMenu.setApplicationMenu([
     submenu: [
       { label: "About Klovi", role: "about" },
       { type: "separator" },
+      { label: "Preferences...", action: "openSettings", accelerator: "CmdOrCtrl+," },
+      { type: "separator" },
       { label: "Quit Klovi", role: "quit" },
     ],
   },
@@ -141,6 +143,9 @@ Electrobun.events.on("application-menu-clicked", (e) => {
       break;
     case "togglePresentation":
       rpcSend.togglePresentation({});
+      break;
+    case "openSettings":
+      rpcSend.openSettings({});
       break;
   }
 });

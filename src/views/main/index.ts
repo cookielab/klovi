@@ -34,6 +34,9 @@ const rpc = Electroview.defineRPC<KloviRPC>({
       togglePresentation: () => {
         window.dispatchEvent(new CustomEvent("klovi:togglePresentation"));
       },
+      openSettings: () => {
+        window.dispatchEvent(new CustomEvent("klovi:openSettings"));
+      },
     },
   },
 });
