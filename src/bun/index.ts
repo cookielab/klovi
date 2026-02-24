@@ -82,37 +82,21 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
   },
 });
 
-const win = new BrowserWindow({
-  title: "Klovi",
-  url: "views://main/index.html",
-  frame: { x: 100, y: 100, width: 1400, height: 900 },
-  rpc,
-});
-
 // Application menu
 ApplicationMenu.setApplicationMenu([
   {
+    label: "Klovi",
     submenu: [
       { label: "About Klovi", role: "about" },
       { type: "separator" },
       { label: "Preferences...", action: "openSettings", accelerator: "CmdOrCtrl+," },
       { type: "separator" },
-      { label: "Quit Klovi", role: "quit" },
+      { label: "Quit Klovi", role: "quit", accelerator: "q" },
     ],
   },
   {
     label: "Edit",
-    submenu: [
-      { role: "undo" },
-      { role: "redo" },
-      { type: "separator" },
-      { role: "cut" },
-      { role: "copy" },
-      { role: "paste" },
-      { role: "pasteAndMatchStyle" },
-      { role: "delete" },
-      { role: "selectAll" },
-    ],
+    submenu: [{ role: "copy" }, { role: "selectAll" }],
   },
   {
     label: "View",
@@ -130,6 +114,13 @@ ApplicationMenu.setApplicationMenu([
     submenu: [{ role: "minimize" }, { role: "zoom" }],
   },
 ]);
+
+const win = new BrowserWindow({
+  title: "Klovi",
+  url: "views://main/index.html",
+  frame: { x: 100, y: 100, width: 1400, height: 900 },
+  rpc,
+});
 
 // Forward menu actions to webview as RPC messages
 Electrobun.events.on("application-menu-clicked", (e) => {
