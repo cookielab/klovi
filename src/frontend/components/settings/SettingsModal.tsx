@@ -294,7 +294,7 @@ export function SettingsModal({
                             checked={presentationTheme.sameAsGlobal}
                             onChange={(e) => presentationTheme.setSameAsGlobal(e.target.checked)}
                           />
-                          Same as normal
+                          Same as global
                         </label>
                         <ThemeSelector
                           value={presentationTheme.setting}
@@ -314,7 +314,7 @@ export function SettingsModal({
                             checked={presentationFontSize.sameAsGlobal}
                             onChange={(e) => presentationFontSize.setSameAsGlobal(e.target.checked)}
                           />
-                          Same as normal
+                          Same as global
                         </label>
                         <FontSizeControl
                           size={presentationFontSize.size}

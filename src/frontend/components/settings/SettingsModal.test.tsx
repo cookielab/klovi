@@ -302,18 +302,18 @@ describe("SettingsModal", () => {
     expect(controls[1]!.classList.contains("disabled")).toBe(true);
   });
 
-  test("Same as normal checkboxes are rendered", async () => {
+  test("Same as global checkboxes are rendered", async () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const { findByRole, findAllByLabelText } = render(<SettingsModal {...defaultProps()} />);
     const generalTab = await findByRole("button", { name: "General" });
     fireEvent.click(generalTab);
-    const sameLabels = await findAllByLabelText("Same as normal");
+    const sameLabels = await findAllByLabelText("Same as global");
     expect(sameLabels).toHaveLength(2);
   });
 
-  test("unchecking Same as normal calls setSameAsGlobal(false)", async () => {
+  test("unchecking Same as global calls setSameAsGlobal(false)", async () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
@@ -321,7 +321,7 @@ describe("SettingsModal", () => {
     const { findByRole, findAllByLabelText } = render(<SettingsModal {...props} />);
     const generalTab = await findByRole("button", { name: "General" });
     fireEvent.click(generalTab);
-    const sameLabels = await findAllByLabelText("Same as normal");
+    const sameLabels = await findAllByLabelText("Same as global");
     // First is theme, second is font size
     fireEvent.click(sameLabels[0]!);
     expect(props.presentationTheme.setSameAsGlobal).toHaveBeenCalledWith(false);
