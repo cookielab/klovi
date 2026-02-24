@@ -235,6 +235,7 @@ export function App() {
 }
 
 export function AppGate() {
+  useTheme();
   const [accepted, setAccepted] = useState(false);
 
   const handleAccept = useCallback(() => {
