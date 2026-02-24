@@ -10,7 +10,7 @@ import type {
 } from "../../../shared/types.ts";
 import { epochSecondsToIso } from "../../iso-time.ts";
 import { iterateJsonl } from "../shared/jsonl-utils.ts";
-import { findCodexSessionFileById, isCodexSessionMeta } from "./session-index.ts";
+import { findCodexSessionFileById, normalizeSessionMeta } from "./session-index.ts";
 
 interface CodexItemCommand {
   type: "command_execution";
@@ -58,11 +58,133 @@ type CodexItem =
 export interface CodexEvent {
   type: string;
   item?: CodexItem;
+  text?: string;
+  callId?: string;
+  toolName?: string;
+  toolInput?: Record<string, unknown>;
   usage?: {
     input_tokens?: number;
     cached_input_tokens?: number;
     output_tokens?: number;
   };
+}
+
+interface EnvelopePayload {
+  type?: string;
+  message?: string;
+  text?: string;
+  name?: string;
+  call_id?: string;
+  input?: string;
+  output?: string;
+  arguments?: Record<string, unknown> | string;
+  role?: string;
+  content?: { type: string; text?: string }[];
+  input_tokens?: number;
+  cached_input_tokens?: number;
+  output_tokens?: number;
+  [key: string]: unknown;
+}
+
+interface EnvelopeEvent {
+  type: string;
+  timestamp?: string;
+  payload?: EnvelopePayload;
+}
+
+function normalizeEventMsg(payload: EnvelopePayload): CodexEvent | null {
+  switch (payload.type) {
+    case "task_started":
+      return { type: "turn.started" };
+    case "user_message":
+      return { type: "user_message", text: payload.message || payload.text || "" };
+    case "agent_message":
+      return {
+        type: "item.completed",
+        item: { type: "agent_message", text: payload.message || payload.text || "" },
+      };
+    case "agent_reasoning":
+      return {
+        type: "item.completed",
+        item: { type: "reasoning", text: payload.text || "" },
+      };
+    case "token_count":
+      return {
+        type: "turn.completed",
+        usage: {
+          input_tokens: payload.input_tokens,
+          cached_input_tokens: payload.cached_input_tokens,
+          output_tokens: payload.output_tokens,
+        },
+      };
+    case "task_complete":
+      return { type: "turn.completed" };
+    default:
+      return null;
+  }
+}
+
+function parseArguments(
+  args: Record<string, unknown> | string | undefined,
+): Record<string, unknown> {
+  if (!args) return {};
+  if (typeof args === "string") {
+    try {
+      return JSON.parse(args) as Record<string, unknown>;
+    } catch {
+      return { raw: args };
+    }
+  }
+  return args;
+}
+
+function normalizeResponseItem(payload: EnvelopePayload): CodexEvent | null {
+  if (payload.type === "function_call" || payload.type === "custom_tool_call") {
+    const name = payload.name || "unknown";
+    const args = parseArguments(payload.arguments);
+    return {
+      type: "item.completed",
+      item: {
+        type: "command_execution",
+        command: name,
+        aggregated_output: "",
+        exit_code: 0,
+      },
+      // Store call_id and parsed args for the generic tool call path
+      callId: payload.call_id,
+      toolName: name,
+      toolInput: args,
+    };
+  }
+  if (payload.type === "function_call_output" || payload.type === "custom_tool_call_output") {
+    return {
+      type: "tool_output",
+      callId: payload.call_id,
+      text: payload.output || "",
+    };
+  }
+  return null;
+}
+
+const OLD_FORMAT_TYPES = new Set([
+  "turn.started",
+  "turn.completed",
+  "item.completed",
+  "thread.started",
+]);
+
+function normalizeEvent(raw: unknown): CodexEvent | null {
+  if (typeof raw !== "object" || raw === null || !("type" in raw)) return null;
+  const obj = raw as EnvelopeEvent;
+
+  if (OLD_FORMAT_TYPES.has(obj.type)) return raw as CodexEvent;
+
+  const payload = obj.payload;
+  if (!payload) return null;
+
+  if (obj.type === "event_msg") return normalizeEventMsg(payload);
+  if (obj.type === "response_item") return normalizeResponseItem(payload);
+  return null;
 }
 
 function buildToolCallFromItem(
@@ -142,13 +264,14 @@ function itemToContentBlock(item: CodexItem, nextToolUseId: () => string): Conte
 
 function handleTurnStarted(
   state: TurnBuilderState,
+  event: CodexEvent,
   timestamp: string,
   nextUserTurnId: () => string,
 ): void {
   flushAssistant(state);
   state.turnCount++;
   if (state.turnCount > 1) {
-    state.turns.push(createUserTurn("", timestamp, nextUserTurnId()));
+    state.turns.push(createUserTurn(event.text || "", timestamp, nextUserTurnId()));
   }
 }
 
@@ -195,6 +318,88 @@ interface TurnBuilderState {
   turns: Turn[];
   currentAssistant: AssistantTurn | null;
   turnCount: number;
+  /** Maps call_id → ToolCallWithResult for new-format function_call_output matching */
+  pendingToolCalls: Map<string, ToolCallWithResult>;
+}
+
+function handleUserMessage(state: TurnBuilderState, event: CodexEvent): void {
+  // Find the last user turn and set its text
+  for (let i = state.turns.length - 1; i >= 0; i--) {
+    const turn = state.turns[i]!;
+    if (turn.kind === "user" && !turn.text) {
+      turn.text = event.text || "";
+      return;
+    }
+  }
+  // If no user turn yet (first message), create one
+  if (state.turnCount === 0) {
+    state.turnCount++;
+  }
+  state.turns.push(createUserTurn(event.text || "", "", "codex-user-first"));
+}
+
+function handleToolOutput(state: TurnBuilderState, event: CodexEvent): void {
+  if (!event.callId) return;
+  const toolCall = state.pendingToolCalls.get(event.callId);
+  if (toolCall) {
+    toolCall.result = event.text || "";
+  }
+}
+
+function handleGenericToolCall(
+  state: TurnBuilderState,
+  event: CodexEvent,
+  model: string,
+  timestamp: string,
+  nextToolUseId: () => string,
+  nextAssistantTurnId: () => string,
+): void {
+  if (!state.currentAssistant) {
+    state.currentAssistant = createAssistantTurn(model, timestamp, nextAssistantTurnId());
+  }
+  const toolCall: ToolCallWithResult = {
+    toolUseId: event.callId || nextToolUseId(),
+    name: event.toolName || "unknown",
+    input: event.toolInput || {},
+    result: "",
+    isError: false,
+  };
+  if (event.callId) {
+    state.pendingToolCalls.set(event.callId, toolCall);
+  }
+  state.currentAssistant.contentBlocks.push({ type: "tool_call", call: toolCall });
+}
+
+function dispatchEvent(
+  state: TurnBuilderState,
+  event: CodexEvent,
+  model: string,
+  timestamp: string,
+  nextToolUseId: () => string,
+  nextUserTurnId: () => string,
+  nextAssistantTurnId: () => string,
+): void {
+  switch (event.type) {
+    case "turn.started":
+      handleTurnStarted(state, event, timestamp, nextUserTurnId);
+      break;
+    case "turn.completed":
+      handleTurnCompleted(state, event);
+      break;
+    case "item.completed":
+      if (event.toolName) {
+        handleGenericToolCall(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
+      } else {
+        handleItemCompleted(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
+      }
+      break;
+    case "user_message":
+      handleUserMessage(state, event);
+      break;
+    case "tool_output":
+      handleToolOutput(state, event);
+      break;
+  }
 }
 
 export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string): Turn[] {
@@ -219,16 +424,19 @@ export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: 
     turns: [],
     currentAssistant: null,
     turnCount: 0,
+    pendingToolCalls: new Map(),
   };
 
   for (const event of events) {
-    if (event.type === "turn.started") {
-      handleTurnStarted(state, timestamp, nextUserTurnId);
-    } else if (event.type === "turn.completed") {
-      handleTurnCompleted(state, event);
-    } else if (event.type === "item.completed") {
-      handleItemCompleted(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
-    }
+    dispatchEvent(
+      state,
+      event,
+      model,
+      timestamp,
+      nextToolUseId,
+      nextUserTurnId,
+      nextAssistantTurnId,
+    );
   }
 
   flushAssistant(state);
@@ -252,17 +460,21 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
   const events: CodexEvent[] = [];
 
   iterateJsonl(text, ({ parsed, lineIndex }) => {
-    if (lineIndex === 0 && isCodexSessionMeta(parsed)) {
-      meta = parsed;
-      return;
+    if (lineIndex === 0) {
+      const normalized = normalizeSessionMeta(parsed);
+      if (normalized) {
+        meta = normalized;
+        return;
+      }
     }
 
-    if (typeof parsed === "object" && parsed !== null && "type" in parsed) {
-      events.push(parsed as CodexEvent);
+    const event = normalizeEvent(parsed);
+    if (event) {
+      events.push(event);
     }
   });
 
-  const metaInfo = isCodexSessionMeta(meta) ? meta : null;
+  const metaInfo = normalizeSessionMeta(meta);
   const model = metaInfo?.model || "unknown";
   const timestamp = metaInfo ? epochSecondsToIso(metaInfo.timestamps.created) : "";
 

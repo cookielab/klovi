@@ -22,6 +22,20 @@ function writeSession(
   return filePath;
 }
 
+function writeNewFormatSession(
+  datePath: string,
+  uuid: string,
+  meta: Record<string, unknown>,
+  events: Record<string, unknown>[] = [],
+): string {
+  const dir = join(testDir, "sessions", datePath);
+  mkdirSync(dir, { recursive: true });
+  const filePath = join(dir, `rollout-${datePath.replace(/\//g, "-")}-${uuid}.jsonl`);
+  const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
+  writeFileSync(filePath, lines.join("\n"));
+  return filePath;
+}
+
 beforeEach(() => {
   mkdirSync(join(testDir, "sessions"), { recursive: true });
   setCodexCliDir(testDir);
@@ -247,5 +261,131 @@ describe("listCodexSessions", () => {
 
     expect(sessions[0]!.sessionId).toBe("uuid-new");
     expect(sessions[1]!.sessionId).toBe("uuid-old");
+  });
+});
+
+describe("new envelope format", () => {
+  describe("discoverCodexProjects", () => {
+    test("discovers projects from new-format session files", async () => {
+      writeNewFormatSession("2026/02/18", "new-uuid-1", {
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "new-uuid-1",
+          cwd: "/Users/dev/new-project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+          originator: "Codex Desktop",
+        },
+      });
+
+      const projects = await discoverCodexProjects();
+
+      expect(projects).toHaveLength(1);
+      expect(projects[0]!.pluginId).toBe("codex-cli");
+      expect(projects[0]!.nativeId).toBe("/Users/dev/new-project");
+      expect(projects[0]!.sessionCount).toBe(1);
+    });
+
+    test("mixes old and new format sessions into same project", async () => {
+      writeSession("openai", "2025-01-15", "old-uuid", {
+        uuid: "old-uuid",
+        cwd: "/Users/dev/project",
+        timestamps: { created: 1706000000, updated: 1706001000 },
+        model: "o4-mini",
+        provider_id: "openai",
+      });
+
+      writeNewFormatSession("2026/02/18", "new-uuid", {
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "new-uuid",
+          cwd: "/Users/dev/project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+        },
+      });
+
+      const projects = await discoverCodexProjects();
+
+      expect(projects).toHaveLength(1);
+      expect(projects[0]!.sessionCount).toBe(2);
+    });
+  });
+
+  describe("listCodexSessions", () => {
+    test("lists new-format sessions", async () => {
+      writeNewFormatSession("2026/02/18", "new-uuid-1", {
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "new-uuid-1",
+          cwd: "/Users/dev/project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+          model: "o4-mini",
+        },
+      });
+
+      const sessions = await listCodexSessions("/Users/dev/project");
+
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0]!.sessionId).toBe("new-uuid-1");
+      expect(sessions[0]!.pluginId).toBe("codex-cli");
+      expect(sessions[0]!.model).toBe("o4-mini");
+    });
+
+    test("extracts first user message from new-format event_msg", async () => {
+      writeNewFormatSession(
+        "2026/02/18",
+        "msg-uuid",
+        {
+          type: "session_meta",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          payload: {
+            id: "msg-uuid",
+            cwd: "/Users/dev/project",
+            timestamp: "2026-02-18T10:00:00.000Z",
+            model_provider: "openai",
+          },
+        },
+        [
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:01.000Z",
+            payload: { type: "user_message", message: "Fix the login bug" },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:02.000Z",
+            payload: { type: "agent_message", message: "I'll look into it" },
+          },
+        ],
+      );
+
+      const sessions = await listCodexSessions("/Users/dev/project");
+
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0]!.firstMessage).toBe("Fix the login bug");
+    });
+
+    test("falls back to Codex session when no messages in new format", async () => {
+      writeNewFormatSession("2026/02/18", "empty-uuid", {
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "empty-uuid",
+          cwd: "/Users/dev/project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+        },
+      });
+
+      const sessions = await listCodexSessions("/Users/dev/project");
+
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0]!.firstMessage).toBe("Codex session");
+    });
   });
 });
