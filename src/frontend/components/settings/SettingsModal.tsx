@@ -140,24 +140,26 @@ interface PluginRowProps {
 }
 
 function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset }: PluginRowProps) {
-  const [editingPath, setEditingPath] = useState(plugin.dataDir);
+  const customPath = plugin.isCustomDir ? plugin.dataDir : "";
+  const [editingPath, setEditingPath] = useState(customPath);
 
   useEffect(() => {
-    setEditingPath(plugin.dataDir);
-  }, [plugin.dataDir]);
+    setEditingPath(plugin.isCustomDir ? plugin.dataDir : "");
+  }, [plugin.dataDir, plugin.isCustomDir]);
 
-  const handlePathBlur = () => {
-    if (editingPath !== plugin.dataDir) {
-      onPathChange(plugin.id, editingPath);
+  const commitPath = () => {
+    const trimmed = editingPath.trim();
+    if (trimmed === "" && plugin.isCustomDir) {
+      onReset(plugin.id);
+    } else if (trimmed !== "" && trimmed !== plugin.dataDir) {
+      onPathChange(plugin.id, trimmed);
     }
   };
 
   const handlePathKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (editingPath !== plugin.dataDir) {
-        onPathChange(plugin.id, editingPath);
-      }
+      commitPath();
     }
   };
 
@@ -178,8 +180,9 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset }: Plugin
           type="text"
           className="settings-path-input"
           value={editingPath}
+          placeholder={plugin.defaultDataDir}
           onChange={(e) => setEditingPath(e.target.value)}
-          onBlur={handlePathBlur}
+          onBlur={commitPath}
           onKeyDown={handlePathKeyDown}
           disabled={!plugin.enabled}
         />

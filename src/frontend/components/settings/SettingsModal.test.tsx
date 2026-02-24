@@ -59,15 +59,33 @@ describe("SettingsModal", () => {
     expect((checkboxes[1] as HTMLInputElement).checked).toBe(false);
   });
 
-  test("renders data directory path", async () => {
+  test("shows default path as placeholder when not customized", async () => {
     setupMockRPC({
       getPluginSettings: () =>
         Promise.resolve({
-          plugins: [makePlugin({ dataDir: "/Users/test/.claude" })],
+          plugins: [makePlugin({ isCustomDir: false, defaultDataDir: "/Users/test/.claude" })],
+        }),
+    });
+    const { findByPlaceholderText } = render(<SettingsModal onClose={mock()} />);
+    const input = await findByPlaceholderText("/Users/test/.claude");
+    expect((input as HTMLInputElement).value).toBe("");
+  });
+
+  test("shows custom path as value when customized", async () => {
+    setupMockRPC({
+      getPluginSettings: () =>
+        Promise.resolve({
+          plugins: [
+            makePlugin({
+              isCustomDir: true,
+              dataDir: "/custom/path",
+              defaultDataDir: "/Users/test/.claude",
+            }),
+          ],
         }),
     });
     const { findByDisplayValue } = render(<SettingsModal onClose={mock()} />);
-    await findByDisplayValue("/Users/test/.claude");
+    await findByDisplayValue("/custom/path");
   });
 
   test("calls onClose with false when X button is clicked without changes", async () => {
