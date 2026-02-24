@@ -1,7 +1,7 @@
 {
   "name": "@cookielab.io/klovi",
   "version": "0.0.0",
-  "description": "A local web app for browsing and presenting AI coding session history",
+  "description": "A native desktop app for browsing and presenting AI coding session history",
   "type": "module",
   "license": "MIT",
   "author": "Cookielab s.r.o.",
@@ -16,6 +16,9 @@
   "keywords": [
     "claude",
     "claude-code",
+    "codex",
+    "openai",
+    "opencode",
     "session-viewer",
     "ai",
     "developer-tools",

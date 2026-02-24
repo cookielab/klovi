@@ -3,16 +3,16 @@
 [![CI](https://github.com/cookielab/klovi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookielab/klovi/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
-A native desktop app for browsing and presenting AI coding session history. Supports Claude Code, Codex CLI, and OpenCode. Built for showing AI coding workflows at meetups and conferences.
+A native desktop app for browsing and presenting AI coding session history. Supports Claude Code, Codex (CLI & app), and OpenCode. Built for showing AI coding workflows at meetups and conferences.
 
 ![Klovi homepage screenshot](docs/screenshot-homepage.png)
 ![Klovi homepage screenshot](docs/screenshot-session.png)
 
 ## Why Klovi?
 
-AI coding tools like Claude Code, Codex CLI, and OpenCode store conversation history locally, but there's no unified way to browse, search, or present them. Klovi fills that gap: launch the app and get a native desktop UI to explore your full session history across all tools, review what AI assistants did across projects, and step through conversations in a presentation mode perfect for demos and talks.
+AI coding tools like Claude Code, Codex (CLI & app), and OpenCode store conversation history locally, but there's no unified way to browse, search, or present them. Klovi fills that gap: launch the app and get a native desktop UI to explore your full session history across all tools, review what AI assistants did across projects, and step through conversations in a presentation mode perfect for demos and talks.
 
-Klovi auto-discovers sessions from Claude Code (`~/.claude/projects/`), Codex CLI (`~/.codex/sessions/`), and OpenCode (`~/.local/share/opencode/opencode.db`), then renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode. Projects from different tools that share the same working directory are merged automatically.
+Klovi auto-discovers sessions from Claude Code (`~/.claude/projects/`), Codex CLI & app (`~/.codex/sessions/`), and OpenCode (`~/.local/share/opencode/opencode.db`), then renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode. Projects from different tools that share the same working directory are merged automatically.
 
 ## Quick Start
 
@@ -34,7 +34,7 @@ bun run dev
 ## Features
 
 **Multi-Tool Support**
-- Claude Code, Codex CLI, and OpenCode sessions in one unified viewer
+- Claude Code, Codex (CLI & app), and OpenCode sessions in one unified viewer
 - Plugin-based architecture — auto-discovers tools from their default data directories
 - Projects from different tools sharing the same working directory are merged
 - Tool name badge shown on each session in the sidebar
