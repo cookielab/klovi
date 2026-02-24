@@ -1,3 +1,4 @@
+import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
 import {
   findImplSessionId,
@@ -12,7 +13,6 @@ import type { PluginSettingInfo, VersionInfo } from "../shared/rpc-types.ts";
 import { encodeSessionId, parseSessionId } from "../shared/session-id.ts";
 import type { GlobalSessionResult, SessionSummary } from "../shared/types.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
-import pkg from "../../package.json" with { type: "json" };
 
 const version = pkg.version == null || pkg.version === "0.0.0" ? "dev" : pkg.version;
 
