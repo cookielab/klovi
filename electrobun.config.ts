@@ -20,8 +20,6 @@ export default {
     },
     copy: {
       "src/views/main/index.html": "views/main/index.html",
-      "src/frontend/App.css": "views/main/App.css",
-      "src/frontend/index.css": "views/main/index.css",
     },
     mac: {
       defaultRenderer: "native",
