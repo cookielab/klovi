@@ -1,4 +1,3 @@
-import { createRegistry } from "../plugins/auto-discover.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import { parseSessionId } from "../shared/session-id.ts";
 import type {
@@ -162,8 +161,6 @@ async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
   return stats;
 }
 
-export async function scanStats(
-  registry: PluginRegistry = createRegistry(),
-): Promise<DashboardStats> {
+export async function scanStats(registry: PluginRegistry): Promise<DashboardStats> {
   return computeStats(registry);
 }

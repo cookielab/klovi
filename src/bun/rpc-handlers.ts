@@ -18,8 +18,8 @@ export function getVersion(): VersionInfo {
   };
 }
 
-export async function getStats() {
-  const stats = await scanStats();
+export async function getStats(registry: PluginRegistry) {
+  const stats = await scanStats(registry);
   return { stats };
 }
 

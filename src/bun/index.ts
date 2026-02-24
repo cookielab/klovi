@@ -1,5 +1,6 @@
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow } from "electrobun/bun";
 import { createRegistry } from "../plugins/auto-discover.ts";
+import type { PluginRegistry } from "../plugins/registry.ts";
 import type { KloviRPC } from "../shared/rpc-types.ts";
 import {
   getProjects,
@@ -11,18 +12,29 @@ import {
   searchSessions,
 } from "./rpc-handlers.ts";
 
-const registry = createRegistry();
+let registry: PluginRegistry | null = null;
+
+function getRegistry(): PluginRegistry {
+  if (!registry) throw new Error("Risk not accepted yet");
+  return registry;
+}
 
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
+      acceptRisks: () => {
+        if (!registry) {
+          registry = createRegistry();
+        }
+        return { ok: true };
+      },
       getVersion: () => getVersion(),
-      getStats: () => getStats(),
-      getProjects: () => getProjects(registry),
-      getSessions: (params) => getSessions(registry, params),
-      getSession: (params) => getSession(registry, params),
-      getSubAgent: (params) => getSubAgent(registry, params),
-      searchSessions: () => searchSessions(registry),
+      getStats: () => getStats(getRegistry()),
+      getProjects: () => getProjects(getRegistry()),
+      getSessions: (params) => getSessions(getRegistry(), params),
+      getSession: (params) => getSession(getRegistry(), params),
+      getSubAgent: (params) => getSubAgent(getRegistry(), params),
+      searchSessions: () => searchSessions(getRegistry()),
     },
     messages: {},
   },
