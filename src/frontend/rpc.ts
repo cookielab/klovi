@@ -1,3 +1,4 @@
+import type { PluginSettingInfo } from "../shared/rpc-types.ts";
 import type {
   DashboardStats,
   GlobalSessionResult,
@@ -20,6 +21,13 @@ export interface RPCClient {
       agentId: string;
     }) => Promise<{ session: Session }>;
     searchSessions: (params: Record<string, never>) => Promise<{ sessions: GlobalSessionResult[] }>;
+    getPluginSettings: (params: Record<string, never>) => Promise<{ plugins: PluginSettingInfo[] }>;
+    updatePluginSetting: (params: {
+      pluginId: string;
+      enabled?: boolean;
+      dataDir?: string | null;
+    }) => Promise<{ plugins: PluginSettingInfo[] }>;
+    browseDirectory: (params: { startingFolder?: string }) => Promise<{ path: string | null }>;
   };
 }
 

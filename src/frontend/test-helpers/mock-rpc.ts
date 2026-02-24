@@ -37,6 +37,9 @@ export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
           session: { sessionId: "", project: "", turns: [] },
         }),
       searchSessions: () => Promise.resolve({ sessions: [] }),
+      getPluginSettings: () => Promise.resolve({ plugins: [] }),
+      updatePluginSetting: () => Promise.resolve({ plugins: [] }),
+      browseDirectory: () => Promise.resolve({ path: null }),
       ...overrides,
     },
   };

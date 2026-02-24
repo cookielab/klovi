@@ -12,6 +12,15 @@ export interface VersionInfo {
   commit: string;
 }
 
+export interface PluginSettingInfo {
+  id: string;
+  displayName: string;
+  enabled: boolean;
+  dataDir: string;
+  defaultDataDir: string;
+  isCustomDir: boolean;
+}
+
 // biome-ignore lint/complexity/noBannedTypes: Electrobun RPC schema requires {} for parameterless requests and empty message payloads
 export interface KloviRPC {
   bun: RPCSchema<{
@@ -36,6 +45,18 @@ export interface KloviRPC {
         params: {};
         response: { sessions: GlobalSessionResult[] };
       };
+      getPluginSettings: {
+        params: {};
+        response: { plugins: PluginSettingInfo[] };
+      };
+      updatePluginSetting: {
+        params: { pluginId: string; enabled?: boolean; dataDir?: string | null };
+        response: { plugins: PluginSettingInfo[] };
+      };
+      browseDirectory: {
+        params: { startingFolder?: string };
+        response: { path: string | null };
+      };
     };
     messages: {};
   }>;
@@ -46,6 +67,7 @@ export interface KloviRPC {
       increaseFontSize: {};
       decreaseFontSize: {};
       togglePresentation: {};
+      openSettings: {};
     };
   }>;
 }
