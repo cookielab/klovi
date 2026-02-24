@@ -1,7 +1,11 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-let claudeCodeDir = join(homedir(), ".claude");
+export const DEFAULT_CLAUDE_CODE_DIR = join(homedir(), ".claude");
+export const DEFAULT_CODEX_CLI_DIR = join(homedir(), ".codex");
+export const DEFAULT_OPENCODE_DIR = join(homedir(), ".local", "share", "opencode");
+
+let claudeCodeDir = DEFAULT_CLAUDE_CODE_DIR;
 
 export function getClaudeCodeDir(): string {
   return claudeCodeDir;
@@ -16,7 +20,7 @@ export function getProjectsDir(): string {
 }
 
 // Codex CLI
-let codexCliDir = join(homedir(), ".codex");
+let codexCliDir = DEFAULT_CODEX_CLI_DIR;
 
 export function getCodexCliDir(): string {
   return codexCliDir;
@@ -27,7 +31,7 @@ export function setCodexCliDir(dir: string): void {
 }
 
 // OpenCode
-let openCodeDir = join(homedir(), ".local", "share", "opencode");
+let openCodeDir = DEFAULT_OPENCODE_DIR;
 
 export function getOpenCodeDir(): string {
   return openCodeDir;

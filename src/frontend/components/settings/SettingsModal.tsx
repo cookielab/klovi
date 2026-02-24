@@ -4,12 +4,15 @@ import { getRPC } from "../../rpc.ts";
 import "./SettingsModal.css";
 
 interface SettingsModalProps {
-  onClose: () => void;
+  onClose: (changed: boolean) => void;
 }
 
 export function SettingsModal({ onClose }: SettingsModalProps) {
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [changed, setChanged] = useState(false);
+
+  const close = useCallback(() => onClose(changed), [onClose, changed]);
 
   useEffect(() => {
     getRPC()
@@ -25,17 +28,20 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
+        close();
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [close]);
 
   const handleToggle = useCallback((pluginId: string, enabled: boolean) => {
     getRPC()
       .request.updatePluginSetting({ pluginId, enabled })
-      .then((data) => setPlugins(data.plugins))
+      .then((data) => {
+        setPlugins(data.plugins);
+        setChanged(true);
+      })
       .catch(() => {});
   }, []);
 
@@ -49,7 +55,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         return null;
       })
       .then((data) => {
-        if (data) setPlugins(data.plugins);
+        if (data) {
+          setPlugins(data.plugins);
+          setChanged(true);
+        }
       })
       .catch(() => {});
   }, []);
@@ -57,19 +66,25 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const handlePathChange = useCallback((pluginId: string, dataDir: string) => {
     getRPC()
       .request.updatePluginSetting({ pluginId, dataDir })
-      .then((data) => setPlugins(data.plugins))
+      .then((data) => {
+        setPlugins(data.plugins);
+        setChanged(true);
+      })
       .catch(() => {});
   }, []);
 
   const handleReset = useCallback((pluginId: string) => {
     getRPC()
       .request.updatePluginSetting({ pluginId, dataDir: null })
-      .then((data) => setPlugins(data.plugins))
+      .then((data) => {
+        setPlugins(data.plugins);
+        setChanged(true);
+      })
       .catch(() => {});
   }, []);
 
   return (
-    <div className="settings-overlay" onMouseDown={onClose} onKeyDown={() => {}}>
+    <div className="settings-overlay" onMouseDown={close} onKeyDown={() => {}}>
       <div className="settings-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="settings-header">
           <h2 className="settings-title">Settings</h2>
@@ -77,7 +92,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             type="button"
             className="settings-close"
             aria-label="Close settings"
-            onClick={onClose}
+            onClick={close}
           >
             &times;
           </button>

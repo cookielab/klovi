@@ -70,7 +70,7 @@ describe("SettingsModal", () => {
     await findByDisplayValue("/Users/test/.claude");
   });
 
-  test("calls onClose when X button is clicked", async () => {
+  test("calls onClose with false when X button is clicked without changes", async () => {
     const onClose = mock();
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
@@ -78,7 +78,7 @@ describe("SettingsModal", () => {
     const { findByLabelText } = render(<SettingsModal onClose={onClose} />);
     const closeBtn = await findByLabelText("Close settings");
     fireEvent.click(closeBtn);
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith(false);
   });
 
   test("calls onClose when Escape is pressed", async () => {

@@ -174,7 +174,14 @@ export function App() {
           onClose={() => setSearchOpen(false)}
         />
       )}
-      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsModal
+          onClose={(changed) => {
+            setSettingsOpen(false);
+            if (changed) goHome();
+          }}
+        />
+      )}
       <Layout sidebar={sidebarContent} hideSidebar={isPresenting} onSearchClick={openSearch}>
         <Header
           title={headerTitle}

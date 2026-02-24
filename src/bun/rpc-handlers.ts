@@ -146,10 +146,15 @@ export function getPluginSettings(settingsPath: string): { plugins: PluginSettin
   return buildPluginSettingsResponse(settingsPath);
 }
 
+const VALID_PLUGIN_IDS = new Set(PLUGIN_META.map((p) => p.id));
+
 export function updatePluginSetting(
   settingsPath: string,
   params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
 ): { plugins: PluginSettingInfo[] } {
+  if (!VALID_PLUGIN_IDS.has(params.pluginId)) {
+    throw new Error(`Unknown plugin: ${params.pluginId}`);
+  }
   const settings = loadSettings(settingsPath);
   const existing = settings.plugins[params.pluginId] ?? { enabled: true, dataDir: null };
 
