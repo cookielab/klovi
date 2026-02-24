@@ -178,4 +178,59 @@ describe("scanCodexSessions", () => {
     expect(sessions[0]!.meta.cwd).toBe("/tmp/project");
     expect(sessions[0]!.meta.model).toBe("o4-mini");
   });
+
+  test("uses turn_context model when new-format meta has no model", async () => {
+    const dir = join(testDir, "sessions", "2026", "02", "18");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "rollout-2026-02-18-turn-context-model.jsonl"),
+      [
+        JSON.stringify({
+          type: "session_meta",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          payload: {
+            id: "turn-context-model-uuid",
+            cwd: "/tmp/project",
+            timestamp: "2026-02-18T10:00:00.000Z",
+            model_provider: "openai",
+          },
+        }),
+        JSON.stringify({
+          type: "turn_context",
+          timestamp: "2026-02-18T10:00:01.000Z",
+          payload: {
+            model: "gpt-5.3-codex",
+          },
+        }),
+      ].join("\n"),
+    );
+
+    const sessions = await scanCodexSessions();
+
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]!.meta.model).toBe("gpt-5.3-codex");
+  });
+
+  test("falls back to provider when new-format meta has no model", async () => {
+    const dir = join(testDir, "sessions", "2026", "02", "18");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "rollout-2026-02-18-provider-model.jsonl"),
+      JSON.stringify({
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "provider-model-uuid",
+          cwd: "/tmp/project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+        },
+      }),
+    );
+
+    const sessions = await scanCodexSessions();
+
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]!.meta.model).toBe("openai");
+  });
 });

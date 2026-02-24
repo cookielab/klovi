@@ -705,7 +705,7 @@ describe("new envelope format", () => {
       expect(assistant.contentBlocks[1]!.type).toBe("text");
     });
 
-    test("uses unknown as model when model field absent in new format", async () => {
+    test("uses turn_context model when model field absent in new format", async () => {
       const metaNoModel = {
         type: "session_meta",
         timestamp: "2026-02-18T10:00:00.000Z",
@@ -718,6 +718,13 @@ describe("new envelope format", () => {
       };
 
       writeNewFormatSession("provider-uuid", metaNoModel, [
+        {
+          type: "turn_context",
+          timestamp: "2026-02-18T10:00:00.500Z",
+          payload: {
+            model: "gpt-5.3-codex",
+          },
+        },
         {
           type: "event_msg",
           timestamp: "2026-02-18T10:00:01.000Z",
@@ -733,7 +740,38 @@ describe("new envelope format", () => {
       const session = await loadCodexSession("/Users/dev/project", "provider-uuid");
 
       const assistant = session.turns[0] as AssistantTurn;
-      expect(assistant.model).toBe("unknown");
+      expect(assistant.model).toBe("gpt-5.3-codex");
+    });
+
+    test("falls back to provider as model when no explicit model is present", async () => {
+      const metaNoModel = {
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "provider-only-uuid",
+          cwd: "/Users/dev/project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+        },
+      };
+
+      writeNewFormatSession("provider-only-uuid", metaNoModel, [
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:01.000Z",
+          payload: { type: "task_started" },
+        },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:02.000Z",
+          payload: { type: "agent_message", message: "Hello!" },
+        },
+      ]);
+
+      const session = await loadCodexSession("/Users/dev/project", "provider-only-uuid");
+
+      const assistant = session.turns[0] as AssistantTurn;
+      expect(assistant.model).toBe("openai");
     });
   });
 });

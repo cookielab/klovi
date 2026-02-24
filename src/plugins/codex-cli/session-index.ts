@@ -2,6 +2,7 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { getCodexCliDir } from "../config.ts";
 import { readTextPrefix } from "../shared/discovery-utils.ts";
+import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
 export interface CodexSessionMeta {
   uuid: string;
@@ -18,7 +19,7 @@ export interface SessionFileInfo {
   mtime: string;
 }
 
-const FIRST_LINE_SCAN_BYTES = 64 * 1024;
+const FIRST_LINE_SCAN_BYTES = 512 * 1024;
 
 export function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
   return (
@@ -84,21 +85,51 @@ export function normalizeSessionMeta(
   return null;
 }
 
-async function readFirstLine(filePath: string): Promise<string | null> {
-  const text = await readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES);
-  const firstNewline = text.indexOf("\n");
-  const firstLine = firstNewline === -1 ? text : text.slice(0, firstNewline);
-  return firstLine.trim() ? firstLine : null;
+function isKnownModel(model: string | null | undefined): model is string {
+  return typeof model === "string" && model.length > 0 && model !== "unknown";
+}
+
+function extractTurnContextModel(parsed: unknown): string | null {
+  if (typeof parsed !== "object" || parsed === null) return null;
+  const event = parsed as { type?: unknown; payload?: { model?: unknown } };
+  if (event.type !== "turn_context") return null;
+  return typeof event.payload?.model === "string" ? event.payload.model : null;
+}
+
+function inferModelFromPrefix(prefixText: string): string | null {
+  let model: string | null = null;
+  iterateJsonl(
+    prefixText,
+    ({ parsed }) => {
+      const extracted = extractTurnContextModel(parsed);
+      if (isKnownModel(extracted)) {
+        model = extracted;
+        return false;
+      }
+    },
+    { startAt: 1, maxLines: 256 },
+  );
+  return model;
 }
 
 async function parseSessionMeta(filePath: string): Promise<CodexSessionMeta | null> {
-  const firstLine = await readFirstLine(filePath);
-  if (!firstLine) return null;
+  const prefix = await readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES);
+  const firstNewline = prefix.indexOf("\n");
+  const firstLine = firstNewline === -1 ? prefix : prefix.slice(0, firstNewline);
+  const trimmedFirstLine = firstLine.trim();
+  if (!trimmedFirstLine) return null;
   try {
-    const parsed: unknown = JSON.parse(firstLine);
+    const parsed: unknown = JSON.parse(trimmedFirstLine);
     const fileStat = await stat(filePath).catch(() => null);
     const fileMtimeEpoch = fileStat ? fileStat.mtime.getTime() / 1000 : undefined;
-    return normalizeSessionMeta(parsed, fileMtimeEpoch);
+    const meta = normalizeSessionMeta(parsed, fileMtimeEpoch);
+    if (!meta) return null;
+    if (isKnownModel(meta.model)) return meta;
+
+    const inferred = inferModelFromPrefix(prefix);
+    if (isKnownModel(inferred)) return { ...meta, model: inferred };
+    if (isKnownModel(meta.provider_id)) return { ...meta, model: meta.provider_id };
+    return meta;
   } catch {
     // Malformed first line
   }

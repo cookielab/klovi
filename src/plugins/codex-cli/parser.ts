@@ -99,6 +99,17 @@ interface EnvelopeEvent {
   payload?: EnvelopePayload;
 }
 
+function isKnownModel(model: string | null | undefined): model is string {
+  return typeof model === "string" && model.length > 0 && model !== "unknown";
+}
+
+function extractTurnContextModel(parsed: unknown): string | null {
+  if (typeof parsed !== "object" || parsed === null) return null;
+  const event = parsed as { type?: unknown; payload?: { model?: unknown } };
+  if (event.type !== "turn_context") return null;
+  return typeof event.payload?.model === "string" ? event.payload.model : null;
+}
+
 function normalizeEventMsg(payload: EnvelopePayload): CodexEvent | null {
   switch (payload.type) {
     case "task_started":
@@ -481,6 +492,7 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
 
   let meta: unknown = null;
   const events: CodexEvent[] = [];
+  let turnContextModel: string | null = null;
 
   iterateJsonl(text, ({ parsed, lineIndex }) => {
     if (lineIndex === 0) {
@@ -491,6 +503,13 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
       }
     }
 
+    if (!isKnownModel(turnContextModel)) {
+      const extracted = extractTurnContextModel(parsed);
+      if (isKnownModel(extracted)) {
+        turnContextModel = extracted;
+      }
+    }
+
     const event = normalizeEvent(parsed);
     if (event) {
       events.push(event);
@@ -498,7 +517,13 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
   });
 
   const metaInfo = normalizeSessionMeta(meta);
-  const model = metaInfo?.model || "unknown";
+  const model = isKnownModel(metaInfo?.model)
+    ? metaInfo.model
+    : isKnownModel(turnContextModel)
+      ? turnContextModel
+      : isKnownModel(metaInfo?.provider_id)
+        ? metaInfo.provider_id
+        : "unknown";
   const timestamp = metaInfo ? epochSecondsToIso(metaInfo.timestamps.created) : "";
 
   const turns = buildCodexTurns(events, model, timestamp);
