@@ -2,7 +2,6 @@
   "name": "@cookielab.io/klovi",
   "version": "0.0.0",
   "description": "A local web app for browsing and presenting AI coding session history",
-  "module": "index.ts",
   "type": "module",
   "license": "MIT",
   "author": "Cookielab s.r.o.",
@@ -24,24 +23,11 @@
     "bun"
   ],
   "engines": {
-    "node": ">=24.0.0",
     "bun": ">=1.3"
   },
-  "bin": {
-    "klovi": "dist/server.js"
-  },
-  "files": [
-    "dist/",
-    "LICENSE.md",
-    "README.md"
-  ],
   "scripts": {
-    "dev": "bun run build:frontend && NODE_ENV=development bun --watch index.ts",
-    "start": "node dist/server.js",
-    "build": "bun run build:frontend && bun run build:server",
-    "build:frontend": "rm -rf dist/public && bun build ./index.html --outdir dist/public",
-    "build:server": "bun scripts/build-server.ts",
-    "build:compile": "bun scripts/build-compile.ts",
+    "dev": "bunx electrobun dev",
+    "build": "bunx electrobun build",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome lint .",
@@ -65,6 +51,7 @@
   "dependencies": {
     "@fontsource/dm-sans": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
+    "electrobun": "^1.14.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",
