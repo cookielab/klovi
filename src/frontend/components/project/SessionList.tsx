@@ -1,5 +1,6 @@
 import type { Project, SessionSummary } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useRPC } from "../../hooks/useRPC.ts";
+import { getRPC } from "../../rpc.ts";
 import { pluginDisplayName } from "../../utils/plugin.ts";
 import { formatFullDateTime, formatTime } from "../../utils/time.ts";
 
@@ -11,8 +12,8 @@ interface SessionListProps {
 }
 
 export function SessionList({ project, onSelect, onBack, selectedId }: SessionListProps) {
-  const { data, loading, error, retry } = useFetch<{ sessions: SessionSummary[] }>(
-    `/api/projects/${encodeURIComponent(project.encodedPath)}/sessions`,
+  const { data, loading, error, retry } = useRPC<{ sessions: SessionSummary[] }>(
+    () => getRPC().request.getSessions({ encodedPath: project.encodedPath }),
     [project.encodedPath],
   );
 

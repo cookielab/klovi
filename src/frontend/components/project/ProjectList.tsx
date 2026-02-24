@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Project } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useRPC } from "../../hooks/useRPC.ts";
+import { getRPC } from "../../rpc.ts";
 import { projectDisplayName } from "../../utils/project.ts";
 import { formatFullDateTime, formatRelativeTime } from "../../utils/time.ts";
 
@@ -19,7 +20,10 @@ export function ProjectList({
   onHide,
   onShowHidden,
 }: ProjectListProps) {
-  const { data, loading, error, retry } = useFetch<{ projects: Project[] }>("/api/projects", []);
+  const { data, loading, error, retry } = useRPC<{ projects: Project[] }>(
+    () => getRPC().request.getProjects({}),
+    [],
+  );
   const [filter, setFilter] = useState("");
 
   const projects = data?.projects ?? [];

@@ -1,5 +1,6 @@
 import type { Project } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useRPC } from "../../hooks/useRPC.ts";
+import { getRPC } from "../../rpc.ts";
 import { projectDisplayName } from "../../utils/project.ts";
 
 interface HiddenProjectListProps {
@@ -9,7 +10,10 @@ interface HiddenProjectListProps {
 }
 
 export function HiddenProjectList({ hiddenIds, onUnhide, onBack }: HiddenProjectListProps) {
-  const { data, loading, error, retry } = useFetch<{ projects: Project[] }>("/api/projects", []);
+  const { data, loading, error, retry } = useRPC<{ projects: Project[] }>(
+    () => getRPC().request.getProjects({}),
+    [],
+  );
 
   const projects = data?.projects ?? [];
   const hidden = projects.filter((p) => hiddenIds.has(p.encodedPath));

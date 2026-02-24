@@ -1,5 +1,6 @@
 import { parseSessionId } from "../shared/session-id.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
+import { getRPC } from "./rpc.ts";
 
 export type ViewState =
   | { kind: "home" }
@@ -43,18 +44,8 @@ export function viewToHash(view: ViewState): string {
   return "#/";
 }
 
-interface ProjectsResponse {
-  projects: Project[];
-}
-
-interface SessionsResponse {
-  sessions: SessionSummary[];
-}
-
 async function loadProject(encodedPath: string): Promise<Project | undefined> {
-  const res = await fetch("/api/projects");
-  if (!res.ok) return undefined;
-  const data = (await res.json()) as ProjectsResponse;
+  const data = await getRPC().request.getProjects({});
   return data.projects.find((p) => p.encodedPath === encodedPath);
 }
 
@@ -62,9 +53,7 @@ async function loadProjectSession(
   project: Project,
   sessionId: string,
 ): Promise<SessionSummary | undefined> {
-  const res = await fetch(`/api/projects/${encodeURIComponent(project.encodedPath)}/sessions`);
-  if (!res.ok) return undefined;
-  const data = (await res.json()) as SessionsResponse;
+  const data = await getRPC().request.getSessions({ encodedPath: project.encodedPath });
   return data.sessions.find((s) => s.sessionId === sessionId);
 }
 

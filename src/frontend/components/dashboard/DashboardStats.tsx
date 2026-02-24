@@ -1,5 +1,6 @@
 import type { ModelTokenUsage, DashboardStats as Stats } from "../../../shared/types.ts";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useRPC } from "../../hooks/useRPC.ts";
+import { getRPC } from "../../rpc.ts";
 
 const fmt = new Intl.NumberFormat();
 
@@ -20,7 +21,10 @@ function totalTokens(usage: ModelTokenUsage): number {
 }
 
 export function DashboardStats() {
-  const { data, loading, error, retry } = useFetch<{ stats: Stats }>("/api/stats", []);
+  const { data, loading, error, retry } = useRPC<{ stats: Stats }>(
+    () => getRPC().request.getStats({}),
+    [],
+  );
 
   if (loading) {
     return (

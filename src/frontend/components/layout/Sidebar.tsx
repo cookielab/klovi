@@ -1,10 +1,11 @@
 import type React from "react";
 import faviconUrl from "../../../../favicon.svg";
-import { useFetch } from "../../hooks/useFetch.ts";
+import { useRPC } from "../../hooks/useRPC.ts";
+import { getRPC } from "../../rpc.ts";
 
 interface VersionInfo {
   version: string;
-  commitHash: string | null;
+  commit: string;
 }
 
 interface SidebarProps {
@@ -13,7 +14,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ children, onSearchClick }: SidebarProps) {
-  const { data: versionInfo } = useFetch<VersionInfo>("/api/version", []);
+  const { data: versionInfo } = useRPC<VersionInfo>(() => getRPC().request.getVersion({}), []);
 
   return (
     <div className="sidebar">
@@ -23,7 +24,7 @@ export function Sidebar({ children, onSearchClick }: SidebarProps) {
         {versionInfo && (
           <span className="sidebar-version">
             {versionInfo.version}
-            {versionInfo.commitHash ? ` (${versionInfo.commitHash})` : ""}
+            {versionInfo.commit ? ` (${versionInfo.commit})` : ""}
           </span>
         )}
         {onSearchClick && (
