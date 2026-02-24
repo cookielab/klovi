@@ -16,6 +16,28 @@ function makePlugin(overrides: Partial<PluginSettingInfo> = {}): PluginSettingIn
   };
 }
 
+function defaultProps() {
+  return {
+    onClose: mock(),
+    theme: { setting: "system" as const, set: mock() },
+    fontSize: { size: 15, set: mock(), increase: mock(), decrease: mock() },
+    presentationTheme: {
+      setting: "system" as const,
+      sameAsGlobal: true,
+      setSameAsGlobal: mock(),
+      set: mock(),
+    },
+    presentationFontSize: {
+      size: 15,
+      sameAsGlobal: true,
+      setSameAsGlobal: mock(),
+      set: mock(),
+      increase: mock(),
+      decrease: mock(),
+    },
+  };
+}
+
 describe("SettingsModal", () => {
   afterEach(cleanup);
 
@@ -23,7 +45,7 @@ describe("SettingsModal", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { getByText } = render(<SettingsModal onClose={mock()} />);
+    const { getByText } = render(<SettingsModal {...defaultProps()} />);
     expect(getByText("Settings")).toBeTruthy();
   });
 
@@ -37,7 +59,7 @@ describe("SettingsModal", () => {
           ],
         }),
     });
-    const { findByText } = render(<SettingsModal onClose={mock()} />);
+    const { findByText } = render(<SettingsModal {...defaultProps()} />);
     await findByText("Claude Code");
     await findByText("Codex CLI");
   });
@@ -52,7 +74,7 @@ describe("SettingsModal", () => {
           ],
         }),
     });
-    const { findAllByRole } = render(<SettingsModal onClose={mock()} />);
+    const { findAllByRole } = render(<SettingsModal {...defaultProps()} />);
     const checkboxes = await findAllByRole("checkbox");
     expect(checkboxes).toHaveLength(2);
     expect((checkboxes[0] as HTMLInputElement).checked).toBe(true);
@@ -66,7 +88,7 @@ describe("SettingsModal", () => {
           plugins: [makePlugin({ isCustomDir: false, defaultDataDir: "/Users/test/.claude" })],
         }),
     });
-    const { findByPlaceholderText } = render(<SettingsModal onClose={mock()} />);
+    const { findByPlaceholderText } = render(<SettingsModal {...defaultProps()} />);
     const input = await findByPlaceholderText("/Users/test/.claude");
     expect((input as HTMLInputElement).value).toBe("");
   });
@@ -84,42 +106,42 @@ describe("SettingsModal", () => {
           ],
         }),
     });
-    const { findByDisplayValue } = render(<SettingsModal onClose={mock()} />);
+    const { findByDisplayValue } = render(<SettingsModal {...defaultProps()} />);
     await findByDisplayValue("/custom/path");
   });
 
   test("calls onClose with false when X button is clicked without changes", async () => {
-    const onClose = mock();
+    const props = defaultProps();
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByLabelText } = render(<SettingsModal onClose={onClose} />);
+    const { findByLabelText } = render(<SettingsModal {...props} />);
     const closeBtn = await findByLabelText("Close settings");
     fireEvent.click(closeBtn);
-    expect(onClose).toHaveBeenCalledWith(false);
+    expect(props.onClose).toHaveBeenCalledWith(false);
   });
 
   test("calls onClose when Escape is pressed", async () => {
-    const onClose = mock();
+    const props = defaultProps();
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { container, findByText } = render(<SettingsModal onClose={onClose} />);
+    const { container, findByText } = render(<SettingsModal {...props} />);
     await findByText("Claude Code");
     fireEvent.keyDown(container, { key: "Escape" });
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(props.onClose).toHaveBeenCalledTimes(1);
   });
 
   test("calls onClose when backdrop is clicked", async () => {
-    const onClose = mock();
+    const props = defaultProps();
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { container, findByText } = render(<SettingsModal onClose={onClose} />);
+    const { container, findByText } = render(<SettingsModal {...props} />);
     await findByText("Claude Code");
     const overlay = container.querySelector(".settings-overlay")!;
     fireEvent.mouseDown(overlay);
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(props.onClose).toHaveBeenCalledTimes(1);
   });
 
   test("shows Reset link when path is customized", async () => {
@@ -129,7 +151,7 @@ describe("SettingsModal", () => {
           plugins: [makePlugin({ isCustomDir: true, dataDir: "/custom/path" })],
         }),
     });
-    const { findByText } = render(<SettingsModal onClose={mock()} />);
+    const { findByText } = render(<SettingsModal {...defaultProps()} />);
     await findByText("Reset");
   });
 
@@ -137,7 +159,7 @@ describe("SettingsModal", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin({ isCustomDir: false })] }),
     });
-    const { findByText, queryByText } = render(<SettingsModal onClose={mock()} />);
+    const { findByText, queryByText } = render(<SettingsModal {...defaultProps()} />);
     await findByText("Claude Code");
     expect(queryByText("Reset")).toBeNull();
   });
@@ -146,7 +168,7 @@ describe("SettingsModal", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByRole } = render(<SettingsModal onClose={mock()} />);
+    const { findByRole } = render(<SettingsModal {...defaultProps()} />);
     const tab = await findByRole("button", { name: "Plugins" });
     expect(tab.classList.contains("active") || tab.closest(".active")).toBeTruthy();
   });
@@ -155,7 +177,7 @@ describe("SettingsModal", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByRole, findByText } = render(<SettingsModal onClose={mock()} />);
+    const { findByRole, findByText } = render(<SettingsModal {...defaultProps()} />);
     const generalTab = await findByRole("button", { name: "General" });
     expect((generalTab as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(generalTab);
@@ -167,7 +189,7 @@ describe("SettingsModal", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
     });
-    const { findByRole, findByLabelText } = render(<SettingsModal onClose={mock()} />);
+    const { findByRole, findByLabelText } = render(<SettingsModal {...defaultProps()} />);
     const generalTab = await findByRole("button", { name: "General" });
     fireEvent.click(generalTab);
     const checkbox = await findByLabelText("Show on-boarding on startup");
@@ -178,11 +200,144 @@ describe("SettingsModal", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByRole } = render(<SettingsModal onClose={mock()} />);
+    const { findByRole } = render(<SettingsModal {...defaultProps()} />);
     const generalTab = await findByRole("button", { name: "General" });
     fireEvent.click(generalTab);
     expect(generalTab.classList.contains("active")).toBe(true);
     const pluginsTab = await findByRole("button", { name: "Plugins" });
     expect(pluginsTab.classList.contains("active")).toBe(false);
+  });
+
+  test("General tab shows Global and Presentation subsections", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const { findByRole, findByText } = render(<SettingsModal {...defaultProps()} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    await findByText("Global");
+    await findByText("Presentation");
+  });
+
+  test("General tab shows theme selector with System/Light/Dark options", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    const { findByRole, findAllByText } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    // Both global and presentation have these options
+    const systemButtons = await findAllByText("System");
+    expect(systemButtons.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("theme selector calls set when option clicked", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    const { findByRole, findAllByText } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const darkButtons = await findAllByText("Dark");
+    // First Dark button is in Global section
+    fireEvent.click(darkButtons[0]!);
+    expect(props.theme.set).toHaveBeenCalledWith("dark");
+  });
+
+  test("font size controls call increase/decrease", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    const { findByRole, findAllByText } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const plusButtons = await findAllByText("A+");
+    const minusButtons = await findAllByText("A-");
+    fireEvent.click(plusButtons[0]!);
+    expect(props.fontSize.increase).toHaveBeenCalled();
+    fireEvent.click(minusButtons[0]!);
+    expect(props.fontSize.decrease).toHaveBeenCalled();
+  });
+
+  test("presentation theme selector is disabled when sameAsGlobal is true", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    props.presentationTheme.sameAsGlobal = true;
+    const { findByRole, container } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const selectors = container.querySelectorAll(".settings-theme-selector");
+    // Second selector is presentation
+    expect(selectors[1]!.classList.contains("disabled")).toBe(true);
+  });
+
+  test("presentation theme selector is enabled when sameAsGlobal is false", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    props.presentationTheme.sameAsGlobal = false;
+    const { findByRole, container } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const selectors = container.querySelectorAll(".settings-theme-selector");
+    expect(selectors[1]!.classList.contains("disabled")).toBe(false);
+  });
+
+  test("presentation font-size control is disabled when sameAsGlobal is true", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    props.presentationFontSize.sameAsGlobal = true;
+    const { findByRole, container } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const controls = container.querySelectorAll(".settings-font-size-control");
+    expect(controls[1]!.classList.contains("disabled")).toBe(true);
+  });
+
+  test("Same as normal checkboxes are rendered", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const { findByRole, findAllByLabelText } = render(<SettingsModal {...defaultProps()} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const sameLabels = await findAllByLabelText("Same as normal");
+    expect(sameLabels).toHaveLength(2);
+  });
+
+  test("unchecking Same as normal calls setSameAsGlobal(false)", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    const { findByRole, findAllByLabelText } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const sameLabels = await findAllByLabelText("Same as normal");
+    // First is theme, second is font size
+    fireEvent.click(sameLabels[0]!);
+    expect(props.presentationTheme.setSameAsGlobal).toHaveBeenCalledWith(false);
+    fireEvent.click(sameLabels[1]!);
+    expect(props.presentationFontSize.setSameAsGlobal).toHaveBeenCalledWith(false);
+  });
+
+  test("General tab shows font size value", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const props = defaultProps();
+    props.fontSize.size = 20;
+    const { findByRole, findByText } = render(<SettingsModal {...props} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    await findByText("20");
   });
 });

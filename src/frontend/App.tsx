@@ -14,15 +14,25 @@ import { SettingsModal } from "./components/settings/SettingsModal.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { Onboarding } from "./components/ui/Onboarding.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
-import { useFontSize, useTheme } from "./hooks/useTheme.ts";
+import {
+  resolveTheme,
+  useFontSize,
+  usePresentationFontSize,
+  usePresentationTheme,
+  useTheme,
+} from "./hooks/useTheme.ts";
 import { useViewState } from "./hooks/useViewState.ts";
 import { getRPC } from "./rpc.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./view-state.ts";
 
 export function App() {
-  const { setting: themeSetting, cycle: cycleTheme } = useTheme();
-  const { size: fontSize, increase, decrease } = useFontSize();
+  const themeHook = useTheme();
+  const { setting: themeSetting, cycle: cycleTheme } = themeHook;
+  const fontSizeHook = useFontSize();
+  const { size: fontSize, increase, decrease } = fontSizeHook;
+  const presentationThemeHook = usePresentationTheme();
+  const presentationFontSizeHook = usePresentationFontSize();
   const { hiddenIds, hide, unhide } = useHiddenProjects();
   const {
     view,
@@ -161,6 +171,36 @@ export function App() {
   const isPresenting =
     view.kind === "session" || view.kind === "subagent" ? view.presenting : false;
 
+  // Override theme/font-size when presenting with custom presentation values
+  useEffect(() => {
+    if (!isPresenting) return;
+
+    if (!presentationThemeHook.sameAsGlobal) {
+      const resolved = resolveTheme(presentationThemeHook.setting);
+      document.documentElement.setAttribute("data-theme", resolved);
+    }
+    if (!presentationFontSizeHook.sameAsGlobal) {
+      document.documentElement.style.setProperty(
+        "--font-size-base",
+        `${presentationFontSizeHook.size}px`,
+      );
+    }
+
+    return () => {
+      // Restore global values when exiting presentation
+      document.documentElement.setAttribute("data-theme", themeHook.resolved);
+      document.documentElement.style.setProperty("--font-size-base", `${fontSizeHook.size}px`);
+    };
+  }, [
+    isPresenting,
+    presentationThemeHook.sameAsGlobal,
+    presentationThemeHook.setting,
+    presentationFontSizeHook.sameAsGlobal,
+    presentationFontSizeHook.size,
+    themeHook.resolved,
+    fontSizeHook.size,
+  ]);
+
   if (!ready) {
     return <div className="loading">Loading...</div>;
   }
@@ -180,6 +220,10 @@ export function App() {
             setSettingsOpen(false);
             if (changed) goHome();
           }}
+          theme={themeHook}
+          fontSize={fontSizeHook}
+          presentationTheme={presentationThemeHook}
+          presentationFontSize={presentationFontSizeHook}
         />
       )}
       <Layout sidebar={sidebarContent} hideSidebar={isPresenting} onSearchClick={openSearch}>

@@ -203,3 +203,119 @@
   font-size: 0.8rem;
   color: var(--text-muted);
 }
+
+.settings-subsection-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 20px 0 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.settings-control-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 12px;
+  min-height: 36px;
+}
+
+.settings-control-label {
+  min-width: 80px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding-top: 6px;
+}
+
+.settings-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-theme-selector {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.settings-theme-selector.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.settings-theme-option {
+  background: var(--bg-primary);
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.settings-theme-option:last-child {
+  border-right: none;
+}
+
+.settings-theme-option:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+.settings-theme-option.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.settings-theme-option:disabled {
+  cursor: default;
+}
+
+.settings-font-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-font-size-control.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.settings-font-size-control button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.settings-font-size-control button:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+.settings-font-size-control button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.settings-font-size-value {
+  min-width: 28px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-same-as-global {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}

@@ -1,14 +1,109 @@
 import { useCallback, useEffect, useState } from "react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
+import type { ThemeSetting } from "../../hooks/useTheme.ts";
 import { getRPC } from "../../rpc.ts";
 import { PluginRow } from "./PluginRow.tsx";
 import "./SettingsModal.css";
 
-interface SettingsModalProps {
-  onClose: (changed: boolean) => void;
+interface ThemeProps {
+  setting: ThemeSetting;
+  set: (theme: ThemeSetting) => void;
 }
 
-export function SettingsModal({ onClose }: SettingsModalProps) {
+interface FontSizeProps {
+  size: number;
+  set: (size: number) => void;
+  increase: () => void;
+  decrease: () => void;
+}
+
+interface PresentationThemeProps {
+  setting: ThemeSetting;
+  sameAsGlobal: boolean;
+  setSameAsGlobal: (v: boolean) => void;
+  set: (theme: ThemeSetting) => void;
+}
+
+interface PresentationFontSizeProps {
+  size: number;
+  sameAsGlobal: boolean;
+  setSameAsGlobal: (v: boolean) => void;
+  set: (size: number) => void;
+  increase: () => void;
+  decrease: () => void;
+}
+
+interface SettingsModalProps {
+  onClose: (changed: boolean) => void;
+  theme: ThemeProps;
+  fontSize: FontSizeProps;
+  presentationTheme: PresentationThemeProps;
+  presentationFontSize: PresentationFontSizeProps;
+}
+
+const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
+function ThemeSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: ThemeSetting;
+  onChange: (v: ThemeSetting) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className={`settings-theme-selector ${disabled ? "disabled" : ""}`}>
+      {THEME_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          className={`settings-theme-option ${value === opt.value ? "active" : ""}`}
+          disabled={disabled}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FontSizeControl({
+  size,
+  onIncrease,
+  onDecrease,
+  disabled,
+}: {
+  size: number;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className={`settings-font-size-control ${disabled ? "disabled" : ""}`}>
+      <button type="button" disabled={disabled || size <= 10} onClick={onDecrease}>
+        A-
+      </button>
+      <span className="settings-font-size-value">{size}</span>
+      <button type="button" disabled={disabled || size >= 28} onClick={onIncrease}>
+        A+
+      </button>
+    </div>
+  );
+}
+
+export function SettingsModal({
+  onClose,
+  theme,
+  fontSize,
+  presentationTheme,
+  presentationFontSize,
+}: SettingsModalProps) {
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [changed, setChanged] = useState(false);
@@ -148,27 +243,88 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 {loading ? (
                   <div className="settings-loading">Loading...</div>
                 ) : (
-                  <div className="settings-general-row">
-                    <label className="settings-general-label">
-                      <input
-                        type="checkbox"
-                        className="custom-checkbox"
-                        checked={showSecurityWarning}
-                        onChange={(e) => {
-                          const value = e.target.checked;
-                          setShowSecurityWarning(value);
-                          getRPC()
-                            .request.updateGeneralSettings({ showSecurityWarning: value })
-                            .then(() => setChanged(true))
-                            .catch(() => {});
-                        }}
+                  <>
+                    <div className="settings-general-row">
+                      <label className="settings-general-label">
+                        <input
+                          type="checkbox"
+                          className="custom-checkbox"
+                          checked={showSecurityWarning}
+                          onChange={(e) => {
+                            const value = e.target.checked;
+                            setShowSecurityWarning(value);
+                            getRPC()
+                              .request.updateGeneralSettings({ showSecurityWarning: value })
+                              .then(() => setChanged(true))
+                              .catch(() => {});
+                          }}
+                        />
+                        Show on-boarding on startup
+                      </label>
+                      <p className="settings-general-hint">
+                        When enabled, the on-boarding wizard is shown the next time Klovi launches.
+                      </p>
+                    </div>
+
+                    <h4 className="settings-subsection-title">Global</h4>
+
+                    <div className="settings-control-row">
+                      <span className="settings-control-label">Theme</span>
+                      <ThemeSelector value={theme.setting} onChange={theme.set} />
+                    </div>
+
+                    <div className="settings-control-row">
+                      <span className="settings-control-label">Font Size</span>
+                      <FontSizeControl
+                        size={fontSize.size}
+                        onIncrease={fontSize.increase}
+                        onDecrease={fontSize.decrease}
                       />
-                      Show on-boarding on startup
-                    </label>
-                    <p className="settings-general-hint">
-                      When enabled, the on-boarding wizard is shown the next time Klovi launches.
-                    </p>
-                  </div>
+                    </div>
+
+                    <h4 className="settings-subsection-title">Presentation</h4>
+
+                    <div className="settings-control-row">
+                      <span className="settings-control-label">Theme</span>
+                      <div className="settings-control-group">
+                        <label className="settings-same-as-global">
+                          <input
+                            type="checkbox"
+                            className="custom-checkbox"
+                            checked={presentationTheme.sameAsGlobal}
+                            onChange={(e) => presentationTheme.setSameAsGlobal(e.target.checked)}
+                          />
+                          Same as normal
+                        </label>
+                        <ThemeSelector
+                          value={presentationTheme.setting}
+                          onChange={presentationTheme.set}
+                          disabled={presentationTheme.sameAsGlobal}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="settings-control-row">
+                      <span className="settings-control-label">Font Size</span>
+                      <div className="settings-control-group">
+                        <label className="settings-same-as-global">
+                          <input
+                            type="checkbox"
+                            className="custom-checkbox"
+                            checked={presentationFontSize.sameAsGlobal}
+                            onChange={(e) => presentationFontSize.setSameAsGlobal(e.target.checked)}
+                          />
+                          Same as normal
+                        </label>
+                        <FontSizeControl
+                          size={presentationFontSize.size}
+                          onIncrease={presentationFontSize.increase}
+                          onDecrease={presentationFontSize.decrease}
+                          disabled={presentationFontSize.sameAsGlobal}
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
               </>
             )}
