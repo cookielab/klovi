@@ -28,6 +28,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         }
         return { ok: true };
       },
+      // getVersion reads env vars only — intentionally ungated
       getVersion: () => getVersion(),
       getStats: () => getStats(getRegistry()),
       getProjects: () => getProjects(getRegistry()),

@@ -241,6 +241,7 @@ export function AppGate() {
     getRPC()
       .request.acceptRisks({} as Record<string, never>)
       .then(() => setAccepted(true))
+      // Allow through on RPC failure to avoid permanently locking the user out
       .catch(() => setAccepted(true));
   }, []);
 

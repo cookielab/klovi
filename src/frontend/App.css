@@ -1218,7 +1218,7 @@
   color: var(--text-inverse);
   background: var(--accent);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.15s;
 }
