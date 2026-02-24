@@ -12,10 +12,13 @@ import type { PluginSettingInfo, VersionInfo } from "../shared/rpc-types.ts";
 import { encodeSessionId, parseSessionId } from "../shared/session-id.ts";
 import type { GlobalSessionResult, SessionSummary } from "../shared/types.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
+import pkg from "../../package.json" with { type: "json" };
+
+const version = pkg.version == null || pkg.version === "0.0.0" ? "dev" : pkg.version;
 
 export function getVersion(): VersionInfo {
   return {
-    version: process.env.KLOVI_VERSION ?? "dev",
+    version,
     commit: process.env.KLOVI_COMMIT ?? "",
   };
 }
