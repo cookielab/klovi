@@ -1,15 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
 import type { Session } from "../../../shared/types.ts";
+import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SubAgentView } from "./SubAgentView.tsx";
-
-let originalFetch: typeof globalThis.fetch;
-
-function mockFetch(response: () => Promise<Response>): void {
-  Object.assign(globalThis, {
-    fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
-  });
-}
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
@@ -35,15 +28,12 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 }
 
 describe("SubAgentView", () => {
-  originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    cleanup();
-    globalThis.fetch = originalFetch;
-  });
+  afterEach(cleanup);
 
   test("shows loading state initially", () => {
-    mockFetch(() => new Promise(() => {}));
+    setupMockRPC({
+      getSubAgent: () => new Promise(() => {}),
+    });
     const { container } = render(
       <SubAgentView sessionId="session-1" project="test-project" agentId="agent-1" />,
     );
@@ -53,7 +43,9 @@ describe("SubAgentView", () => {
 
   test("renders sub-agent messages after fetch", async () => {
     const session = makeSession();
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ session }), { status: 200 })));
+    setupMockRPC({
+      getSubAgent: () => Promise.resolve({ session }),
+    });
 
     const { findByText } = render(
       <SubAgentView sessionId="session-1" project="test-project" agentId="agent-1" />,
@@ -62,7 +54,9 @@ describe("SubAgentView", () => {
   });
 
   test("shows error state on fetch failure", async () => {
-    mockFetch(() => Promise.resolve(new Response("Not Found", { status: 404 })));
+    setupMockRPC({
+      getSubAgent: () => Promise.reject(new Error("HTTP 404")),
+    });
 
     const { findByText } = render(
       <SubAgentView sessionId="session-1" project="test-project" agentId="agent-1" />,
@@ -72,7 +66,9 @@ describe("SubAgentView", () => {
 
   test("shows empty state when session has no turns", async () => {
     const session = makeSession({ turns: [] });
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ session }), { status: 200 })));
+    setupMockRPC({
+      getSubAgent: () => Promise.resolve({ session }),
+    });
 
     const { findByText } = render(
       <SubAgentView sessionId="session-1" project="test-project" agentId="agent-1" />,
@@ -81,7 +77,9 @@ describe("SubAgentView", () => {
   });
 
   test("shows error on network error", async () => {
-    mockFetch(() => Promise.reject(new Error("Connection refused")));
+    setupMockRPC({
+      getSubAgent: () => Promise.reject(new Error("Connection refused")),
+    });
 
     const { findByText } = render(
       <SubAgentView sessionId="session-1" project="test-project" agentId="agent-1" />,

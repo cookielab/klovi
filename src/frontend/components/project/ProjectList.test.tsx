@@ -1,15 +1,8 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { Project } from "../../../shared/types.ts";
+import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { ProjectList } from "./ProjectList.tsx";
-
-let originalFetch: typeof globalThis.fetch;
-
-function mockFetch(response: () => Promise<Response>): void {
-  Object.assign(globalThis, {
-    fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
-  });
-}
 
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
@@ -23,15 +16,12 @@ function makeProject(overrides: Partial<Project> = {}): Project {
 }
 
 describe("ProjectList", () => {
-  originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    cleanup();
-    globalThis.fetch = originalFetch;
-  });
+  afterEach(cleanup);
 
   test("shows loading state initially", () => {
-    mockFetch(() => new Promise(() => {})); // Never resolves
+    setupMockRPC({
+      getProjects: () => new Promise(() => {}),
+    });
     const { container } = render(
       <ProjectList
         onSelect={() => {}}
@@ -48,7 +38,9 @@ describe("ProjectList", () => {
       makeProject({ encodedPath: "proj1", name: "/Users/test/proj1" }),
       makeProject({ encodedPath: "proj2", name: "/Users/test/proj2" }),
     ];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ projects }), { status: 200 })));
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects }),
+    });
 
     const { findByText, container } = render(
       <ProjectList
@@ -68,7 +60,9 @@ describe("ProjectList", () => {
       makeProject({ encodedPath: "proj1", name: "/Users/test/proj1" }),
       makeProject({ encodedPath: "proj2", name: "/Users/test/proj2" }),
     ];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ projects }), { status: 200 })));
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects }),
+    });
 
     const { findByText } = render(
       <ProjectList
@@ -83,9 +77,9 @@ describe("ProjectList", () => {
 
   test("calls onSelect when project clicked", async () => {
     const project = makeProject({ encodedPath: "proj1", name: "/Users/test/proj1" });
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ projects: [project] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects: [project] }),
+    });
 
     const onSelect = mock(() => {});
     const { container, findByText } = render(
@@ -107,7 +101,9 @@ describe("ProjectList", () => {
       makeProject({ encodedPath: "alpha", name: "/Users/test/alpha" }),
       makeProject({ encodedPath: "beta", name: "/Users/test/beta" }),
     ];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ projects }), { status: 200 })));
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects }),
+    });
 
     const { container, findByText } = render(
       <ProjectList
@@ -126,9 +122,9 @@ describe("ProjectList", () => {
   });
 
   test("shows empty message when no projects match", async () => {
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ projects: [] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects: [] }),
+    });
 
     const { findByText } = render(
       <ProjectList
@@ -142,9 +138,9 @@ describe("ProjectList", () => {
   });
 
   test("shows hidden projects link when there are hidden projects", async () => {
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ projects: [] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects: [] }),
+    });
 
     const { findByText } = render(
       <ProjectList
@@ -159,9 +155,9 @@ describe("ProjectList", () => {
 
   test("calls onHide when hide button clicked", async () => {
     const project = makeProject({ encodedPath: "proj1" });
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ projects: [project] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects: [project] }),
+    });
 
     const onHide = mock(() => {});
     const { container, findByText } = render(
@@ -180,7 +176,9 @@ describe("ProjectList", () => {
 
   test("displays session count per project", async () => {
     const projects = [makeProject({ sessionCount: 12 })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ projects }), { status: 200 })));
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects }),
+    });
 
     const { findByText } = render(
       <ProjectList
@@ -195,7 +193,9 @@ describe("ProjectList", () => {
 
   test("singular session count", async () => {
     const projects = [makeProject({ sessionCount: 1 })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ projects }), { status: 200 })));
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects }),
+    });
 
     const { findByText } = render(
       <ProjectList
@@ -210,9 +210,9 @@ describe("ProjectList", () => {
 
   test("marks selected project as active", async () => {
     const project = makeProject({ encodedPath: "proj1" });
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ projects: [project] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getProjects: () => Promise.resolve({ projects: [project] }),
+    });
 
     const { container, findByText } = render(
       <ProjectList

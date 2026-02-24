@@ -1,15 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import type { Session } from "../../../shared/types.ts";
+import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SubAgentPresentation } from "./SubAgentPresentation.tsx";
-
-let originalFetch: typeof globalThis.fetch;
-
-function mockFetch(response: () => Promise<Response>): void {
-  Object.assign(globalThis, {
-    fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
-  });
-}
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
@@ -35,15 +28,12 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 }
 
 describe("SubAgentPresentation", () => {
-  originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    cleanup();
-    globalThis.fetch = originalFetch;
-  });
+  afterEach(cleanup);
 
   test("shows loading state initially", () => {
-    mockFetch(() => new Promise(() => {}));
+    setupMockRPC({
+      getSubAgent: () => new Promise(() => {}),
+    });
     const { container } = render(
       <SubAgentPresentation
         sessionId="session-1"
@@ -58,7 +48,9 @@ describe("SubAgentPresentation", () => {
 
   test("renders presentation mode after fetch", async () => {
     const session = makeSession();
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ session }), { status: 200 })));
+    setupMockRPC({
+      getSubAgent: () => Promise.resolve({ session }),
+    });
 
     const { container, findByText } = render(
       <SubAgentPresentation
@@ -74,7 +66,9 @@ describe("SubAgentPresentation", () => {
 
   test("returns null when session has no turns", async () => {
     const session = makeSession({ turns: [] });
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ session }), { status: 200 })));
+    setupMockRPC({
+      getSubAgent: () => Promise.resolve({ session }),
+    });
 
     const { container } = render(
       <SubAgentPresentation
@@ -91,9 +85,9 @@ describe("SubAgentPresentation", () => {
   });
 
   test("returns null when session is null", async () => {
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ session: null }), { status: 200 })),
-    );
+    setupMockRPC({
+      getSubAgent: () => Promise.resolve({ session: null as unknown as Session }),
+    });
 
     const { container } = render(
       <SubAgentPresentation

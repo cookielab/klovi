@@ -1,15 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
 import type { Session } from "../../../shared/types.ts";
+import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionView } from "./SessionView.tsx";
-
-let originalFetch: typeof globalThis.fetch;
-
-function mockFetch(response: () => Promise<Response>): void {
-  Object.assign(globalThis, {
-    fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
-  });
-}
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
@@ -35,15 +28,12 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 }
 
 describe("SessionView", () => {
-  originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    cleanup();
-    globalThis.fetch = originalFetch;
-  });
+  afterEach(cleanup);
 
   test("shows loading state initially", () => {
-    mockFetch(() => new Promise(() => {}));
+    setupMockRPC({
+      getSession: () => new Promise(() => {}),
+    });
     const { container } = render(<SessionView sessionId="session-1" project="test-project" />);
     expect(container.querySelector(".loading")).not.toBeNull();
     expect(container.textContent).toContain("Loading session...");
@@ -51,21 +41,27 @@ describe("SessionView", () => {
 
   test("renders messages after successful fetch", async () => {
     const session = makeSession();
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ session }), { status: 200 })));
+    setupMockRPC({
+      getSession: () => Promise.resolve({ session }),
+    });
 
     const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
     await findByText("Hello world");
   });
 
   test("shows error state on fetch failure", async () => {
-    mockFetch(() => Promise.resolve(new Response("Not Found", { status: 404 })));
+    setupMockRPC({
+      getSession: () => Promise.reject(new Error("HTTP 404")),
+    });
 
     const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
     await findByText(/Error:/);
   });
 
   test("shows error state on network error", async () => {
-    mockFetch(() => Promise.reject(new Error("Network error")));
+    setupMockRPC({
+      getSession: () => Promise.reject(new Error("Network error")),
+    });
 
     const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
     await findByText(/Error:.*Network error/);
@@ -73,7 +69,9 @@ describe("SessionView", () => {
 
   test("renders both user and assistant messages", async () => {
     const session = makeSession();
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ session }), { status: 200 })));
+    setupMockRPC({
+      getSession: () => Promise.resolve({ session }),
+    });
 
     const { findByText, container } = render(
       <SessionView sessionId="session-1" project="test-project" />,

@@ -1,25 +1,12 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
+import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { Sidebar } from "./Sidebar.tsx";
 
-let originalFetch: typeof globalThis.fetch;
-
-function mockFetch(response: () => Promise<Response>): void {
-  Object.assign(globalThis, {
-    fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
-  });
-}
-
 describe("Sidebar", () => {
-  originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    cleanup();
-    globalThis.fetch = originalFetch;
-  });
+  afterEach(cleanup);
 
   test("renders Klovi title", () => {
-    mockFetch(() => Promise.resolve(new Response("{}", { status: 200 })));
     const { container } = render(
       <Sidebar>
         <div>Children</div>
@@ -29,7 +16,6 @@ describe("Sidebar", () => {
   });
 
   test("renders children in sidebar-content", () => {
-    mockFetch(() => Promise.resolve(new Response("{}", { status: 200 })));
     const { getByText } = render(
       <Sidebar>
         <div>My Child Content</div>
@@ -39,7 +25,6 @@ describe("Sidebar", () => {
   });
 
   test("renders search button when onSearchClick provided", () => {
-    mockFetch(() => Promise.resolve(new Response("{}", { status: 200 })));
     const onSearchClick = mock(() => {});
     const { container } = render(
       <Sidebar onSearchClick={onSearchClick}>
@@ -50,7 +35,6 @@ describe("Sidebar", () => {
   });
 
   test("does not render search button when onSearchClick not provided", () => {
-    mockFetch(() => Promise.resolve(new Response("{}", { status: 200 })));
     const { container } = render(
       <Sidebar>
         <div>Content</div>
@@ -60,8 +44,9 @@ describe("Sidebar", () => {
   });
 
   test("renders version info after fetch", async () => {
-    const versionData = { version: "1.2.3", commitHash: "abc1234" };
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify(versionData), { status: 200 })));
+    setupMockRPC({
+      getVersion: () => Promise.resolve({ version: "1.2.3", commit: "abc1234" }),
+    });
 
     const { findByText } = render(
       <Sidebar>
@@ -71,9 +56,10 @@ describe("Sidebar", () => {
     await findByText("1.2.3 (abc1234)");
   });
 
-  test("renders version without commit hash when null", async () => {
-    const versionData = { version: "1.2.3", commitHash: null };
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify(versionData), { status: 200 })));
+  test("renders version without commit hash when empty", async () => {
+    setupMockRPC({
+      getVersion: () => Promise.resolve({ version: "1.2.3", commit: "" }),
+    });
 
     const { findByText } = render(
       <Sidebar>
@@ -84,7 +70,6 @@ describe("Sidebar", () => {
   });
 
   test("renders footer with cookielab link", () => {
-    mockFetch(() => Promise.resolve(new Response("{}", { status: 200 })));
     const { container } = render(
       <Sidebar>
         <div>Content</div>

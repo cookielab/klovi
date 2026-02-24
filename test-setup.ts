@@ -1,4 +1,5 @@
 import { GlobalWindow } from "happy-dom";
+import { setupMockRPC } from "./src/frontend/test-helpers/mock-rpc.ts";
 
 const window = new GlobalWindow();
 
@@ -35,3 +36,6 @@ for (const key of globals) {
     ];
   }
 }
+
+// Set up default RPC mock for all tests
+setupMockRPC();

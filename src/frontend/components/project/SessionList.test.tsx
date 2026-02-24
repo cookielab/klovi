@@ -1,15 +1,8 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
+import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionList } from "./SessionList.tsx";
-
-let originalFetch: typeof globalThis.fetch;
-
-function mockFetch(response: () => Promise<Response>): void {
-  Object.assign(globalThis, {
-    fetch: Object.assign(response, { preconnect: globalThis.fetch.preconnect }),
-  });
-}
 
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
@@ -35,15 +28,12 @@ function makeSession(overrides: Partial<SessionSummary> = {}): SessionSummary {
 }
 
 describe("SessionList", () => {
-  originalFetch = globalThis.fetch;
-
-  afterEach(() => {
-    cleanup();
-    globalThis.fetch = originalFetch;
-  });
+  afterEach(cleanup);
 
   test("shows loading state initially", () => {
-    mockFetch(() => new Promise(() => {}));
+    setupMockRPC({
+      getSessions: () => new Promise(() => {}),
+    });
     const { container } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
     );
@@ -55,7 +45,9 @@ describe("SessionList", () => {
       makeSession({ sessionId: "s1", firstMessage: "First" }),
       makeSession({ sessionId: "s2", firstMessage: "Second" }),
     ];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions }),
+    });
 
     const { findByText, container } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -65,9 +57,9 @@ describe("SessionList", () => {
   });
 
   test("calls onBack when back button clicked", async () => {
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ sessions: [] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions: [] }),
+    });
     const onBack = mock(() => {});
 
     const { container, findByText } = render(
@@ -81,9 +73,9 @@ describe("SessionList", () => {
 
   test("calls onSelect when session clicked", async () => {
     const session = makeSession({ sessionId: "s1" });
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ sessions: [session] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions: [session] }),
+    });
 
     const onSelect = mock(() => {});
     const { container, findByText } = render(
@@ -97,7 +89,9 @@ describe("SessionList", () => {
 
   test("renders session type badge for plan session", async () => {
     const sessions = [makeSession({ sessionType: "plan" })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions }),
+    });
 
     const { findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -107,7 +101,9 @@ describe("SessionList", () => {
 
   test("does not render model name in session list", async () => {
     const sessions = [makeSession({ model: "claude-opus-4-6" })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions }),
+    });
 
     const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -119,7 +115,9 @@ describe("SessionList", () => {
 
   test("renders plugin badge with correct class when pluginId is set", async () => {
     const sessions = [makeSession({ pluginId: "claude-code", model: "claude-opus-4-6" })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions }),
+    });
 
     const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -134,7 +132,9 @@ describe("SessionList", () => {
 
   test("does not render git branch in session list", async () => {
     const sessions = [makeSession({ gitBranch: "feature/test" })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions }),
+    });
 
     const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -145,9 +145,9 @@ describe("SessionList", () => {
   });
 
   test("shows empty message when no sessions", async () => {
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ sessions: [] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions: [] }),
+    });
 
     const { findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -157,9 +157,9 @@ describe("SessionList", () => {
 
   test("marks selected session as active", async () => {
     const session = makeSession({ sessionId: "s1" });
-    mockFetch(() =>
-      Promise.resolve(new Response(JSON.stringify({ sessions: [session] }), { status: 200 })),
-    );
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions: [session] }),
+    });
 
     const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} selectedId="s1" />,
@@ -170,7 +170,9 @@ describe("SessionList", () => {
 
   test("falls back to slug when firstMessage is empty", async () => {
     const sessions = [makeSession({ firstMessage: "", slug: "my-slug" })];
-    mockFetch(() => Promise.resolve(new Response(JSON.stringify({ sessions }), { status: 200 })));
+    setupMockRPC({
+      getSessions: () => Promise.resolve({ sessions }),
+    });
 
     const { findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
@@ -179,7 +181,9 @@ describe("SessionList", () => {
   });
 
   test("displays project name from path segments", () => {
-    mockFetch(() => new Promise(() => {}));
+    setupMockRPC({
+      getSessions: () => new Promise(() => {}),
+    });
     const { container } = render(
       <SessionList
         project={makeProject({ name: "/Users/test/my-project" })}
