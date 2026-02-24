@@ -10,6 +10,7 @@ import { SearchModal } from "./components/search/SearchModal.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
 import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
+import { SettingsModal } from "./components/settings/SettingsModal.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
@@ -36,6 +37,7 @@ export function App() {
   } = useViewState();
 
   const [searchOpen, setSearchOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchSessions, setSearchSessions] = useState<GlobalSessionResult[]>([]);
 
   const fetchSearchSessions = useCallback(() => {
@@ -81,6 +83,18 @@ export function App() {
     return () => window.removeEventListener("keydown", handleCmdK);
   }, [fetchSearchSessions]);
 
+  // Cmd+, opens settings
+  useEffect(() => {
+    function handleCmdComma(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+        e.preventDefault();
+        setSettingsOpen((prev) => !prev);
+      }
+    }
+    window.addEventListener("keydown", handleCmdComma);
+    return () => window.removeEventListener("keydown", handleCmdComma);
+  }, []);
+
   // Global keyboard shortcuts: p = toggle presentation, +/- = font size
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -118,17 +132,20 @@ export function App() {
     const handleTogglePresentation = () => {
       if (canPresent) togglePresentation();
     };
+    const handleOpenSettings = () => setSettingsOpen(true);
 
     window.addEventListener("klovi:cycleTheme", handleCycleTheme);
     window.addEventListener("klovi:increaseFontSize", handleIncrease);
     window.addEventListener("klovi:decreaseFontSize", handleDecrease);
     window.addEventListener("klovi:togglePresentation", handleTogglePresentation);
+    window.addEventListener("klovi:openSettings", handleOpenSettings);
 
     return () => {
       window.removeEventListener("klovi:cycleTheme", handleCycleTheme);
       window.removeEventListener("klovi:increaseFontSize", handleIncrease);
       window.removeEventListener("klovi:decreaseFontSize", handleDecrease);
       window.removeEventListener("klovi:togglePresentation", handleTogglePresentation);
+      window.removeEventListener("klovi:openSettings", handleOpenSettings);
     };
   }, [cycleTheme, increase, decrease, canPresent, togglePresentation]);
 
@@ -157,6 +174,7 @@ export function App() {
           onClose={() => setSearchOpen(false)}
         />
       )}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
       <Layout sidebar={sidebarContent} hideSidebar={isPresenting} onSearchClick={openSearch}>
         <Header
           title={headerTitle}
