@@ -10,53 +10,68 @@ Tests use `bun test` with happy-dom for DOM simulation.
 preload = ["./test-setup.ts"]
 ```
 
-**DOM setup** (`test-setup.ts`):
+**DOM + RPC setup** (`test-setup.ts`):
 ```ts
 import { GlobalWindow } from "happy-dom";
+import { setupMockRPC } from "./src/frontend/test-helpers/mock-rpc.ts";
 // Registers window, document, etc. as globals
+// Sets up default RPC mock for all tests
+setupMockRPC();
 ```
 
 happy-dom v20 uses `GlobalWindow` (not `GlobalRegistrator` which was removed).
+
+The test setup also calls `setupMockRPC()` from `src/frontend/test-helpers/mock-rpc.ts`, which wires up a default mock RPC client so frontend components that call `getRPC()` work without errors. Individual tests can override specific RPC methods by calling `setupMockRPC({ getProjects: () => ... })`.
 
 ## Running Tests
 
 ```bash
 bun test                    # All tests
-bun test src/server         # Server tests only
+bun test src/parser         # Parser tests only
+bun test src/plugins        # Plugin tests only
 bun test src/frontend       # Frontend tests only
 bun test --watch            # Watch mode
 ```
 
-**Current:** 541 tests across 49 files
-
 ## Test Files
 
-### Server — Parser & Infrastructure
+### Parser & Infrastructure
 
 | File | What it covers |
 |---|---|
-| **Server** | |
-| `src/server/parser/session.test.ts` | `buildTurns()`, `extractSubAgentMap()`, contentBlocks ordering, plan/impl linking |
-| `src/server/parser/command-message.test.ts` | `parseCommandMessage()`, `cleanCommandMessage()` |
-| `src/server/parser/claude-dir.test.ts` | Session discovery, `classifySessionTypes()`, slug extraction |
-| `src/server/parser/stats.test.ts` | `scanStats()` aggregate statistics computation |
-| `src/server/plugin-registry.test.ts` | PluginRegistry: project merging, session aggregation |
-| `src/server/config.test.ts` | Config getters/setters for all tool directories |
-| `src/server/cli.test.ts` | CLI arg parsing, dir flags, port validation |
-| `src/server/http.test.ts` | HTTP server route matching |
-| `src/server/version.test.ts` | Version info |
-| `src/server/api/version.test.ts` | Version API handler |
-| **Shared** | |
+| `src/parser/session.test.ts` | `buildTurns()`, `extractSubAgentMap()`, contentBlocks ordering, plan/impl linking |
+| `src/parser/command-message.test.ts` | `parseCommandMessage()`, `cleanCommandMessage()` |
+| `src/parser/claude-dir.test.ts` | Session discovery, `classifySessionTypes()`, slug extraction |
+| `src/parser/stats.test.ts` | `scanStats()` aggregate statistics computation |
+
+### Plugins
+
+| File | What it covers |
+|---|---|
+| `src/plugins/registry.test.ts` | PluginRegistry: project merging, session aggregation |
+| `src/plugins/config.test.ts` | Config getters/setters for all tool directories |
+| `src/plugins/claude-code/discovery.test.ts` | Claude Code project/session discovery |
+| `src/plugins/claude-code/subagent.test.ts` | Sub-agent session parsing |
+| `src/plugins/codex-cli/discovery.test.ts` | Codex CLI project/session discovery from nested JSONL dirs |
+| `src/plugins/codex-cli/parser.test.ts` | `buildCodexTurns()` from JSONL events |
+| `src/plugins/codex-cli/session-index.test.ts` | Codex CLI session index management |
+| `src/plugins/opencode/discovery.test.ts` | OpenCode project/session discovery from SQLite |
+| `src/plugins/opencode/parser.test.ts` | `buildOpenCodeTurns()` from SQLite messages/parts |
+| `src/plugins/shared/json-utils.test.ts` | JSON parsing utilities |
+| `src/plugins/shared/jsonl-utils.test.ts` | JSONL file reading utilities |
+
+### Main Process
+
+| File | What it covers |
+|---|---|
+| `src/bun/rpc-handlers.test.ts` | RPC handler implementations |
+
+### Shared
+
+| File | What it covers |
+|---|---|
 | `src/shared/content-blocks.test.ts` | ContentBlock grouping for presentation steps |
-
-### Server — Tool Plugins
-
-| File | What it covers |
-|---|---|
-| `src/server/plugins/codex-cli/discovery.test.ts` | Codex CLI project/session discovery from nested JSONL dirs |
-| `src/server/plugins/codex-cli/parser.test.ts` | `buildCodexTurns()` from JSONL events |
-| `src/server/plugins/opencode/discovery.test.ts` | OpenCode project/session discovery from SQLite |
-| `src/server/plugins/opencode/parser.test.ts` | `buildOpenCodeTurns()` from SQLite messages/parts |
+| `src/shared/iso-time.test.ts` | ISO timestamp sorting utilities |
 
 ### Frontend — Components
 
@@ -87,12 +102,14 @@ bun test --watch            # Watch mode
 | `src/frontend/components/ui/DiffView.test.tsx` | Diff view rendering |
 | `src/frontend/components/ui/ErrorBoundary.test.tsx` | Error boundary with retry |
 | `src/frontend/components/ui/MarkdownRenderer.test.tsx` | Markdown rendering |
+| `src/frontend/components/ui/ImageLightbox.test.tsx` | Image lightbox overlay |
 
 ### Frontend — Hooks & Utils
 
 | File | What it covers |
 |---|---|
-| `src/frontend/hooks/useFetch.test.ts` | Generic data fetching hook |
+| `src/frontend/hooks/useRPC.test.ts` | Generic RPC data fetching hook |
+| `src/frontend/hooks/useSessionData.test.ts` | Session data fetching hook |
 | `src/frontend/hooks/useHiddenProjects.test.ts` | `useHiddenProjects` hook: hide, unhide, localStorage persistence |
 | `src/frontend/hooks/useKeyboard.test.tsx` | Keyboard event handling |
 | `src/frontend/hooks/usePresentationMode.test.ts` | Step counting, navigation, turn boundaries, visibility |
@@ -102,7 +119,6 @@ bun test --watch            # Watch mode
 | `src/frontend/utils/model.test.ts` | Model name shortening (Opus/Sonnet/Haiku/GPT/Gemini) |
 | `src/frontend/utils/project.test.ts` | Project path utilities |
 | `src/frontend/utils/format-detector.test.ts` | Format detection utilities |
-| `src/shared/content-blocks.test.ts` | Content block grouping |
 
 ## Patterns
 
@@ -153,13 +169,30 @@ test("renders user text", () => {
 });
 ```
 
+### RPC Mocking
+
+The test setup preloads `setupMockRPC()` which provides default no-op implementations for all RPC methods. To override specific methods in a test:
+
+```ts
+import { setupMockRPC } from "../test-helpers/mock-rpc.ts";
+
+test("shows projects from RPC", () => {
+  setupMockRPC({
+    getProjects: () => Promise.resolve({
+      projects: [{ name: "my-project", encodedPath: "abc", sources: [] }],
+    }),
+  });
+  // render component that calls getRPC().request.getProjects(...)
+});
+```
+
 ### Key Conventions
 
 - Use `!` non-null assertions for array index access (required by `noUncheckedIndexedAccess` in tsconfig)
 - Build synthetic data objects matching the shared types
 - Parser tests focus on turn merging, filtering, and edge cases
 - Component tests focus on rendering output and conditional display
-- No mocking of fetch/API - component tests render with static props
+- Frontend components use `getRPC()` for data; tests mock via `setupMockRPC()`
 
 ### Plugin Tests
 
@@ -191,3 +224,4 @@ Both patterns use `afterEach` cleanup to remove temporary files and reset config
 2. Import from `bun:test` for `test`, `expect`, `describe`, `beforeEach`
 3. For components, import `render` from `@testing-library/react`
 4. For parser logic, import `buildTurns` and construct `RawLine[]` fixtures
+5. For components that use RPC, call `setupMockRPC()` with relevant overrides

@@ -1,53 +1,34 @@
 # Klovi
 
 [![CI](https://github.com/cookielab/klovi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookielab/klovi/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@cookielab.io/klovi)](https://www.npmjs.com/package/@cookielab.io/klovi)
-[![npm downloads](https://img.shields.io/npm/dm/@cookielab.io/klovi)](https://www.npmjs.com/package/@cookielab.io/klovi)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
-A local web app for browsing and presenting AI coding session history. Supports Claude Code, Codex CLI, and OpenCode. Built for showing AI coding workflows at meetups and conferences.
+A native desktop app for browsing and presenting AI coding session history. Supports Claude Code, Codex CLI, and OpenCode. Built for showing AI coding workflows at meetups and conferences.
 
 ![Klovi homepage screenshot](docs/screenshot-homepage.png)
 ![Klovi homepage screenshot](docs/screenshot-session.png)
 
 ## Why Klovi?
 
-AI coding tools like Claude Code, Codex CLI, and OpenCode store conversation history locally, but there's no unified way to browse, search, or present them. Klovi fills that gap: run a single command and get a local web UI to explore your full session history across all tools, review what AI assistants did across projects, and step through conversations in a presentation mode perfect for demos and talks.
+AI coding tools like Claude Code, Codex CLI, and OpenCode store conversation history locally, but there's no unified way to browse, search, or present them. Klovi fills that gap: launch the app and get a native desktop UI to explore your full session history across all tools, review what AI assistants did across projects, and step through conversations in a presentation mode perfect for demos and talks.
 
 Klovi auto-discovers sessions from Claude Code (`~/.claude/projects/`), Codex CLI (`~/.codex/sessions/`), and OpenCode (`~/.local/share/opencode/opencode.db`), then renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode. Projects from different tools that share the same working directory are merged automatically.
 
 ## Quick Start
 
-Run directly without installing (requires [Bun](https://bun.sh) or [Node.js](https://nodejs.org) >=24):
+Download the latest release for your platform from the [Releases page](https://github.com/cookielab/klovi/releases).
 
-```bash
-bunx --bun @cookielab.io/klovi@latest
-npx @cookielab.io/klovi@latest
-yarn dlx @cookielab.io/klovi@latest
-pnpm dlx @cookielab.io/klovi@latest
-```
-
-Or install globally:
-
-```bash
-bun install -g @cookielab.io/klovi
-klovi
-```
-
-Or install via [Homebrew](https://brew.sh) (no runtime dependency):
+Or install via [Homebrew](https://brew.sh):
 
 ```bash
 brew install cookielab/tap/klovi
-klovi
 ```
-
-Open http://localhost:3583
 
 ### Development
 
 ```bash
 bun install
-bun run dev
+bunx electrobun dev
 ```
 
 ## Features
@@ -89,28 +70,17 @@ bun run dev
 - Fade-in animation for each revealed step
 
 **Theme & Display**
-- Light and dark themes (toggle in header, persisted to localStorage)
+- Light and dark themes (toggle in header or via View menu, persisted to localStorage)
 - System theme auto-detection
-- Font size control (+/- buttons) for projector readability
-
-**CLI**
-- `--port <number>` — specify server port (default: 3583)
-- `--claude-code-dir <path>` — path to Claude Code data directory (default: `~/.claude`)
-- `--codex-cli-dir <path>` — path to Codex CLI data directory (default: `~/.codex`)
-- `--opencode-dir <path>` — path to OpenCode data directory (default: `~/.local/share/opencode`)
-- `--accept-risks` — skip the startup security warning
-- `--help` / `-h` — show usage information
+- Font size control (+/- buttons or via View menu) for projector readability
+- Native application menu with keyboard shortcuts
 
 ## Scripts
 
 | Script | Description |
 |---|---|
-| `bun run dev` | Build frontend + start dev server with watch (port 3583) |
-| `bun run start` | Start production server (`node dist/server.js`) |
-| `bun run build` | Build frontend + server for production |
-| `bun run build:frontend` | Bundle frontend into `dist/public/` |
-| `bun run build:server` | Bundle server into `dist/server.js` (Node.js target) |
-| `bun run build:compile` | Compile standalone binaries for multiple platforms |
+| `bunx electrobun dev` | Start development mode with hot reload |
+| `bunx electrobun build` | Build native desktop binary for production |
 | `bun test` | Run all tests |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `bun run lint` | Lint with Biome |
@@ -118,20 +88,10 @@ bun run dev
 | `bun run check` | Biome check (lint + format, no write) |
 | `bun run check:fix` | Biome check + auto-fix |
 
-## API
-
-| Endpoint | Description |
-|---|---|
-| `GET /api/version` | Server version information |
-| `GET /api/stats` | Aggregate dashboard statistics (projects, sessions, tokens, models) |
-| `GET /api/projects` | List all discovered projects |
-| `GET /api/projects/:encodedPath/sessions` | List sessions for a project |
-| `GET /api/sessions/:id?project=:encodedPath` | Full parsed session with turns |
-| `GET /api/sessions/:id/subagents/:agentId?project=:encodedPath` | Sub-agent session data |
-
 ## Tech Stack
 
-- [Bun](https://bun.sh) - runtime, bundler, test runner; [Node.js](https://nodejs.org) - production HTTP server
+- [Electrobun](https://electrobun.dev) - native desktop framework for Bun
+- [Bun](https://bun.sh) - runtime, bundler, test runner
 - React 19 + TypeScript (strict mode)
 - react-markdown + remark-gfm
 - react-syntax-highlighter (Prism, oneDark theme)

@@ -4,114 +4,134 @@
 
 ```
 Klovi/
-├── index.ts                         # Server entry (CLI bootstrap, static dir resolution)
-├── index.html                       # HTML template (imports frontend.tsx, built by Bun)
+├── electrobun.config.ts                # Electrobun build config (app name, entrypoints, views)
 ├── package.json
-├── tsconfig.json                    # Strict mode, noUncheckedIndexedAccess
-├── bunfig.toml                      # Preloads test-setup.ts
-├── biome.json                       # Linter + formatter config
-├── test-setup.ts                    # Registers happy-dom globals
-├── CLAUDE.md                        # Coding guidelines for Claude
-├── CONTENT_TYPES.md                 # JSONL content type catalog
-│
-├── scripts/
-│   ├── build-server.ts             # Bundles server for Node.js, injects version/commit
-│   └── build-compile.ts            # Compiles standalone binaries (embeds frontend assets)
+├── tsconfig.json                       # Strict mode, noUncheckedIndexedAccess
+├── bunfig.toml                         # Preloads test-setup.ts
+├── biome.json                          # Linter + formatter config
+├── test-setup.ts                       # Registers happy-dom globals + setupMockRPC()
+├── CLAUDE.md                           # Coding guidelines for Claude
+├── CONTENT_TYPES.md                    # JSONL content type catalog
 │
 └── src/
-    ├── shared/
-    │   ├── types.ts                 # Shared type definitions (Turn, Session, Project, etc.)
-    │   ├── plugin-types.ts          # ToolPlugin, PluginProject, MergedProject interfaces
-    │   └── content-blocks.ts        # ContentBlock grouping for presentation steps
+    ├── bun/                            # Main process (Bun runtime, runs in Electrobun)
+    │   ├── index.ts                    # App entry: BrowserWindow, RPC definition, ApplicationMenu
+    │   ├── rpc-handlers.ts             # RPC handler implementations (getProjects, getSession, etc.)
+    │   └── rpc-handlers.test.ts        # RPC handler tests
     │
-    ├── server/
-    │   ├── cli.ts                   # CLI arg parsing, help text, startup banner, route wiring
-    │   ├── config.ts                # Directory configuration for all tools
-    │   ├── http.ts                  # HTTP server (node:http), route matching, static files
-    │   ├── version.ts               # Version info from package.json
-    │   ├── plugin-registry.ts       # PluginRegistry: merge projects, aggregate sessions
-    │   ├── registry.ts              # createRegistry(): auto-discovers and registers plugins
-    │   ├── api/
-    │   │   ├── projects.ts          # GET /api/projects (uses registry)
-    │   │   ├── sessions.ts          # GET /api/projects/:path/sessions (uses registry)
-    │   │   ├── session.ts           # GET /api/sessions/:id?project=... (uses registry)
-    │   │   ├── stats.ts             # GET /api/stats (dashboard statistics, 5-min cache)
-    │   │   ├── subagent.ts          # GET /api/sessions/:id/subagents/:agentId?project=...
-    │   │   └── version.ts           # GET /api/version
-    │   ├── parser/
-    │   │   ├── claude-dir.ts        # Claude Code project/session discovery
-    │   │   ├── session.ts           # Claude Code JSONL parser: parseSession(), buildTurns()
-    │   │   ├── stats.ts             # Scans all sessions for aggregate statistics
-    │   │   ├── command-message.ts   # Slash command XML extraction
-    │   │   └── types.ts             # Raw JSONL line types (RawLine, RawMessage, etc.)
-    │   └── plugins/
-    │       ├── claude-code/
-    │       │   ├── index.ts         # Claude Code ToolPlugin implementation
-    │       │   ├── discovery.ts     # Project/session discovery from ~/.claude/projects/
-    │       │   └── parser.ts        # JSONL session parser (delegates to shared parser)
-    │       ├── codex-cli/
-    │       │   ├── index.ts         # Codex CLI ToolPlugin implementation
-    │       │   ├── discovery.ts     # Project/session discovery from ~/.codex/sessions/
-    │       │   ├── parser.ts        # JSONL event parser (turn.started/item.completed)
-    │       │   └── extractors.ts    # Tool summary extractors & input formatters
-    │       └── opencode/
-    │           ├── index.ts         # OpenCode ToolPlugin implementation
-    │           ├── discovery.ts     # Project/session discovery from SQLite DB
-    │           ├── parser.ts        # SQLite message/part parser
-    │           └── extractors.ts    # Tool summary extractors & input formatters
+    ├── views/
+    │   └── main/
+    │       ├── index.html              # HTML template for the webview
+    │       └── index.ts                # Webview entry: Electroview RPC, React mount, menu actions
+    │
+    ├── shared/
+    │   ├── types.ts                    # Shared type definitions (Turn, Session, Project, etc.)
+    │   ├── plugin-types.ts             # ToolPlugin, PluginProject, MergedProject interfaces
+    │   ├── rpc-types.ts                # KloviRPC schema (bun requests + webview messages)
+    │   ├── content-blocks.ts           # ContentBlock grouping for presentation steps
+    │   ├── session-id.ts               # Encode/decode pluginId:rawSessionId
+    │   └── iso-time.ts                 # ISO timestamp sorting utilities
+    │
+    ├── parser/
+    │   ├── session.test.ts             # buildTurns(), contentBlocks ordering, plan/impl linking
+    │   ├── command-message.ts          # Slash command XML extraction
+    │   ├── command-message.test.ts     # Command message tests
+    │   ├── claude-dir.test.ts          # Session discovery, classifySessionTypes(), slug extraction
+    │   ├── stats.ts                    # Scans all sessions for aggregate statistics
+    │   ├── stats.test.ts              # Stats tests
+    │   └── types.ts                    # Raw JSONL line types (RawLine, RawMessage, etc.)
+    │
+    ├── plugins/
+    │   ├── auto-discover.ts            # createRegistry(): auto-discovers plugins whose data dirs exist
+    │   ├── registry.ts                 # PluginRegistry: merge projects, aggregate sessions
+    │   ├── registry.test.ts            # Registry tests
+    │   ├── config.ts                   # Directory configuration for all tools
+    │   ├── config.test.ts              # Config tests
+    │   ├── shared/
+    │   │   ├── discovery-utils.ts      # Shared discovery helpers
+    │   │   ├── json-utils.ts           # JSON parsing utilities
+    │   │   ├── jsonl-utils.ts          # JSONL file reading utilities
+    │   │   └── text-utils.ts           # Text processing utilities
+    │   ├── claude-code/
+    │   │   ├── index.ts                # Claude Code ToolPlugin implementation
+    │   │   ├── discovery.ts            # Project/session discovery from ~/.claude/projects/
+    │   │   ├── parser.ts               # JSONL session parser
+    │   │   └── discovery.test.ts       # Discovery tests
+    │   ├── codex-cli/
+    │   │   ├── index.ts                # Codex CLI ToolPlugin implementation
+    │   │   ├── discovery.ts            # Project/session discovery from ~/.codex/sessions/
+    │   │   ├── parser.ts               # JSONL event parser (turn.started/item.completed)
+    │   │   ├── extractors.ts           # Tool summary extractors & input formatters
+    │   │   ├── session-index.ts        # Session index management
+    │   │   └── discovery.test.ts       # Discovery tests
+    │   └── opencode/
+    │       ├── index.ts                # OpenCode ToolPlugin implementation
+    │       ├── discovery.ts            # Project/session discovery from SQLite DB
+    │       ├── parser.ts               # SQLite message/part parser
+    │       ├── extractors.ts           # Tool summary extractors & input formatters
+    │       ├── db.ts                   # SQLite database access
+    │       └── discovery.test.ts       # Discovery tests
     │
     └── frontend/
-        ├── App.tsx                  # Root component: router, state, hash navigation
-        ├── App.css                  # All styles + CSS custom properties (light/dark)
-        ├── index.css                # Global reset + base styles
-        ├── svg.d.ts                 # SVG module declarations for TypeScript
-        ├── plugin-registry.ts       # Frontend plugin registry (summary extractors, input formatters)
+        ├── App.tsx                     # Root component: router, state, hash navigation
+        ├── App.css                     # All styles + CSS custom properties (light/dark)
+        ├── index.css                   # Global reset + base styles
+        ├── rpc.ts                      # RPC client module (setRPCClient, getRPC)
+        ├── svg.d.ts                    # SVG module declarations for TypeScript
+        ├── plugin-registry.ts          # Frontend plugin registry (summary extractors, input formatters)
+        ├── view-state.ts               # View state types
+        ├── sidebar-content.tsx         # Sidebar content routing
+        ├── test-helpers/
+        │   └── mock-rpc.ts             # setupMockRPC() for test environment
         ├── components/
         │   ├── dashboard/
         │   │   └── DashboardStats.tsx  # Homepage statistics (projects, sessions, tokens, models)
         │   ├── layout/
-        │   │   ├── Layout.tsx       # Sidebar + main content flex wrapper
-        │   │   ├── Header.tsx       # Top bar: title, theme, font size, copy command, back link
-        │   │   └── Sidebar.tsx      # Fixed 320px left sidebar
+        │   │   ├── Layout.tsx          # Sidebar + main content flex wrapper
+        │   │   ├── Header.tsx          # Top bar: title, theme, font size, back link
+        │   │   └── Sidebar.tsx         # Fixed 320px left sidebar
         │   ├── message/
-        │   │   ├── MessageList.tsx   # Maps Turn[] to message components
-        │   │   ├── UserMessage.tsx   # User bubble: text, commands, attachments
-        │   │   ├── AssistantMessage.tsx  # Assistant: thinking + text + tool calls
-        │   │   ├── ToolCall.tsx      # Collapsible tool call with smart summary
-        │   │   ├── SmartToolOutput.tsx  # Tool output: format detection, images, lightbox
-        │   │   ├── BashToolContent.tsx  # Bash tool input/output display
-        │   │   ├── ThinkingBlock.tsx # Collapsible thinking/reasoning block
-        │   │   └── SubAgentView.tsx  # Inline sub-agent session display
+        │   │   ├── MessageList.tsx     # Maps Turn[] to message components
+        │   │   ├── UserMessage.tsx     # User bubble: text, commands, attachments
+        │   │   ├── AssistantMessage.tsx # Assistant: thinking + text + tool calls
+        │   │   ├── ToolCall.tsx        # Collapsible tool call with smart summary
+        │   │   ├── SmartToolOutput.tsx # Tool output: format detection, images, lightbox
+        │   │   ├── BashToolContent.tsx # Bash tool input/output display
+        │   │   ├── ThinkingBlock.tsx   # Collapsible thinking/reasoning block
+        │   │   └── SubAgentView.tsx    # Inline sub-agent session display
         │   ├── session/
-        │   │   ├── SessionView.tsx       # Normal session display (fetches + renders)
+        │   │   ├── SessionView.tsx     # Normal session display (fetches + renders)
         │   │   ├── SessionPresentation.tsx  # Presentation mode with step navigation
         │   │   ├── PresentationShell.tsx    # Shared presentation wrapper (keyboard, progress)
         │   │   └── SubAgentPresentation.tsx # Sub-agent presentation mode
         │   ├── project/
-        │   │   ├── ProjectList.tsx   # Home view: all projects
-        │   │   ├── SessionList.tsx   # Sidebar: sessions for selected project
+        │   │   ├── ProjectList.tsx     # Home view: all projects
+        │   │   ├── SessionList.tsx     # Sidebar: sessions for selected project
         │   │   └── HiddenProjectList.tsx  # Hidden projects management view
         │   ├── search/
-        │   │   └── SearchModal.tsx   # Global session search (Cmd+K)
+        │   │   └── SearchModal.tsx     # Global session search (Cmd+K)
         │   └── ui/
         │       ├── MarkdownRenderer.tsx  # react-markdown + GFM + file ref detection
-        │       ├── CodeBlock.tsx     # Syntax-highlighted code (Prism)
+        │       ├── CodeBlock.tsx       # Syntax-highlighted code (Prism)
         │       ├── CollapsibleSection.tsx  # Reusable expand/collapse
-        │       ├── DiffView.tsx      # Side-by-side diff display for Edit tool
-        │       ├── ErrorBoundary.tsx  # React error boundary with retry
-        │       └── ImageLightbox.tsx  # Fullscreen image lightbox overlay
+        │       ├── DiffView.tsx        # Side-by-side diff display for Edit tool
+        │       ├── ErrorBoundary.tsx   # React error boundary with retry
+        │       ├── FetchError.tsx      # Error display component
+        │       └── ImageLightbox.tsx   # Fullscreen image lightbox overlay
         ├── hooks/
-        │   ├── useTheme.ts          # Light/dark/system theme + font size persistence
-        │   ├── useFetch.ts          # Generic data fetching hook with loading/error state
-        │   ├── useHiddenProjects.ts  # Hidden projects state + localStorage persistence
-        │   ├── usePresentationMode.ts   # Step-through state machine
-        │   └── useKeyboard.ts       # Arrow/Space/Esc/F key bindings
+        │   ├── useTheme.ts            # Light/dark/system theme + font size persistence
+        │   ├── useRPC.ts              # Generic RPC data fetching hook with loading/error state
+        │   ├── useSessionData.ts      # Session data fetching hook
+        │   ├── useHiddenProjects.ts   # Hidden projects state + localStorage persistence
+        │   ├── usePresentationMode.ts # Step-through state machine
+        │   ├── useKeyboard.ts         # Arrow/Space/Esc/F key bindings
+        │   └── useViewState.ts        # View state management hook
         └── utils/
-            ├── time.ts              # Relative time formatting + timestamp display
-            ├── model.ts             # Model name shortening (Opus/Sonnet/Haiku)
-            ├── project.ts           # Project path utilities
-            ├── format-detector.ts   # Auto-detect output format (JSON, XML, diff, etc.)
-            └── plugin.ts            # Plugin display name mapping
+            ├── time.ts                # Relative time formatting + timestamp display
+            ├── model.ts               # Model name shortening (Opus/Sonnet/Haiku)
+            ├── project.ts             # Project path utilities
+            ├── format-detector.ts     # Auto-detect output format (JSON, XML, diff, etc.)
+            └── plugin.ts              # Plugin display name mapping
 ```
 
 ## Data Flow
@@ -130,49 +150,64 @@ Data Sources                            # Each tool stores sessions differently
           │
           ▼
    PluginRegistry                       # Merges projects by resolved filesystem path
-     registry.ts: createRegistry()      # Auto-discovers plugins whose data dirs exist
-     plugin-registry.ts                 # discoverAllProjects() → MergedProject[]
+     auto-discover.ts: createRegistry() # Auto-discovers plugins whose data dirs exist
+     registry.ts                        # discoverAllProjects() → MergedProject[]
                                         # listAllSessions() → SessionSummary[]
           │
           ▼
-   API handlers (projects.ts,           # Serve as JSON responses via registry
-   sessions.ts, session.ts)
+   RPC Handlers (rpc-handlers.ts)       # Called by Electrobun typed RPC from webview
+          │
+     Electrobun RPC                     # Typed WebSocket bridge between Bun and webview
           │
           ▼
-   App.tsx                              # Frontend: fetches, manages view state
+   Webview (views/main/index.ts)        # Electroview RPC client, React mount
+          │
+          ▼
+   App.tsx                              # Frontend: RPC calls via getRPC(), manages view state
    MessageList.tsx                      # Maps Turn[] to components
    UserMessage / AssistantMessage       # Render each turn type
    ToolCall / ThinkingBlock             # Render sub-elements (pluginId-aware)
 ```
 
-## Server
+## Main Process
 
-Custom `node:http` server in `src/server/http.ts` with route matching and static file serving. CLI argument parsing, help text, startup banner, and route creation are extracted to `src/server/cli.ts`. Routes are wired via `createRoutes()`:
+The main process runs in Bun via Electrobun (`src/bun/index.ts`). It:
 
-| Route | Handler | Purpose |
+1. Creates a `PluginRegistry` via `createRegistry()` (auto-discovers installed tools)
+2. Defines typed RPC handlers using `BrowserView.defineRPC<KloviRPC>()`
+3. Opens a `BrowserWindow` pointing to `views://main/index.html`
+4. Sets up the `ApplicationMenu` with Edit, View, and Window menus
+5. Forwards menu actions (theme cycling, font size, presentation toggle) to the webview via RPC messages
+
+### RPC Methods
+
+| RPC Method | Handler | Purpose |
 |---|---|---|
-| `/*` | Static file serving | Serves pre-built frontend from `dist/public/` |
-| `/api/version` | `handleVersion()` | Server version information |
-| `/api/stats` | `handleStats()` | Aggregate dashboard statistics (5-min cache) |
-| `/api/projects` | `handleProjects()` | Lists all discovered projects |
-| `/api/projects/:encodedPath/sessions` | `handleSessions()` | Lists sessions for a project |
-| `/api/sessions/:sessionId?project=` | `handleSession()` | Returns full parsed session (with plan/impl linking) |
-| `/api/sessions/:sessionId/subagents/:agentId?project=` | `handleSubAgent()` | Returns sub-agent session |
+| `getVersion` | `getVersion()` | App version information |
+| `getStats` | `getStats()` | Aggregate dashboard statistics (projects, sessions, tokens, models) |
+| `getProjects` | `getProjects()` | Lists all discovered projects |
+| `getSessions` | `getSessions()` | Lists sessions for a project by `encodedPath` |
+| `getSession` | `getSession()` | Returns full parsed session (with plan/impl linking) |
+| `getSubAgent` | `getSubAgent()` | Returns sub-agent session |
+| `searchSessions` | `searchSessions()` | Returns all sessions across all projects for search |
+
+### RPC Messages (Main → Webview)
+
+| Message | Purpose |
+|---|---|
+| `cycleTheme` | Cycle through light/dark/system themes |
+| `increaseFontSize` | Increase font size |
+| `decreaseFontSize` | Decrease font size |
+| `togglePresentation` | Toggle presentation mode |
 
 ### Build Pipeline
 
-The frontend is built with `bun build` (HTML imports) into `dist/public/`. The server is bundled with `bun build --target node` into `dist/server.js` with a Node.js shebang for CLI execution. In development, `bun --watch index.ts` serves the pre-built frontend with auto-reload.
+The app is built with Electrobun:
 
-### CLI Flags
+- **Development**: `bunx electrobun dev` starts the main process with hot reload and opens the webview
+- **Production**: `bunx electrobun build` produces a native desktop binary
 
-| Flag | Description |
-|---|---|
-| `--help` / `-h` | Show usage information and exit |
-| `--port <number>` | Specify server port (default: 3583) |
-| `--claude-code-dir <path>` | Path to Claude Code data directory (default: `~/.claude`) |
-| `--codex-cli-dir <path>` | Path to Codex CLI data directory (default: `~/.codex`) |
-| `--opencode-dir <path>` | Path to OpenCode data directory (default: `~/.local/share/opencode`) |
-| `--accept-risks` | Skip the startup security warning |
+Electrobun handles bundling both the Bun main process (`src/bun/index.ts`) and the webview entry (`src/views/main/index.ts`), including all React/CSS assets. The `electrobun.config.ts` defines entrypoints and view mappings.
 
 ## Frontend Router
 
@@ -197,8 +232,8 @@ App
 │   │   ├── ProjectList          (home)
 │   │   └── SessionList          (project/session views)
 │   └── main
-│       ├── Header               (always visible, with copyCommand + backHref + sessionType badge)
-│       ├── DashboardStats       (home view, fetches /api/stats)
+│       ├── Header               (always visible, with backHref + sessionType badge)
+│       ├── DashboardStats       (home view, fetches via RPC)
 │       ├── empty-state          (home/project)
 │       ├── HiddenProjectList    (hidden projects view)
 │       ├── SessionView          (session, normal mode)
@@ -240,7 +275,16 @@ TokenUsage { inputTokens, outputTokens, cacheReadTokens?, cacheCreationTokens? }
 DashboardStats { projects, sessions, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens, toolCalls, models }
 ```
 
-Raw JSONL types in `src/server/parser/types.ts`:
+RPC type schema in `src/shared/rpc-types.ts`:
+
+```
+KloviRPC {
+  bun: RPCSchema<{ requests: { getVersion, getStats, getProjects, ... }, messages: {} }>
+  webview: RPCSchema<{ requests: {}, messages: { cycleTheme, increaseFontSize, ... } }>
+}
+```
+
+Raw JSONL types in `src/parser/types.ts`:
 
 ```
 RawLine { type, message?: RawMessage, isMeta?, uuid?, timestamp?, ... }
@@ -281,7 +325,7 @@ interface ToolPlugin {
 }
 ```
 
-### PluginRegistry (`src/server/plugin-registry.ts`)
+### PluginRegistry (`src/plugins/registry.ts`)
 
 The `PluginRegistry` class manages registered plugins and handles cross-tool merging:
 
@@ -289,7 +333,7 @@ The `PluginRegistry` class manages registered plugins and handles cross-tool mer
 - **`discoverAllProjects()`** — calls each plugin's `discoverProjects()`, then merges results by `resolvedPath` (so the same filesystem project discovered by multiple tools becomes one `MergedProject` with multiple `sources`)
 - **`listAllSessions(project)`** — aggregates sessions from all sources for a merged project
 
-### Auto-Discovery (`src/server/registry.ts`)
+### Auto-Discovery (`src/plugins/auto-discover.ts`)
 
 `createRegistry()` checks whether each tool's data directory exists on disk and only registers plugins whose data is available. OpenCode additionally checks for the `opencode.db` file.
 
@@ -299,10 +343,12 @@ The frontend has its own plugin registry for tool-specific rendering: custom sum
 
 ## Key Design Decisions
 
-1. **No server-side database** - reads JSONL files directly for Claude Code and Codex CLI; reads OpenCode's existing SQLite DB
-2. **No build tool** - Bun's native HTML import bundling
-3. **No CSS framework** - custom design system with CSS variables
-4. **Turn merging** - consecutive assistant messages merged into one logical turn (tool_result user messages don't break the turn)
-5. **Hash routing** - simple client-side navigation without a router library
-6. **Chronological content blocks** - assistant turn content stored as a single `contentBlocks` array preserving API order (thinking, text, and tool calls interleaved)
-7. **Grouped presentation steps** - consecutive non-text blocks (thinking, tool calls) are revealed together as one step; each text block is its own step
+1. **Native desktop app** - uses Electrobun for a native Bun-powered desktop experience with typed RPC between main process and webview
+2. **No HTTP server** - data flows via Electrobun's typed RPC, not HTTP endpoints
+3. **No server-side database** - reads JSONL files directly for Claude Code and Codex CLI; reads OpenCode's existing SQLite DB
+4. **No CSS framework** - custom design system with CSS variables
+5. **Turn merging** - consecutive assistant messages merged into one logical turn (tool_result user messages don't break the turn)
+6. **Hash routing** - simple client-side navigation without a router library
+7. **Chronological content blocks** - assistant turn content stored as a single `contentBlocks` array preserving API order (thinking, text, and tool calls interleaved)
+8. **Grouped presentation steps** - consecutive non-text blocks (thinking, tool calls) are revealed together as one step; each text block is its own step
+9. **Electrobun typed RPC** - compile-time type safety for all communication between main process and webview via `KloviRPC` schema
