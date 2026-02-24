@@ -7,11 +7,6 @@ afterEach(cleanup);
 function makeProps(overrides: Partial<Parameters<typeof Header>[0]> = {}) {
   return {
     title: "Test Session",
-    themeSetting: "system" as const,
-    onCycleTheme: mock(() => {}),
-    fontSize: 14,
-    onIncreaseFontSize: mock(() => {}),
-    onDecreaseFontSize: mock(() => {}),
     presentationActive: false,
     onTogglePresentation: mock(() => {}),
     showPresentationToggle: false,
@@ -73,46 +68,6 @@ describe("Header", () => {
   test("does not render copy button when no copyCommand", () => {
     const { container } = render(<Header {...makeProps()} />);
     expect(container.querySelector(".btn-copy-command")).toBeNull();
-  });
-
-  test("displays current font size", () => {
-    const { container } = render(<Header {...makeProps({ fontSize: 16 })} />);
-    expect(container.textContent).toContain("16");
-  });
-
-  test("calls onIncreaseFontSize when A+ clicked", () => {
-    const onIncreaseFontSize = mock(() => {});
-    const { container } = render(<Header {...makeProps({ onIncreaseFontSize })} />);
-    const buttons = container.querySelectorAll(".btn-icon");
-    const plusBtn = Array.from(buttons).find((b) => b.textContent === "A+")!;
-    fireEvent.click(plusBtn);
-    expect(onIncreaseFontSize).toHaveBeenCalledTimes(1);
-  });
-
-  test("calls onDecreaseFontSize when A- clicked", () => {
-    const onDecreaseFontSize = mock(() => {});
-    const { container } = render(<Header {...makeProps({ onDecreaseFontSize })} />);
-    const buttons = container.querySelectorAll(".btn-icon");
-    const minusBtn = Array.from(buttons).find((b) => b.textContent === "A-")!;
-    fireEvent.click(minusBtn);
-    expect(onDecreaseFontSize).toHaveBeenCalledTimes(1);
-  });
-
-  test("calls onCycleTheme when theme button clicked", () => {
-    const onCycleTheme = mock(() => {});
-    const { getByText } = render(<Header {...makeProps({ onCycleTheme })} />);
-    fireEvent.click(getByText("System"));
-    expect(onCycleTheme).toHaveBeenCalledTimes(1);
-  });
-
-  test("displays correct theme label", () => {
-    const { getByText } = render(<Header {...makeProps({ themeSetting: "light" })} />);
-    expect(getByText("Light")).toBeTruthy();
-  });
-
-  test("displays dark theme label", () => {
-    const { getByText } = render(<Header {...makeProps({ themeSetting: "dark" })} />);
-    expect(getByText("Dark")).toBeTruthy();
   });
 
   test("shows presentation toggle when showPresentationToggle is true", () => {

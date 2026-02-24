@@ -6,11 +6,6 @@ interface HeaderProps {
   copyCommand?: string;
   backHref?: string;
   sessionType?: "plan" | "implementation";
-  themeSetting: "system" | "light" | "dark";
-  onCycleTheme: () => void;
-  fontSize: number;
-  onIncreaseFontSize: () => void;
-  onDecreaseFontSize: () => void;
   presentationActive: boolean;
   onTogglePresentation: () => void;
   showPresentationToggle: boolean;
@@ -22,11 +17,6 @@ export function Header({
   copyCommand,
   backHref,
   sessionType,
-  themeSetting,
-  onCycleTheme,
-  fontSize,
-  onIncreaseFontSize,
-  onDecreaseFontSize,
   presentationActive,
   onTogglePresentation,
   showPresentationToggle,
@@ -117,37 +107,6 @@ export function Header({
         )}
       </div>
       <div className="header-actions">
-        <button
-          type="button"
-          className="btn btn-sm btn-icon"
-          onClick={onDecreaseFontSize}
-          title="Decrease font size"
-        >
-          A-
-        </button>
-        <span
-          style={{
-            fontSize: "0.75rem",
-            color: "var(--text-muted)",
-            minWidth: 30,
-            textAlign: "center",
-          }}
-        >
-          {fontSize}
-        </span>
-        <button
-          type="button"
-          className="btn btn-sm btn-icon"
-          onClick={onIncreaseFontSize}
-          title="Increase font size"
-        >
-          A+
-        </button>
-
-        <button type="button" className="btn btn-sm" onClick={onCycleTheme}>
-          {themeSetting === "system" ? "System" : themeSetting === "light" ? "Light" : "Dark"}
-        </button>
-
         {showPresentationToggle && (
           <button
             type="button"

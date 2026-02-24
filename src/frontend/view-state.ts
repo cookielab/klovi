@@ -5,6 +5,7 @@ import { getRPC } from "./rpc.ts";
 export type ViewState =
   | { kind: "home" }
   | { kind: "hidden" }
+  | { kind: "settings" }
   | { kind: "project"; project: Project }
   | {
       kind: "session";
@@ -37,6 +38,7 @@ export function getResumeCommand(
 
 export function viewToHash(view: ViewState): string {
   if (view.kind === "hidden") return "#/hidden";
+  if (view.kind === "settings") return "#/settings";
   if (view.kind === "project") return `#/${view.project.encodedPath}`;
   if (view.kind === "session") return `#/${view.project.encodedPath}/${view.session.sessionId}`;
   if (view.kind === "subagent")
@@ -76,6 +78,7 @@ export async function restoreFromHash(): Promise<ViewState> {
   const hash = window.location.hash.replace(/^#\/?/, "");
   if (!hash) return { kind: "home" };
   if (hash === "hidden") return { kind: "hidden" };
+  if (hash === "settings") return { kind: "settings" };
 
   const parts = hash.split("/");
   const encodedPath = parts[0];
@@ -110,6 +113,9 @@ export async function restoreFromHash(): Promise<ViewState> {
 export function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
   if (view.kind === "hidden") {
     return { title: "Hidden Projects", breadcrumb: "" };
+  }
+  if (view.kind === "settings") {
+    return { title: "Settings", breadcrumb: "" };
   }
   if (view.kind === "project") {
     const parts = view.project.name.split("/").filter(Boolean);

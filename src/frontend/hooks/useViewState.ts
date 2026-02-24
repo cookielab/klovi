@@ -11,6 +11,7 @@ interface UseViewStateResult {
   selectSession: (session: SessionSummary) => void;
   goHome: () => void;
   goHidden: () => void;
+  goSettings: () => void;
   canPresent: boolean;
   togglePresentation: () => void;
 }
@@ -62,6 +63,7 @@ export function useViewState(): UseViewStateResult {
 
   const goHome = useCallback(() => setView({ kind: "home" }), []);
   const goHidden = useCallback(() => setView({ kind: "hidden" }), []);
+  const goSettings = useCallback(() => setView({ kind: "settings" }), []);
   const canPresent = view.kind === "session" || view.kind === "subagent";
 
   const togglePresentation = useCallback(() => {
@@ -81,6 +83,7 @@ export function useViewState(): UseViewStateResult {
     selectSession,
     goHome,
     goHidden,
+    goSettings,
     canPresent,
     togglePresentation,
   };
