@@ -488,6 +488,11 @@ describe("new envelope format", () => {
           timestamp: "2026-02-18T10:00:04.000Z",
           payload: { type: "token_count", input_tokens: 200, output_tokens: 80 },
         },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:05.000Z",
+          payload: { type: "task_complete" },
+        },
       ]);
 
       const session = await loadCodexSession("/Users/dev/project", "new-test-uuid");
@@ -554,6 +559,11 @@ describe("new envelope format", () => {
             timestamp: "2026-02-18T10:00:03.000Z",
             payload: { type: "token_count", input_tokens: 100, output_tokens: 50 },
           },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:04.000Z",
+            payload: { type: "task_complete" },
+          },
         ],
       );
 
@@ -604,7 +614,98 @@ describe("new envelope format", () => {
       expect(session.turns).toEqual([]);
     });
 
-    test("uses model_provider as model when model field absent in new format", async () => {
+    test("extracts tokens from nested info.last_token_usage in new format", async () => {
+      writeNewFormatSession(
+        "nested-tokens-uuid",
+        { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "nested-tokens-uuid" } },
+        [
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:01.000Z",
+            payload: { type: "task_started" },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:02.000Z",
+            payload: { type: "agent_message", message: "Done!" },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:03.000Z",
+            payload: {
+              type: "token_count",
+              info: {
+                last_token_usage: {
+                  input_tokens: 500,
+                  cached_input_tokens: 100,
+                  output_tokens: 250,
+                },
+              },
+            },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:04.000Z",
+            payload: { type: "task_complete" },
+          },
+        ],
+      );
+
+      const session = await loadCodexSession("/Users/dev/project", "nested-tokens-uuid");
+
+      const assistant = session.turns[0] as AssistantTurn;
+      expect(assistant.usage).toEqual({
+        inputTokens: 500,
+        outputTokens: 250,
+        cacheReadTokens: 100,
+      });
+    });
+
+    test("token_count does not prematurely flush assistant turn", async () => {
+      writeNewFormatSession(
+        "no-flush-uuid",
+        { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "no-flush-uuid" } },
+        [
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:01.000Z",
+            payload: { type: "task_started" },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:02.000Z",
+            payload: { type: "agent_message", message: "Working on it..." },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:03.000Z",
+            payload: { type: "token_count", input_tokens: 50, output_tokens: 20 },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:04.000Z",
+            payload: { type: "agent_message", message: "All done!" },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:05.000Z",
+            payload: { type: "task_complete" },
+          },
+        ],
+      );
+
+      const session = await loadCodexSession("/Users/dev/project", "no-flush-uuid");
+
+      // Both messages should be in the same assistant turn (not split by token_count)
+      const assistantTurns = session.turns.filter((t) => t.kind === "assistant");
+      expect(assistantTurns).toHaveLength(1);
+      const assistant = assistantTurns[0] as AssistantTurn;
+      expect(assistant.contentBlocks).toHaveLength(2);
+      expect(assistant.contentBlocks[0]!.type).toBe("text");
+      expect(assistant.contentBlocks[1]!.type).toBe("text");
+    });
+
+    test("uses unknown as model when model field absent in new format", async () => {
       const metaNoModel = {
         type: "session_meta",
         timestamp: "2026-02-18T10:00:00.000Z",
@@ -632,7 +733,7 @@ describe("new envelope format", () => {
       const session = await loadCodexSession("/Users/dev/project", "provider-uuid");
 
       const assistant = session.turns[0] as AssistantTurn;
-      expect(assistant.model).toBe("openai");
+      expect(assistant.model).toBe("unknown");
     });
   });
 });

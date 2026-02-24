@@ -83,6 +83,13 @@ interface EnvelopePayload {
   input_tokens?: number;
   cached_input_tokens?: number;
   output_tokens?: number;
+  info?: {
+    last_token_usage?: {
+      input_tokens?: number;
+      cached_input_tokens?: number;
+      output_tokens?: number;
+    };
+  } | null;
   [key: string]: unknown;
 }
 
@@ -108,15 +115,17 @@ function normalizeEventMsg(payload: EnvelopePayload): CodexEvent | null {
         type: "item.completed",
         item: { type: "reasoning", text: payload.text || "" },
       };
-    case "token_count":
+    case "token_count": {
+      const src = payload.info?.last_token_usage ?? payload;
       return {
-        type: "turn.completed",
+        type: "usage_update",
         usage: {
-          input_tokens: payload.input_tokens,
-          cached_input_tokens: payload.cached_input_tokens,
-          output_tokens: payload.output_tokens,
+          input_tokens: src.input_tokens,
+          cached_input_tokens: src.cached_input_tokens,
+          output_tokens: src.output_tokens,
         },
       };
+    }
     case "task_complete":
       return { type: "turn.completed" };
     default:
@@ -338,6 +347,17 @@ function handleUserMessage(state: TurnBuilderState, event: CodexEvent): void {
   state.turns.push(createUserTurn(event.text || "", "", "codex-user-first"));
 }
 
+function handleUsageUpdate(state: TurnBuilderState, event: CodexEvent): void {
+  if (state.currentAssistant && event.usage) {
+    const usage: TokenUsage = {
+      inputTokens: event.usage.input_tokens ?? 0,
+      outputTokens: event.usage.output_tokens ?? 0,
+      cacheReadTokens: event.usage.cached_input_tokens,
+    };
+    state.currentAssistant.usage = usage;
+  }
+}
+
 function handleToolOutput(state: TurnBuilderState, event: CodexEvent): void {
   if (!event.callId) return;
   const toolCall = state.pendingToolCalls.get(event.callId);
@@ -392,6 +412,9 @@ function dispatchEvent(
       } else {
         handleItemCompleted(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
       }
+      break;
+    case "usage_update":
+      handleUsageUpdate(state, event);
       break;
     case "user_message":
       handleUserMessage(state, event);

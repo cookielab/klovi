@@ -76,7 +76,7 @@ export function normalizeSessionMeta(
       uuid: payload.id,
       cwd: payload.cwd,
       timestamps: { created: createdEpoch, updated: updatedEpoch },
-      model: payload.model || payload.model_provider || "unknown",
+      model: payload.model || "unknown",
       provider_id: payload.model_provider || "unknown",
     };
   }

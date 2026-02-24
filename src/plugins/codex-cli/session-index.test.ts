@@ -88,7 +88,7 @@ describe("normalizeSessionMeta", () => {
     );
   });
 
-  test("uses model_provider as model when model absent", () => {
+  test("uses unknown as model when model absent", () => {
     const newFormat = {
       type: "session_meta",
       payload: {
@@ -100,7 +100,7 @@ describe("normalizeSessionMeta", () => {
     };
 
     const result = normalizeSessionMeta(newFormat);
-    expect(result!.model).toBe("anthropic");
+    expect(result!.model).toBe("unknown");
     expect(result!.provider_id).toBe("anthropic");
   });
 
