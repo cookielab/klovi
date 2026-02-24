@@ -1,0 +1,107 @@
+.onboarding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: 20px;
+}
+
+.onboarding-content {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.onboarding-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s;
+}
+
+.onboarding-dot.active {
+  background: var(--accent);
+}
+
+.onboarding-line {
+  width: 24px;
+  height: 2px;
+  background: var(--border);
+}
+
+.onboarding-logo {
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.onboarding-heading {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.onboarding-muted {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.onboarding-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.onboarding-plugins {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.onboarding-button {
+  margin-top: 24px;
+  padding: 10px 32px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--text-inverse);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.onboarding-button:hover {
+  background: var(--accent-hover);
+}
+
+.onboarding-back {
+  display: block;
+  margin: 12px auto 0;
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.onboarding-back:hover {
+  color: var(--text-primary);
+}
