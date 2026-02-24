@@ -1,0 +1,184 @@
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.settings-modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  width: 640px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.settings-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.settings-close:hover {
+  color: var(--text-primary);
+}
+
+.settings-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.settings-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border-right: 1px solid var(--border);
+  min-width: 120px;
+}
+
+.settings-tab {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.settings-tab:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+.settings-tab.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.settings-tab:disabled {
+  color: var(--text-muted);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.settings-content {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.settings-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--text-primary);
+}
+
+.settings-loading {
+  color: var(--text-muted);
+  padding: 20px 0;
+}
+
+.settings-plugin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-plugin-row {
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+}
+
+.settings-plugin-row.disabled {
+  opacity: 0.6;
+}
+
+.settings-plugin-header {
+  margin-bottom: 8px;
+}
+
+.settings-plugin-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.settings-plugin-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-plugin-path {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-path-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.settings-path-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.settings-path-input:disabled {
+  opacity: 0.5;
+}
+
+.settings-reset-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.settings-reset-link:hover {
+  text-decoration: underline;
+}
+
+.settings-reset-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

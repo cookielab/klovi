@@ -1,0 +1,192 @@
+import { useCallback, useEffect, useState } from "react";
+import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
+import { getRPC } from "../../rpc.ts";
+import "./SettingsModal.css";
+
+interface SettingsModalProps {
+  onClose: () => void;
+}
+
+export function SettingsModal({ onClose }: SettingsModalProps) {
+  const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getRPC()
+      .request.getPluginSettings({} as Record<string, never>)
+      .then((data) => {
+        setPlugins(data.plugins);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const handleToggle = useCallback((pluginId: string, enabled: boolean) => {
+    getRPC()
+      .request.updatePluginSetting({ pluginId, enabled })
+      .then((data) => setPlugins(data.plugins))
+      .catch(() => {});
+  }, []);
+
+  const handleBrowse = useCallback((pluginId: string, currentDir: string) => {
+    getRPC()
+      .request.browseDirectory({ startingFolder: currentDir })
+      .then((data) => {
+        if (data.path) {
+          return getRPC().request.updatePluginSetting({ pluginId, dataDir: data.path });
+        }
+        return null;
+      })
+      .then((data) => {
+        if (data) setPlugins(data.plugins);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handlePathChange = useCallback((pluginId: string, dataDir: string) => {
+    getRPC()
+      .request.updatePluginSetting({ pluginId, dataDir })
+      .then((data) => setPlugins(data.plugins))
+      .catch(() => {});
+  }, []);
+
+  const handleReset = useCallback((pluginId: string) => {
+    getRPC()
+      .request.updatePluginSetting({ pluginId, dataDir: null })
+      .then((data) => setPlugins(data.plugins))
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div className="settings-overlay" onMouseDown={onClose} onKeyDown={() => {}}>
+      <div className="settings-modal" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="settings-header">
+          <h2 className="settings-title">Settings</h2>
+          <button
+            type="button"
+            className="settings-close"
+            aria-label="Close settings"
+            onClick={onClose}
+          >
+            &times;
+          </button>
+        </div>
+        <div className="settings-body">
+          <nav className="settings-sidebar">
+            <button type="button" className="settings-tab active">
+              Plugins
+            </button>
+            <button type="button" className="settings-tab" disabled>
+              General
+            </button>
+          </nav>
+          <div className="settings-content">
+            <h3 className="settings-section-title">Plugins</h3>
+            {loading ? (
+              <div className="settings-loading">Loading...</div>
+            ) : (
+              <div className="settings-plugin-list">
+                {plugins.map((plugin) => (
+                  <PluginRow
+                    key={plugin.id}
+                    plugin={plugin}
+                    onToggle={handleToggle}
+                    onBrowse={handleBrowse}
+                    onPathChange={handlePathChange}
+                    onReset={handleReset}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface PluginRowProps {
+  plugin: PluginSettingInfo;
+  onToggle: (pluginId: string, enabled: boolean) => void;
+  onBrowse: (pluginId: string, currentDir: string) => void;
+  onPathChange: (pluginId: string, dataDir: string) => void;
+  onReset: (pluginId: string) => void;
+}
+
+function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset }: PluginRowProps) {
+  const [editingPath, setEditingPath] = useState(plugin.dataDir);
+
+  useEffect(() => {
+    setEditingPath(plugin.dataDir);
+  }, [plugin.dataDir]);
+
+  const handlePathBlur = () => {
+    if (editingPath !== plugin.dataDir) {
+      onPathChange(plugin.id, editingPath);
+    }
+  };
+
+  const handlePathKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (editingPath !== plugin.dataDir) {
+        onPathChange(plugin.id, editingPath);
+      }
+    }
+  };
+
+  return (
+    <div className={`settings-plugin-row ${!plugin.enabled ? "disabled" : ""}`}>
+      <div className="settings-plugin-header">
+        <label className="settings-plugin-label">
+          <input
+            type="checkbox"
+            checked={plugin.enabled}
+            onChange={(e) => onToggle(plugin.id, e.target.checked)}
+          />
+          <span className="settings-plugin-name">{plugin.displayName}</span>
+        </label>
+      </div>
+      <div className="settings-plugin-path">
+        <input
+          type="text"
+          className="settings-path-input"
+          value={editingPath}
+          onChange={(e) => setEditingPath(e.target.value)}
+          onBlur={handlePathBlur}
+          onKeyDown={handlePathKeyDown}
+          disabled={!plugin.enabled}
+        />
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => onBrowse(plugin.id, plugin.dataDir)}
+          disabled={!plugin.enabled}
+        >
+          Browse
+        </button>
+        {plugin.isCustomDir && (
+          <button
+            type="button"
+            className="settings-reset-link"
+            onClick={() => onReset(plugin.id)}
+            disabled={!plugin.enabled}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
