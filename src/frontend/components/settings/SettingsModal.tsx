@@ -163,10 +163,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                             .catch(() => {});
                         }}
                       />
-                      Show security warning on startup
+                      Show on-boarding on startup
                     </label>
                     <p className="settings-general-hint">
-                      When enabled, a security notice is shown each time Klovi launches.
+                      When enabled, the on-boarding wizard is shown the next time Klovi launches.
                     </p>
                   </div>
                 )}

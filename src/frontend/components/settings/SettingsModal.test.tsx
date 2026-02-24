@@ -159,7 +159,7 @@ describe("SettingsModal", () => {
     const generalTab = await findByRole("button", { name: "General" });
     expect((generalTab as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(generalTab);
-    await findByText("Show security warning on startup");
+    await findByText("Show on-boarding on startup");
   });
 
   test("General tab reflects persisted value", async () => {
@@ -170,7 +170,7 @@ describe("SettingsModal", () => {
     const { findByRole, findByLabelText } = render(<SettingsModal onClose={mock()} />);
     const generalTab = await findByRole("button", { name: "General" });
     fireEvent.click(generalTab);
-    const checkbox = await findByLabelText("Show security warning on startup");
+    const checkbox = await findByLabelText("Show on-boarding on startup");
     expect((checkbox as HTMLInputElement).checked).toBe(false);
   });
 

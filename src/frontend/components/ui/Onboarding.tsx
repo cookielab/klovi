@@ -61,7 +61,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   }, []);
 
   return (
-    <div className="onboarding" aria-labelledby="onboarding-heading">
+    <div className="onboarding" role="region" aria-labelledby="onboarding-heading">
       <div className="onboarding-content">
         <div className="onboarding-steps" aria-hidden="true">
           <div className={`onboarding-dot ${step === 1 ? "active" : ""}`} />
@@ -94,7 +94,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
         {step === 2 && (
           <>
-            <h1 className="onboarding-heading">Plugins</h1>
+            <h1 id="onboarding-heading" className="onboarding-heading">
+              Plugins
+            </h1>
             <p className="onboarding-subtitle">Choose which AI coding tools to monitor</p>
             {loading ? (
               <div>Loading...</div>

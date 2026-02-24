@@ -12,7 +12,7 @@ import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
 import { SettingsModal } from "./components/settings/SettingsModal.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
-import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
+import { Onboarding } from "./components/ui/Onboarding.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 import { useViewState } from "./hooks/useViewState.ts";
@@ -263,14 +263,14 @@ export function AppGate() {
   useTheme();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showWarning, setShowWarning] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   useEffect(() => {
     getRPC()
       .request.getGeneralSettings({} as Record<string, never>)
       .then((data) => {
         if (!data.showSecurityWarning) {
-          setShowWarning(false);
+          setShowOnboarding(false);
           return getRPC()
             .request.acceptRisks({} as Record<string, never>)
             .then(() => setAccepted(true))
@@ -278,32 +278,28 @@ export function AppGate() {
         }
       })
       .catch(() => {
-        // On failure, show warning as usual
+        // On failure, show onboarding as usual
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const handleAccept = useCallback((skipNextTime: boolean) => {
-    const acceptPromise = getRPC()
+  const handleComplete = useCallback(() => {
+    getRPC()
       .request.acceptRisks({} as Record<string, never>)
       .then(() => setAccepted(true))
       .catch(() => setAccepted(true));
 
-    if (skipNextTime) {
-      getRPC()
-        .request.updateGeneralSettings({ showSecurityWarning: false })
-        .catch(() => {});
-    }
-
-    return acceptPromise;
+    getRPC()
+      .request.updateGeneralSettings({ showSecurityWarning: false })
+      .catch(() => {});
   }, []);
 
   if (loading) {
     return null;
   }
 
-  if (!accepted && showWarning) {
-    return <SecurityWarning onAccept={handleAccept} />;
+  if (!accepted && showOnboarding) {
+    return <Onboarding onComplete={handleComplete} />;
   }
 
   if (!accepted) {
