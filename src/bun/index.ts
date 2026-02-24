@@ -31,7 +31,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 const win = new BrowserWindow({
   title: "Klovi",
   url: "views://main/index.html",
-  frame: { width: 1400, height: 900 },
+  frame: { x: 100, y: 100, width: 1400, height: 900 },
   rpc,
 });
 
@@ -77,18 +77,20 @@ ApplicationMenu.setApplicationMenu([
 
 // Forward menu actions to webview as RPC messages
 Electrobun.events.on("application-menu-clicked", (e) => {
+  const rpcSend = win.webview.rpc?.send;
+  if (!rpcSend) return;
   switch (e.data.action) {
     case "cycleTheme":
-      win.webview.rpc.send.cycleTheme({});
+      rpcSend.cycleTheme({});
       break;
     case "increaseFontSize":
-      win.webview.rpc.send.increaseFontSize({});
+      rpcSend.increaseFontSize({});
       break;
     case "decreaseFontSize":
-      win.webview.rpc.send.decreaseFontSize({});
+      rpcSend.decreaseFontSize({});
       break;
     case "togglePresentation":
-      win.webview.rpc.send.togglePresentation({});
+      rpcSend.togglePresentation({});
       break;
   }
 });
