@@ -1,0 +1,18 @@
+{"uuid":"opencode-0011-2233-4455-6677-8899aabbccdd","name":"Add user authentication","cwd":"/Users/demo/projects/my-app","timestamps":{"created":1771281600,"updated":1771282800},"model":"opencode/default","provider_id":"opencode"}
+{"type":"turn.started"}
+{"type":"user_message","text":"Add JWT authentication to the Express API with login and register endpoints."}
+{"type":"item.started","item":{"type":"tool_use","name":"glob","input":{"pattern":"src/**/*.ts"}}}
+{"type":"item.completed","item":{"type":"tool_use","name":"glob","input":{"pattern":"src/**/*.ts"},"output":["src/index.ts","src/routes/users.ts","src/middleware/auth.ts"]}}
+{"type":"item.started","item":{"type":"file_read","path":"src/index.ts"}}
+{"type":"item.completed","item":{"type":"file_read","path":"src/index.ts","content":"import express from 'express';\nconst app = express();\n// ... existing routes\n"}}
+{"type":"item.started","item":{"type":"tool_use","name":"Bash","input":{"command":"ls -la src/"}}}
+{"type":"item.completed","item":{"type":"tool_use","name":"Bash","input":{"command":"ls -la src/"},"output":"auth.ts\tusers.ts\tindex.ts","exit_code":0}}
+{"type":"item.completed","item":{"type":"file_change","path":"src/auth.ts","kind":"create"}}
+{"type":"item.completed","item":{"type":"file_change","path":"src/routes/auth.ts","kind":"create"}}
+{"type":"turn.completed","usage":{"input_tokens":1200,"cached_input_tokens":0,"output_tokens":450}}
+{"uuid":"opencode-0011-2233-4455-6677-8899aabbccdd","timestamps":{"created":1771282800}}
+{"type":"turn.started"}
+{"type":"user_message","text":"Add rate limiting to prevent brute force attacks on login."}
+{"type":"item.completed","item":{"type":"file_change","path":"src/middleware/rateLimit.ts","kind":"create"}}
+{"type":"item.completed","item":{"type":"file_change","path":"src/routes/auth.ts","kind":"edit"}}
+{"type":"turn.completed","usage":{"input_tokens":800,"cached_input_tokens":400,"output_tokens":200}}
