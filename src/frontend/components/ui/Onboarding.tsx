@@ -72,7 +72,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {step === 1 && (
           <>
             <img src={faviconUrl} alt="" width="64" height="64" className="onboarding-logo" />
-            <h1 id="onboarding-heading" className="onboarding-heading">Session Data Notice</h1>
+            <h1 id="onboarding-heading" className="onboarding-heading">
+              Session Data Notice
+            </h1>
             <p>
               Klovi reads AI coding session history from your local machine. Session data may
               contain sensitive information such as API keys, credentials, or private code snippets.
