@@ -30,8 +30,8 @@ If any check fails, fix the issue and re-run until all pass. Never skip this ste
 
 Klovi is a native desktop app built with [Electrobun](https://electrobun.dev). There is no HTTP server.
 
-- **Dev mode**: `bunx electrobun dev`
-- **Build**: `bunx electrobun build`
+- **Dev mode**: `bun run dev`
+- **Build**: `bun run build`
 - **Main process**: `src/bun/index.ts` (Bun runtime, RPC handlers, BrowserWindow, ApplicationMenu)
 - **Webview entry**: `src/views/main/index.ts` (Electroview RPC client, React mount)
 - **RPC types**: `src/shared/rpc-types.ts` (typed schema shared between main process and webview)

@@ -28,7 +28,7 @@ brew install cookielab/tap/klovi
 
 ```bash
 bun install
-bunx electrobun dev
+bun run dev
 ```
 
 ## Features
@@ -79,8 +79,8 @@ bunx electrobun dev
 
 | Script | Description |
 |---|---|
-| `bunx electrobun dev` | Start development mode with hot reload |
-| `bunx electrobun build` | Build native desktop binary for production |
+| `bun run dev` | Start development mode with hot reload |
+| `bun run build` | Build native desktop binary for production |
 | `bun test` | Run all tests |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 | `bun run lint` | Lint with Biome |

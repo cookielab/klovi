@@ -13,11 +13,11 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    cd klovi
    bun install
    ```
-3. Start the dev server:
+3. Start the dev app:
    ```bash
    bun run dev
    ```
-4. Open http://localhost:3583
+   The native window opens automatically.
 
 ## Running Checks
 

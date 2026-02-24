@@ -4,7 +4,7 @@
 
 ### DashboardStats (`src/frontend/components/dashboard/DashboardStats.tsx`)
 
-Fetches `/api/stats` and displays aggregate statistics on the homepage. Shows:
+Fetches stats via `getRPC().request.getStats()` and displays aggregate statistics on the homepage. Shows:
 - **Top row**: project count, session count, tool call count
 - **Token card**: input, output, cache read, cache creation tokens (compact formatting: K/M/B with full number on hover)
 - **Models card**: sorted list of models with turn counts
@@ -93,7 +93,7 @@ MCP tools follow the `mcp__<server>__<action>` naming pattern. The server name i
 
 ### SubAgentView (`src/frontend/components/message/SubAgentView.tsx`)
 
-Displays a sub-agent conversation inline within the parent session. Fetches sub-agent data from `/api/sessions/:id/subagents/:agentId` and renders it using `MessageList` with the `isSubAgent` flag.
+Displays a sub-agent conversation inline within the parent session. Fetches sub-agent data via `getRPC().request.getSubAgent()` and renders it using `MessageList` with the `isSubAgent` flag.
 
 ### ThinkingBlock (`src/frontend/components/message/ThinkingBlock.tsx`)
 
@@ -124,23 +124,23 @@ Fixed-width container for project/session lists.
 
 ### ProjectList (`src/frontend/components/project/ProjectList.tsx`)
 
-Fetches `/api/projects` and renders a filterable list. Each project shows name (last 2 path segments), session count, and last activity time.
+Fetches projects via `getRPC().request.getProjects()` and renders a filterable list. Each project shows name (last 2 path segments), session count, and last activity time.
 
 ### SessionList (`src/frontend/components/project/SessionList.tsx`)
 
-Fetches `/api/projects/:path/sessions` and renders session cards. Each shows first message preview, tool name badge (via `pluginDisplayName()`), git branch, and relative timestamp. Highlights selected session. Sessions with a detected `sessionType` display a colored badge ("Plan" or "Impl") and get a corresponding CSS class for visual distinction.
+Fetches sessions via `getRPC().request.getSessions()` and renders session cards. Each shows first message preview, tool name badge (via `pluginDisplayName()`), git branch, and relative timestamp. Highlights selected session. Sessions with a detected `sessionType` display a colored badge ("Plan" or "Impl") and get a corresponding CSS class for visual distinction.
 
 The sidebar shows the tool name (e.g., "Claude Code", "Codex", "OpenCode") instead of the model name, using the `pluginId` from the session summary.
 
 ### HiddenProjectList (`src/frontend/components/project/HiddenProjectList.tsx`)
 
-Displays hidden projects with unhide functionality. Fetches all projects from `/api/projects` and filters to show only those in the hidden set. Provides an unhide button per project and a back link to the home view.
+Displays hidden projects with unhide functionality. Fetches all projects via `getRPC().request.getProjects()` and filters to show only those in the hidden set. Provides an unhide button per project and a back link to the home view.
 
 ## Session Components
 
 ### SessionView (`src/frontend/components/session/SessionView.tsx`)
 
-Normal session display. Fetches `/api/sessions/:id?project=...` and passes turns to `MessageList`.
+Normal session display. Fetches session data via `getRPC().request.getSession()` and passes turns to `MessageList`.
 
 ### SessionPresentation (`src/frontend/components/session/SessionPresentation.tsx`)
 
@@ -158,7 +158,7 @@ Shared presentation wrapper used by both `SessionPresentation` and `SubAgentPres
 
 ### SubAgentPresentation (`src/frontend/components/session/SubAgentPresentation.tsx`)
 
-Fetches sub-agent session data from `/api/sessions/:id/subagents/:agentId` and renders it in `PresentationShell` with the `isSubAgent` flag.
+Fetches sub-agent session data via `getRPC().request.getSubAgent()` and renders it in `PresentationShell` with the `isSubAgent` flag.
 
 ## UI Components
 

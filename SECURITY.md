@@ -2,21 +2,19 @@
 
 ## What Klovi Accesses
 
-Klovi is a **read-only** local web viewer for Claude Code session history. It:
+Klovi is a **read-only** native desktop app for browsing AI coding session history. It:
 
-- Reads JSONL session files from `~/.claude/projects/` (or a custom directory via `--claude-code-dir`)
-- Serves a local HTTP server (default port 3583)
-- Does **not** write, modify, or delete any files
+- Reads JSONL session files from `~/.claude/projects/`, `~/.codex/sessions/`, and `~/.local/share/opencode/`
+- Runs as a native desktop application (no network server)
+- Does **not** write, modify, or delete any session files
 - Does **not** send data to external servers
-- Does **not** require authentication
 
 ## Important Considerations
 
-Session data may contain sensitive information such as API keys, credentials, or private code snippets that were part of your Claude Code conversations. The local server exposes this data on `http://localhost:3583`.
+Session data may contain sensitive information such as API keys, credentials, or private code snippets that were part of your AI coding conversations.
 
-- Only run Klovi on trusted networks
-- Do not expose the server to the public internet
-- The startup warning can be acknowledged with `--accept-risks`
+- Be mindful of screen sharing when browsing sessions that may contain sensitive data
+- Klovi only reads local files — no data leaves your machine
 
 ## Reporting Vulnerabilities
 

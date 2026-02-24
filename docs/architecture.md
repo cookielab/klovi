@@ -204,8 +204,8 @@ The main process runs in Bun via Electrobun (`src/bun/index.ts`). It:
 
 The app is built with Electrobun:
 
-- **Development**: `bunx electrobun dev` starts the main process with hot reload and opens the webview
-- **Production**: `bunx electrobun build` produces a native desktop binary
+- **Development**: `bun run dev` starts the main process with hot reload and opens the webview
+- **Production**: `bun run build` produces a native desktop binary
 
 Electrobun handles bundling both the Bun main process (`src/bun/index.ts`) and the webview entry (`src/views/main/index.ts`), including all React/CSS assets. The `electrobun.config.ts` defines entrypoints and view mappings.
 
