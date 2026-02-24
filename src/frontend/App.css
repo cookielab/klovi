@@ -1209,6 +1209,17 @@
   font-size: 0.85rem;
 }
 
+.security-warning-remember {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
 .security-warning-button {
   margin-top: 24px;
   padding: 10px 32px;

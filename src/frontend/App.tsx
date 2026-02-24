@@ -262,17 +262,52 @@ export function App() {
 export function AppGate() {
   useTheme();
   const [accepted, setAccepted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showWarning, setShowWarning] = useState(true);
 
-  const handleAccept = useCallback(() => {
+  useEffect(() => {
     getRPC()
-      .request.acceptRisks({} as Record<string, never>)
-      .then(() => setAccepted(true))
-      // Allow through on RPC failure to avoid permanently locking the user out
-      .catch(() => setAccepted(true));
+      .request.getGeneralSettings({} as Record<string, never>)
+      .then((data) => {
+        if (!data.showSecurityWarning) {
+          setShowWarning(false);
+          return getRPC()
+            .request.acceptRisks({} as Record<string, never>)
+            .then(() => setAccepted(true))
+            .catch(() => setAccepted(true));
+        }
+      })
+      .catch(() => {
+        // On failure, show warning as usual
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!accepted) {
+  const handleAccept = useCallback((skipNextTime: boolean) => {
+    const acceptPromise = getRPC()
+      .request.acceptRisks({} as Record<string, never>)
+      .then(() => setAccepted(true))
+      .catch(() => setAccepted(true));
+
+    if (skipNextTime) {
+      getRPC()
+        .request.updateGeneralSettings({ showSecurityWarning: false })
+        .catch(() => {});
+    }
+
+    return acceptPromise;
+  }, []);
+
+  if (loading) {
+    return null;
+  }
+
+  if (!accepted && showWarning) {
     return <SecurityWarning onAccept={handleAccept} />;
+  }
+
+  if (!accepted) {
+    return null;
   }
 
   return <App />;

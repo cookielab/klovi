@@ -27,6 +27,12 @@ export interface RPCClient {
       enabled?: boolean;
       dataDir?: string | null;
     }) => Promise<{ plugins: PluginSettingInfo[] }>;
+    getGeneralSettings: (
+      params: Record<string, never>,
+    ) => Promise<{ showSecurityWarning: boolean }>;
+    updateGeneralSettings: (params: {
+      showSecurityWarning?: boolean;
+    }) => Promise<{ showSecurityWarning: boolean }>;
     browseDirectory: (params: { startingFolder?: string }) => Promise<{ path: string | null }>;
   };
 }

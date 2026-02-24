@@ -53,6 +53,14 @@ export interface KloviRPC {
         params: { pluginId: string; enabled?: boolean; dataDir?: string | null };
         response: { plugins: PluginSettingInfo[] };
       };
+      getGeneralSettings: {
+        params: {};
+        response: { showSecurityWarning: boolean };
+      };
+      updateGeneralSettings: {
+        params: { showSecurityWarning?: boolean };
+        response: { showSecurityWarning: boolean };
+      };
       browseDirectory: {
         params: { startingFolder?: string };
         response: { path: string | null };

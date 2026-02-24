@@ -4,6 +4,7 @@ import { createRegistry } from "../plugins/auto-discover.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import type { KloviRPC } from "../shared/rpc-types.ts";
 import {
+  getGeneralSettings,
   getPluginSettings,
   getProjects,
   getSession,
@@ -12,6 +13,7 @@ import {
   getSubAgent,
   getVersion,
   searchSessions,
+  updateGeneralSettings,
   updatePluginSetting,
 } from "./rpc-handlers.ts";
 import { loadSettings } from "./settings.ts";
@@ -49,8 +51,10 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         }
         return { ok: true };
       },
-      // getVersion reads env vars only — intentionally ungated
+      // getVersion and getGeneralSettings read settings only — intentionally ungated
       getVersion: () => getVersion(),
+      getGeneralSettings: () => getGeneralSettings(getSettingsPath()),
+      updateGeneralSettings: (params) => updateGeneralSettings(getSettingsPath(), params),
       getStats: () => getStats(getRegistry()),
       getProjects: () => getProjects(getRegistry()),
       getSessions: (params) => getSessions(getRegistry(), params),

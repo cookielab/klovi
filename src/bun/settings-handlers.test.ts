@@ -2,7 +2,12 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getPluginSettings, updatePluginSetting } from "./rpc-handlers.ts";
+import {
+  getGeneralSettings,
+  getPluginSettings,
+  updateGeneralSettings,
+  updatePluginSetting,
+} from "./rpc-handlers.ts";
 import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
 
 const testDir = join(tmpdir(), `klovi-handlers-test-${Date.now()}`);
@@ -53,6 +58,42 @@ describe("settings RPC handlers", () => {
     const claude = result.plugins.find((p) => p.id === "claude-code")!;
     expect(claude.dataDir).toBe("/custom/path");
     expect(claude.isCustomDir).toBe(true);
+  });
+
+  test("getGeneralSettings returns true by default", () => {
+    mkdirSync(testDir, { recursive: true });
+    saveSettings(settingsPath, getDefaultSettings());
+    const result = getGeneralSettings(settingsPath);
+    expect(result.showSecurityWarning).toBe(true);
+  });
+
+  test("getGeneralSettings returns true for legacy settings without general", () => {
+    mkdirSync(testDir, { recursive: true });
+    const settings = getDefaultSettings();
+    delete settings.general;
+    saveSettings(settingsPath, settings);
+    const result = getGeneralSettings(settingsPath);
+    expect(result.showSecurityWarning).toBe(true);
+  });
+
+  test("updateGeneralSettings sets showSecurityWarning to false", () => {
+    mkdirSync(testDir, { recursive: true });
+    saveSettings(settingsPath, getDefaultSettings());
+    const result = updateGeneralSettings(settingsPath, { showSecurityWarning: false });
+    expect(result.showSecurityWarning).toBe(false);
+
+    // Verify persisted
+    const loaded = loadSettings(settingsPath);
+    expect(loaded.general?.showSecurityWarning).toBe(false);
+  });
+
+  test("updateGeneralSettings sets showSecurityWarning to true", () => {
+    mkdirSync(testDir, { recursive: true });
+    const settings = getDefaultSettings();
+    settings.general = { showSecurityWarning: false };
+    saveSettings(settingsPath, settings);
+    const result = updateGeneralSettings(settingsPath, { showSecurityWarning: true });
+    expect(result.showSecurityWarning).toBe(true);
   });
 
   test("updatePluginSetting resets dataDir to default with null", () => {

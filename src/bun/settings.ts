@@ -9,6 +9,9 @@ export type PluginSettings = {
       dataDir: string | null;
     };
   };
+  general?: {
+    showSecurityWarning?: boolean;
+  };
 };
 
 export function getDefaultSettings(): PluginSettings {
@@ -18,6 +21,9 @@ export function getDefaultSettings(): PluginSettings {
       "claude-code": { enabled: true, dataDir: null },
       "codex-cli": { enabled: true, dataDir: null },
       opencode: { enabled: true, dataDir: null },
+    },
+    general: {
+      showSecurityWarning: true,
     },
   };
 }

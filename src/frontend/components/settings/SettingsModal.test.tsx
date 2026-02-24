@@ -150,4 +150,39 @@ describe("SettingsModal", () => {
     const tab = await findByRole("button", { name: "Plugins" });
     expect(tab.classList.contains("active") || tab.closest(".active")).toBeTruthy();
   });
+
+  test("General tab is clickable and shows toggle", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const { findByRole, findByText } = render(<SettingsModal onClose={mock()} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    expect((generalTab as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(generalTab);
+    await findByText("Show security warning on startup");
+  });
+
+  test("General tab reflects persisted value", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+      getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
+    });
+    const { findByRole, findByLabelText } = render(<SettingsModal onClose={mock()} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    const checkbox = await findByLabelText("Show security warning on startup");
+    expect((checkbox as HTMLInputElement).checked).toBe(false);
+  });
+
+  test("switching to General tab makes it active", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const { findByRole } = render(<SettingsModal onClose={mock()} />);
+    const generalTab = await findByRole("button", { name: "General" });
+    fireEvent.click(generalTab);
+    expect(generalTab.classList.contains("active")).toBe(true);
+    const pluginsTab = await findByRole("button", { name: "Plugins" });
+    expect(pluginsTab.classList.contains("active")).toBe(false);
+  });
 });

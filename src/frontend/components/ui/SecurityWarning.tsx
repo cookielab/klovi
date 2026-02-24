@@ -1,10 +1,13 @@
+import { useState } from "react";
 import faviconUrl from "../../../../favicon.svg";
 
 interface SecurityWarningProps {
-  onAccept: () => void;
+  onAccept: (skipNextTime: boolean) => void;
 }
 
 export function SecurityWarning({ onAccept }: SecurityWarningProps) {
+  const [skipNextTime, setSkipNextTime] = useState(false);
+
   return (
     <div className="security-warning" role="alert" aria-labelledby="security-warning-title">
       <div className="security-warning-content">
@@ -23,7 +26,19 @@ export function SecurityWarning({ onAccept }: SecurityWarningProps) {
         <p className="security-warning-muted">
           Be mindful when screen sharing or using Klovi in public settings.
         </p>
-        <button type="button" className="security-warning-button" onClick={onAccept}>
+        <label className="security-warning-remember">
+          <input
+            type="checkbox"
+            checked={skipNextTime}
+            onChange={(e) => setSkipNextTime(e.target.checked)}
+          />
+          Don't show this warning again
+        </label>
+        <button
+          type="button"
+          className="security-warning-button"
+          onClick={() => onAccept(skipNextTime)}
+        >
           Continue
         </button>
       </div>

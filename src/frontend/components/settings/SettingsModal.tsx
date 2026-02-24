@@ -11,14 +11,19 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [changed, setChanged] = useState(false);
+  const [activeTab, setActiveTab] = useState<"plugins" | "general">("plugins");
+  const [showSecurityWarning, setShowSecurityWarning] = useState(true);
 
   const close = useCallback(() => onClose(changed), [onClose, changed]);
 
   useEffect(() => {
-    getRPC()
-      .request.getPluginSettings({} as Record<string, never>)
-      .then((data) => {
-        setPlugins(data.plugins);
+    Promise.all([
+      getRPC().request.getPluginSettings({} as Record<string, never>),
+      getRPC().request.getGeneralSettings({} as Record<string, never>),
+    ])
+      .then(([pluginData, generalData]) => {
+        setPlugins(pluginData.plugins);
+        setShowSecurityWarning(generalData.showSecurityWarning);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -99,30 +104,71 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
         <div className="settings-body">
           <nav className="settings-sidebar">
-            <button type="button" className="settings-tab active">
+            <button
+              type="button"
+              className={`settings-tab ${activeTab === "plugins" ? "active" : ""}`}
+              onClick={() => setActiveTab("plugins")}
+            >
               Plugins
             </button>
-            <button type="button" className="settings-tab" disabled>
+            <button
+              type="button"
+              className={`settings-tab ${activeTab === "general" ? "active" : ""}`}
+              onClick={() => setActiveTab("general")}
+            >
               General
             </button>
           </nav>
           <div className="settings-content">
-            <h3 className="settings-section-title">Plugins</h3>
-            {loading ? (
-              <div className="settings-loading">Loading...</div>
-            ) : (
-              <div className="settings-plugin-list">
-                {plugins.map((plugin) => (
-                  <PluginRow
-                    key={plugin.id}
-                    plugin={plugin}
-                    onToggle={handleToggle}
-                    onBrowse={handleBrowse}
-                    onPathChange={handlePathChange}
-                    onReset={handleReset}
-                  />
-                ))}
-              </div>
+            {activeTab === "plugins" && (
+              <>
+                <h3 className="settings-section-title">Plugins</h3>
+                {loading ? (
+                  <div className="settings-loading">Loading...</div>
+                ) : (
+                  <div className="settings-plugin-list">
+                    {plugins.map((plugin) => (
+                      <PluginRow
+                        key={plugin.id}
+                        plugin={plugin}
+                        onToggle={handleToggle}
+                        onBrowse={handleBrowse}
+                        onPathChange={handlePathChange}
+                        onReset={handleReset}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+            {activeTab === "general" && (
+              <>
+                <h3 className="settings-section-title">General</h3>
+                {loading ? (
+                  <div className="settings-loading">Loading...</div>
+                ) : (
+                  <div className="settings-general-row">
+                    <label className="settings-general-label">
+                      <input
+                        type="checkbox"
+                        checked={showSecurityWarning}
+                        onChange={(e) => {
+                          const value = e.target.checked;
+                          setShowSecurityWarning(value);
+                          getRPC()
+                            .request.updateGeneralSettings({ showSecurityWarning: value })
+                            .then(() => setChanged(true))
+                            .catch(() => {});
+                        }}
+                      />
+                      Show security warning on startup
+                    </label>
+                    <p className="settings-general-hint">
+                      When enabled, a security notice is shown each time Klovi launches.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

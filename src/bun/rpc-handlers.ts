@@ -148,6 +148,26 @@ export function getPluginSettings(settingsPath: string): { plugins: PluginSettin
 
 const VALID_PLUGIN_IDS = new Set(PLUGIN_META.map((p) => p.id));
 
+export function getGeneralSettings(settingsPath: string): { showSecurityWarning: boolean } {
+  const settings = loadSettings(settingsPath);
+  return { showSecurityWarning: settings.general?.showSecurityWarning ?? true };
+}
+
+export function updateGeneralSettings(
+  settingsPath: string,
+  params: { showSecurityWarning?: boolean },
+): { showSecurityWarning: boolean } {
+  const settings = loadSettings(settingsPath);
+  if (!settings.general) {
+    settings.general = {};
+  }
+  if (params.showSecurityWarning !== undefined) {
+    settings.general.showSecurityWarning = params.showSecurityWarning;
+  }
+  saveSettings(settingsPath, settings);
+  return { showSecurityWarning: settings.general.showSecurityWarning ?? true };
+}
+
 export function updatePluginSetting(
   settingsPath: string,
   params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
