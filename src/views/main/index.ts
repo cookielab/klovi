@@ -18,6 +18,7 @@ import "../../frontend/index.css";
 import "../../frontend/App.css";
 
 const rpc = Electroview.defineRPC<KloviRPC>({
+  maxRequestTime: 30_000,
   handlers: {
     requests: {},
     messages: {
