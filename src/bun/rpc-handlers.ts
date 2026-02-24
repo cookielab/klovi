@@ -5,11 +5,13 @@ import {
   loadClaudeSession,
   parseSubAgentSession,
 } from "../plugins/claude-code/parser.ts";
+import { getClaudeCodeDir, getCodexCliDir, getOpenCodeDir } from "../plugins/config.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import { sortByIsoDesc } from "../shared/iso-time.ts";
-import type { VersionInfo } from "../shared/rpc-types.ts";
+import type { PluginSettingInfo, VersionInfo } from "../shared/rpc-types.ts";
 import { encodeSessionId, parseSessionId } from "../shared/session-id.ts";
 import type { GlobalSessionResult, SessionSummary } from "../shared/types.ts";
+import { loadSettings, saveSettings } from "./settings.ts";
 
 export function getVersion(): VersionInfo {
   return {
@@ -114,4 +116,51 @@ export async function searchSessions(registry: PluginRegistry) {
 
   sortByIsoDesc(allSessions, (session) => session.timestamp);
   return { sessions: allSessions };
+}
+
+const PLUGIN_META: Array<{ id: string; displayName: string; getDefaultDir: () => string }> = [
+  { id: "claude-code", displayName: "Claude Code", getDefaultDir: getClaudeCodeDir },
+  { id: "codex-cli", displayName: "Codex CLI", getDefaultDir: getCodexCliDir },
+  { id: "opencode", displayName: "OpenCode", getDefaultDir: getOpenCodeDir },
+];
+
+function buildPluginSettingsResponse(settingsPath: string): { plugins: PluginSettingInfo[] } {
+  const settings = loadSettings(settingsPath);
+  const plugins: PluginSettingInfo[] = PLUGIN_META.map(({ id, displayName, getDefaultDir }) => {
+    const pluginConf = settings.plugins[id] ?? { enabled: true, dataDir: null };
+    const defaultDataDir = getDefaultDir();
+    const isCustomDir = pluginConf.dataDir !== null;
+    return {
+      id,
+      displayName,
+      enabled: pluginConf.enabled,
+      dataDir: pluginConf.dataDir ?? defaultDataDir,
+      defaultDataDir,
+      isCustomDir,
+    };
+  });
+  return { plugins };
+}
+
+export function getPluginSettings(settingsPath: string): { plugins: PluginSettingInfo[] } {
+  return buildPluginSettingsResponse(settingsPath);
+}
+
+export function updatePluginSetting(
+  settingsPath: string,
+  params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
+): { plugins: PluginSettingInfo[] } {
+  const settings = loadSettings(settingsPath);
+  const existing = settings.plugins[params.pluginId] ?? { enabled: true, dataDir: null };
+
+  if (params.enabled !== undefined) {
+    existing.enabled = params.enabled;
+  }
+  if (params.dataDir !== undefined) {
+    existing.dataDir = params.dataDir;
+  }
+
+  settings.plugins[params.pluginId] = existing;
+  saveSettings(settingsPath, settings);
+  return buildPluginSettingsResponse(settingsPath);
 }

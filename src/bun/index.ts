@@ -1,8 +1,10 @@
-import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow } from "electrobun/bun";
+import { join } from "node:path";
+import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import { createRegistry } from "../plugins/auto-discover.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import type { KloviRPC } from "../shared/rpc-types.ts";
 import {
+  getPluginSettings,
   getProjects,
   getSession,
   getSessions,
@@ -10,7 +12,9 @@ import {
   getSubAgent,
   getVersion,
   searchSessions,
+  updatePluginSetting,
 } from "./rpc-handlers.ts";
+import { loadSettings } from "./settings.ts";
 
 let registry: PluginRegistry | null = null;
 
@@ -19,12 +23,29 @@ function getRegistry(): PluginRegistry {
   return registry;
 }
 
+function getSettingsPath(): string {
+  try {
+    return join(Utils.paths.userData, "settings.json");
+  } catch {
+    // Fallback if version.json not readable (e.g. dev mode outside app bundle)
+    return join(
+      process.env.HOME ?? "",
+      "Library",
+      "Application Support",
+      "io.cookielab.klovi",
+      "stable",
+      "settings.json",
+    );
+  }
+}
+
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
       acceptRisks: async () => {
         if (!registry) {
-          registry = createRegistry();
+          const settings = loadSettings(getSettingsPath());
+          registry = createRegistry(settings);
         }
         return { ok: true };
       },
@@ -36,6 +57,22 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       getSession: (params) => getSession(getRegistry(), params),
       getSubAgent: (params) => getSubAgent(getRegistry(), params),
       searchSessions: () => searchSessions(getRegistry()),
+      getPluginSettings: () => getPluginSettings(getSettingsPath()),
+      updatePluginSetting: (params) => {
+        const result = updatePluginSetting(getSettingsPath(), params);
+        registry = createRegistry(loadSettings(getSettingsPath()));
+        return result;
+      },
+      browseDirectory: async (params) => {
+        const paths = await Utils.openFileDialog({
+          startingFolder: params.startingFolder ?? "~/",
+          canChooseFiles: false,
+          canChooseDirectory: true,
+          allowsMultipleSelection: false,
+        });
+        const selected = paths[0];
+        return { path: selected && selected !== "" ? selected : null };
+      },
     },
     messages: {},
   },
