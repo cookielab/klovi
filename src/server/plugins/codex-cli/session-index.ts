@@ -32,6 +32,58 @@ export function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
   );
 }
 
+interface NewFormatMeta {
+  type: "session_meta";
+  timestamp?: string;
+  payload: {
+    id: string;
+    cwd: string;
+    timestamp?: string;
+    model_provider?: string;
+    model?: string;
+    originator?: string;
+    [key: string]: unknown;
+  };
+}
+
+function isNewFormatMeta(obj: unknown): obj is NewFormatMeta {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "type" in obj &&
+    (obj as NewFormatMeta).type === "session_meta" &&
+    "payload" in obj &&
+    typeof (obj as NewFormatMeta).payload === "object" &&
+    (obj as NewFormatMeta).payload !== null &&
+    typeof (obj as NewFormatMeta).payload.id === "string" &&
+    typeof (obj as NewFormatMeta).payload.cwd === "string"
+  );
+}
+
+export function normalizeSessionMeta(
+  parsed: unknown,
+  fileMtimeEpoch?: number,
+): CodexSessionMeta | null {
+  if (isCodexSessionMeta(parsed)) return parsed;
+
+  if (isNewFormatMeta(parsed)) {
+    const { payload } = parsed;
+    const isoTimestamp = payload.timestamp || parsed.timestamp;
+    const createdEpoch = isoTimestamp ? new Date(isoTimestamp).getTime() / 1000 : 0;
+    const updatedEpoch = fileMtimeEpoch ?? createdEpoch;
+
+    return {
+      uuid: payload.id,
+      cwd: payload.cwd,
+      timestamps: { created: createdEpoch, updated: updatedEpoch },
+      model: payload.model || payload.model_provider || "unknown",
+      provider_id: payload.model_provider || "unknown",
+    };
+  }
+
+  return null;
+}
+
 async function readFirstLine(filePath: string): Promise<string | null> {
   const text = await readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES);
   const firstNewline = text.indexOf("\n");
@@ -44,7 +96,9 @@ async function parseSessionMeta(filePath: string): Promise<CodexSessionMeta | nu
   if (!firstLine) return null;
   try {
     const parsed: unknown = JSON.parse(firstLine);
-    if (isCodexSessionMeta(parsed)) return parsed;
+    const fileStat = await stat(filePath).catch(() => null);
+    const fileMtimeEpoch = fileStat ? fileStat.mtime.getTime() / 1000 : undefined;
+    return normalizeSessionMeta(parsed, fileMtimeEpoch);
   } catch {
     // Malformed first line
   }
@@ -95,7 +149,10 @@ export async function scanCodexSessions(): Promise<SessionFileInfo[]> {
   return sessions;
 }
 
-async function walkForFile(dir: string, targetFilename: string): Promise<string | null> {
+async function walkForFile(
+  dir: string,
+  match: (fileName: string) => boolean,
+): Promise<string | null> {
   let entries: { name: string; isDirectory(): boolean }[];
   try {
     entries = await readdir(dir, { withFileTypes: true });
@@ -105,9 +162,9 @@ async function walkForFile(dir: string, targetFilename: string): Promise<string 
 
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
-    if (entry.name === targetFilename) return fullPath;
+    if (!entry.isDirectory() && match(entry.name)) return fullPath;
     if (entry.isDirectory()) {
-      const found = await walkForFile(fullPath, targetFilename);
+      const found = await walkForFile(fullPath, match);
       if (found) return found;
     }
   }
@@ -116,7 +173,13 @@ async function walkForFile(dir: string, targetFilename: string): Promise<string 
 
 export async function findCodexSessionFileById(sessionId: string): Promise<string | null> {
   const sessionsDir = join(getCodexCliDir(), "sessions");
-  const filePath = await walkForFile(sessionsDir, `${sessionId}.jsonl`);
+  const exactName = `${sessionId}.jsonl`;
+  const suffix = `-${sessionId}.jsonl`;
+
+  const filePath = await walkForFile(
+    sessionsDir,
+    (name) => name === exactName || name.endsWith(suffix),
+  );
   if (!filePath) return null;
 
   const fileStat = await stat(filePath).catch(() => null);

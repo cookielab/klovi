@@ -21,6 +21,19 @@ function writeSession(
   return filePath;
 }
 
+function writeNewFormatSession(
+  uuid: string,
+  meta: Record<string, unknown>,
+  events: Record<string, unknown>[] = [],
+): string {
+  const dir = join(testDir, "sessions", "2026", "02", "18");
+  mkdirSync(dir, { recursive: true });
+  const filePath = join(dir, `rollout-2026-02-18-${uuid}.jsonl`);
+  const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
+  writeFileSync(filePath, lines.join("\n"));
+  return filePath;
+}
+
 const baseMeta = {
   uuid: "test-uuid",
   name: "Test session",
@@ -28,6 +41,19 @@ const baseMeta = {
   timestamps: { created: 1706000000, updated: 1706001000 },
   model: "o4-mini",
   provider_id: "openai",
+};
+
+const newBaseMeta = {
+  type: "session_meta",
+  timestamp: "2026-02-18T10:00:00.000Z",
+  payload: {
+    id: "new-test-uuid",
+    cwd: "/Users/dev/project",
+    timestamp: "2026-02-18T10:00:00.000Z",
+    model_provider: "openai",
+    model: "o4-mini",
+    originator: "Codex Desktop",
+  },
 };
 
 beforeEach(() => {
@@ -429,6 +455,184 @@ describe("loadCodexSession", () => {
       inputTokens: 100,
       outputTokens: 50,
       cacheReadTokens: 25,
+    });
+  });
+});
+
+describe("new envelope format", () => {
+  describe("loadCodexSession", () => {
+    test("loads session with new-format metadata and events", async () => {
+      writeNewFormatSession("new-test-uuid", newBaseMeta, [
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:01.000Z",
+          payload: { type: "task_started" },
+        },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:01.500Z",
+          payload: { type: "user_message", message: "Fix the bug" },
+        },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:02.000Z",
+          payload: { type: "agent_reasoning", text: "Let me think..." },
+        },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:03.000Z",
+          payload: { type: "agent_message", message: "I found the issue." },
+        },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:04.000Z",
+          payload: { type: "token_count", input_tokens: 200, output_tokens: 80 },
+        },
+      ]);
+
+      const session = await loadCodexSession("/Users/dev/project", "new-test-uuid");
+
+      expect(session.sessionId).toBe("new-test-uuid");
+      expect(session.pluginId).toBe("codex-cli");
+      // First turn: user message, then assistant response
+      expect(session.turns).toHaveLength(2);
+      expect(session.turns[0]!.kind).toBe("user");
+      if (session.turns[0]!.kind === "user") {
+        expect(session.turns[0]!.text).toBe("Fix the bug");
+      }
+
+      const assistant = session.turns[1] as AssistantTurn;
+      expect(assistant.kind).toBe("assistant");
+      expect(assistant.model).toBe("o4-mini");
+      expect(assistant.contentBlocks).toHaveLength(2);
+      expect(assistant.contentBlocks[0]!.type).toBe("thinking");
+      if (assistant.contentBlocks[0]!.type === "thinking") {
+        expect(assistant.contentBlocks[0]!.block.text).toBe("Let me think...");
+      }
+      expect(assistant.contentBlocks[1]!.type).toBe("text");
+      if (assistant.contentBlocks[1]!.type === "text") {
+        expect(assistant.contentBlocks[1]!.text).toBe("I found the issue.");
+      }
+      expect(assistant.usage).toEqual({
+        inputTokens: 200,
+        outputTokens: 80,
+        cacheReadTokens: undefined,
+      });
+    });
+
+    test("loads new-format session with command execution", async () => {
+      writeNewFormatSession(
+        "cmd-uuid",
+        { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "cmd-uuid" } },
+        [
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:01.000Z",
+            payload: { type: "task_started" },
+          },
+          {
+            type: "response_item",
+            timestamp: "2026-02-18T10:00:02.000Z",
+            payload: {
+              type: "function_call",
+              name: "exec_command",
+              call_id: "call_abc",
+              arguments: '{"cmd":"ls -la","workdir":"/tmp"}',
+            },
+          },
+          {
+            type: "response_item",
+            timestamp: "2026-02-18T10:00:02.500Z",
+            payload: {
+              type: "function_call_output",
+              call_id: "call_abc",
+              output: "file1.ts\nfile2.ts",
+            },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:03.000Z",
+            payload: { type: "token_count", input_tokens: 100, output_tokens: 50 },
+          },
+        ],
+      );
+
+      const session = await loadCodexSession("/Users/dev/project", "cmd-uuid");
+
+      expect(session.turns).toHaveLength(1);
+      const assistant = session.turns[0] as AssistantTurn;
+      expect(assistant.contentBlocks).toHaveLength(1);
+      const block = assistant.contentBlocks[0]!;
+      expect(block.type).toBe("tool_call");
+      if (block.type === "tool_call") {
+        expect(block.call.name).toBe("exec_command");
+        expect(block.call.input).toEqual({ cmd: "ls -la", workdir: "/tmp" });
+        expect(block.call.result).toBe("file1.ts\nfile2.ts");
+        expect(block.call.isError).toBe(false);
+      }
+    });
+
+    test("finds new-format file by session ID with rollout prefix", async () => {
+      writeNewFormatSession(
+        "rollout-uuid",
+        { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "rollout-uuid" } },
+        [
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:01.000Z",
+            payload: { type: "task_started" },
+          },
+          {
+            type: "event_msg",
+            timestamp: "2026-02-18T10:00:02.000Z",
+            payload: { type: "agent_message", message: "Hello!" },
+          },
+        ],
+      );
+
+      const session = await loadCodexSession("/Users/dev/project", "rollout-uuid");
+
+      expect(session.turns).toHaveLength(1);
+      const assistant = session.turns[0] as AssistantTurn;
+      expect(assistant.contentBlocks[0]!.type).toBe("text");
+    });
+
+    test("returns empty session when new-format file not found", async () => {
+      const session = await loadCodexSession("/Users/dev/project", "nonexistent-new-uuid");
+
+      expect(session.sessionId).toBe("nonexistent-new-uuid");
+      expect(session.turns).toEqual([]);
+    });
+
+    test("uses model_provider as model when model field absent in new format", async () => {
+      const metaNoModel = {
+        type: "session_meta",
+        timestamp: "2026-02-18T10:00:00.000Z",
+        payload: {
+          id: "provider-uuid",
+          cwd: "/Users/dev/project",
+          timestamp: "2026-02-18T10:00:00.000Z",
+          model_provider: "openai",
+        },
+      };
+
+      writeNewFormatSession("provider-uuid", metaNoModel, [
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:01.000Z",
+          payload: { type: "task_started" },
+        },
+        {
+          type: "event_msg",
+          timestamp: "2026-02-18T10:00:02.000Z",
+          payload: { type: "agent_message", message: "Hello!" },
+        },
+      ]);
+
+      const session = await loadCodexSession("/Users/dev/project", "provider-uuid");
+
+      const assistant = session.turns[0] as AssistantTurn;
+      expect(assistant.model).toBe("openai");
     });
   });
 });

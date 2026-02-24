@@ -12,6 +12,12 @@ interface CodexEvent {
     type?: string;
     text?: string;
   };
+  payload?: {
+    type?: string;
+    message?: string;
+    text?: string;
+    [key: string]: unknown;
+  };
 }
 
 const SESSION_TITLE_SCAN_BYTES = 256 * 1024;
@@ -58,6 +64,8 @@ function extractFirstUserMessage(text: string): string | null {
     text,
     ({ parsed }) => {
       const event = parsed as CodexEvent;
+
+      // Old format: item.completed with agent_message
       if (
         event.type === "item.completed" &&
         event.item?.type === "agent_message" &&
@@ -65,6 +73,15 @@ function extractFirstUserMessage(text: string): string | null {
       ) {
         message = event.item.text.slice(0, 200);
         return false;
+      }
+
+      // New format: event_msg with user_message payload
+      if (event.type === "event_msg" && event.payload?.type === "user_message") {
+        const text = event.payload.message || event.payload.text;
+        if (typeof text === "string" && text) {
+          message = text.slice(0, 200);
+          return false;
+        }
       }
     },
     { startAt: 1 },
