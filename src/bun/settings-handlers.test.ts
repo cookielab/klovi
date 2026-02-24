@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   getGeneralSettings,
   getPluginSettings,
+  isFirstLaunch,
   updateGeneralSettings,
   updatePluginSetting,
 } from "./rpc-handlers.ts";
@@ -108,5 +109,18 @@ describe("settings RPC handlers", () => {
     });
     const claude = result.plugins.find((p) => p.id === "claude-code")!;
     expect(claude.isCustomDir).toBe(false);
+  });
+
+  test("isFirstLaunch returns true when settings file does not exist", () => {
+    // testDir cleaned by afterEach — no settings file present
+    const result = isFirstLaunch(settingsPath);
+    expect(result.firstLaunch).toBe(true);
+  });
+
+  test("isFirstLaunch returns false when settings file exists", () => {
+    mkdirSync(testDir, { recursive: true });
+    saveSettings(settingsPath, getDefaultSettings());
+    const result = isFirstLaunch(settingsPath);
+    expect(result.firstLaunch).toBe(false);
   });
 });

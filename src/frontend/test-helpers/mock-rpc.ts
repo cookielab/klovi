@@ -9,6 +9,7 @@ export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
   const defaultMock: RPCClient = {
     request: {
       acceptRisks: () => Promise.resolve({ ok: true }),
+      isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
       getVersion: () => Promise.resolve({ version: "test", commit: "abc123" }),
       getStats: () =>
         Promise.resolve({

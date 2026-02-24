@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
 import {
@@ -154,6 +155,10 @@ const VALID_PLUGIN_IDS = new Set(PLUGIN_META.map((p) => p.id));
 export function getGeneralSettings(settingsPath: string): { showSecurityWarning: boolean } {
   const settings = loadSettings(settingsPath);
   return { showSecurityWarning: settings.general?.showSecurityWarning ?? true };
+}
+
+export function isFirstLaunch(settingsPath: string): { firstLaunch: boolean } {
+  return { firstLaunch: !existsSync(settingsPath) };
 }
 
 export function updateGeneralSettings(

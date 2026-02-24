@@ -26,6 +26,7 @@ export interface KloviRPC {
   bun: RPCSchema<{
     requests: {
       acceptRisks: { params: {}; response: { ok: boolean } };
+      isFirstLaunch: { params: {}; response: { firstLaunch: boolean } };
       getVersion: { params: {}; response: VersionInfo };
       getStats: { params: {}; response: { stats: DashboardStats } };
       getProjects: { params: {}; response: { projects: Project[] } };

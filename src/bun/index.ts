@@ -12,6 +12,7 @@ import {
   getStats,
   getSubAgent,
   getVersion,
+  isFirstLaunch,
   searchSessions,
   updateGeneralSettings,
   updatePluginSetting,
@@ -51,8 +52,9 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         }
         return { ok: true };
       },
-      // getVersion and getGeneralSettings read settings only — intentionally ungated
+      // getVersion, isFirstLaunch, and getGeneralSettings read settings only — intentionally ungated
       getVersion: () => getVersion(),
+      isFirstLaunch: () => isFirstLaunch(getSettingsPath()),
       getGeneralSettings: () => getGeneralSettings(getSettingsPath()),
       updateGeneralSettings: (params) => updateGeneralSettings(getSettingsPath(), params),
       getStats: () => getStats(getRegistry()),
