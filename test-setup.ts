@@ -27,6 +27,7 @@ const globals = [
   "location",
   "getComputedStyle",
   "localStorage",
+  "history",
 ] as const;
 
 for (const key of globals) {

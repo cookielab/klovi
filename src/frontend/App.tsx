@@ -11,6 +11,7 @@ import { SessionPresentation } from "./components/session/SessionPresentation.ts
 import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
+import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 import { useViewState } from "./hooks/useViewState.ts";
@@ -231,4 +232,21 @@ export function App() {
       </Layout>
     </>
   );
+}
+
+export function AppGate() {
+  const [accepted, setAccepted] = useState(false);
+
+  const handleAccept = useCallback(() => {
+    getRPC()
+      .request.acceptRisks({} as Record<string, never>)
+      .then(() => setAccepted(true))
+      .catch(() => setAccepted(true));
+  }, []);
+
+  if (!accepted) {
+    return <SecurityWarning onAccept={handleAccept} />;
+  }
+
+  return <App />;
 }

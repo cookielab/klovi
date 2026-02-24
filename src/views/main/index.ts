@@ -1,7 +1,7 @@
 import { Electroview } from "electrobun/view";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "../../frontend/App.tsx";
+import { AppGate } from "../../frontend/App.tsx";
 import { setRPCClient } from "../../frontend/rpc.ts";
 import type { KloviRPC } from "../../shared/rpc-types.ts";
 
@@ -46,4 +46,4 @@ setRPCClient(rpc as unknown as import("../../frontend/rpc.ts").RPCClient);
 
 // Mount React app
 const root = createRoot(document.getElementById("root")!);
-root.render(createElement(App));
+root.render(createElement(AppGate));

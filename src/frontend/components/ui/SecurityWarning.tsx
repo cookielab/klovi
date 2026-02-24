@@ -6,12 +6,7 @@ interface SecurityWarningProps {
 
 export function SecurityWarning({ onAccept }: SecurityWarningProps) {
   return (
-    <div
-      className="security-warning"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="security-warning-title"
-    >
+    <div className="security-warning" role="alert" aria-labelledby="security-warning-title">
       <div className="security-warning-content">
         <img src={faviconUrl} alt="" width="64" height="64" className="security-warning-logo" />
         <h1 id="security-warning-title" className="security-warning-heading">
