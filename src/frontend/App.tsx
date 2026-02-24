@@ -10,7 +10,8 @@ import { SearchModal } from "./components/search/SearchModal.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
 import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
-import { SettingsModal } from "./components/settings/SettingsModal.tsx";
+import type { SettingsTab } from "./components/settings/SettingsSidebar.tsx";
+import { SettingsView } from "./components/settings/SettingsView.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { Onboarding } from "./components/ui/Onboarding.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
@@ -28,9 +29,9 @@ import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./vie
 
 export function App() {
   const themeHook = useTheme();
-  const { setting: themeSetting, cycle: cycleTheme } = themeHook;
+  const { cycle: cycleTheme } = themeHook;
   const fontSizeHook = useFontSize();
-  const { size: fontSize, increase, decrease } = fontSizeHook;
+  const { increase, decrease } = fontSizeHook;
   const presentationThemeHook = usePresentationTheme();
   const presentationFontSizeHook = usePresentationFontSize();
   const { hiddenIds, hide, unhide } = useHiddenProjects();
@@ -42,12 +43,13 @@ export function App() {
     selectSession,
     goHome,
     goHidden,
+    goSettings,
     canPresent,
     togglePresentation,
   } = useViewState();
 
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchSessions, setSearchSessions] = useState<GlobalSessionResult[]>([]);
 
   const fetchSearchSessions = useCallback(() => {
@@ -98,12 +100,16 @@ export function App() {
     function handleCmdComma(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === ",") {
         e.preventDefault();
-        setSettingsOpen((prev) => !prev);
+        if (view.kind === "settings") {
+          history.back();
+        } else {
+          goSettings();
+        }
       }
     }
     window.addEventListener("keydown", handleCmdComma);
     return () => window.removeEventListener("keydown", handleCmdComma);
-  }, []);
+  }, [view.kind, goSettings]);
 
   // Global keyboard shortcuts: p = toggle presentation, +/- = font size
   useEffect(() => {
@@ -142,7 +148,7 @@ export function App() {
     const handleTogglePresentation = () => {
       if (canPresent) togglePresentation();
     };
-    const handleOpenSettings = () => setSettingsOpen(true);
+    const handleOpenSettings = () => goSettings();
 
     window.addEventListener("klovi:cycleTheme", handleCycleTheme);
     window.addEventListener("klovi:increaseFontSize", handleIncrease);
@@ -157,7 +163,7 @@ export function App() {
       window.removeEventListener("klovi:togglePresentation", handleTogglePresentation);
       window.removeEventListener("klovi:openSettings", handleOpenSettings);
     };
-  }, [cycleTheme, increase, decrease, canPresent, togglePresentation]);
+  }, [cycleTheme, increase, decrease, canPresent, togglePresentation, goSettings]);
 
   const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
   const sidebarContent = getSidebarContent(view, hiddenIds, {
@@ -166,6 +172,8 @@ export function App() {
     goHome,
     goHidden,
     hide,
+    settingsTab,
+    setSettingsTab,
   });
 
   const isPresenting =
@@ -214,18 +222,6 @@ export function App() {
           onClose={() => setSearchOpen(false)}
         />
       )}
-      {settingsOpen && (
-        <SettingsModal
-          onClose={(changed) => {
-            setSettingsOpen(false);
-            if (changed) goHome();
-          }}
-          theme={themeHook}
-          fontSize={fontSizeHook}
-          presentationTheme={presentationThemeHook}
-          presentationFontSize={presentationFontSizeHook}
-        />
-      )}
       <Layout sidebar={sidebarContent} hideSidebar={isPresenting} onSearchClick={openSearch}>
         <Header
           title={headerTitle}
@@ -239,11 +235,6 @@ export function App() {
             view.kind === "subagent" ? `#/${view.project.encodedPath}/${view.sessionId}` : undefined
           }
           sessionType={view.kind === "session" ? view.session.sessionType : undefined}
-          themeSetting={themeSetting}
-          onCycleTheme={cycleTheme}
-          fontSize={fontSize}
-          onIncreaseFontSize={increase}
-          onDecreaseFontSize={decrease}
           presentationActive={isPresenting}
           onTogglePresentation={togglePresentation}
           showPresentationToggle={canPresent}
@@ -261,6 +252,16 @@ export function App() {
           )}
           {view.kind === "hidden" && (
             <HiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
+          )}
+          {view.kind === "settings" && (
+            <SettingsView
+              activeTab={settingsTab}
+              onNavigateHome={goHome}
+              theme={themeHook}
+              fontSize={fontSizeHook}
+              presentationTheme={presentationThemeHook}
+              presentationFontSize={presentationFontSizeHook}
+            />
           )}
           {view.kind === "project" && (
             <div className="empty-state">

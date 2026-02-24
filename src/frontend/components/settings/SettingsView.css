@@ -1,97 +1,42 @@
-.settings-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
-
-.settings-modal {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
-  width: 640px;
-  max-width: 90vw;
-  max-height: 80vh;
+.settings-view {
+  flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-.settings-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.settings-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.settings-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-}
-
-.settings-close:hover {
-  color: var(--text-primary);
-}
-
-.settings-body {
-  display: flex;
-  flex: 1;
   overflow: hidden;
 }
 
-.settings-sidebar {
+.settings-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 12px;
-  border-right: 1px solid var(--border);
-  min-width: 120px;
 }
 
-.settings-tab {
+.settings-nav-item {
   background: none;
   border: none;
+  border-radius: 6px;
   padding: 8px 12px;
   text-align: left;
   cursor: pointer;
   color: var(--text-secondary);
   font-size: 0.9rem;
+  width: 100%;
 }
 
-.settings-tab:hover:not(:disabled) {
-  background: var(--bg-secondary);
+.settings-nav-item:hover {
+  background: var(--bg-hover, var(--bg-secondary));
 }
 
-.settings-tab.active {
+.settings-nav-item.active {
   background: var(--accent-subtle);
   color: var(--accent);
   font-weight: 500;
 }
 
-.settings-tab:disabled {
-  color: var(--text-muted);
-  cursor: default;
-  opacity: 0.5;
-}
-
 .settings-content {
   flex: 1;
-  padding: 16px 20px;
+  padding: 24px 32px;
+  max-width: 800px;
   overflow-y: auto;
 }
 

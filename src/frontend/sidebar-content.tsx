@@ -2,6 +2,7 @@ import type React from "react";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { ProjectList } from "./components/project/ProjectList.tsx";
 import { SessionList } from "./components/project/SessionList.tsx";
+import { SettingsSidebar, type SettingsTab } from "./components/settings/SettingsSidebar.tsx";
 import type { ViewState } from "./view-state.ts";
 
 interface SidebarActions {
@@ -10,6 +11,8 @@ interface SidebarActions {
   goHome: () => void;
   goHidden: () => void;
   hide: (id: string) => void;
+  settingsTab: SettingsTab;
+  setSettingsTab: (tab: SettingsTab) => void;
 }
 
 export function getSidebarContent(
@@ -17,6 +20,10 @@ export function getSidebarContent(
   hiddenIds: Set<string>,
   actions: SidebarActions,
 ): React.ReactNode {
+  if (view.kind === "settings") {
+    return <SettingsSidebar activeTab={actions.settingsTab} onTabChange={actions.setSettingsTab} />;
+  }
+
   if (view.kind === "home" || view.kind === "hidden") {
     return (
       <ProjectList

@@ -3,7 +3,8 @@ import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
 import type { ThemeSetting } from "../../hooks/useTheme.ts";
 import { getRPC } from "../../rpc.ts";
 import { PluginRow } from "./PluginRow.tsx";
-import "./SettingsModal.css";
+import type { SettingsTab } from "./SettingsSidebar.tsx";
+import "./SettingsView.css";
 
 interface ThemeProps {
   setting: ThemeSetting;
@@ -33,8 +34,9 @@ interface PresentationFontSizeProps {
   decrease: () => void;
 }
 
-interface SettingsModalProps {
-  onClose: (changed: boolean) => void;
+interface SettingsViewProps {
+  activeTab: SettingsTab;
+  onNavigateHome: () => void;
   theme: ThemeProps;
   fontSize: FontSizeProps;
   presentationTheme: PresentationThemeProps;
@@ -97,20 +99,18 @@ function FontSizeControl({
   );
 }
 
-export function SettingsModal({
-  onClose,
+export function SettingsView({
+  activeTab,
+  onNavigateHome,
   theme,
   fontSize,
   presentationTheme,
   presentationFontSize,
-}: SettingsModalProps) {
+}: SettingsViewProps) {
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [changed, setChanged] = useState(false);
-  const [activeTab, setActiveTab] = useState<"plugins" | "general">("plugins");
   const [showSecurityWarning, setShowSecurityWarning] = useState(true);
-
-  const close = useCallback(() => onClose(changed), [onClose, changed]);
 
   useEffect(() => {
     Promise.all([
@@ -129,12 +129,16 @@ export function SettingsModal({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
-        close();
+        if (changed) {
+          onNavigateHome();
+        } else {
+          history.back();
+        }
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [close]);
+  }, [changed, onNavigateHome]);
 
   const handleToggle = useCallback((pluginId: string, enabled: boolean) => {
     getRPC()
@@ -185,151 +189,120 @@ export function SettingsModal({
   }, []);
 
   return (
-    <div className="settings-overlay" onMouseDown={close} onKeyDown={() => {}}>
-      <div className="settings-modal" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="settings-header">
-          <h2 className="settings-title">Settings</h2>
-          <button
-            type="button"
-            className="settings-close"
-            aria-label="Close settings"
-            onClick={close}
-          >
-            &times;
-          </button>
-        </div>
-        <div className="settings-body">
-          <nav className="settings-sidebar">
-            <button
-              type="button"
-              className={`settings-tab ${activeTab === "plugins" ? "active" : ""}`}
-              onClick={() => setActiveTab("plugins")}
-            >
-              Plugins
-            </button>
-            <button
-              type="button"
-              className={`settings-tab ${activeTab === "general" ? "active" : ""}`}
-              onClick={() => setActiveTab("general")}
-            >
-              General
-            </button>
-          </nav>
-          <div className="settings-content">
-            {activeTab === "plugins" && (
+    <div className="settings-view">
+      <div className="settings-content">
+        {activeTab === "plugins" && (
+          <>
+            <h3 className="settings-section-title">Plugins</h3>
+            {loading ? (
+              <div className="settings-loading">Loading...</div>
+            ) : (
+              <div className="settings-plugin-list">
+                {plugins.map((plugin) => (
+                  <PluginRow
+                    key={plugin.id}
+                    plugin={plugin}
+                    onToggle={handleToggle}
+                    onBrowse={handleBrowse}
+                    onPathChange={handlePathChange}
+                    onReset={handleReset}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        {activeTab === "general" && (
+          <>
+            <h3 className="settings-section-title">General</h3>
+            {loading ? (
+              <div className="settings-loading">Loading...</div>
+            ) : (
               <>
-                <h3 className="settings-section-title">Plugins</h3>
-                {loading ? (
-                  <div className="settings-loading">Loading...</div>
-                ) : (
-                  <div className="settings-plugin-list">
-                    {plugins.map((plugin) => (
-                      <PluginRow
-                        key={plugin.id}
-                        plugin={plugin}
-                        onToggle={handleToggle}
-                        onBrowse={handleBrowse}
-                        onPathChange={handlePathChange}
-                        onReset={handleReset}
+                <div className="settings-general-row">
+                  <label className="settings-general-label">
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={showSecurityWarning}
+                      onChange={(e) => {
+                        const value = e.target.checked;
+                        setShowSecurityWarning(value);
+                        getRPC()
+                          .request.updateGeneralSettings({ showSecurityWarning: value })
+                          .then(() => setChanged(true))
+                          .catch(() => {});
+                      }}
+                    />
+                    Show on-boarding on startup
+                  </label>
+                  <p className="settings-general-hint">
+                    When enabled, the on-boarding wizard is shown the next time Klovi launches.
+                  </p>
+                </div>
+
+                <h4 className="settings-subsection-title">Global</h4>
+
+                <div className="settings-control-row">
+                  <span className="settings-control-label">Theme</span>
+                  <ThemeSelector value={theme.setting} onChange={theme.set} />
+                </div>
+
+                <div className="settings-control-row">
+                  <span className="settings-control-label">Font Size</span>
+                  <FontSizeControl
+                    size={fontSize.size}
+                    onIncrease={fontSize.increase}
+                    onDecrease={fontSize.decrease}
+                  />
+                </div>
+
+                <h4 className="settings-subsection-title">Presentation</h4>
+
+                <div className="settings-control-row">
+                  <span className="settings-control-label">Theme</span>
+                  <div className="settings-control-group">
+                    <label className="settings-same-as-global">
+                      <input
+                        type="checkbox"
+                        className="custom-checkbox"
+                        checked={presentationTheme.sameAsGlobal}
+                        onChange={(e) => presentationTheme.setSameAsGlobal(e.target.checked)}
                       />
-                    ))}
+                      Same as global
+                    </label>
+                    <ThemeSelector
+                      value={presentationTheme.setting}
+                      onChange={presentationTheme.set}
+                      disabled={presentationTheme.sameAsGlobal}
+                    />
                   </div>
-                )}
-              </>
-            )}
-            {activeTab === "general" && (
-              <>
-                <h3 className="settings-section-title">General</h3>
-                {loading ? (
-                  <div className="settings-loading">Loading...</div>
-                ) : (
-                  <>
-                    <div className="settings-general-row">
-                      <label className="settings-general-label">
-                        <input
-                          type="checkbox"
-                          className="custom-checkbox"
-                          checked={showSecurityWarning}
-                          onChange={(e) => {
-                            const value = e.target.checked;
-                            setShowSecurityWarning(value);
-                            getRPC()
-                              .request.updateGeneralSettings({ showSecurityWarning: value })
-                              .then(() => setChanged(true))
-                              .catch(() => {});
-                          }}
-                        />
-                        Show on-boarding on startup
-                      </label>
-                      <p className="settings-general-hint">
-                        When enabled, the on-boarding wizard is shown the next time Klovi launches.
-                      </p>
-                    </div>
+                </div>
 
-                    <h4 className="settings-subsection-title">Global</h4>
-
-                    <div className="settings-control-row">
-                      <span className="settings-control-label">Theme</span>
-                      <ThemeSelector value={theme.setting} onChange={theme.set} />
-                    </div>
-
-                    <div className="settings-control-row">
-                      <span className="settings-control-label">Font Size</span>
-                      <FontSizeControl
-                        size={fontSize.size}
-                        onIncrease={fontSize.increase}
-                        onDecrease={fontSize.decrease}
+                <div className="settings-control-row">
+                  <span className="settings-control-label">Font Size</span>
+                  <div className="settings-control-group">
+                    <label className="settings-same-as-global">
+                      <input
+                        type="checkbox"
+                        className="custom-checkbox"
+                        checked={presentationFontSize.sameAsGlobal}
+                        onChange={(e) => presentationFontSize.setSameAsGlobal(e.target.checked)}
                       />
-                    </div>
-
-                    <h4 className="settings-subsection-title">Presentation</h4>
-
-                    <div className="settings-control-row">
-                      <span className="settings-control-label">Theme</span>
-                      <div className="settings-control-group">
-                        <label className="settings-same-as-global">
-                          <input
-                            type="checkbox"
-                            className="custom-checkbox"
-                            checked={presentationTheme.sameAsGlobal}
-                            onChange={(e) => presentationTheme.setSameAsGlobal(e.target.checked)}
-                          />
-                          Same as global
-                        </label>
-                        <ThemeSelector
-                          value={presentationTheme.setting}
-                          onChange={presentationTheme.set}
-                          disabled={presentationTheme.sameAsGlobal}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="settings-control-row">
-                      <span className="settings-control-label">Font Size</span>
-                      <div className="settings-control-group">
-                        <label className="settings-same-as-global">
-                          <input
-                            type="checkbox"
-                            className="custom-checkbox"
-                            checked={presentationFontSize.sameAsGlobal}
-                            onChange={(e) => presentationFontSize.setSameAsGlobal(e.target.checked)}
-                          />
-                          Same as global
-                        </label>
-                        <FontSizeControl
-                          size={presentationFontSize.size}
-                          onIncrease={presentationFontSize.increase}
-                          onDecrease={presentationFontSize.decrease}
-                          disabled={presentationFontSize.sameAsGlobal}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+                      Same as global
+                    </label>
+                    <FontSizeControl
+                      size={presentationFontSize.size}
+                      onIncrease={presentationFontSize.increase}
+                      onDecrease={presentationFontSize.decrease}
+                      disabled={presentationFontSize.sameAsGlobal}
+                    />
+                  </div>
+                </div>
               </>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
