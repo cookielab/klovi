@@ -1,4 +1,8 @@
 import { Electroview } from "electrobun/view";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "../../frontend/App.tsx";
+import { setRPCClient } from "../../frontend/rpc.ts";
 import type { KloviRPC } from "../../shared/rpc-types.ts";
 
 // Import fonts
@@ -33,12 +37,13 @@ const rpc = Electroview.defineRPC<KloviRPC>({
   },
 });
 
-const electroview = new Electroview({ rpc });
+// Electroview constructor initializes WebSocket transport and wires up the RPC
+new Electroview({ rpc });
 
-// Export for use by the RPC client module (src/frontend/rpc.ts, created in Task 8)
-export { electroview };
+// Wire up the RPC client so frontend components can use getRPC()
+// The `rpc` object from defineRPC has the `.request` proxy that matches our RPCClient interface
+setRPCClient(rpc as unknown as import("../../frontend/rpc.ts").RPCClient);
 
 // Mount React app
-// Note: App.tsx still auto-mounts itself currently. This will be refactored in Task 8
-// when App becomes a named export. For now, just import it to trigger the auto-mount.
-import "../../frontend/App.tsx";
+const root = createRoot(document.getElementById("root")!);
+root.render(createElement(App));

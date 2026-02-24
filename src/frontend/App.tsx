@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
 import faviconUrl from "../../favicon.svg";
 import type { GlobalSessionResult } from "../shared/types.ts";
 import { DashboardStats } from "./components/dashboard/DashboardStats.tsx";
@@ -15,10 +14,11 @@ import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import { useFontSize, useTheme } from "./hooks/useTheme.ts";
 import { useViewState } from "./hooks/useViewState.ts";
+import { getRPC } from "./rpc.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./view-state.ts";
 
-function App() {
+export function App() {
   const { setting: themeSetting, cycle: cycleTheme } = useTheme();
   const { size: fontSize, increase, decrease } = useFontSize();
   const { hiddenIds, hide, unhide } = useHiddenProjects();
@@ -38,9 +38,9 @@ function App() {
   const [searchSessions, setSearchSessions] = useState<GlobalSessionResult[]>([]);
 
   const fetchSearchSessions = useCallback(() => {
-    fetch("/api/search/sessions")
-      .then((res) => res.json())
-      .then((data: { sessions: GlobalSessionResult[] }) => setSearchSessions(data.sessions))
+    getRPC()
+      .request.searchSessions({} as Record<string, never>)
+      .then((data) => setSearchSessions(data.sessions))
       .catch(() => {});
   }, []);
 
@@ -108,6 +108,28 @@ function App() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canPresent, togglePresentation, increase, decrease]);
+
+  // Listen for Electrobun menu actions dispatched as CustomEvents
+  useEffect(() => {
+    const handleCycleTheme = () => cycleTheme();
+    const handleIncrease = () => increase();
+    const handleDecrease = () => decrease();
+    const handleTogglePresentation = () => {
+      if (canPresent) togglePresentation();
+    };
+
+    window.addEventListener("klovi:cycleTheme", handleCycleTheme);
+    window.addEventListener("klovi:increaseFontSize", handleIncrease);
+    window.addEventListener("klovi:decreaseFontSize", handleDecrease);
+    window.addEventListener("klovi:togglePresentation", handleTogglePresentation);
+
+    return () => {
+      window.removeEventListener("klovi:cycleTheme", handleCycleTheme);
+      window.removeEventListener("klovi:increaseFontSize", handleIncrease);
+      window.removeEventListener("klovi:decreaseFontSize", handleDecrease);
+      window.removeEventListener("klovi:togglePresentation", handleTogglePresentation);
+    };
+  }, [cycleTheme, increase, decrease, canPresent, togglePresentation]);
 
   const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
   const sidebarContent = getSidebarContent(view, hiddenIds, {
@@ -210,6 +232,3 @@ function App() {
     </>
   );
 }
-
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
