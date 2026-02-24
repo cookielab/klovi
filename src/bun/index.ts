@@ -103,8 +103,8 @@ ApplicationMenu.setApplicationMenu([
     submenu: [
       { label: "Toggle Theme", action: "cycleTheme", accelerator: "t" },
       { type: "separator" },
-      { label: "Increase Font Size", action: "increaseFontSize", accelerator: "+" },
-      { label: "Decrease Font Size", action: "decreaseFontSize", accelerator: "-" },
+      { label: "Increase Font Size", action: "increaseFontSize", accelerator: "plus" },
+      { label: "Decrease Font Size", action: "decreaseFontSize", accelerator: "minus" },
       { type: "separator" },
       { label: "Toggle Presentation", action: "togglePresentation", accelerator: "p" },
     ],
