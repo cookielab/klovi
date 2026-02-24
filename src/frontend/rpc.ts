@@ -8,6 +8,7 @@ import type {
 
 export interface RPCClient {
   request: {
+    acceptRisks: (params: Record<string, never>) => Promise<{ ok: boolean }>;
     getVersion: (params: Record<string, never>) => Promise<{ version: string; commit: string }>;
     getStats: (params: Record<string, never>) => Promise<{ stats: DashboardStats }>;
     getProjects: (params: Record<string, never>) => Promise<{ projects: Project[] }>;

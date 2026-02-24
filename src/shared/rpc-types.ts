@@ -16,6 +16,7 @@ export interface VersionInfo {
 export interface KloviRPC {
   bun: RPCSchema<{
     requests: {
+      acceptRisks: { params: {}; response: { ok: boolean } };
       getVersion: { params: {}; response: VersionInfo };
       getStats: { params: {}; response: { stats: DashboardStats } };
       getProjects: { params: {}; response: { projects: Project[] } };
