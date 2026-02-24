@@ -22,7 +22,7 @@ function getRegistry(): PluginRegistry {
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
-      acceptRisks: () => {
+      acceptRisks: async () => {
         if (!registry) {
           registry = createRegistry();
         }
