@@ -29,6 +29,7 @@ export function SecurityWarning({ onAccept }: SecurityWarningProps) {
         <label className="security-warning-remember">
           <input
             type="checkbox"
+            className="custom-checkbox"
             checked={skipNextTime}
             onChange={(e) => setSkipNextTime(e.target.checked)}
           />

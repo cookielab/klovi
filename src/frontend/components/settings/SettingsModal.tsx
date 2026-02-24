@@ -151,6 +151,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                     <label className="settings-general-label">
                       <input
                         type="checkbox"
+                        className="custom-checkbox"
                         checked={showSecurityWarning}
                         onChange={(e) => {
                           const value = e.target.checked;
@@ -215,6 +216,7 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset }: Plugin
         <label className="settings-plugin-label">
           <input
             type="checkbox"
+            className="custom-checkbox"
             checked={plugin.enabled}
             onChange={(e) => onToggle(plugin.id, e.target.checked)}
           />

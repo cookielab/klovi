@@ -1649,3 +1649,41 @@
   background: var(--bg-primary);
   overflow-y: auto;
 }
+
+/* Custom checkbox */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.custom-checkbox:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.custom-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--text-inverse);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox:hover:not(:checked) {
+  border-color: var(--text-muted);
+}
