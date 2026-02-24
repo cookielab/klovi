@@ -1,5 +1,7 @@
 import type { ElectrobunConfig } from "electrobun";
 
+const isDev = process.argv.includes("dev");
+
 export default {
   app: {
     name: "Klovi",
@@ -22,7 +24,13 @@ export default {
       "src/views/main/index.html": "views/main/index.html",
     },
     mac: {
-      defaultRenderer: "native",
+      bundleCEF: isDev,
+      defaultRenderer: isDev ? "cef" : "native",
+      ...(isDev && {
+        chromiumFlags: {
+          "remote-debugging-port": "9222",
+        },
+      }),
       icons: "icon.iconset",
     },
     linux: {

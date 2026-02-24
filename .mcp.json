@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "chrome-devtools": {
-      "command": "./node_modules/.bin/chrome-devtools-mcp"
+      "command": "./node_modules/.bin/chrome-devtools-mcp",
+      "args": ["--browserUrl", "http://127.0.0.1:9222"]
     }
   }
 }
