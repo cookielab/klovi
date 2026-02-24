@@ -1,4 +1,4 @@
-import { scanStats } from "../parser/stats.ts";
+import { scanStats } from "../../parser/stats.ts";
 
 export async function handleStats(): Promise<Response> {
   const stats = await scanStats();

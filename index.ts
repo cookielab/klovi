@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getClaudeCodeDir } from "./src/plugins/config.ts";
 import {
   createRoutes,
   parseCliArgs,
@@ -8,7 +9,6 @@ import {
   promptSecurityWarning,
   showHelpText,
 } from "./src/server/cli.ts";
-import { getClaudeCodeDir } from "./src/server/config.ts";
 import { startServer } from "./src/server/http.ts";
 
 const { port, host, acceptRisks, showHelp } = parseCliArgs(process.argv);

@@ -1,5 +1,5 @@
+import { parseSubAgentSession } from "../../plugins/claude-code/parser.ts";
 import { parseSessionId } from "../../shared/session-id.ts";
-import { parseSubAgentSession } from "../plugins/claude-code/parser.ts";
 
 export async function handleSubAgent(
   sessionId: string,

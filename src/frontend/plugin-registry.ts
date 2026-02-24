@@ -1,11 +1,8 @@
-import {
-  codexInputFormatters,
-  codexSummaryExtractors,
-} from "../server/plugins/codex-cli/extractors.ts";
+import { codexInputFormatters, codexSummaryExtractors } from "../plugins/codex-cli/extractors.ts";
 import {
   openCodeInputFormatters,
   openCodeSummaryExtractors,
-} from "../server/plugins/opencode/extractors.ts";
+} from "../plugins/opencode/extractors.ts";
 
 export type SummaryExtractor = (input: Record<string, unknown>) => string;
 export type InputFormatter = (input: Record<string, unknown>) => string;

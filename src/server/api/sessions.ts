@@ -1,4 +1,4 @@
-import type { PluginRegistry } from "../plugin-registry.ts";
+import type { PluginRegistry } from "../../plugins/registry.ts";
 
 export async function handleSessions(
   encodedPath: string,

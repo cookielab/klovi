@@ -1,10 +1,10 @@
-import { encodeSessionId, parseSessionId } from "../../shared/session-id.ts";
-import type { PluginRegistry } from "../plugin-registry.ts";
 import {
   findImplSessionId,
   findPlanSessionId,
   loadClaudeSession,
-} from "../plugins/claude-code/parser.ts";
+} from "../../plugins/claude-code/parser.ts";
+import type { PluginRegistry } from "../../plugins/registry.ts";
+import { encodeSessionId, parseSessionId } from "../../shared/session-id.ts";
 
 export async function handleSession(
   sessionId: string,

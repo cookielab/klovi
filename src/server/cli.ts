@@ -1,11 +1,5 @@
 import { readSync } from "node:fs";
-import { handleProjects } from "./api/projects.ts";
-import { handleSearchSessions } from "./api/search.ts";
-import { handleSession } from "./api/session.ts";
-import { handleSessions } from "./api/sessions.ts";
-import { handleStats } from "./api/stats.ts";
-import { handleSubAgent } from "./api/subagent.ts";
-import { handleVersion } from "./api/version.ts";
+import { createRegistry } from "../plugins/auto-discover.ts";
 import {
   getClaudeCodeDir,
   getCodexCliDir,
@@ -13,9 +7,15 @@ import {
   setClaudeCodeDir,
   setCodexCliDir,
   setOpenCodeDir,
-} from "./config.ts";
+} from "../plugins/config.ts";
+import { handleProjects } from "./api/projects.ts";
+import { handleSearchSessions } from "./api/search.ts";
+import { handleSession } from "./api/session.ts";
+import { handleSessions } from "./api/sessions.ts";
+import { handleStats } from "./api/stats.ts";
+import { handleSubAgent } from "./api/subagent.ts";
+import { handleVersion } from "./api/version.ts";
 import type { Route } from "./http.ts";
-import { createRegistry } from "./registry.ts";
 import { appVersion } from "./version.ts";
 
 interface CliArgs {
