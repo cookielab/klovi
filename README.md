@@ -121,4 +121,4 @@ This project was built with love using [Claude Code](https://claude.ai/claude-co
 
 ## Trademark Notice
 
-"Claude" and "Claude Code" are trademarks of Anthropic, PBC. "Codex" is a trademark of OpenAI. This project is not affiliated with, endorsed by, or sponsored by Anthropic, OpenAI, or any other AI tool vendor. All trademarks and registered trademarks are the property of their respective owners.
+"Claude" and "Claude Code" are trademarks of Anthropic, PBC. "OpenAI", "ChatGPT", and "Codex" are trademarks of OpenAI, Inc. "OpenCode" is a trademark of its respective owner. This project is not affiliated with, endorsed by, or sponsored by Anthropic, OpenAI, or any other AI tool vendor. All trademarks and registered trademarks are the property of their respective owners.
