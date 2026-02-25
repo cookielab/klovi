@@ -1,0 +1,20 @@
+{
+  "name": "@cookielab.io/klovi-plugin-opencode",
+  "version": "0.1.0",
+  "description": "OpenCode plugin for Klovi",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": false,
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@cookielab.io/klovi-plugin-core": "workspace:*"
+  }
+}

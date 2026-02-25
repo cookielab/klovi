@@ -11,18 +11,44 @@ Klovi/
 ├── electrobun.config.ts                # Desktop app build config
 ├── docs/architecture.md
 ├── packages/
-│   └── klovi-plugin-core/              # @cookielab.io/klovi-plugin-core
-│       ├── package.json
-│       ├── tsconfig.json
+│   ├── klovi-plugin-core/              # @cookielab.io/klovi-plugin-core
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── ids.ts                  # Canonical plugin IDs + package names
+│   │       ├── plugin-types.ts         # Unified ToolPlugin interfaces
+│   │       ├── plugin-registry.ts      # Shared PluginRegistry implementation
+│   │       ├── session-id.ts           # Session ID codec (pluginId::rawId)
+│   │       ├── session-types.ts        # Shared session/turn model contracts
+│   │       ├── iso-time.ts             # ISO sort helpers
+│   │       ├── plugin-registry.test.ts # Core registry tests (edge cases)
+│   │       ├── ids.test.ts             # Plugin ID/package-name tests
+│   │       └── session-id.test.ts      # Session ID codec tests
+│   ├── klovi-plugin-claude-code/       # @cookielab.io/klovi-plugin-claude-code
+│   │   └── src/
+│   │       ├── index.ts                # Claude Code ToolPlugin + public exports
+│   │       ├── discovery.ts            # Project/session discovery from ~/.claude/projects/
+│   │       ├── parser.ts               # JSONL session parser + sub-agent parsing
+│   │       ├── config.ts               # Data-dir configuration
+│   │       └── *.test.ts               # Plugin-specific tests
+│   ├── klovi-plugin-codex/             # @cookielab.io/klovi-plugin-codex
+│   │   └── src/
+│   │       ├── index.ts                # Codex ToolPlugin + public exports
+│   │       ├── discovery.ts            # Project/session discovery from ~/.codex/sessions/
+│   │       ├── parser.ts               # JSONL event parser
+│   │       ├── session-index.ts        # Session index scanner
+│   │       ├── extractors.ts           # Tool summary extractors/input formatters
+│   │       ├── config.ts               # Data-dir configuration
+│   │       └── *.test.ts               # Plugin-specific tests
+│   └── klovi-plugin-opencode/          # @cookielab.io/klovi-plugin-opencode
 │       └── src/
-│           ├── ids.ts                  # Canonical plugin IDs + package names
-│           ├── plugin-types.ts         # Unified ToolPlugin interfaces
-│           ├── plugin-registry.ts      # Shared PluginRegistry implementation
-│           ├── session-id.ts           # Session ID codec (pluginId::rawId)
-│           ├── iso-time.ts             # ISO sort helpers
-│           ├── plugin-registry.test.ts # Core registry tests (edge cases)
-│           ├── ids.test.ts             # Plugin ID/package-name tests
-│           └── session-id.test.ts      # Session ID codec tests
+│           ├── index.ts                # OpenCode ToolPlugin + public exports
+│           ├── discovery.ts            # Project/session discovery from SQLite DB
+│           ├── parser.ts               # SQLite message/part parser
+│           ├── db.ts                   # SQLite database access
+│           ├── extractors.ts           # Tool summary extractors/input formatters
+│           ├── config.ts               # Data-dir configuration
+│           └── *.test.ts               # Plugin-specific tests
 │
 └── src/
     ├── bun/                            # Main process (Bun runtime, runs in Electrobun)
@@ -56,31 +82,26 @@ Klovi/
     │   ├── auto-discover.ts            # createRegistry(): auto-discovers plugins whose data dirs exist
     │   ├── registry.ts                 # Typed wrapper over core PluginRegistry
     │   ├── registry.test.ts            # Registry tests
-    │   ├── config.ts                   # Directory configuration for all tools
+    │   ├── config.ts                   # Compatibility re-exports of package config helpers
     │   ├── config.test.ts              # Config tests
-    │   ├── shared/
-    │   │   ├── discovery-utils.ts      # Shared discovery helpers
-    │   │   ├── json-utils.ts           # JSON parsing utilities
-    │   │   ├── jsonl-utils.ts          # JSONL file reading utilities
-    │   │   └── text-utils.ts           # Text processing utilities
     │   ├── claude-code/
-    │   │   ├── index.ts                # Claude Code ToolPlugin implementation
-    │   │   ├── discovery.ts            # Project/session discovery from ~/.claude/projects/
-    │   │   ├── parser.ts               # JSONL session parser
+    │   │   ├── index.ts                # Thin wrapper re-exporting package plugin object
+    │   │   ├── discovery.ts            # Thin wrapper re-exporting package discovery API
+    │   │   ├── parser.ts               # Thin wrapper re-exporting package parser API
     │   │   └── discovery.test.ts       # Discovery tests
     │   ├── codex-cli/
-    │   │   ├── index.ts                # Codex CLI ToolPlugin implementation
-    │   │   ├── discovery.ts            # Project/session discovery from ~/.codex/sessions/
-    │   │   ├── parser.ts               # JSONL event parser (turn.started/item.completed)
-    │   │   ├── extractors.ts           # Tool summary extractors & input formatters
-    │   │   ├── session-index.ts        # Session index management
+    │   │   ├── index.ts                # Thin wrapper re-exporting package plugin object
+    │   │   ├── discovery.ts            # Thin wrapper re-exporting package discovery API
+    │   │   ├── parser.ts               # Thin wrapper re-exporting package parser API
+    │   │   ├── extractors.ts           # Thin wrapper re-exporting package formatter helpers
+    │   │   ├── session-index.ts        # Thin wrapper re-exporting package index API
     │   │   └── discovery.test.ts       # Discovery tests
     │   └── opencode/
-    │       ├── index.ts                # OpenCode ToolPlugin implementation
-    │       ├── discovery.ts            # Project/session discovery from SQLite DB
-    │       ├── parser.ts               # SQLite message/part parser
-    │       ├── extractors.ts           # Tool summary extractors & input formatters
-    │       ├── db.ts                   # SQLite database access
+    │       ├── index.ts                # Thin wrapper re-exporting package plugin object
+    │       ├── discovery.ts            # Thin wrapper re-exporting package discovery API
+    │       ├── parser.ts               # Thin wrapper re-exporting package parser API
+    │       ├── extractors.ts           # Thin wrapper re-exporting package formatter helpers
+    │       ├── db.ts                   # Thin wrapper re-exporting package DB API
     │       └── discovery.test.ts       # Discovery tests
     │
     └── frontend/
@@ -154,10 +175,10 @@ Data Sources                            # Each tool stores sessions differently
   ~/.local/share/opencode/opencode.db   # OpenCode: SQLite database (messages + parts)
           │
           ▼
-   Plugin Layer                         # Each plugin implements ToolPlugin from core package
-     plugins/claude-code/               #   discovery.ts + parser.ts
-     plugins/codex-cli/                 #   discovery.ts + parser.ts
-     plugins/opencode/                  #   discovery.ts + parser.ts (SQLite)
+   Plugin Packages                      # Each plugin implements ToolPlugin from core package
+     @cookielab.io/klovi-plugin-claude-code
+     @cookielab.io/klovi-plugin-codex
+     @cookielab.io/klovi-plugin-opencode
           │
           ▼
    @cookielab.io/klovi-plugin-core      # Shared contracts + registry implementation
@@ -330,11 +351,11 @@ Klovi now uses a workspace package, `@cookielab.io/klovi-plugin-core`, as the si
 Current package layout:
 
 - `@cookielab.io/klovi-plugin-core` (implemented)
-- `@cookielab.io/klovi-plugin-claude-code` (planned)
-- `@cookielab.io/klovi-plugin-codex` (planned)
-- `@cookielab.io/klovi-plugin-opencode` (planned)
+- `@cookielab.io/klovi-plugin-claude-code` (implemented)
+- `@cookielab.io/klovi-plugin-codex` (implemented)
+- `@cookielab.io/klovi-plugin-opencode` (implemented)
 
-Until extraction is complete, plugin implementations still live under `src/plugins/*` in the app, but they are typed against core interfaces.
+App-side files under `src/plugins/*` are now thin wrappers used to preserve internal import compatibility while delegating plugin-specific behavior to package exports.
 
 ### ToolPlugin Interface (`packages/klovi-plugin-core/src/plugin-types.ts`)
 

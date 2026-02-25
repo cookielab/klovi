@@ -41,7 +41,10 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+    "@cookielab.io/klovi-plugin-codex": "workspace:*",
     "@cookielab.io/klovi-plugin-core": "workspace:*",
+    "@cookielab.io/klovi-plugin-opencode": "workspace:*",
     "@fontsource/dm-sans": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "electrobun": "^1.14.4",

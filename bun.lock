@@ -5,7 +5,10 @@
     "": {
       "name": "@cookielab.io/klovi",
       "dependencies": {
+        "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+        "@cookielab.io/klovi-plugin-codex": "workspace:*",
         "@cookielab.io/klovi-plugin-core": "workspace:*",
+        "@cookielab.io/klovi-plugin-opencode": "workspace:*",
         "@fontsource/dm-sans": "^5.2.8",
         "@fontsource/ibm-plex-mono": "^5.2.7",
         "electrobun": "^1.14.4",
@@ -27,9 +30,30 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/klovi-plugin-claude-code": {
+      "name": "@cookielab.io/klovi-plugin-claude-code",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cookielab.io/klovi-plugin-core": "workspace:*",
+      },
+    },
+    "packages/klovi-plugin-codex": {
+      "name": "@cookielab.io/klovi-plugin-codex",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cookielab.io/klovi-plugin-core": "workspace:*",
+      },
+    },
     "packages/klovi-plugin-core": {
       "name": "@cookielab.io/klovi-plugin-core",
       "version": "0.1.0",
+    },
+    "packages/klovi-plugin-opencode": {
+      "name": "@cookielab.io/klovi-plugin-opencode",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cookielab.io/klovi-plugin-core": "workspace:*",
+      },
     },
   },
   "patchedDependencies": {
@@ -60,7 +84,13 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.4", "", { "os": "win32", "cpu": "x64" }, "sha512-gnOHKVPFAAPrpoPt2t+Q6FZ7RPry/FDV3GcpU53P3PtLNnQjBmKyN2Vh/JtqXet+H4pme8CC76rScwdjDcT1/A=="],
 
+    "@cookielab.io/klovi-plugin-claude-code": ["@cookielab.io/klovi-plugin-claude-code@workspace:packages/klovi-plugin-claude-code"],
+
+    "@cookielab.io/klovi-plugin-codex": ["@cookielab.io/klovi-plugin-codex@workspace:packages/klovi-plugin-codex"],
+
     "@cookielab.io/klovi-plugin-core": ["@cookielab.io/klovi-plugin-core@workspace:packages/klovi-plugin-core"],
+
+    "@cookielab.io/klovi-plugin-opencode": ["@cookielab.io/klovi-plugin-opencode@workspace:packages/klovi-plugin-opencode"],
 
     "@fontsource/dm-sans": ["@fontsource/dm-sans@5.2.8", "", {}, "sha512-tlovG42m9ESG28WiHpLq3F5umAlm64rv0RkqTbYowRn70e9OlRr5a3yTJhrhrY+k5lftR/OFJjPzOLQzk8EfCA=="],
 
