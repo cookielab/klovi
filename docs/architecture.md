@@ -4,14 +4,25 @@
 
 ```
 Klovi/
-├── electrobun.config.ts                # Electrobun build config (app name, entrypoints, views)
-├── package.json
-├── tsconfig.json                       # Strict mode, noUncheckedIndexedAccess
-├── bunfig.toml                         # Preloads test-setup.ts
-├── biome.json                          # Linter + formatter config
-├── test-setup.ts                       # Registers happy-dom globals + setupMockRPC()
-├── CLAUDE.md                           # Coding guidelines for Claude
-├── CONTENT_TYPES.md                    # JSONL content type catalog
+├── package.json                        # Bun workspace root (@cookielab.io/klovi)
+├── tsconfig.json                       # Strict TS config used across workspace
+├── bunfig.toml                         # Bun config
+├── biome.json                          # Lint + format config
+├── electrobun.config.ts                # Desktop app build config
+├── docs/architecture.md
+├── packages/
+│   └── klovi-plugin-core/              # @cookielab.io/klovi-plugin-core
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+│           ├── ids.ts                  # Canonical plugin IDs + package names
+│           ├── plugin-types.ts         # Unified ToolPlugin interfaces
+│           ├── plugin-registry.ts      # Shared PluginRegistry implementation
+│           ├── session-id.ts           # Session ID codec (pluginId::rawId)
+│           ├── iso-time.ts             # ISO sort helpers
+│           ├── plugin-registry.test.ts # Core registry tests (edge cases)
+│           ├── ids.test.ts             # Plugin ID/package-name tests
+│           └── session-id.test.ts      # Session ID codec tests
 │
 └── src/
     ├── bun/                            # Main process (Bun runtime, runs in Electrobun)
@@ -26,7 +37,7 @@ Klovi/
     │
     ├── shared/
     │   ├── types.ts                    # Shared type definitions (Turn, Session, Project, etc.)
-    │   ├── plugin-types.ts             # ToolPlugin, PluginProject, MergedProject interfaces
+    │   ├── plugin-types.ts             # App-local aliases that re-export core plugin interfaces
     │   ├── rpc-types.ts                # KloviRPC schema (bun requests + webview messages)
     │   ├── content-blocks.ts           # ContentBlock grouping for presentation steps
     │   ├── session-id.ts               # Encode/decode pluginId:rawSessionId
@@ -43,7 +54,7 @@ Klovi/
     │
     ├── plugins/
     │   ├── auto-discover.ts            # createRegistry(): auto-discovers plugins whose data dirs exist
-    │   ├── registry.ts                 # PluginRegistry: merge projects, aggregate sessions
+    │   ├── registry.ts                 # Typed wrapper over core PluginRegistry
     │   ├── registry.test.ts            # Registry tests
     │   ├── config.ts                   # Directory configuration for all tools
     │   ├── config.test.ts              # Config tests
@@ -143,13 +154,18 @@ Data Sources                            # Each tool stores sessions differently
   ~/.local/share/opencode/opencode.db   # OpenCode: SQLite database (messages + parts)
           │
           ▼
-   Plugin Layer                         # Each plugin implements ToolPlugin interface
+   Plugin Layer                         # Each plugin implements ToolPlugin from core package
      plugins/claude-code/               #   discovery.ts + parser.ts
      plugins/codex-cli/                 #   discovery.ts + parser.ts
      plugins/opencode/                  #   discovery.ts + parser.ts (SQLite)
           │
           ▼
-   PluginRegistry                       # Merges projects by resolved filesystem path
+   @cookielab.io/klovi-plugin-core      # Shared contracts + registry implementation
+     plugin-types.ts                    # ToolPlugin, PluginProject, MergedProject, capabilities
+     plugin-registry.ts                 # discoverAllProjects() / listAllSessions()
+          │
+          ▼
+   App PluginRegistry Wrapper           # App-specific typed wrapper over core registry
      auto-discover.ts: createRegistry() # Auto-discovers plugins whose data dirs exist
      registry.ts                        # discoverAllProjects() → MergedProject[]
                                         # listAllSessions() → SessionSummary[]
@@ -309,9 +325,18 @@ Theme selection persisted to `localStorage` key `klovi-theme`. Font size to `klo
 
 ## Plugin System
 
-Klovi uses a plugin architecture to support multiple AI coding tools. Each tool is a `ToolPlugin` that implements a common interface for project discovery, session listing, and session parsing.
+Klovi now uses a workspace package, `@cookielab.io/klovi-plugin-core`, as the single source of truth for plugin contracts and registry behavior.
 
-### ToolPlugin Interface (`src/shared/plugin-types.ts`)
+Current package layout:
+
+- `@cookielab.io/klovi-plugin-core` (implemented)
+- `@cookielab.io/klovi-plugin-claude-code` (planned)
+- `@cookielab.io/klovi-plugin-codex` (planned)
+- `@cookielab.io/klovi-plugin-opencode` (planned)
+
+Until extraction is complete, plugin implementations still live under `src/plugins/*` in the app, but they are typed against core interfaces.
+
+### ToolPlugin Interface (`packages/klovi-plugin-core/src/plugin-types.ts`)
 
 ```typescript
 interface ToolPlugin {
@@ -321,17 +346,31 @@ interface ToolPlugin {
   discoverProjects(): Promise<PluginProject[]>;
   listSessions(nativeId: string): Promise<SessionSummary[]>;
   loadSession(nativeId: string, sessionId: string): Promise<Session>;
+  loadSessionDetail?(nativeId: string, sessionId: string): Promise<{
+    session: Session;
+    planSessionId?: string;
+    implSessionId?: string;
+  }>;
+  loadSubAgentSession?(params: {
+    sessionId: string;
+    project: string;
+    agentId: string;
+  }): Promise<Session>;
   getResumeCommand?(sessionId: string): string | null;
 }
 ```
 
-### PluginRegistry (`src/plugins/registry.ts`)
+`loadSessionDetail` and `loadSubAgentSession` are capability hooks used to keep plugin-specific behavior behind the plugin interface, so RPC handlers do not branch on plugin IDs.
+
+### PluginRegistry (`packages/klovi-plugin-core/src/plugin-registry.ts`)
 
 The `PluginRegistry` class manages registered plugins and handles cross-tool merging:
 
 - **`register(plugin)`** — adds a plugin to the registry
 - **`discoverAllProjects()`** — calls each plugin's `discoverProjects()`, then merges results by `resolvedPath` (so the same filesystem project discovered by multiple tools becomes one `MergedProject` with multiple `sources`)
 - **`listAllSessions(project)`** — aggregates sessions from all sources for a merged project
+
+The app wraps this class in `src/plugins/registry.ts` to bind Klovi's concrete `Session`/`SessionSummary` types.
 
 ### Auto-Discovery (`src/plugins/auto-discover.ts`)
 
@@ -352,3 +391,4 @@ The frontend has its own plugin registry for tool-specific rendering: custom sum
 7. **Chronological content blocks** - assistant turn content stored as a single `contentBlocks` array preserving API order (thinking, text, and tool calls interleaved)
 8. **Grouped presentation steps** - consecutive non-text blocks (thinking, tool calls) are revealed together as one step; each text block is its own step
 9. **Electrobun typed RPC** - compile-time type safety for all communication between main process and webview via `KloviRPC` schema
+10. **Core-first plugin contracts** - plugin interfaces and registry behavior live in `@cookielab.io/klovi-plugin-core`; app code consumes wrappers over this core package
