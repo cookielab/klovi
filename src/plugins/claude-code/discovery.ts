@@ -16,6 +16,7 @@ import { iterateJsonl } from "../shared/jsonl-utils.ts";
 
 const CWD_SCAN_BYTES = 64 * 1024;
 const SESSION_META_SCAN_BYTES = 1024 * 1024;
+const BRACKETED_TEXT_REGEX = /^\[.+\]$/;
 
 async function inspectProjectSessions(
   projectDir: string,
@@ -147,7 +148,7 @@ function isInternalMessage(text: string): boolean {
   return (
     text.startsWith("<local-command") ||
     text.startsWith("<command-name") ||
-    /^\[.+\]$/.test(text.trim())
+    BRACKETED_TEXT_REGEX.test(text.trim())
   );
 }
 

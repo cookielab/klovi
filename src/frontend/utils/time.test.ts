@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { formatFullDateTime, formatRelativeTime, formatTime, formatTimestamp } from "./time.ts";
 
+const FORMATTED_DATE_REGEX = /^[A-Z][a-z]+ \d+, \d{2}:\d{2}$/;
+
 describe("formatTimestamp", () => {
   test("'just now' for recent timestamps", () => {
     const now = new Date().toISOString();
@@ -20,7 +22,7 @@ describe("formatTimestamp", () => {
   test("date string for older timestamps", () => {
     const result = formatTimestamp("2024-02-06T14:30:00Z");
     // Should contain month and time
-    expect(result).toMatch(/^[A-Z][a-z]+ \d+, \d{2}:\d{2}$/);
+    expect(result).toMatch(FORMATTED_DATE_REGEX);
   });
 
   test("empty string for invalid date", () => {

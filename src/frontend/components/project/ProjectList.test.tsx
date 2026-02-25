@@ -4,6 +4,9 @@ import type { Project } from "../../../shared/types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { ProjectList } from "./ProjectList.tsx";
 
+const SESSIONS_COUNT_REGEX = /12 sessions/;
+const SINGULAR_SESSION_REGEX = /1 session[^s]/;
+
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
     encodedPath: "test-project",
@@ -91,8 +94,9 @@ describe("ProjectList", () => {
       />,
     );
     await findByText("Projects (1)");
-    const item = container.querySelector(".list-item")!;
-    fireEvent.click(item);
+    const item = container.querySelector(".list-item");
+    expect(item).not.toBeNull();
+    fireEvent.click(item as Element);
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
@@ -169,8 +173,9 @@ describe("ProjectList", () => {
       />,
     );
     await findByText("Projects (1)");
-    const hideBtn = container.querySelector(".btn-hide")!;
-    fireEvent.click(hideBtn);
+    const hideBtn = container.querySelector(".btn-hide");
+    expect(hideBtn).not.toBeNull();
+    fireEvent.click(hideBtn as Element);
     expect(onHide).toHaveBeenCalledTimes(1);
   });
 
@@ -188,7 +193,7 @@ describe("ProjectList", () => {
         onShowHidden={() => {}}
       />,
     );
-    await findByText(/12 sessions/);
+    await findByText(SESSIONS_COUNT_REGEX);
   });
 
   test("singular session count", async () => {
@@ -205,7 +210,7 @@ describe("ProjectList", () => {
         onShowHidden={() => {}}
       />,
     );
-    await findByText(/1 session[^s]/);
+    await findByText(SINGULAR_SESSION_REGEX);
   });
 
   test("marks selected project as active", async () => {

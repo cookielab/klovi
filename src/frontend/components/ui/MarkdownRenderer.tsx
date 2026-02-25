@@ -5,6 +5,8 @@ import { getRPC } from "../../rpc.ts";
 import { CodeBlock } from "./CodeBlock.tsx";
 
 const FILE_REF_RE = /@([\w./-]+\.\w+)/g;
+const LANGUAGE_CLASS_REGEX = /language-(\w+)/;
+const TRAILING_NEWLINE_REGEX = /\n$/;
 
 function renderTextWithFileRefs(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
@@ -49,8 +51,8 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             );
           },
           code({ className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || "");
-            const text = String(children).replace(/\n$/, "");
+            const match = LANGUAGE_CLASS_REGEX.exec(className || "");
+            const text = String(children).replace(TRAILING_NEWLINE_REGEX, "");
 
             // Inline code (no language class, single line)
             if (!match && !text.includes("\n")) {

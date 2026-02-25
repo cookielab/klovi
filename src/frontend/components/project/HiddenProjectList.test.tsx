@@ -4,6 +4,8 @@ import type { Project } from "../../../shared/types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { HiddenProjectList } from "./HiddenProjectList.tsx";
 
+const SESSIONS_COUNT_REGEX = /8 sessions/;
+
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
     encodedPath: "proj1",
@@ -100,6 +102,6 @@ describe("HiddenProjectList", () => {
     const { findByText } = render(
       <HiddenProjectList hiddenIds={new Set(["proj1"])} onUnhide={() => {}} onBack={() => {}} />,
     );
-    await findByText(/8 sessions/);
+    await findByText(SESSIONS_COUNT_REGEX);
   });
 });

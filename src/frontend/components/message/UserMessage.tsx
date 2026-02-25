@@ -3,6 +3,8 @@ import { formatFullDateTime, formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
 import { UserBashContent } from "./UserBashContent.tsx";
 
+const IMAGE_MEDIA_TYPE_PREFIX_REGEX = /^image\//;
+
 interface UserMessageProps {
   turn: UserTurn;
   isSubAgent?: boolean;
@@ -99,8 +101,9 @@ export function UserMessage({
         {turn.attachments && turn.attachments.length > 0 && (
           <div className="attachments">
             {turn.attachments.map((a, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: attachments have no unique identifier
               <span key={i} className="attachment-badge">
-                image/{a.mediaType.replace(/^image\//, "")}
+                image/{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
               </span>
             ))}
           </div>

@@ -2,6 +2,8 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useTheme } from "../../hooks/useTheme.ts";
 
+const TRAILING_NEWLINE_REGEX = /\n$/;
+
 interface CodeBlockProps {
   language?: string;
   children: string;
@@ -30,7 +32,7 @@ export function CodeBlock({ language, children }: CodeBlockProps) {
           }}
           showLineNumbers={children.split("\n").length > 3}
         >
-          {children.replace(/\n$/, "")}
+          {children.replace(TRAILING_NEWLINE_REGEX, "")}
         </SyntaxHighlighter>
       </div>
     </div>

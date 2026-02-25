@@ -3,6 +3,9 @@ import { fireEvent, render, within } from "@testing-library/react";
 import type { GlobalSessionResult } from "../../../shared/types.ts";
 import { SearchModal } from "./SearchModal.tsx";
 
+const COOKIELAB_KLOVI_REGEX = /Cookielab\/Klovi/;
+const OTHER_PROJECT_REGEX = /other\/project/;
+
 function makeResult(overrides: Partial<GlobalSessionResult> = {}): GlobalSessionResult {
   return {
     sessionId: "abc-123",
@@ -23,7 +26,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     expect(modal.getByPlaceholderText("Search sessions...")).toBeTruthy();
     expect(modal.getByText("Search test message")).toBeTruthy();
@@ -37,7 +40,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     fireEvent.change(modal.getByPlaceholderText("Search sessions..."), {
       target: { value: "login" },
@@ -55,14 +58,14 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     fireEvent.change(modal.getByPlaceholderText("Search sessions..."), {
       target: { value: "klovi" },
     });
 
-    expect(modal.getAllByText(/Cookielab\/Klovi/)).toHaveLength(1);
-    expect(modal.queryByText(/other\/project/)).toBeNull();
+    expect(modal.getAllByText(COOKIELAB_KLOVI_REGEX)).toHaveLength(1);
+    expect(modal.queryByText(OTHER_PROJECT_REGEX)).toBeNull();
   });
 
   test("filters by gitBranch even though branch is not displayed", () => {
@@ -73,7 +76,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     fireEvent.change(modal.getByPlaceholderText("Search sessions..."), {
       target: { value: "feature/search" },
@@ -89,7 +92,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     fireEvent.change(modal.getByPlaceholderText("Search sessions..."), {
       target: { value: "zzzznotfound" },
@@ -116,7 +119,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={onSelect} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     fireEvent.click(modal.getByText("Search test message"));
 
@@ -128,7 +131,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={[makeResult()]} onSelect={mock()} onClose={onClose} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     fireEvent.keyDown(modal.getByPlaceholderText("Search sessions..."), { key: "Escape" });
 
@@ -143,7 +146,7 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={mock()} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     expect(modal.getByText("plan")).toBeTruthy();
     expect(modal.getByText("implementation")).toBeTruthy();
@@ -159,25 +162,25 @@ describe("SearchModal", () => {
     const { container } = render(
       <SearchModal sessions={sessions} onSelect={onSelect} onClose={mock()} />,
     );
-    const modal = within(container.querySelector(".search-modal")!);
+    const modal = within(container.querySelector(".search-modal") as HTMLElement);
 
     const input = modal.getByPlaceholderText("Search sessions...");
     const items = () => container.querySelectorAll("[data-search-item]");
 
     // Initially first item is highlighted
-    expect(items()[0]!.classList.contains("highlighted")).toBe(true);
+    expect(items()[0]?.classList.contains("highlighted")).toBe(true);
 
     // ArrowDown moves to second
     fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(items()[1]!.classList.contains("highlighted")).toBe(true);
+    expect(items()[1]?.classList.contains("highlighted")).toBe(true);
 
     // ArrowDown moves to third
     fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(items()[2]!.classList.contains("highlighted")).toBe(true);
+    expect(items()[2]?.classList.contains("highlighted")).toBe(true);
 
     // ArrowUp moves back to second
     fireEvent.keyDown(input, { key: "ArrowUp" });
-    expect(items()[1]!.classList.contains("highlighted")).toBe(true);
+    expect(items()[1]?.classList.contains("highlighted")).toBe(true);
 
     // Enter selects the highlighted item
     fireEvent.keyDown(input, { key: "Enter" });

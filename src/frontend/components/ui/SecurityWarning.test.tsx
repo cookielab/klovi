@@ -2,6 +2,9 @@ import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { SecurityWarning } from "./SecurityWarning.tsx";
 
+const SENSITIVE_INFO_REGEX = /sensitive information/;
+const FULLY_LOCAL_REGEX = /fully local/;
+
 describe("SecurityWarning", () => {
   afterEach(cleanup);
 
@@ -16,14 +19,14 @@ describe("SecurityWarning", () => {
     const { getByText } = render(
       <SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />,
     );
-    expect(getByText(/sensitive information/)).toBeTruthy();
+    expect(getByText(SENSITIVE_INFO_REGEX)).toBeTruthy();
   });
 
   test("renders fully local text", () => {
     const { getByText } = render(
       <SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />,
     );
-    expect(getByText(/fully local/)).toBeTruthy();
+    expect(getByText(FULLY_LOCAL_REGEX)).toBeTruthy();
   });
 
   test("renders Accept & Continue button", () => {

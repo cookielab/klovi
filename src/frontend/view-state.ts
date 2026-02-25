@@ -2,6 +2,8 @@ import { parseSessionId } from "../shared/session-id.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { getRPC } from "./rpc.ts";
 
+const HASH_PREFIX_REGEX = /^#\/?/;
+
 export type ViewState =
   | { kind: "home" }
   | { kind: "hidden" }
@@ -75,7 +77,7 @@ export async function resolveProjectAndSession(
 }
 
 export async function restoreFromHash(): Promise<ViewState> {
-  const hash = window.location.hash.replace(/^#\/?/, "");
+  const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
   if (!hash) return { kind: "home" };
   if (hash === "hidden") return { kind: "hidden" };
   if (hash === "settings") return { kind: "settings" };
@@ -83,7 +85,7 @@ export async function restoreFromHash(): Promise<ViewState> {
   const parts = hash.split("/");
   const encodedPath = parts[0];
   const sessionId = parts[1];
-  const isSubAgent = parts[2] === "subagent" && parts[3];
+  const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
   if (!encodedPath) return { kind: "home" };
 
   let project: Project | undefined;
@@ -95,8 +97,8 @@ export async function restoreFromHash(): Promise<ViewState> {
   if (!project) return { kind: "home" };
   if (!sessionId) return { kind: "project", project };
 
-  if (isSubAgent) {
-    return { kind: "subagent", project, sessionId, agentId: parts[3]!, presenting: false };
+  if (subAgentId) {
+    return { kind: "subagent", project, sessionId, agentId: subAgentId, presenting: false };
   }
 
   try {

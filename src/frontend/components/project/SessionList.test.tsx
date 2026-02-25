@@ -4,6 +4,10 @@ import type { Project, SessionSummary } from "../../../shared/types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionList } from "./SessionList.tsx";
 
+const OPUS_REGEX = /Opus/;
+const CLAUDE_CODE_REGEX = /Claude Code/;
+const FEATURE_BRANCH_REGEX = /feature\/test/;
+
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
     encodedPath: "test-project",
@@ -66,8 +70,9 @@ describe("SessionList", () => {
       <SessionList project={makeProject()} onSelect={() => {}} onBack={onBack} />,
     );
     await findByText("No sessions found");
-    const backBtn = container.querySelector(".back-btn")!;
-    fireEvent.click(backBtn);
+    const backBtn = container.querySelector(".back-btn");
+    expect(backBtn).not.toBeNull();
+    fireEvent.click(backBtn as Element);
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
@@ -82,8 +87,9 @@ describe("SessionList", () => {
       <SessionList project={makeProject()} onSelect={onSelect} onBack={() => {}} />,
     );
     await findByText("Hello world");
-    const item = container.querySelector(".list-item")!;
-    fireEvent.click(item);
+    const item = container.querySelector(".list-item");
+    expect(item).not.toBeNull();
+    fireEvent.click(item as Element);
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
@@ -109,8 +115,8 @@ describe("SessionList", () => {
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
     );
     await findByText("Hello world");
-    const meta = container.querySelector(".list-item-meta")!;
-    expect(meta.textContent).not.toMatch(/Opus/);
+    const meta = container.querySelector(".list-item-meta");
+    expect(meta?.textContent).not.toMatch(OPUS_REGEX);
   });
 
   test("renders plugin badge with correct class when pluginId is set", async () => {
@@ -122,12 +128,12 @@ describe("SessionList", () => {
     const { container, findByText } = render(
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
     );
-    await findByText(/Claude Code/);
-    const badge = container.querySelector(".plugin-badge")!;
+    await findByText(CLAUDE_CODE_REGEX);
+    const badge = container.querySelector(".plugin-badge");
     expect(badge).not.toBeNull();
-    expect(badge.textContent).toMatch(/Claude Code/);
-    const meta = container.querySelector(".list-item-meta")!;
-    expect(meta.textContent).not.toMatch(/Opus/);
+    expect(badge?.textContent).toMatch(CLAUDE_CODE_REGEX);
+    const meta = container.querySelector(".list-item-meta");
+    expect(meta?.textContent).not.toMatch(OPUS_REGEX);
   });
 
   test("does not render git branch in session list", async () => {
@@ -140,8 +146,8 @@ describe("SessionList", () => {
       <SessionList project={makeProject()} onSelect={() => {}} onBack={() => {}} />,
     );
     await findByText("Hello world");
-    const meta = container.querySelector(".list-item-meta")!;
-    expect(meta.textContent).not.toMatch(/feature\/test/);
+    const meta = container.querySelector(".list-item-meta");
+    expect(meta?.textContent).not.toMatch(FEATURE_BRANCH_REGEX);
   });
 
   test("shows empty message when no sessions", async () => {
@@ -191,6 +197,6 @@ describe("SessionList", () => {
         onBack={() => {}}
       />,
     );
-    expect(container.querySelector(".list-section-title")!.textContent).toBe("test/my-project");
+    expect(container.querySelector(".list-section-title")?.textContent).toBe("test/my-project");
   });
 });

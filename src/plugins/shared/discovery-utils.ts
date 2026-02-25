@@ -3,6 +3,8 @@ import { open, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { sortByIsoDesc } from "../../shared/iso-time.ts";
 
+const WINDOWS_DRIVE_LETTER_REGEX = /^[A-Za-z]\//;
+
 export interface FileWithMtime {
   fileName: string;
   mtime: string;
@@ -68,7 +70,7 @@ export function decodeEncodedPath(encoded: string): string {
   // Windows: "-C-Users-foo-bar" -> "C:/Users/foo/bar"
   if (encoded.startsWith("-")) {
     const withSlashes = encoded.slice(1).replace(/-/g, "/");
-    if (process.platform === "win32" && /^[A-Za-z]\//.test(withSlashes)) {
+    if (process.platform === "win32" && WINDOWS_DRIVE_LETTER_REGEX.test(withSlashes)) {
       return `${withSlashes[0]}:${withSlashes.slice(1)}`;
     }
     return `/${withSlashes}`;

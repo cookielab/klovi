@@ -4,6 +4,8 @@ import type { Session } from "../../../shared/types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionPresentation } from "./SessionPresentation.tsx";
 
+const STEP_REGEX = /Step/;
+
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     sessionId: "session-1",
@@ -49,7 +51,7 @@ describe("SessionPresentation", () => {
     const { container, findByText } = render(
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
     );
-    await findByText(/Step/);
+    await findByText(STEP_REGEX);
     expect(container.querySelector(".presentation-mode")).not.toBeNull();
   });
 
@@ -62,7 +64,7 @@ describe("SessionPresentation", () => {
     const { container, findByText } = render(
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
     );
-    await findByText(/Step/);
+    await findByText(STEP_REGEX);
     expect(container.querySelector(".presentation-progress-bar")).not.toBeNull();
   });
 

@@ -4,6 +4,9 @@ import type { Session } from "../../../shared/types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionView } from "./SessionView.tsx";
 
+const ERROR_PREFIX_REGEX = /Error:/;
+const NETWORK_ERROR_REGEX = /Error:.*Network error/;
+
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     sessionId: "session-1",
@@ -55,7 +58,7 @@ describe("SessionView", () => {
     });
 
     const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
-    await findByText(/Error:/);
+    await findByText(ERROR_PREFIX_REGEX);
   });
 
   test("shows error state on network error", async () => {
@@ -64,7 +67,7 @@ describe("SessionView", () => {
     });
 
     const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
-    await findByText(/Error:.*Network error/);
+    await findByText(NETWORK_ERROR_REGEX);
   });
 
   test("renders both user and assistant messages", async () => {

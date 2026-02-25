@@ -3,6 +3,7 @@ import { useRPC } from "../../hooks/useRpc.ts";
 import { getRPC } from "../../rpc.ts";
 
 const fmt = new Intl.NumberFormat();
+const CLAUDE_MODEL_NAME_REGEX = /claude-(\w+-[\d-]+?)(?:-\d{8})?$/;
 
 function compactNumber(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
@@ -12,7 +13,7 @@ function compactNumber(n: number): string {
 }
 
 function simplifyModelName(model: string): string {
-  const match = model.match(/claude-(\w+-[\d-]+?)(?:-\d{8})?$/);
+  const match = model.match(CLAUDE_MODEL_NAME_REGEX);
   return match?.[1] ?? model;
 }
 
@@ -31,6 +32,7 @@ export function DashboardStats() {
       <div className="dashboard-stats">
         <div className="stats-row stats-row-3">
           {Array.from({ length: 3 }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton items
             <div key={`skeleton-${i}`} className="stat-card stat-card-skeleton" />
           ))}
         </div>

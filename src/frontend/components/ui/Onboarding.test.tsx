@@ -4,6 +4,9 @@ import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { Onboarding } from "./Onboarding.tsx";
 
+const SENSITIVE_INFO_REGEX = /sensitive information/;
+const FULLY_LOCAL_REGEX = /fully local/;
+
 function makePlugin(overrides: Partial<PluginSettingInfo> = {}): PluginSettingInfo {
   return {
     id: "claude-code",
@@ -23,8 +26,8 @@ describe("Onboarding", () => {
     setupMockRPC();
     const { getByText } = render(<Onboarding onComplete={() => {}} />);
     expect(getByText("Session Data Notice")).toBeTruthy();
-    expect(getByText(/sensitive information/)).toBeTruthy();
-    expect(getByText(/fully local/)).toBeTruthy();
+    expect(getByText(SENSITIVE_INFO_REGEX)).toBeTruthy();
+    expect(getByText(FULLY_LOCAL_REGEX)).toBeTruthy();
   });
 
   test("renders Accept & Continue button on step 1", () => {

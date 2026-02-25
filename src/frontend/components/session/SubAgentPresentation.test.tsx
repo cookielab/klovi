@@ -4,6 +4,8 @@ import type { Session } from "../../../shared/types.ts";
 import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SubAgentPresentation } from "./SubAgentPresentation.tsx";
 
+const STEP_REGEX = /Step/;
+
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     sessionId: "session-1",
@@ -60,7 +62,7 @@ describe("SubAgentPresentation", () => {
         onExit={() => {}}
       />,
     );
-    await findByText(/Step/);
+    await findByText(STEP_REGEX);
     expect(container.querySelector(".presentation-mode")).not.toBeNull();
   });
 
