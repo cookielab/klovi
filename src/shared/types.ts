@@ -13,17 +13,17 @@ export interface SessionSummary {
   firstMessage: string;
   model: string;
   gitBranch: string;
-  sessionType?: "plan" | "implementation";
-  pluginId?: string;
+  sessionType?: "plan" | "implementation" | undefined;
+  pluginId?: string | undefined;
 }
 
 export interface Session {
   sessionId: string;
   project: string;
   turns: Turn[];
-  planSessionId?: string;
-  implSessionId?: string;
-  pluginId?: string;
+  planSessionId?: string | undefined;
+  implSessionId?: string | undefined;
+  pluginId?: string | undefined;
 }
 
 export type Turn = UserTurn | AssistantTurn | SystemTurn | ParseErrorTurn;
@@ -38,15 +38,17 @@ export interface UserTurn {
   uuid: string;
   timestamp: string;
   text: string;
-  command?: {
-    name: string;
-    args: string;
-  };
-  attachments?: Attachment[];
-  bashInput?: string;
-  bashStdout?: string;
-  bashStderr?: string;
-  ideOpenedFile?: string;
+  command?:
+    | {
+        name: string;
+        args: string;
+      }
+    | undefined;
+  attachments?: Attachment[] | undefined;
+  bashInput?: string | undefined;
+  bashStdout?: string | undefined;
+  bashStderr?: string | undefined;
+  ideOpenedFile?: string | undefined;
 }
 
 export type ContentBlock =
@@ -60,15 +62,15 @@ export interface AssistantTurn {
   timestamp: string;
   model: string;
   contentBlocks: ContentBlock[];
-  usage?: TokenUsage;
-  stopReason?: string;
+  usage?: TokenUsage | undefined;
+  stopReason?: string | undefined;
 }
 
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
-  cacheReadTokens?: number;
-  cacheCreationTokens?: number;
+  cacheReadTokens?: number | undefined;
+  cacheCreationTokens?: number | undefined;
 }
 
 export interface SystemTurn {
@@ -85,7 +87,7 @@ export interface ParseErrorTurn {
   lineNumber: number;
   rawLine: string;
   errorType: "json_parse" | "invalid_structure";
-  errorDetails?: string;
+  errorDetails?: string | undefined;
 }
 
 export interface ThinkingBlock {
@@ -98,8 +100,8 @@ export interface ToolCallWithResult {
   input: Record<string, unknown>;
   result: string;
   isError: boolean;
-  resultImages?: ToolResultImage[];
-  subAgentId?: string;
+  resultImages?: ToolResultImage[] | undefined;
+  subAgentId?: string | undefined;
 }
 
 export interface ToolResultImage {
@@ -110,7 +112,7 @@ export interface ToolResultImage {
 export interface GlobalSessionResult extends SessionSummary {
   encodedPath: string;
   projectName: string;
-  pluginId?: string;
+  pluginId?: string | undefined;
 }
 
 export interface ModelTokenUsage {

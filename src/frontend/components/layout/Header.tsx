@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 interface HeaderProps {
   title: string;
-  breadcrumb?: string;
-  copyCommand?: string;
-  backHref?: string;
-  sessionType?: "plan" | "implementation";
+  breadcrumb?: string | undefined;
+  copyCommand?: string | undefined;
+  backHref?: string | undefined;
+  sessionType?: "plan" | "implementation" | undefined;
   presentationActive: boolean;
   onTogglePresentation: () => void;
   showPresentationToggle: boolean;

@@ -12,7 +12,8 @@ export function shortModel(model: string): string {
   // Claude: claude-opus-4-6, claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001
   const claudeMatch = model.match(CLAUDE_MODEL_REGEX);
   if (claudeMatch) {
-    const family = claudeMatch[1]?.charAt(0).toUpperCase() + claudeMatch[1]?.slice(1);
+    const rawFamily = claudeMatch[1] ?? "";
+    const family = rawFamily.charAt(0).toUpperCase() + rawFamily.slice(1);
     const major = claudeMatch[2] ?? "";
     const minor = claudeMatch[3];
     return minor ? `${family} ${major}.${minor}` : `${family} ${major}`;
@@ -21,7 +22,7 @@ export function shortModel(model: string): string {
   // GPT: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
   const gptMatch = model.match(GPT_MODEL_REGEX);
   if (gptMatch) {
-    return gptMatch[1]?.replace("gpt-", "GPT-");
+    return gptMatch[1]?.replace("gpt-", "GPT-") ?? model;
   }
 
   // OpenAI reasoning: o1, o3, o3-mini, o4-mini

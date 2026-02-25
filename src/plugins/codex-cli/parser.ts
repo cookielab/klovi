@@ -57,16 +57,18 @@ type CodexItem =
 
 export interface CodexEvent {
   type: string;
-  item?: CodexItem;
-  text?: string;
-  callId?: string;
-  toolName?: string;
-  toolInput?: Record<string, unknown>;
-  usage?: {
-    input_tokens?: number;
-    cached_input_tokens?: number;
-    output_tokens?: number;
-  };
+  item?: CodexItem | undefined;
+  text?: string | undefined;
+  callId?: string | undefined;
+  toolName?: string | undefined;
+  toolInput?: Record<string, unknown> | undefined;
+  usage?:
+    | {
+        input_tokens?: number | undefined;
+        cached_input_tokens?: number | undefined;
+        output_tokens?: number | undefined;
+      }
+    | undefined;
 }
 
 interface EnvelopePayload {

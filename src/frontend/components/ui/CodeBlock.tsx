@@ -5,7 +5,7 @@ import { useTheme } from "../../hooks/useTheme.ts";
 const TRAILING_NEWLINE_REGEX = /\n$/;
 
 interface CodeBlockProps {
-  language?: string;
+  language?: string | undefined;
   children: string;
 }
 

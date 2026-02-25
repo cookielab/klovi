@@ -8,10 +8,10 @@ import { ToolCall } from "./ToolCall.tsx";
 
 interface AssistantMessageProps {
   turn: AssistantTurn;
-  visibleSubSteps?: number; // how many sub-steps to show (presentation mode)
-  sessionId?: string;
-  project?: string;
-  pluginId?: string;
+  visibleSubSteps?: number | undefined; // how many sub-steps to show (presentation mode)
+  sessionId?: string | undefined;
+  project?: string | undefined;
+  pluginId?: string | undefined;
 }
 
 function contentBlockKey(block: ContentBlock, index: number): string {

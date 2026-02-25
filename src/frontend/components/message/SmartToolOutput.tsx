@@ -8,7 +8,7 @@ import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCall.tsx";
 interface SmartToolOutputProps {
   output: string;
   isError: boolean;
-  resultImages?: ToolResultImage[];
+  resultImages?: ToolResultImage[] | undefined;
 }
 
 export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutputProps) {

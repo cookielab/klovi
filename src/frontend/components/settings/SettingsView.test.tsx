@@ -180,9 +180,9 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     const { findAllByText } = render(<SettingsView {...props} />);
-    const darkButtons = await findAllByText("Dark");
+    const [darkButton] = await findAllByText("Dark");
     // First Dark button is in Global section
-    fireEvent.click(darkButtons[0]);
+    fireEvent.click(darkButton as HTMLElement);
     expect(props.theme.set).toHaveBeenCalledWith("dark");
   });
 
@@ -192,11 +192,11 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     const { findAllByText } = render(<SettingsView {...props} />);
-    const plusButtons = await findAllByText("A+");
-    const minusButtons = await findAllByText("A-");
-    fireEvent.click(plusButtons[0]);
+    const [plusButton] = await findAllByText("A+");
+    const [minusButton] = await findAllByText("A-");
+    fireEvent.click(plusButton as HTMLElement);
     expect(props.fontSize.increase).toHaveBeenCalled();
-    fireEvent.click(minusButtons[0]);
+    fireEvent.click(minusButton as HTMLElement);
     expect(props.fontSize.decrease).toHaveBeenCalled();
   });
 
@@ -252,11 +252,11 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     const { findAllByLabelText } = render(<SettingsView {...props} />);
-    const sameLabels = await findAllByLabelText("Same as global");
+    const [themeLabel, fontSizeLabel] = await findAllByLabelText("Same as global");
     // First is theme, second is font size
-    fireEvent.click(sameLabels[0]);
+    fireEvent.click(themeLabel as HTMLElement);
     expect(props.presentationTheme.setSameAsGlobal).toHaveBeenCalledWith(false);
-    fireEvent.click(sameLabels[1]);
+    fireEvent.click(fontSizeLabel as HTMLElement);
     expect(props.presentationFontSize.setSameAsGlobal).toHaveBeenCalledWith(false);
   });
 

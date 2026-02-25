@@ -10,7 +10,7 @@ interface VersionInfo {
 
 interface SidebarProps {
   children: React.ReactNode;
-  onSearchClick?: () => void;
+  onSearchClick?: (() => void) | undefined;
 }
 
 export function Sidebar({ children, onSearchClick }: SidebarProps) {

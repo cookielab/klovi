@@ -9,9 +9,11 @@ export type PluginSettings = {
       dataDir: string | null;
     };
   };
-  general?: {
-    showSecurityWarning?: boolean;
-  };
+  general?:
+    | {
+        showSecurityWarning?: boolean | undefined;
+      }
+    | undefined;
 };
 
 export function getDefaultSettings(): PluginSettings {

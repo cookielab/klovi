@@ -12,9 +12,9 @@ export const MAX_THINKING_PREVIEW = 100;
 
 interface ToolCallProps {
   call: ToolCallWithResult;
-  sessionId?: string;
-  project?: string;
-  pluginId?: string;
+  sessionId?: string | undefined;
+  project?: string | undefined;
+  pluginId?: string | undefined;
 }
 
 function isEditWithDiff(call: ToolCallWithResult): boolean {
@@ -37,7 +37,13 @@ function isJsonFallbackInput(call: ToolCallWithResult, pluginId?: string): boole
   return !hasInputFormatter(call, pluginId);
 }
 
-function DefaultToolContent({ call, pluginId }: { call: ToolCallWithResult; pluginId?: string }) {
+function DefaultToolContent({
+  call,
+  pluginId,
+}: {
+  call: ToolCallWithResult;
+  pluginId?: string | undefined;
+}) {
   const formattedInput = formatToolInput(call, pluginId);
   const jsonInput = isJsonFallbackInput(call, pluginId);
 

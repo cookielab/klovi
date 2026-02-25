@@ -9,8 +9,8 @@ interface PresentationShellProps {
   onExit: () => void;
   sessionId: string;
   project: string;
-  pluginId?: string;
-  isSubAgent?: boolean;
+  pluginId?: string | undefined;
+  isSubAgent?: boolean | undefined;
 }
 
 export function PresentationShell({

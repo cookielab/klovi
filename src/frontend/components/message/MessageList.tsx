@@ -7,13 +7,13 @@ import { UserMessage } from "./UserMessage.tsx";
 
 interface MessageListProps {
   turns: Turn[];
-  visibleSubSteps?: Map<number, number>;
-  sessionId?: string;
-  project?: string;
-  pluginId?: string;
-  isSubAgent?: boolean;
-  planSessionId?: string;
-  implSessionId?: string;
+  visibleSubSteps?: Map<number, number> | undefined;
+  sessionId?: string | undefined;
+  project?: string | undefined;
+  pluginId?: string | undefined;
+  isSubAgent?: boolean | undefined;
+  planSessionId?: string | undefined;
+  implSessionId?: string | undefined;
 }
 
 function renderTurn(

@@ -7,10 +7,10 @@ const IMAGE_MEDIA_TYPE_PREFIX_REGEX = /^image\//;
 
 interface UserMessageProps {
   turn: UserTurn;
-  isSubAgent?: boolean;
-  planSessionId?: string;
-  implSessionId?: string;
-  project?: string;
+  isSubAgent?: boolean | undefined;
+  planSessionId?: string | undefined;
+  implSessionId?: string | undefined;
+  project?: string | undefined;
 }
 
 const STATUS_RE = /^\[.+\]$/;
