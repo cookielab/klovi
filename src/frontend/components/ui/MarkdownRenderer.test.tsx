@@ -15,14 +15,15 @@ describe("MarkdownRenderer", () => {
     expect(strong!.textContent).toBe("bold");
   });
 
-  test("renders markdown links with target=_blank", () => {
+  test("renders external links with onClick handler", () => {
     const { container } = render(
       <MarkdownRenderer content="Visit [example](https://example.com)" />,
     );
     const link = container.querySelector("a");
     expect(link).not.toBeNull();
-    expect(link!.getAttribute("target")).toBe("_blank");
-    expect(link!.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(link!.getAttribute("href")).toBe("https://example.com");
+    // External links use onClick to open via Electrobun's openExternal RPC
+    expect(link!.onclick).not.toBeNull();
   });
 
   test("renders file references with @", () => {

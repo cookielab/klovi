@@ -1,6 +1,7 @@
 import React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getRPC } from "../../rpc.ts";
 import { CodeBlock } from "./CodeBlock.tsx";
 
 const FILE_REF_RE = /@([\w./-]+\.\w+)/g;
@@ -62,10 +63,22 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
             return <CodeBlock language={match?.[1]}>{text}</CodeBlock>;
           },
-          // Open external links in new tab
+          // Open external links via Electrobun
           a({ href, children, ...props }) {
+            const isExternal = href?.startsWith("http://") || href?.startsWith("https://");
             return (
-              <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+              <a
+                href={href}
+                {...(isExternal
+                  ? {
+                      onClick: (e: React.MouseEvent) => {
+                        e.preventDefault();
+                        if (href) getRPC().request.openExternal({ url: href });
+                      },
+                    }
+                  : {})}
+                {...props}
+              >
                 {children}
               </a>
             );

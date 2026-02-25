@@ -75,6 +75,10 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         registry = createRegistry(loadSettings(getSettingsPath()));
         return result;
       },
+      openExternal: (params) => {
+        Utils.openExternal(params.url);
+        return { ok: true };
+      },
       browseDirectory: async (params) => {
         const paths = await Utils.openFileDialog({
           startingFolder: params.startingFolder ?? "~/",

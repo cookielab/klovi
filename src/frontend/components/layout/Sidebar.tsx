@@ -43,8 +43,12 @@ export function Sidebar({ children, onSearchClick }: SidebarProps) {
         Made by{" "}
         <a
           href="https://cookielab.io?utm_source=opensource&utm_medium=klovi"
-          target="_blank"
-          rel="noopener noreferrer"
+          onClick={(e) => {
+            e.preventDefault();
+            getRPC().request.openExternal({
+              url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
+            });
+          }}
         >
           cookielab.io
         </a>
