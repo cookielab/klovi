@@ -30,7 +30,7 @@ describe("AppGate", () => {
     await findByText("Welcome to Klovi");
   });
 
-  test("first launch: saves showSecurityWarning=false on complete", async () => {
+  test("first launch: does not disable warning unless checkbox is checked", async () => {
     const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
     setupMockRPC({
       isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
@@ -42,6 +42,21 @@ describe("AppGate", () => {
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
     fireEvent.click(startBtn);
+    expect(updateGeneralSettings).not.toHaveBeenCalled();
+  });
+
+  test("first launch: checking dont-show in step 1 saves setting", async () => {
+    const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
+    setupMockRPC({
+      isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
+      updateGeneralSettings,
+      getPluginSettings: () => Promise.resolve({ plugins: [] }),
+    });
+    const { findByRole, findByLabelText } = render(<AppGate />);
+    const checkbox = await findByLabelText("Don't show this again");
+    fireEvent.click(checkbox);
+    const nextBtn = await findByRole("button", { name: "Accept & Continue" });
+    fireEvent.click(nextBtn);
     expect(updateGeneralSettings).toHaveBeenCalledWith({ showSecurityWarning: false });
   });
 

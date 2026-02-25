@@ -357,10 +357,6 @@ export function AppGate() {
       .request.acceptRisks({} as Record<string, never>)
       .then(() => setAccepted(true))
       .catch(() => setAccepted(true));
-
-    getRPC()
-      .request.updateGeneralSettings({ showSecurityWarning: false })
-      .catch(() => {});
   }, []);
 
   const handleSecurityAccept = useCallback(() => {
