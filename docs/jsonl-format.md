@@ -147,7 +147,7 @@ Slash commands are encoded in user messages as XML:
 <command-args>-m "fix bug"</command-args>
 ```
 
-Parsed by `packages/klovi-plugin-claude-code/src/command-message.ts` and displayed as a green command badge.
+Parsed by `packages/klovi-plugin-claude-code/src/command-message.ts` and displayed as a dedicated command row in the message UI.
 
 ## Metadata Fields
 

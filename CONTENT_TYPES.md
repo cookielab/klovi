@@ -8,9 +8,9 @@ Catalog of all distinct content types found in AI coding session data and their 
 
 | Role | Current Status | Visual Treatment |
 |------|---------------|-----------------|
-| `user` | Handled | Green left border, light green bg |
-| `assistant` | Handled | Gray bg, light border |
-| `system` | Handled | Yellow bg, light border |
+| `user` | Handled | Turn badge + user-accent left border |
+| `assistant` | Handled | Turn badge + assistant-accent left border |
+| `system` | Handled | Turn badge + muted system styling |
 
 ---
 
@@ -26,7 +26,7 @@ Regular markdown text. Rendered with `react-markdown` + GFM.
 | `@filepath.ext` references | Handled | Green badge with border |
 | Inline code | Handled | Gray bg, rounded |
 | Fenced code blocks | Handled | Syntax-highlighted with language label |
-| Links | Handled | Open in new tab |
+| Links | Handled | External links are opened via native browser integration |
 | Tables (GFM) | Handled | Standard markdown table |
 
 ### 2.2 Thinking (`type: "thinking"`)
@@ -54,7 +54,7 @@ Invocation of a tool. Matched with `tool_result` by `id` / `tool_use_id`.
 
 ---
 
-## 3. Tools (37 unique names found)
+## 3. Tools (representative set)
 
 ### 3.1 Core File Tools
 
@@ -116,9 +116,9 @@ Invocation of a tool. Matched with `tool_result` by `id` / `tool_use_id`.
 
 ### 3.8 MCP Tools (Model Context Protocol)
 
-Prefixed with `mcp__<server>__<action>`. Found in sessions:
+Prefixed with `mcp__<server>__<action>`. Examples seen in sessions:
 
-**Chrome DevTools (14 tools):**
+**Chrome DevTools tools (examples):**
 - `mcp__chrome-devtools__click`
 - `mcp__chrome-devtools__evaluate_script`
 - `mcp__chrome-devtools__fill`
@@ -185,7 +185,7 @@ Detected by structured XML tags in content:
 <command-args>-m "fix bug"</command-args>
 ```
 
-**Status:** Handled (green badge with `>` prefix)
+**Status:** Handled (rendered as a command call row with command badge and label)
 
 ### 5.3 Image Attachments
 Content blocks of `type: "image"` within user messages:

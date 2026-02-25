@@ -73,7 +73,7 @@ Klovi is a Bun workspace monorepo with these key packages:
 - Tool result images rendered as clickable thumbnails with fullscreen lightbox
 - File references (`@filepath.ext`) highlighted as green badges
 - Image attachments displayed as media-type badges
-- Slash commands shown with green `> /command` badge
+- Slash commands shown in a dedicated command row
 
 **Presentation Mode**
 - Step-through navigation: each conversation turn is a step, assistant turns have sub-steps (each text block is a step, consecutive non-text blocks like thinking and tool calls are grouped together)
@@ -83,9 +83,9 @@ Klovi is a Bun workspace monorepo with these key packages:
 - Fade-in animation for each revealed step
 
 **Theme & Display**
-- Light and dark themes (toggle in header or via View menu, persisted to localStorage)
+- System/light/dark theme support (configurable in Settings and via View menu action)
 - System theme auto-detection
-- Font size control (+/- buttons or via View menu) for projector readability
+- Font size control (Settings controls, keyboard `+`/`-`, and View menu actions) for projector readability
 - Native application menu with keyboard shortcuts
 
 ## Scripts
@@ -111,7 +111,7 @@ Klovi is a Bun workspace monorepo with these key packages:
 - `@cookielab.io/klovi-ui` for feature UI modules
 - `@cookielab.io/klovi-design-system` for primitives/tokens/globals
 - react-markdown + remark-gfm
-- react-syntax-highlighter (Prism, oneDark theme)
+- react-syntax-highlighter (Prism themes: oneDark/oneLight)
 - CSS custom properties + CSS modules (no CSS framework)
 - Biome for linting and formatting
 - happy-dom + @testing-library/react for tests
