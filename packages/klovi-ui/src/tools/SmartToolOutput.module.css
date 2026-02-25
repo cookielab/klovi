@@ -1,0 +1,52 @@
+.toolSectionLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.toolCallOutput {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.toolCallError {
+  color: var(--error);
+}
+
+.toolCallTruncated {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.toolResultImages {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.toolResultImageBtn {
+  all: unset;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.toolResultImageBtn:hover .toolResultImage {
+  border-color: var(--accent);
+}
+
+.toolResultImage {
+  max-height: 200px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  object-fit: contain;
+  transition: border-color 0.15s;
+}

@@ -4,7 +4,7 @@ import styles from "./Collapsible.module.css";
 
 interface CollapsibleProps {
   title: React.ReactNode;
-  defaultOpen?: boolean;
+  defaultOpen?: boolean | undefined;
   children: React.ReactNode;
 }
 

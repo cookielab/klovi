@@ -1,0 +1,77 @@
+.toolCall {
+  margin: 2px 0;
+}
+
+.toolCallName {
+  font-weight: 600;
+  color: var(--role-tool);
+  font-size: 0.82rem;
+}
+
+.toolCallInput {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.toolCallError {
+  color: var(--error);
+}
+
+.toolCallSummary {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.toolSectionLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.toolMcpServer {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.toolSkillBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.subagentLink {
+  margin-left: 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.subagentLink:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
