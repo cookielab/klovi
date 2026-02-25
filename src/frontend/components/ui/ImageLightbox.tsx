@@ -25,7 +25,12 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
   }, [handleClose]);
 
   return (
-    <div className={`lightbox-overlay ${visible ? "lightbox-visible" : ""}`} onClick={handleClose}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: lightbox backdrop dismiss
+    <div
+      className={`lightbox-overlay ${visible ? "lightbox-visible" : ""}`}
+      role="presentation"
+      onClick={handleClose}
+    >
       <img className="lightbox-image" src={src} alt="Full size preview" />
     </div>
   );

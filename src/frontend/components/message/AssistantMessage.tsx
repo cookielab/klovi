@@ -14,6 +14,12 @@ interface AssistantMessageProps {
   pluginId?: string;
 }
 
+function contentBlockKey(block: ContentBlock, index: number): string {
+  if (block.type === "tool_call") return `tool-${block.call.toolUseId}`;
+  if (block.type === "thinking") return `thinking-${block.block.text.slice(0, 40)}-${index}`;
+  return `text-${index}`;
+}
+
 function renderGroup(
   group: ContentBlock[],
   sessionId: string | undefined,
@@ -21,15 +27,16 @@ function renderGroup(
   pluginId: string | undefined,
 ) {
   return group.map((block, i) => {
+    const key = contentBlockKey(block, i);
     if (block.type === "thinking") {
-      return <ThinkingBlock key={`thinking-${i}`} block={block.block} />;
+      return <ThinkingBlock key={key} block={block.block} />;
     }
     if (block.type === "text") {
-      return <MarkdownRenderer key={`text-${i}`} content={block.text} />;
+      return <MarkdownRenderer key={key} content={block.text} />;
     }
     return (
       <ToolCall
-        key={`tool-${block.call.toolUseId}`}
+        key={key}
         call={block.call}
         sessionId={sessionId}
         project={project}
@@ -101,6 +108,7 @@ export function AssistantMessage({
           <div className="exec-tree">
             {treeGroups.map((group, i) => (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: positional groups are never reordered
                 key={`tree-${i}`}
                 className={`tree-node${isPresentation && i === treeGroups.length - 1 ? " step-enter" : ""}`}
               >
@@ -111,6 +119,7 @@ export function AssistantMessage({
         )}
         {flatGroups.map((group, i) => (
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: positional groups are never reordered
             key={`flat-${i}`}
             className={isPresentation && i === flatGroups.length - 1 ? "step-enter" : ""}
           >

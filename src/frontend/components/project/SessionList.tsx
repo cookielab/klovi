@@ -23,9 +23,9 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
 
   return (
     <div>
-      <div className="back-btn" onClick={onBack}>
+      <button type="button" className="back-btn" onClick={onBack}>
         ← Projects
-      </div>
+      </button>
       <div className="list-section-title">{displayName}</div>
       {loading && <div className="loading">Loading sessions...</div>}
       {error && (
@@ -39,7 +39,8 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
       {!loading &&
         !error &&
         sessions.map((session) => (
-          <div
+          <button
+            type="button"
             key={session.sessionId}
             className={`list-item ${selectedId === session.sessionId ? "active" : ""}${session.sessionType ? ` ${session.sessionType}` : ""}`}
             onClick={() => onSelect(session)}
@@ -58,7 +59,7 @@ export function SessionList({ project, onSelect, onBack, selectedId }: SessionLi
                 {formatTime(session.timestamp)}
               </time>
             </div>
-          </div>
+          </button>
         ))}
       {!loading && !error && sessions.length === 0 && (
         <div className="empty-list-message">No sessions found</div>

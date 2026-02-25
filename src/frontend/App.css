@@ -330,6 +330,13 @@
   border-color: var(--accent);
 }
 
+button.list-item {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left;
+}
+
 .list-item {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
@@ -407,6 +414,10 @@
 
 /* Hidden projects link */
 .hidden-projects-link {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
   padding: 12px;
   font-size: 0.8rem;
@@ -428,6 +439,7 @@
 
 /* Back button */
 .back-btn {
+  all: unset;
   cursor: pointer;
   color: var(--accent);
   font-size: 0.85rem;
@@ -1178,17 +1190,22 @@
   margin-top: 8px;
 }
 
+.tool-result-image-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.tool-result-image-btn:hover .tool-result-image {
+  border-color: var(--accent);
+}
+
 .tool-result-image {
   max-height: 200px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
-  cursor: pointer;
   object-fit: contain;
   transition: border-color 0.15s;
-}
-
-.tool-result-image:hover {
-  border-color: var(--accent);
 }
 
 /* Image lightbox */

@@ -34,13 +34,19 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
       {resultImages && resultImages.length > 0 && (
         <div className="tool-result-images">
           {resultImages.map((img, i) => (
-            <img
+            <button
+              // biome-ignore lint/suspicious/noArrayIndexKey: images have no stable unique identifier
               key={i}
-              className="tool-result-image"
-              src={`data:${img.mediaType};base64,${img.data}`}
-              alt={`Tool result ${i + 1}`}
+              type="button"
+              className="tool-result-image-btn"
               onClick={() => setLightboxSrc(`data:${img.mediaType};base64,${img.data}`)}
-            />
+            >
+              <img
+                className="tool-result-image"
+                src={`data:${img.mediaType};base64,${img.data}`}
+                alt={`Tool result ${i + 1}`}
+              />
+            </button>
           ))}
         </div>
       )}

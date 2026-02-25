@@ -80,8 +80,10 @@ export function SearchModal({ sessions, onSelect, onClose }: SearchModalProps) {
   );
 
   return (
-    <div className="search-overlay" onMouseDown={onClose}>
-      <div className="search-modal" onMouseDown={(e) => e.stopPropagation()}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop dismiss
+    <div className="search-overlay" role="presentation" onMouseDown={onClose}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation on modal body */}
+      <div className="search-modal" role="presentation" onMouseDown={(e) => e.stopPropagation()}>
         <div className="search-input-wrapper">
           <input
             ref={inputRef}
@@ -96,15 +98,19 @@ export function SearchModal({ sessions, onSelect, onClose }: SearchModalProps) {
             onKeyDown={handleKeyDown}
           />
         </div>
-        <div className="search-results" ref={resultsRef}>
+        <div className="search-results" role="listbox" ref={resultsRef}>
           {filtered.length === 0 ? (
             <div className="search-empty">No results found</div>
           ) : (
             filtered.map((result, index) => (
+              // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard nav handled by input onKeyDown
               <div
                 key={`${result.encodedPath}-${result.sessionId}`}
                 className={`search-result-item ${index === highlightedIndex ? "highlighted" : ""}`}
                 data-search-item
+                role="option"
+                tabIndex={-1}
+                aria-selected={index === highlightedIndex}
                 onClick={() => handleSelect(result)}
                 onMouseEnter={() => setHighlightedIndex(index)}
               >

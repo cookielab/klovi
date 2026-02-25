@@ -56,16 +56,24 @@ export function ProjectList({
       />
       <div className="list-section-title">Projects ({filtered.length})</div>
       {filtered.map((project) => (
+        // biome-ignore lint/a11y/useSemanticElements: contains nested button, cannot be a <button>
         <div
           key={project.encodedPath}
           className={`list-item list-item-with-action ${selected === project.encodedPath ? "active" : ""}`}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelect(project)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelect(project);
+            }
+          }}
         >
           <div className="list-item-content">
             <div className="list-item-title">{projectDisplayName(project)}</div>
             <div className="list-item-meta">
-              {project.sessionCount} session{project.sessionCount !== 1 ? "s" : ""}
-              {" · "}
+              {project.sessionCount} session{project.sessionCount !== 1 ? "s" : ""} ·{" "}
               <time
                 dateTime={project.lastActivity}
                 title={formatFullDateTime(project.lastActivity)}
@@ -89,9 +97,9 @@ export function ProjectList({
       ))}
       {filtered.length === 0 && <div className="empty-list-message">No projects found</div>}
       {hiddenIds.size > 0 && (
-        <div className="hidden-projects-link" onClick={onShowHidden}>
+        <button type="button" className="hidden-projects-link" onClick={onShowHidden}>
           {hiddenIds.size} hidden project{hiddenIds.size !== 1 ? "s" : ""}
-        </div>
+        </button>
       )}
     </div>
   );

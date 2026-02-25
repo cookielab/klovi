@@ -32,9 +32,9 @@ export function HiddenProjectList({ hiddenIds, onUnhide, onBack }: HiddenProject
 
   return (
     <div className="hidden-projects-page">
-      <div className="back-btn" onClick={onBack}>
+      <button type="button" className="back-btn" onClick={onBack}>
         ← Back to projects
-      </div>
+      </button>
       <h2 style={{ margin: "16px 0 12px", fontSize: "1.1rem", color: "var(--text-primary)" }}>
         Hidden Projects
       </h2>
