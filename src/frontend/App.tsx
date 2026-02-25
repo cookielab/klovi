@@ -14,6 +14,7 @@ import type { SettingsTab } from "./components/settings/SettingsSidebar.tsx";
 import { SettingsView } from "./components/settings/SettingsView.tsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { Onboarding } from "./components/ui/Onboarding.tsx";
+import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import {
   resolveTheme,
@@ -308,27 +309,38 @@ export function AppGate() {
   useTheme();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [screen, setScreen] = useState<"onboarding" | "security-warning" | "none">("onboarding");
 
   useEffect(() => {
     getRPC()
-      .request.getGeneralSettings({} as Record<string, never>)
+      .request.isFirstLaunch({} as Record<string, never>)
       .then((data) => {
-        if (!data.showSecurityWarning) {
-          setShowOnboarding(false);
-          return getRPC()
-            .request.acceptRisks({} as Record<string, never>)
-            .then(() => setAccepted(true))
-            .catch(() => setAccepted(true));
+        if (data.firstLaunch) {
+          setScreen("onboarding");
+          return;
         }
+        return getRPC()
+          .request.getGeneralSettings({} as Record<string, never>)
+          .then((settings) => {
+            if (settings.showSecurityWarning) {
+              setScreen("security-warning");
+            } else {
+              setScreen("none");
+              return getRPC()
+                .request.acceptRisks({} as Record<string, never>)
+                .then(() => setAccepted(true))
+                .catch(() => setAccepted(true));
+            }
+          });
       })
       .catch(() => {
-        // On failure, show onboarding as usual
+        // On failure, assume first launch (safe fallback)
+        setScreen("onboarding");
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const handleComplete = useCallback(() => {
+  const handleOnboardingComplete = useCallback(() => {
     getRPC()
       .request.acceptRisks({} as Record<string, never>)
       .then(() => setAccepted(true))
@@ -339,12 +351,31 @@ export function AppGate() {
       .catch(() => {});
   }, []);
 
+  const handleSecurityAccept = useCallback(() => {
+    getRPC()
+      .request.acceptRisks({} as Record<string, never>)
+      .then(() => setAccepted(true))
+      .catch(() => setAccepted(true));
+  }, []);
+
+  const handleDontShowAgain = useCallback(() => {
+    getRPC()
+      .request.updateGeneralSettings({ showSecurityWarning: false })
+      .catch(() => {});
+  }, []);
+
   if (loading) {
     return null;
   }
 
-  if (!accepted && showOnboarding) {
-    return <Onboarding onComplete={handleComplete} />;
+  if (!accepted && screen === "onboarding") {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
+  if (!accepted && screen === "security-warning") {
+    return (
+      <SecurityWarning onAccept={handleSecurityAccept} onDontShowAgain={handleDontShowAgain} />
+    );
   }
 
   if (!accepted) {
