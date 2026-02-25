@@ -1,7 +1,7 @@
 import { existsSync, unlinkSync } from "node:fs";
 import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
-import { getClaudeCodeDir, getCodexCliDir, getOpenCodeDir } from "../plugins/config.ts";
+import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "../plugins/catalog.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import { sortByIsoDesc } from "../shared/iso-time.ts";
 import type { PluginSettingInfo, VersionInfo } from "../shared/rpc-types.ts";
@@ -119,17 +119,13 @@ export async function searchSessions(registry: PluginRegistry) {
   return { sessions: allSessions };
 }
 
-const PLUGIN_META: Array<{ id: string; displayName: string; getDefaultDir: () => string }> = [
-  { id: "claude-code", displayName: "Claude Code", getDefaultDir: getClaudeCodeDir },
-  { id: "codex-cli", displayName: "Codex CLI", getDefaultDir: getCodexCliDir },
-  { id: "opencode", displayName: "OpenCode", getDefaultDir: getOpenCodeDir },
-];
-
 function buildPluginSettingsResponse(settingsPath: string): { plugins: PluginSettingInfo[] } {
   const settings = loadSettings(settingsPath);
-  const plugins: PluginSettingInfo[] = PLUGIN_META.map(({ id, displayName, getDefaultDir }) => {
+  const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir }) => {
+    const id = plugin.id;
+    const displayName = plugin.displayName;
     const pluginConf = settings.plugins[id] ?? { enabled: true, dataDir: null };
-    const defaultDataDir = getDefaultDir();
+    const defaultDataDir = defaultDir;
     const isCustomDir = pluginConf.dataDir !== null;
     return {
       id,
@@ -146,8 +142,6 @@ function buildPluginSettingsResponse(settingsPath: string): { plugins: PluginSet
 export function getPluginSettings(settingsPath: string): { plugins: PluginSettingInfo[] } {
   return buildPluginSettingsResponse(settingsPath);
 }
-
-const VALID_PLUGIN_IDS = new Set(PLUGIN_META.map((p) => p.id));
 
 export function getGeneralSettings(settingsPath: string): { showSecurityWarning: boolean } {
   const settings = loadSettings(settingsPath);
@@ -184,7 +178,7 @@ export function updatePluginSetting(
   settingsPath: string,
   params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
 ): { plugins: PluginSettingInfo[] } {
-  if (!VALID_PLUGIN_IDS.has(params.pluginId)) {
+  if (!BUILTIN_PLUGIN_ID_SET.has(params.pluginId)) {
     throw new Error(`Unknown plugin: ${params.pluginId}`);
   }
   const settings = loadSettings(settingsPath);

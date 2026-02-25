@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { classifySessionTypes } from "../plugins/claude-code/discovery.ts";
+import { classifySessionTypes } from "@cookielab.io/klovi-plugin-claude-code";
 import type { SessionSummary } from "../shared/types.ts";
 
 function session(overrides: Partial<SessionSummary> & { sessionId: string }): SessionSummary {

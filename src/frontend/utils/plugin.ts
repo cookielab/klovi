@@ -1,9 +1,9 @@
-const PLUGIN_NAMES: Record<string, string> = {
-  "claude-code": "Claude Code",
-  "codex-cli": "Codex",
-  opencode: "OpenCode",
-};
+import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-core";
 
 export function pluginDisplayName(pluginId: string): string {
-  return PLUGIN_NAMES[pluginId] ?? pluginId;
+  return (
+    BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[
+      pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES
+    ] ?? pluginId
+  );
 }

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
 
 export type PluginSettings = {
   version: 1;
@@ -16,14 +17,16 @@ export type PluginSettings = {
     | undefined;
 };
 
+function createDefaultPluginStates(): PluginSettings["plugins"] {
+  return Object.fromEntries(
+    BUILTIN_KLOVI_PLUGIN_IDS.map((pluginId) => [pluginId, { enabled: true, dataDir: null }]),
+  );
+}
+
 export function getDefaultSettings(): PluginSettings {
   return {
     version: 1,
-    plugins: {
-      "claude-code": { enabled: true, dataDir: null },
-      "codex-cli": { enabled: true, dataDir: null },
-      opencode: { enabled: true, dataDir: null },
-    },
+    plugins: createDefaultPluginStates(),
     general: {
       showSecurityWarning: true,
     },

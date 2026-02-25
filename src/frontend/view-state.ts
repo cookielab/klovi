@@ -1,5 +1,6 @@
 import { parseSessionId } from "../shared/session-id.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
+import { getFrontendPlugin } from "./plugin-registry.ts";
 import { getRPC } from "./rpc.ts";
 
 const HASH_PREFIX_REGEX = /^#\/?/;
@@ -27,15 +28,13 @@ export function getResumeCommand(
   pluginId: string | undefined,
   encodedSessionId: string,
 ): string | undefined {
-  const rawSessionId = parseSessionId(encodedSessionId).rawSessionId;
-  switch (pluginId) {
-    case "claude-code":
-      return `claude --resume ${rawSessionId}`;
-    case "codex-cli":
-      return `codex resume ${rawSessionId}`;
-    default:
-      return;
-  }
+  const parsedSessionId = parseSessionId(encodedSessionId);
+  const resolvedPluginId = pluginId ?? parsedSessionId.pluginId ?? undefined;
+  if (!resolvedPluginId || !parsedSessionId.rawSessionId) return;
+  return (
+    getFrontendPlugin(resolvedPluginId)?.getResumeCommand?.(parsedSessionId.rawSessionId) ??
+    undefined
+  );
 }
 
 export function viewToHash(view: ViewState): string {

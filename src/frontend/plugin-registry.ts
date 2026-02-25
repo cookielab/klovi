@@ -1,38 +1,25 @@
-import { codexInputFormatters, codexSummaryExtractors } from "../plugins/codex-cli/extractors.ts";
-import {
-  openCodeInputFormatters,
-  openCodeSummaryExtractors,
-} from "../plugins/opencode/extractors.ts";
+import { claudeCodeFrontendPlugin } from "@cookielab.io/klovi-plugin-claude-code/frontend";
+import { codexFrontendPlugin } from "@cookielab.io/klovi-plugin-codex/frontend";
+import type {
+  FrontendPlugin,
+  FrontendInputFormatter as InputFormatter,
+  FrontendSummaryExtractor as SummaryExtractor,
+} from "@cookielab.io/klovi-plugin-core";
+import { openCodeFrontendPlugin } from "@cookielab.io/klovi-plugin-opencode/frontend";
 
-export type SummaryExtractor = (input: Record<string, unknown>) => string;
-export type InputFormatter = (input: Record<string, unknown>) => string;
-
-export interface FrontendPlugin {
-  displayName: string;
-  summaryExtractors: Record<string, SummaryExtractor>;
-  inputFormatters: Record<string, InputFormatter>;
-}
+export type { InputFormatter, SummaryExtractor };
+export type { FrontendPlugin };
 
 const pluginRegistry = new Map<string, FrontendPlugin>();
 
-export function registerFrontendPlugin(id: string, plugin: FrontendPlugin): void {
-  pluginRegistry.set(id, plugin);
+export function registerFrontendPlugin(plugin: FrontendPlugin): void {
+  pluginRegistry.set(plugin.id, plugin);
 }
 
 export function getFrontendPlugin(id: string): FrontendPlugin | undefined {
   return pluginRegistry.get(id);
 }
 
-// Register Codex CLI frontend plugin
-registerFrontendPlugin("codex-cli", {
-  displayName: "Codex",
-  summaryExtractors: codexSummaryExtractors,
-  inputFormatters: codexInputFormatters,
-});
-
-// Register OpenCode frontend plugin
-registerFrontendPlugin("opencode", {
-  displayName: "OpenCode",
-  summaryExtractors: openCodeSummaryExtractors,
-  inputFormatters: openCodeInputFormatters,
-});
+for (const plugin of [claudeCodeFrontendPlugin, codexFrontendPlugin, openCodeFrontendPlugin]) {
+  registerFrontendPlugin(plugin);
+}

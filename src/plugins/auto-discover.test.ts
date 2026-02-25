@@ -2,17 +2,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { getClaudeCodeDir, setClaudeCodeDir } from "@cookielab.io/klovi-plugin-claude-code";
+import { getCodexCliDir, setCodexCliDir } from "@cookielab.io/klovi-plugin-codex";
+import { getOpenCodeDir, setOpenCodeDir } from "@cookielab.io/klovi-plugin-opencode";
 import type { PluginSettings } from "../bun/settings.ts";
 import { getDefaultSettings } from "../bun/settings.ts";
 import { createRegistry } from "./auto-discover.ts";
-import {
-  getClaudeCodeDir,
-  getCodexCliDir,
-  getOpenCodeDir,
-  setClaudeCodeDir,
-  setCodexCliDir,
-  setOpenCodeDir,
-} from "./config.ts";
 
 const testDir = join(tmpdir(), `klovi-registry-test-${Date.now()}`);
 

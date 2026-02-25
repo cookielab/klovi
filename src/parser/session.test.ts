@@ -5,7 +5,7 @@ import {
   extractSubAgentMap,
   findImplSessionId,
   findPlanSessionId,
-} from "../plugins/claude-code/parser.ts";
+} from "@cookielab.io/klovi-plugin-claude-code";
 import type { AssistantTurn, SessionSummary, SystemTurn, UserTurn } from "../shared/types.ts";
 import type { RawLine } from "./types.ts";
 
