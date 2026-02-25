@@ -1,0 +1,125 @@
+/* Back button */
+.backBtn {
+  all: unset;
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.backBtn:hover {
+  text-decoration: underline;
+}
+
+/* Section title */
+.sectionTitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 12px 12px 4px;
+}
+
+/* Session list item (button) */
+.listItemButton {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left;
+}
+
+.listItem {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.listItem:hover {
+  background: var(--bg-tertiary);
+}
+
+.listItemActive {
+  background: var(--accent-subtle);
+  border-left: 3px solid var(--accent);
+}
+
+.listItemPlan {
+  border-left: 3px solid var(--plan-color);
+}
+
+.listItemImplementation {
+  border-left: 3px solid var(--impl-color);
+}
+
+.listItemTitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listItemMeta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Plugin badge */
+.pluginBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--bg-tertiary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+/* Session type badge */
+.sessionTypeBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.sessionTypeBadgePlan {
+  background: var(--plan-subtle);
+  color: var(--plan-color);
+}
+
+.sessionTypeBadgeImplementation {
+  background: var(--impl-subtle);
+  color: var(--impl-color);
+}
+
+/* Empty & loading states */
+.emptyMessage {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

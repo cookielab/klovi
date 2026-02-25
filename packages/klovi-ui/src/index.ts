@@ -9,6 +9,19 @@ export {
   UserBashContent,
   UserMessage,
 } from "./messages/index.ts";
+export type {
+  DashboardStatsProps,
+  HiddenProjectListProps,
+  ProjectListProps,
+  SessionListProps,
+} from "./sessions/index.ts";
+export {
+  DashboardStats as DashboardStatsPanel,
+  HiddenProjectList,
+  ProjectList,
+  projectDisplayName,
+  SessionList,
+} from "./sessions/index.ts";
 export {
   BashToolContent,
   DiffView,

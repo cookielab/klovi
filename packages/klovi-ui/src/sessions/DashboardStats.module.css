@@ -1,0 +1,93 @@
+/* Dashboard stats container */
+.dashboardStats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 40px 40px;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Grid rows */
+.statsRow {
+  display: grid;
+  gap: 12px;
+}
+
+.statsRow3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.statsRow4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Stat cards */
+.statCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+}
+
+.statCardSkeleton {
+  height: 64px;
+  opacity: 0.4;
+}
+
+.statValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.statLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.statSublabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* Token row */
+.tokenRow {
+  margin-top: 8px;
+}
+
+/* Model list */
+.modelList {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.modelListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 0.8rem;
+}
+
+.modelName {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.modelCount {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
