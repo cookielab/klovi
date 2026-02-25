@@ -20,3 +20,13 @@ export type {
   UserTurn,
 } from "./types/index.ts";
 export { groupContentBlocks } from "./types/index.ts";
+
+export {
+  detectOutputFormat,
+  formatFullDateTime,
+  formatRelativeTime,
+  formatTime,
+  formatTimestamp,
+  isClaudeModel,
+  shortModel,
+} from "./utilities/index.ts";
