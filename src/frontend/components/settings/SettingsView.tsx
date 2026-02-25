@@ -112,6 +112,7 @@ export function SettingsView({
   const [changed, setChanged] = useState(false);
   const [showSecurityWarning, setShowSecurityWarning] = useState(true);
   const [resetting, setResetting] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const resettingRef = useRef(false);
 
   useEffect(() => {
@@ -192,7 +193,6 @@ export function SettingsView({
 
   const handleResetToDefaults = useCallback(() => {
     if (resettingRef.current) return;
-    if (!window.confirm("Reset all settings to defaults? This will reload the app.")) return;
     resettingRef.current = true;
     setResetting(true);
     getRPC()
@@ -210,13 +210,14 @@ export function SettingsView({
         for (const key of keys) {
           localStorage.removeItem(key);
         }
-        window.location.reload();
+        onNavigateHome();
       })
       .catch(() => {
         resettingRef.current = false;
         setResetting(false);
+        setConfirmingReset(false);
       });
-  }, []);
+  }, [onNavigateHome]);
 
   return (
     <div className="settings-view">
@@ -332,17 +333,45 @@ export function SettingsView({
 
                 <h4 className="settings-subsection-title">Reset</h4>
                 <div className="settings-general-row">
-                  <button
-                    type="button"
-                    className="settings-reset-to-defaults-btn"
-                    disabled={resetting}
-                    onClick={handleResetToDefaults}
-                  >
-                    {resetting ? "Resetting..." : "Reset to defaults"}
-                  </button>
-                  <p className="settings-general-hint">
-                    Deletes all settings and reloads the app into its initial state.
-                  </p>
+                  {!confirmingReset ? (
+                    <>
+                      <button
+                        type="button"
+                        className="settings-reset-to-defaults-btn"
+                        disabled={resetting}
+                        onClick={() => setConfirmingReset(true)}
+                      >
+                        Reset to defaults
+                      </button>
+                      <p className="settings-general-hint">
+                        Deletes all settings and returns to the home screen.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="settings-reset-confirm-text">
+                        Reset all settings to defaults? This cannot be undone.
+                      </p>
+                      <div className="settings-reset-confirm-actions">
+                        <button
+                          type="button"
+                          className="settings-reset-confirm-btn"
+                          disabled={resetting}
+                          onClick={handleResetToDefaults}
+                        >
+                          {resetting ? "Resetting..." : "Yes, reset everything"}
+                        </button>
+                        <button
+                          type="button"
+                          className="settings-reset-cancel-btn"
+                          disabled={resetting}
+                          onClick={() => setConfirmingReset(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             )}

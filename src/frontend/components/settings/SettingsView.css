@@ -282,3 +282,46 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.settings-reset-confirm-text {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.settings-reset-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-reset-confirm-btn {
+  background: var(--error, #d93025);
+  border: 1px solid transparent;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.settings-reset-confirm-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.settings-reset-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.settings-reset-cancel-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.settings-reset-cancel-btn:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
