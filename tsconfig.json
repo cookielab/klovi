@@ -31,8 +31,7 @@
     "noUncheckedSideEffectImports": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "exactOptionalPropertyTypes": true,
-    "isolatedDeclarations": true
+    "exactOptionalPropertyTypes": true
   },
   "exclude": ["dist", "node_modules"]
 }
