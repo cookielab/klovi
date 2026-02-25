@@ -1,6 +1,8 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render } from "@testing-library/react";
 import { DiffView, formatDiff } from "./DiffView.tsx";
+
+afterEach(cleanup);
 
 describe("formatDiff", () => {
   test("prefixes old lines with - and new lines with +", () => {
@@ -31,21 +33,17 @@ describe("formatDiff", () => {
 
 describe("DiffView", () => {
   test("renders file path in header", () => {
-    const { container } = render(
+    const { getByText } = render(
       <DiffView filePath="/src/app.ts" oldString="old" newString="new" />,
     );
-    const header = container.querySelector(".diff-view-header");
-    expect(header).not.toBeNull();
-    expect(header?.textContent).toBe("/src/app.ts");
+    expect(getByText("/src/app.ts")).toBeTruthy();
   });
 
   test("renders diff content", () => {
     const { container } = render(
       <DiffView filePath="/a.ts" oldString="const x = 1;" newString="const x = 2;" />,
     );
-    const content = container.querySelector(".diff-view-content");
-    expect(content).not.toBeNull();
-    expect(content?.textContent).toContain("-const x = 1;");
-    expect(content?.textContent).toContain("+const x = 2;");
+    expect(container.textContent).toContain("-const x = 1;");
+    expect(container.textContent).toContain("+const x = 2;");
   });
 });

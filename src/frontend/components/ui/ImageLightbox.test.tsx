@@ -19,24 +19,23 @@ afterEach(() => {
 describe("ImageLightbox", () => {
   test("renders overlay and image with correct src and alt", () => {
     const onClose = mock(() => {});
-    const { container } = render(
+    const { getByRole, getByAltText } = render(
       <ImageLightbox src="data:image/png;base64,AAAA" onClose={onClose} />,
     );
 
-    const overlay = container.querySelector(".lightbox-overlay");
+    const overlay = getByRole("presentation");
     expect(overlay).not.toBeNull();
 
-    const img = container.querySelector(".lightbox-image") as HTMLImageElement;
+    const img = getByAltText("Full size preview") as HTMLImageElement;
     expect(img).not.toBeNull();
     expect(img.src).toBe("data:image/png;base64,AAAA");
-    expect(img.alt).toBe("Full size preview");
   });
 
   test("calls onClose on overlay click after timeout", () => {
     const onClose = mock(() => {});
-    const { container } = render(<ImageLightbox src="test.png" onClose={onClose} />);
+    const { getByRole } = render(<ImageLightbox src="test.png" onClose={onClose} />);
 
-    const overlay = container.querySelector(".lightbox-overlay") as HTMLElement;
+    const overlay = getByRole("presentation");
     overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     // onClose is called via setTimeout(onClose, 200), so not yet called

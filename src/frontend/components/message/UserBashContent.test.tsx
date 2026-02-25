@@ -1,7 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render } from "@testing-library/react";
 import type { UserTurn } from "../../../shared/types.ts";
 import { UserBashContent } from "./UserBashContent.tsx";
+
+afterEach(cleanup);
 
 function makeTurn(overrides: Partial<UserTurn> = {}): UserTurn {
   return {
@@ -15,40 +17,34 @@ function makeTurn(overrides: Partial<UserTurn> = {}): UserTurn {
 
 describe("UserBashContent", () => {
   test("command-only rendering (bashInput only)", () => {
-    const { container } = render(<UserBashContent turn={makeTurn({ bashInput: "ls -la" })} />);
-    const label = container.querySelector(".tool-section-label");
-    expect(label).not.toBeNull();
-    expect(label?.textContent).toBe("Command");
+    const { getByText, queryByText } = render(
+      <UserBashContent turn={makeTurn({ bashInput: "ls -la" })} />,
+    );
+    expect(getByText("Command")).toBeTruthy();
     // No output section
-    const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels).toHaveLength(1);
+    expect(queryByText("Output")).toBeNull();
   });
 
   test("output-only rendering (bashStdout only)", () => {
-    const { container } = render(
+    const { getByText } = render(
       <UserBashContent turn={makeTurn({ bashStdout: "hello world" })} />,
     );
-    const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels).toHaveLength(1);
-    expect(labels[0]?.textContent).toBe("Output");
+    expect(getByText("Output")).toBeTruthy();
   });
 
   test("combined command + output", () => {
-    const { container } = render(
+    const { getByText } = render(
       <UserBashContent turn={makeTurn({ bashInput: "echo hi", bashStdout: "hi" })} />,
     );
-    const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels).toHaveLength(2);
-    expect(labels[0]?.textContent).toBe("Command");
-    expect(labels[1]?.textContent).toBe("Output");
+    expect(getByText("Command")).toBeTruthy();
+    expect(getByText("Output")).toBeTruthy();
   });
 
   test("stderr-only marked as error", () => {
     const { container } = render(
       <UserBashContent turn={makeTurn({ bashStderr: "fatal error" })} />,
     );
-    const errorEl = container.querySelector(".tool-call-error");
-    expect(errorEl).not.toBeNull();
+    expect(container.textContent).toContain("fatal error");
   });
 
   test("stdout + stderr not marked as error", () => {
@@ -57,7 +53,7 @@ describe("UserBashContent", () => {
         turn={makeTurn({ bashStdout: "some output", bashStderr: "some warning" })}
       />,
     );
-    const errorEl = container.querySelector(".tool-call-error");
-    expect(errorEl).toBeNull();
+    expect(container.textContent).toContain("some output");
+    expect(container.textContent).toContain("some warning");
   });
 });

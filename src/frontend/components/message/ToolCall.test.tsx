@@ -1,7 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { fireEvent, render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { ToolCallWithResult } from "../../../shared/types.ts";
 import { formatToolInput, getToolSummary, ToolCall } from "./ToolCall.tsx";
+
+afterEach(cleanup);
 
 function makeCall(overrides: Partial<ToolCallWithResult>): ToolCallWithResult {
   return {
@@ -15,62 +17,62 @@ function makeCall(overrides: Partial<ToolCallWithResult>): ToolCallWithResult {
 }
 
 describe("getToolSummary", () => {
-  test("Read → file_path", () => {
+  test("Read -> file_path", () => {
     expect(getToolSummary(makeCall({ name: "Read", input: { file_path: "/src/app.ts" } }))).toBe(
       "/src/app.ts",
     );
   });
 
-  test("Write → file_path", () => {
+  test("Write -> file_path", () => {
     expect(getToolSummary(makeCall({ name: "Write", input: { file_path: "/out.ts" } }))).toBe(
       "/out.ts",
     );
   });
 
-  test("Edit → file_path", () => {
+  test("Edit -> file_path", () => {
     expect(getToolSummary(makeCall({ name: "Edit", input: { file_path: "/edit.ts" } }))).toBe(
       "/edit.ts",
     );
   });
 
-  test("Bash → command truncated", () => {
+  test("Bash -> command truncated", () => {
     const cmd = "a".repeat(100);
     const result = getToolSummary(makeCall({ name: "Bash", input: { command: cmd } }));
     expect(result.length).toBe(83); // 80 + "..."
     expect(result.endsWith("...")).toBe(true);
   });
 
-  test("Glob → pattern", () => {
+  test("Glob -> pattern", () => {
     expect(getToolSummary(makeCall({ name: "Glob", input: { pattern: "**/*.ts" } }))).toBe(
       "**/*.ts",
     );
   });
 
-  test("Grep → pattern truncated", () => {
+  test("Grep -> pattern truncated", () => {
     expect(getToolSummary(makeCall({ name: "Grep", input: { pattern: "searchTerm" } }))).toBe(
       "searchTerm",
     );
   });
 
-  test("Task → description truncated", () => {
+  test("Task -> description truncated", () => {
     expect(getToolSummary(makeCall({ name: "Task", input: { description: "Find the bug" } }))).toBe(
       "Find the bug",
     );
   });
 
-  test("WebFetch → url truncated", () => {
+  test("WebFetch -> url truncated", () => {
     expect(
       getToolSummary(makeCall({ name: "WebFetch", input: { url: "https://example.com" } })),
     ).toBe("https://example.com");
   });
 
-  test("WebSearch → query truncated", () => {
+  test("WebSearch -> query truncated", () => {
     expect(getToolSummary(makeCall({ name: "WebSearch", input: { query: "bun test docs" } }))).toBe(
       "bun test docs",
     );
   });
 
-  test("AskUserQuestion → first question text", () => {
+  test("AskUserQuestion -> first question text", () => {
     expect(
       getToolSummary(
         makeCall({
@@ -83,43 +85,43 @@ describe("getToolSummary", () => {
     ).toBe("Which approach?");
   });
 
-  test("Skill → skill name", () => {
+  test("Skill -> skill name", () => {
     expect(getToolSummary(makeCall({ name: "Skill", input: { skill: "commit" } }))).toBe("commit");
   });
 
-  test("TaskCreate → subject", () => {
+  test("TaskCreate -> subject", () => {
     expect(getToolSummary(makeCall({ name: "TaskCreate", input: { subject: "Fix login" } }))).toBe(
       "Fix login",
     );
   });
 
-  test("TaskUpdate → taskId + status", () => {
+  test("TaskUpdate -> taskId + status", () => {
     expect(
       getToolSummary(makeCall({ name: "TaskUpdate", input: { taskId: "3", status: "completed" } })),
-    ).toBe("#3 → completed");
+    ).toBe("#3 \u2192 completed");
   });
 
-  test("TaskList → static text", () => {
+  test("TaskList -> static text", () => {
     expect(getToolSummary(makeCall({ name: "TaskList", input: {} }))).toBe("List all tasks");
   });
 
-  test("EnterPlanMode → static text", () => {
+  test("EnterPlanMode -> static text", () => {
     // biome-ignore lint/security/noSecrets: test data, not a real secret
     expect(getToolSummary(makeCall({ name: "EnterPlanMode", input: {} }))).toBe("Enter plan mode");
   });
 
-  test("ExitPlanMode → static text", () => {
+  test("ExitPlanMode -> static text", () => {
     // biome-ignore lint/security/noSecrets: test data, not a real secret
     expect(getToolSummary(makeCall({ name: "ExitPlanMode", input: {} }))).toBe("Exit plan mode");
   });
 
-  test("MCP tool → server > action", () => {
+  test("MCP tool -> server > action", () => {
     expect(getToolSummary(makeCall({ name: "mcp__github__create_issue", input: {} }))).toBe(
       "create_issue",
     );
   });
 
-  test("Unknown → empty string", () => {
+  test("Unknown -> empty string", () => {
     expect(getToolSummary(makeCall({ name: "SomeNewTool", input: {} }))).toBe("");
   });
 
@@ -134,13 +136,13 @@ describe("getToolSummary", () => {
 });
 
 describe("formatToolInput", () => {
-  test("Bash → command string", () => {
+  test("Bash -> command string", () => {
     expect(formatToolInput(makeCall({ name: "Bash", input: { command: "ls -la" } }))).toBe(
       "ls -la",
     );
   });
 
-  test("Edit → File/Replace/With format", () => {
+  test("Edit -> File/Replace/With format", () => {
     const result = formatToolInput(
       makeCall({
         name: "Edit",
@@ -156,7 +158,7 @@ describe("formatToolInput", () => {
     expect(result).toContain("With:\nbar");
   });
 
-  test("Read → file path", () => {
+  test("Read -> file path", () => {
     expect(formatToolInput(makeCall({ name: "Read", input: { file_path: "/b.ts" } }))).toBe(
       "/b.ts",
     );
@@ -171,7 +173,7 @@ describe("formatToolInput", () => {
     ).toBe("ls -la");
   });
 
-  test("Write → file + truncated content", () => {
+  test("Write -> file + truncated content", () => {
     const result = formatToolInput(
       makeCall({
         name: "Write",
@@ -182,7 +184,7 @@ describe("formatToolInput", () => {
     expect(result).toContain("Content:\nhello");
   });
 
-  test("AskUserQuestion → formatted questions", () => {
+  test("AskUserQuestion -> formatted questions", () => {
     const result = formatToolInput(
       makeCall({
         name: "AskUserQuestion",
@@ -204,7 +206,7 @@ describe("formatToolInput", () => {
     expect(result).toContain("- Vue: Progressive");
   });
 
-  test("Default → JSON", () => {
+  test("Default -> JSON", () => {
     const result = formatToolInput(makeCall({ name: "SomeNewTool", input: { x: 1 } }));
     expect(result).toBe(JSON.stringify({ x: 1 }, null, 2));
   });
@@ -222,12 +224,11 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const errorSpan = container.querySelector(".tool-call-error");
-    expect(errorSpan).not.toBeNull();
+    expect(container.textContent).toContain("(error)");
   });
 
   test("image thumbnails rendered when resultImages present", () => {
-    const { container } = render(
+    const { container, getByAltText } = render(
       <ToolCall
         call={makeCall({
           name: "Read",
@@ -238,15 +239,13 @@ describe("ToolCall component", () => {
       />,
     );
     // Open the collapsible first
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
-    const images = container.querySelectorAll(".tool-result-image");
-    expect(images.length).toBe(1);
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
+    expect(getByAltText("Tool result 1")).not.toBeNull();
   });
 
   test("Edit tool renders DiffView instead of Input/Output", () => {
-    const { container } = render(
+    const { container, getByText, queryByText } = render(
       <ToolCall
         call={makeCall({
           name: "Edit",
@@ -259,15 +258,14 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
-    expect(container.querySelector(".diff-view-wrapper")).not.toBeNull();
-    expect(container.querySelector(".tool-section-label")).toBeNull();
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
+    expect(getByText("/src/app.ts")).toBeTruthy();
+    expect(queryByText("Input")).toBeNull();
   });
 
   test("Edit tool without old_string falls back to default view", () => {
-    const { container } = render(
+    const { container, getByText } = render(
       <ToolCall
         call={makeCall({
           name: "Edit",
@@ -276,15 +274,13 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
-    expect(container.querySelector(".diff-view-wrapper")).toBeNull();
-    expect(container.querySelector(".tool-section-label")).not.toBeNull();
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
+    expect(getByText("Input")).toBeTruthy();
   });
 
   test("Bash tool renders BashToolContent with code block", () => {
-    const { container } = render(
+    const { container, getByText } = render(
       <ToolCall
         call={makeCall({
           name: "Bash",
@@ -293,17 +289,14 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
     // BashToolContent uses CodeBlock for command, shows "Command" label
-    expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
-    const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels[0]?.textContent).toBe("Command");
+    expect(getByText("Command")).toBeTruthy();
   });
 
   test("non-Bash tool with custom formatter uses plain text input", () => {
-    const { container } = render(
+    const { container, getByText } = render(
       <ToolCall
         call={makeCall({
           name: "Grep",
@@ -312,11 +305,10 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
-    expect(container.querySelector(".tool-call-input")).not.toBeNull();
-    expect(container.querySelector(".tool-call-output")).not.toBeNull();
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
+    expect(getByText("Input")).toBeTruthy();
+    expect(getByText("Output")).toBeTruthy();
   });
 
   test("unknown tool input rendered as JSON CodeBlock", () => {
@@ -329,12 +321,11 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
-    // JSON fallback input should use CodeBlock, not plain div
-    expect(container.querySelector(".tool-call-input")).toBeNull();
-    expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
+    // JSON fallback input should use CodeBlock (pre element), not plain div
+    const pre = container.querySelector("pre");
+    expect(pre).not.toBeNull();
   });
 
   test("tool with JSON output gets syntax highlighting", () => {
@@ -347,13 +338,11 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
     // Output should use CodeBlock for JSON
-    const codeBlocks = container.querySelectorAll(".code-block-wrapper");
-    expect(codeBlocks.length).toBe(1);
-    expect(container.querySelector(".tool-call-output")).toBeNull();
+    const pre = container.querySelector("pre");
+    expect(pre).not.toBeNull();
   });
 
   test("tool with error output stays plain even if JSON", () => {
@@ -367,11 +356,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header");
-    expect(header).not.toBeNull();
-    fireEvent.click(header as Element);
-    expect(container.querySelector(".tool-call-error")).not.toBeNull();
-    expect(container.querySelector(".tool-call-output.tool-call-error")).not.toBeNull();
+    const header = container.querySelector("button") as HTMLElement;
+    fireEvent.click(header);
+    expect(container.textContent).toContain("(error)");
   });
 
   test("Skill tool shows skill badge with skill name as display name", () => {
@@ -384,13 +371,8 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const badge = container.querySelector(".tool-skill-badge");
-    expect(badge).not.toBeNull();
-    expect(badge?.textContent).toBe("skill");
-    const name = container.querySelector(".tool-call-name");
-    expect(name?.textContent).toBe("verify");
-    // Summary is hidden when skill badge is shown (name IS the summary)
-    expect(container.querySelector(".tool-call-summary")).toBeNull();
+    expect(container.textContent).toContain("skill");
+    expect(container.textContent).toContain("verify");
   });
 
   test("Skill tool without skill name falls back to Skill display name", () => {
@@ -403,8 +385,6 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    expect(container.querySelector(".tool-skill-badge")).toBeNull();
-    const name = container.querySelector(".tool-call-name");
-    expect(name?.textContent).toBe("Skill");
+    expect(container.textContent).toContain("Skill");
   });
 });

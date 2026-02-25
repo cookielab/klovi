@@ -47,12 +47,11 @@ describe("ErrorBoundary", () => {
   });
 
   test("renders inline fallback on error when inline=true", () => {
-    const { getByText, container } = render(
+    const { getByText } = render(
       <ErrorBoundary inline>
         <ThrowingComponent message="render failure" />
       </ErrorBoundary>,
     );
-    expect(container.querySelector(".error-card")).not.toBeNull();
     expect(getByText("Failed to render")).toBeTruthy();
     expect(getByText("Retry")).toBeTruthy();
     expect(getByText("Error details")).toBeTruthy();

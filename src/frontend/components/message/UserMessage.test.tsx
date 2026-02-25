@@ -1,7 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render } from "@testing-library/react";
 import type { UserTurn } from "../../../shared/types.ts";
 import { UserMessage } from "./UserMessage.tsx";
+
+afterEach(cleanup);
 
 function makeTurn(overrides: Partial<UserTurn> = {}): UserTurn {
   return {
@@ -32,12 +34,8 @@ describe("UserMessage", () => {
         })}
       />,
     );
-    const badge = container.querySelector(".command-call-label");
-    expect(badge).not.toBeNull();
-    expect(badge?.textContent).toBe("/commit");
-    const skillBadge = container.querySelector(".tool-skill-badge");
-    expect(skillBadge).not.toBeNull();
-    expect(skillBadge?.textContent).toBe("skill");
+    expect(container.textContent).toContain("/commit");
+    expect(container.textContent).toContain("skill");
   });
 
   test("attachment badges for images", () => {
@@ -49,41 +47,36 @@ describe("UserMessage", () => {
         })}
       />,
     );
-    const badge = container.querySelector(".attachment-badge");
-    expect(badge).not.toBeNull();
-    expect(badge?.textContent).toBe("image/png");
+    expect(container.textContent).toContain("image/png");
   });
 
   test("bash-input renders as user card with command section", () => {
-    const { container } = render(
+    const { container, getByText } = render(
       <UserMessage turn={makeTurn({ text: "", bashInput: "bun run dev" })} />,
     );
     expect(container.querySelector(".turn")).not.toBeNull();
     expect(container.querySelector(".turn-badge-user")).not.toBeNull();
-    expect(container.querySelector(".tool-section-label")).not.toBeNull();
-    expect(container.querySelector(".tool-section-label")?.textContent).toBe("Command");
+    expect(getByText("Command")).toBeTruthy();
   });
 
   test("ide_opened_file renders with file path styling", () => {
     const { container } = render(
       <UserMessage turn={makeTurn({ text: "", ideOpenedFile: "/Users/dev/project/.env" })} />,
     );
-    const notice = container.querySelector(".ide-opened-file-notice");
-    expect(notice).not.toBeNull();
-    const path = container.querySelector(".ide-opened-file-path");
-    expect(path).not.toBeNull();
-    expect(path?.textContent).toBe("/Users/dev/project/.env");
+    expect(container.textContent).toContain("Opened");
+    expect(container.textContent).toContain("/Users/dev/project/.env");
+    const codeEl = container.querySelector("code");
+    expect(codeEl).not.toBeNull();
+    expect(codeEl?.textContent).toBe("/Users/dev/project/.env");
   });
 
   test("bash stdout renders as user card with SmartToolOutput", () => {
-    const { container } = render(
+    const { container, getByText } = render(
       <UserMessage turn={makeTurn({ text: "", bashStdout: "output line 1\noutput line 2" })} />,
     );
     expect(container.querySelector(".turn")).not.toBeNull();
     expect(container.querySelector(".turn-badge-user")).not.toBeNull();
-    const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels.length).toBeGreaterThanOrEqual(1);
-    expect(labels[0]?.textContent).toBe("Output");
+    expect(getByText("Output")).toBeTruthy();
   });
 
   test("bash stderr renders inside user card", () => {
@@ -97,14 +90,11 @@ describe("UserMessage", () => {
   });
 
   test("merged bash-input + bash-stdout renders command and output", () => {
-    const { container } = render(
+    const { getByText } = render(
       <UserMessage turn={makeTurn({ text: "", bashInput: "ls", bashStdout: "file.txt" })} />,
     );
-    expect(container.querySelector(".turn")).not.toBeNull();
-    const labels = container.querySelectorAll(".tool-section-label");
-    const labelTexts = Array.from(labels).map((l) => l.textContent);
-    expect(labelTexts).toContain("Command");
-    expect(labelTexts).toContain("Output");
+    expect(getByText("Command")).toBeTruthy();
+    expect(getByText("Output")).toBeTruthy();
   });
 
   test("regular markdown text renders", () => {

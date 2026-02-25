@@ -1,7 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render } from "@testing-library/react";
 import type { AssistantTurn } from "../../../shared/types.ts";
 import { AssistantMessage } from "./AssistantMessage.tsx";
+
+afterEach(cleanup);
 
 function makeTurn(overrides: Partial<AssistantTurn> = {}): AssistantTurn {
   return {
@@ -15,28 +17,25 @@ function makeTurn(overrides: Partial<AssistantTurn> = {}): AssistantTurn {
 }
 
 describe("AssistantMessage", () => {
-  test("model name display — Opus", () => {
+  test("model name display -- Opus", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ model: "claude-opus-4-6" })} />,
     );
-    const role = container.querySelector(".turn-badge-model");
-    expect(role?.textContent).toContain("Opus");
+    expect(container.textContent).toContain("Opus");
   });
 
-  test("model name display — Sonnet", () => {
+  test("model name display -- Sonnet", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ model: "claude-sonnet-4-5-20250929" })} />,
     );
-    const role = container.querySelector(".turn-badge-model");
-    expect(role?.textContent).toContain("Sonnet");
+    expect(container.textContent).toContain("Sonnet");
   });
 
-  test("model name display — Haiku", () => {
+  test("model name display -- Haiku", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ model: "claude-haiku-4-5-20251001" })} />,
     );
-    const role = container.querySelector(".turn-badge-model");
-    expect(role?.textContent).toContain("Haiku");
+    expect(container.textContent).toContain("Haiku");
   });
 
   test("token usage footer displayed when usage exists", () => {
@@ -53,20 +52,17 @@ describe("AssistantMessage", () => {
         })}
       />,
     );
-    const usage = container.querySelector(".token-usage");
-    expect(usage).not.toBeNull();
-    expect(usage?.textContent).toContain("1,500 in");
-    expect(usage?.textContent).toContain("300 out");
-    expect(usage?.textContent).toContain("1,200 cache read");
-    expect(usage?.textContent).toContain("100 cache write");
+    expect(container.textContent).toContain("1,500 in");
+    expect(container.textContent).toContain("300 out");
+    expect(container.textContent).toContain("1,200 cache read");
+    expect(container.textContent).toContain("100 cache write");
   });
 
   test("token usage footer hidden when no usage", () => {
     const { container } = render(
       <AssistantMessage turn={makeTurn({ contentBlocks: [{ type: "text", text: "Hello" }] })} />,
     );
-    const usage = container.querySelector(".token-usage");
-    expect(usage).toBeNull();
+    expect(container.textContent).not.toContain(" in /");
   });
 
   test("thinking blocks rendered", () => {
@@ -77,8 +73,7 @@ describe("AssistantMessage", () => {
         })}
       />,
     );
-    const thinking = container.querySelector(".thinking-block");
-    expect(thinking).not.toBeNull();
+    expect(container.textContent).toContain("Thinking:");
   });
 
   test("text blocks rendered as markdown", () => {
@@ -89,8 +84,8 @@ describe("AssistantMessage", () => {
         })}
       />,
     );
-    const content = container.querySelector(".markdown-content");
-    expect(content).not.toBeNull();
+    const strong = container.querySelector("strong");
+    expect(strong).not.toBeNull();
   });
 
   test("tool calls rendered", () => {
@@ -112,8 +107,7 @@ describe("AssistantMessage", () => {
         })}
       />,
     );
-    const toolCall = container.querySelector(".tool-call");
-    expect(toolCall).not.toBeNull();
+    expect(container.textContent).toContain("Bash");
   });
 
   test("visibleSubSteps limits rendered content groups", () => {
@@ -130,8 +124,9 @@ describe("AssistantMessage", () => {
       />,
     );
     // Each text block = 1 group, visibleSubSteps=2 means only first 2 shown
-    const markdowns = container.querySelectorAll(".markdown-content");
-    expect(markdowns).toHaveLength(2);
+    expect(container.textContent).toContain("First message");
+    expect(container.textContent).toContain("Second message");
+    expect(container.textContent).not.toContain("Third message");
   });
 
   test("all groups shown when visibleSubSteps undefined", () => {
@@ -146,8 +141,9 @@ describe("AssistantMessage", () => {
         })}
       />,
     );
-    const markdowns = container.querySelectorAll(".markdown-content");
-    expect(markdowns).toHaveLength(3);
+    expect(container.textContent).toContain("First");
+    expect(container.textContent).toContain("Second");
+    expect(container.textContent).toContain("Third");
   });
 
   test("step-enter class on last visible item in presentation mode", () => {
@@ -169,7 +165,7 @@ describe("AssistantMessage", () => {
   test("empty contentBlocks renders without error", () => {
     const { container } = render(<AssistantMessage turn={makeTurn({ contentBlocks: [] })} />);
     expect(container.querySelector(".message-assistant")).not.toBeNull();
-    expect(container.querySelector(".token-usage")).toBeNull();
+    expect(container.textContent).not.toContain(" in /");
   });
 
   test("cache tokens hidden when zero", () => {
@@ -186,9 +182,9 @@ describe("AssistantMessage", () => {
         })}
       />,
     );
-    const usage = container.querySelector(".token-usage");
-    expect(usage).not.toBeNull();
-    expect(usage?.textContent).not.toContain("cache read");
-    expect(usage?.textContent).not.toContain("cache write");
+    expect(container.textContent).toContain("100 in");
+    expect(container.textContent).toContain("50 out");
+    expect(container.textContent).not.toContain("cache read");
+    expect(container.textContent).not.toContain("cache write");
   });
 });

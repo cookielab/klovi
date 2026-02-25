@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render } from "@testing-library/react";
 import type {
   AssistantTurn,
   ParseErrorTurn,
@@ -8,6 +8,8 @@ import type {
   UserTurn,
 } from "../../../shared/types.ts";
 import { MessageList } from "./MessageList.tsx";
+
+afterEach(cleanup);
 
 function userTurn(overrides: Partial<UserTurn> = {}): UserTurn {
   return {
@@ -66,7 +68,7 @@ describe("MessageList", () => {
     const { container } = render(<MessageList turns={turns} />);
     const system = container.querySelector(".message-system");
     expect(system).not.toBeNull();
-    expect(system?.textContent).toContain("System");
+    expect(container.textContent).toContain("System");
   });
 
   test("renders empty list with no turns", () => {
@@ -129,10 +131,8 @@ describe("MessageList", () => {
   test("renders parse error messages", () => {
     const turns: Turn[] = [parseErrorTurn()];
     const { container } = render(<MessageList turns={turns} />);
-    const turn = container.querySelector(".turn");
-    expect(turn).not.toBeNull();
-    expect(turn?.textContent).toContain("Parse Error");
-    expect(turn?.textContent).toContain("line 42");
+    expect(container.textContent).toContain("Parse Error");
+    expect(container.textContent).toContain("line 42");
     const el = container.querySelector(".message-parse-error");
     expect(el).not.toBeNull();
     expect(el?.textContent).toContain("Invalid JSON");

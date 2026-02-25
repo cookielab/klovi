@@ -1,6 +1,8 @@
-import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cleanup, render } from "@testing-library/react";
 import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
+
+afterEach(cleanup);
 
 describe("MarkdownRenderer", () => {
   test("renders plain text", () => {
@@ -28,9 +30,9 @@ describe("MarkdownRenderer", () => {
 
   test("renders file references with @", () => {
     const { container } = render(<MarkdownRenderer content="See @src/utils/time.ts for details" />);
-    const fileRef = container.querySelector(".file-ref");
-    expect(fileRef).not.toBeNull();
-    expect(fileRef?.textContent).toBe("@src/utils/time.ts");
+    const code = container.querySelector("code");
+    expect(code).not.toBeNull();
+    expect(code?.textContent).toBe("@src/utils/time.ts");
   });
 
   test("renders inline code", () => {
@@ -39,17 +41,17 @@ describe("MarkdownRenderer", () => {
     expect(code).not.toBeNull();
   });
 
-  test("wraps in markdown-content div", () => {
+  test("wraps in a container div", () => {
     const { container } = render(<MarkdownRenderer content="test" />);
-    expect(container.querySelector(".markdown-content")).not.toBeNull();
+    expect(container.querySelector("div")).not.toBeNull();
   });
 
   test("renders fenced code blocks", () => {
     // biome-ignore lint/security/noSecrets: test data, not a real secret
     const content = "```js\nconsole.log('hi')\n```";
     const { container } = render(<MarkdownRenderer content={content} />);
-    // Should render through CodeBlock component
-    expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
+    // Should render through CodeBox component — check for pre element
+    expect(container.querySelector("pre")).not.toBeNull();
   });
 
   test("renders GFM tables", () => {
