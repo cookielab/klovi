@@ -1,8 +1,67 @@
+diff --git a/dist/api/bun/core/ApplicationMenu.ts b/dist/api/bun/core/ApplicationMenu.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/ApplicationMenu.ts
++++ b/dist/api/bun/core/ApplicationMenu.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, type ApplicationMenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { roleLabelMap } from "./menuRoles";
+diff --git a/dist/api/bun/core/BrowserView.ts b/dist/api/bun/core/BrowserView.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/BrowserView.ts
++++ b/dist/api/bun/core/BrowserView.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { native, toCString, ffi } from "../proc/native";
+ import * as fs from "fs";
+ import electrobunEventEmitter from "../events/eventEmitter";
+diff --git a/dist/api/bun/core/BrowserWindow.ts b/dist/api/bun/core/BrowserWindow.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/BrowserWindow.ts
++++ b/dist/api/bun/core/BrowserWindow.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { BrowserView } from "./BrowserView";
+diff --git a/dist/api/bun/core/ContextMenu.ts b/dist/api/bun/core/ContextMenu.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/ContextMenu.ts
++++ b/dist/api/bun/core/ContextMenu.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ // TODO: have a context specific menu that excludes role
+ import { ffi, type ApplicationMenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+diff --git a/dist/api/bun/core/Socket.ts b/dist/api/bun/core/Socket.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/Socket.ts
++++ b/dist/api/bun/core/Socket.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import type { Server, ServerWebSocket } from "bun";
+ import { BrowserView } from "./BrowserView";
+ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+diff --git a/dist/api/bun/core/Tray.ts b/dist/api/bun/core/Tray.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/Tray.ts
++++ b/dist/api/bun/core/Tray.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, type MenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { VIEWS_FOLDER } from "./Paths";
 diff --git a/dist/api/bun/core/Updater.ts b/dist/api/bun/core/Updater.ts
 index c747d1f91d7ad2451c5a9c1cf16ba7720da48e03..f4df82b3572367bae109cb1bccfe89098d3ce67d 100644
 --- a/dist/api/bun/core/Updater.ts
 +++ b/dist/api/bun/core/Updater.ts
-@@ -4,7 +4,7 @@ import {
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { join, dirname, resolve } from "path";
+ import { homedir } from "os";
+ import {
+@@ -4,7 +5,7 @@ import {
  	renameSync,
  	unlinkSync,
  	mkdirSync,
@@ -11,7 +70,7 @@ index c747d1f91d7ad2451c5a9c1cf16ba7720da48e03..f4df82b3572367bae109cb1bccfe8909
  	statSync,
  	readdirSync,
  } from "fs";
-@@ -145,7 +145,7 @@ function cleanupExtractionFolder(
+@@ -145,7 +146,7 @@ function cleanupExtractionFolder(
  			try {
  				const s = statSync(fullPath);
  				if (s.isDirectory()) {
@@ -20,21 +79,39 @@ index c747d1f91d7ad2451c5a9c1cf16ba7720da48e03..f4df82b3572367bae109cb1bccfe8909
  				} else {
  					unlinkSync(fullPath);
  				}
-@@ -895,7 +895,7 @@ const Updater = {
+@@ -895,7 +896,7 @@ const Updater = {
  					if (currentOS === "macos") {
  						// Remove existing app before installing the new one
  						if (statSync(runningAppBundlePath, { throwIfNoEntry: false })) {
 -							rmdirSync(runningAppBundlePath, { recursive: true });
 +							rmSync(runningAppBundlePath, { recursive: true });
  						}
- 
+
  						emitStatus("replacing-app", "Installing new version...");
-@@ -920,7 +920,7 @@ const Updater = {
- 						
+@@ -920,7 +921,7 @@ const Updater = {
+
  						// Remove existing app directory if it exists
  						if (statSync(appBundleDir, { throwIfNoEntry: false })) {
 -							rmdirSync(appBundleDir, { recursive: true });
 +							rmSync(appBundleDir, { recursive: true });
  						}
- 
+
  						// Move new app bundle directory to app location
+diff --git a/dist/api/bun/core/Utils.ts b/dist/api/bun/core/Utils.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/Utils.ts
++++ b/dist/api/bun/core/Utils.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, native } from "../proc/native";
+ import { electrobunEventEmitter } from "../events/eventEmitter";
+ import { homedir, tmpdir } from "node:os";
+diff --git a/dist/api/bun/proc/native.ts b/dist/api/bun/proc/native.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/proc/native.ts
++++ b/dist/api/bun/proc/native.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { join } from "path";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import ElectrobunEvent from "../events/event";
