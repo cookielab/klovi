@@ -1,0 +1,80 @@
+.statusNotice {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0;
+  margin-bottom: 16px;
+}
+
+.ideOpenedFilePath {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: none;
+  padding: 0;
+}
+
+.ideOpenedFileNotice {
+  font-style: normal;
+}
+
+.commandCall {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.commandCallLabel {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.skillBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 6px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.attachments {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.attachmentBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.sessionLink {
+  margin-left: 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.sessionLink:hover {
+  text-decoration: underline;
+  opacity: 1;
+}

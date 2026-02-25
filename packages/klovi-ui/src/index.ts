@@ -1,6 +1,15 @@
 // Re-exports from all domains — populated as domains are built
 
 export {
+  AssistantMessage,
+  MarkdownRenderer,
+  MessageList,
+  SubAgentView,
+  ThinkingBlock as ThinkingBlockComponent,
+  UserBashContent,
+  UserMessage,
+} from "./messages/index.ts";
+export {
   BashToolContent,
   DiffView,
   formatDiff,

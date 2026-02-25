@@ -1,0 +1,12 @@
+.thinkingBlock {
+  margin: 2px 0;
+}
+
+.thinkingContent {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}

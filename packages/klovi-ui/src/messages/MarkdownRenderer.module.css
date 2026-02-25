@@ -1,0 +1,88 @@
+.markdownContent {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.markdownContent p {
+  margin-bottom: 0.75em;
+}
+
+.markdownContent p:last-child {
+  margin-bottom: 0;
+}
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3,
+.markdownContent h4 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.markdownContent h1 {
+  font-size: 1.4em;
+}
+.markdownContent h2 {
+  font-size: 1.2em;
+}
+.markdownContent h3 {
+  font-size: 1.1em;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+}
+
+.markdownContent li {
+  margin-bottom: 0.25em;
+}
+
+.markdownContent code:not(pre code) {
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 0;
+  font-size: 0.88em;
+}
+
+.fileRef {
+  background: transparent;
+  color: var(--accent);
+  font-weight: 500;
+  border: none;
+  padding: 0;
+}
+
+.markdownContent pre {
+  margin: 0.75em 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.markdownContent blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: var(--text-secondary);
+}
+
+.markdownContent table {
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  width: 100%;
+}
+
+.markdownContent th,
+.markdownContent td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.markdownContent th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+}

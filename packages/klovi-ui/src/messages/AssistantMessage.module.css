@@ -1,0 +1,66 @@
+.execTree {
+  margin-top: 12px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.execTree::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--tree-line);
+}
+
+.treeNode {
+  position: relative;
+  padding: 5px 0;
+}
+
+.treeNode::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 17px;
+  width: 11px;
+  height: 1px;
+  background: var(--tree-line);
+}
+
+/* Hide the vertical line below the last node */
+.treeNode:last-child::after {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 17px;
+  bottom: 0;
+  width: 2px;
+  background: var(--bg-card);
+}
+
+.tokenUsage {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+  text-align: right;
+}
+
+.stepEnter {
+  animation: stepFadeIn 0.3s ease forwards;
+}
+
+@keyframes stepFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
