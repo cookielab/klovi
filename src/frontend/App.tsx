@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@cookielab.io/klovi-ui/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
 import type { GlobalSessionResult } from "../shared/types.ts";
@@ -12,7 +13,6 @@ import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
 import type { SettingsTab } from "./components/settings/SettingsSidebar.tsx";
 import { SettingsView } from "./components/settings/SettingsView.tsx";
-import { ErrorBoundary } from "./components/ui/ErrorBoundary.tsx";
 import { Onboarding } from "./components/ui/Onboarding.tsx";
 import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";

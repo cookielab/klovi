@@ -1,6 +1,6 @@
+import { FetchError } from "@cookielab.io/klovi-ui/utilities";
 import { useSessionData } from "../../hooks/useSessionData.ts";
 import { PackageMessageList } from "../message/PackageMessageList.tsx";
-import { FetchError } from "../ui/FetchError.tsx";
 
 interface SessionViewProps {
   sessionId: string;
