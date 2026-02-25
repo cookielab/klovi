@@ -1,3 +1,4 @@
+import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useEffect, useRef } from "react";
 import { MessageList } from "../messages/index.ts";
 import type { Turn } from "../types/index.ts";
@@ -16,6 +17,8 @@ interface PresentationShellProps {
   project?: string | undefined;
   pluginId?: string | undefined;
   isSubAgent?: boolean | undefined;
+  onLinkClick?: ((url: string) => void) | undefined;
+  getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
   onNavigateToSubAgent?: ((id: string) => void) | undefined;
   theme?: string | undefined;
   fontSize?: number | undefined;
@@ -28,6 +31,8 @@ export function PresentationShell({
   project,
   pluginId,
   isSubAgent,
+  onLinkClick,
+  getFrontendPlugin,
 }: PresentationShellProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const presentation = usePresentationMode(turns);
@@ -84,6 +89,8 @@ export function PresentationShell({
         project={project}
         pluginId={pluginId}
         isSubAgent={isSubAgent}
+        onLinkClick={onLinkClick}
+        getFrontendPlugin={getFrontendPlugin}
       />
       <div className={s(styles["progress"])}>
         <span>

@@ -1,6 +1,6 @@
 import { useSessionData } from "../../hooks/useSessionData.ts";
 import { FetchError } from "../ui/FetchError.tsx";
-import { PresentationShell } from "./PresentationShell.tsx";
+import { PackagePresentationShell } from "./PackagePresentationShell.tsx";
 
 interface SessionPresentationProps {
   sessionId: string;
@@ -16,7 +16,7 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
   if (!data?.session) return null;
 
   return (
-    <PresentationShell
+    <PackagePresentationShell
       turns={data.session.turns}
       onExit={onExit}
       sessionId={sessionId}

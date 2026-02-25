@@ -1,7 +1,7 @@
 import type React from "react";
 import type { Project, SessionSummary } from "../shared/types.ts";
-import { ProjectList } from "./components/project/ProjectList.tsx";
-import { SessionList } from "./components/project/SessionList.tsx";
+import { PackageProjectList } from "./components/project/PackageProjectList.tsx";
+import { PackageSessionList } from "./components/project/PackageSessionList.tsx";
 import { SettingsSidebar, type SettingsTab } from "./components/settings/SettingsSidebar.tsx";
 import type { ViewState } from "./view-state.ts";
 
@@ -26,7 +26,7 @@ export function getSidebarContent(
 
   if (view.kind === "home" || view.kind === "hidden") {
     return (
-      <ProjectList
+      <PackageProjectList
         onSelect={actions.selectProject}
         hiddenIds={hiddenIds}
         onHide={actions.hide}
@@ -37,7 +37,7 @@ export function getSidebarContent(
 
   if (view.kind === "project") {
     return (
-      <SessionList
+      <PackageSessionList
         project={view.project}
         onSelect={actions.selectSession}
         onBack={actions.goHome}
@@ -47,7 +47,7 @@ export function getSidebarContent(
 
   if (view.kind === "subagent") {
     return (
-      <SessionList
+      <PackageSessionList
         project={view.project}
         onSelect={actions.selectSession}
         onBack={actions.goHome}
@@ -57,7 +57,7 @@ export function getSidebarContent(
   }
 
   return (
-    <SessionList
+    <PackageSessionList
       project={view.project}
       onSelect={actions.selectSession}
       onBack={actions.goHome}

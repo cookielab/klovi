@@ -1,6 +1,6 @@
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { FetchError } from "../ui/FetchError.tsx";
-import { PresentationShell } from "./PresentationShell.tsx";
+import { PackagePresentationShell } from "./PackagePresentationShell.tsx";
 
 interface SubAgentPresentationProps {
   sessionId: string;
@@ -22,7 +22,7 @@ export function SubAgentPresentation({
   if (!data?.session || data.session.turns.length === 0) return null;
 
   return (
-    <PresentationShell
+    <PackagePresentationShell
       turns={data.session.turns}
       onExit={onExit}
       sessionId={sessionId}

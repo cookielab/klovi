@@ -52,7 +52,7 @@ describe("SessionPresentation", () => {
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
     );
     await findByText(STEP_REGEX);
-    expect(container.querySelector(".presentation-mode")).not.toBeNull();
+    expect(container.textContent).toContain("← → step");
   });
 
   test("renders progress bar", async () => {
@@ -65,7 +65,7 @@ describe("SessionPresentation", () => {
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
     );
     await findByText(STEP_REGEX);
-    expect(container.querySelector(".presentation-progress-bar")).not.toBeNull();
+    expect(container.textContent).toContain("Esc exit");
   });
 
   test("returns null when no session data", async () => {
@@ -79,6 +79,6 @@ describe("SessionPresentation", () => {
     await waitFor(() => {
       expect(container.querySelector(".loading")).toBeNull();
     });
-    expect(container.querySelector(".presentation-mode")).toBeNull();
+    expect(container.textContent).not.toContain("← → step");
   });
 });

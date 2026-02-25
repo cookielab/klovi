@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
 import type { GlobalSessionResult } from "../shared/types.ts";
-import { DashboardStats } from "./components/dashboard/DashboardStats.tsx";
+import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats.tsx";
 import { Header } from "./components/layout/Header.tsx";
 import { Layout } from "./components/layout/Layout.tsx";
-import { SubAgentView } from "./components/message/SubAgentView.tsx";
-import { HiddenProjectList } from "./components/project/HiddenProjectList.tsx";
-import { SearchModal } from "./components/search/SearchModal.tsx";
+import { PackageSubAgentView } from "./components/message/PackageSubAgentView.tsx";
+import { PackageHiddenProjectList } from "./components/project/PackageHiddenProjectList.tsx";
+import { PackageSearchModal } from "./components/search/PackageSearchModal.tsx";
 import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
 import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
@@ -217,7 +217,7 @@ export function App() {
   return (
     <>
       {searchOpen && (
-        <SearchModal
+        <PackageSearchModal
           sessions={searchSessions}
           onSelect={handleSearchSelect}
           onClose={() => setSearchOpen(false)}
@@ -248,11 +248,11 @@ export function App() {
                 <div className="empty-state-title">Welcome to Klovi</div>
                 <p>Select a project from the sidebar to browse your AI coding sessions</p>
               </div>
-              <DashboardStats />
+              <PackageDashboardStats />
             </>
           )}
           {view.kind === "hidden" && (
-            <HiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
+            <PackageHiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
           )}
           {view.kind === "settings" && (
             <SettingsView
@@ -293,7 +293,7 @@ export function App() {
                 onExit={togglePresentation}
               />
             ) : (
-              <SubAgentView
+              <PackageSubAgentView
                 sessionId={view.sessionId}
                 project={view.project.encodedPath}
                 agentId={view.agentId}

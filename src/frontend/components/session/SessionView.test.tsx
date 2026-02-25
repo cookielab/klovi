@@ -76,11 +76,9 @@ describe("SessionView", () => {
       getSession: () => Promise.resolve({ session }),
     });
 
-    const { findByText, container } = render(
-      <SessionView sessionId="session-1" project="test-project" />,
-    );
+    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
     await findByText("Hello world");
-    expect(container.querySelector(".message-user")).not.toBeNull();
-    expect(container.querySelector(".message-assistant")).not.toBeNull();
+    await findByText("User");
+    await findByText("Assistant");
   });
 });

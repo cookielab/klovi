@@ -1,5 +1,5 @@
 import { useSessionData } from "../../hooks/useSessionData.ts";
-import { MessageList } from "../message/MessageList.tsx";
+import { PackageMessageList } from "../message/PackageMessageList.tsx";
 import { FetchError } from "../ui/FetchError.tsx";
 
 interface SessionViewProps {
@@ -23,7 +23,7 @@ export function SessionView({ sessionId, project, gitBranch }: SessionViewProps)
           <span className="session-branch-icon">⎇</span> {gitBranch}
         </div>
       )}
-      <MessageList
+      <PackageMessageList
         turns={session.turns}
         sessionId={sessionId}
         project={project}

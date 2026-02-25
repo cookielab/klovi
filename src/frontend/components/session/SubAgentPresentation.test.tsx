@@ -63,7 +63,7 @@ describe("SubAgentPresentation", () => {
       />,
     );
     await findByText(STEP_REGEX);
-    expect(container.querySelector(".presentation-mode")).not.toBeNull();
+    expect(container.textContent).toContain("← → step");
   });
 
   test("returns null when session has no turns", async () => {
@@ -83,7 +83,7 @@ describe("SubAgentPresentation", () => {
     await waitFor(() => {
       expect(container.querySelector(".loading")).toBeNull();
     });
-    expect(container.querySelector(".presentation-mode")).toBeNull();
+    expect(container.textContent).not.toContain("← → step");
   });
 
   test("returns null when session is null", async () => {
@@ -102,6 +102,6 @@ describe("SubAgentPresentation", () => {
     await waitFor(() => {
       expect(container.querySelector(".loading")).toBeNull();
     });
-    expect(container.querySelector(".presentation-mode")).toBeNull();
+    expect(container.textContent).not.toContain("← → step");
   });
 });
