@@ -20,7 +20,7 @@
     "dev": "electrobun dev",
     "build": "electrobun build",
     "test": "bun test",
-    "typecheck": "bash -c 'errors=$(tsc --noEmit 2>&1 | grep \"error TS\" | grep -v node_modules); if [ -n \"$errors\" ]; then echo \"$errors\"; exit 1; fi'",
+    "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check .",
@@ -33,7 +33,7 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "chrome-devtools-mcp": "^0.17.3",
+    "chrome-devtools-mcp": "^0.18.0",
     "happy-dom": "^20.5.0"
   },
   "dependencies": {
