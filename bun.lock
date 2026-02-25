@@ -79,6 +79,9 @@
         "react-syntax-highlighter": "^16.1.0",
         "remark-gfm": "^4.0.1",
       },
+      "devDependencies": {
+        "@testing-library/react": "^16.3.2",
+      },
       "peerDependencies": {
         "@cookielab.io/klovi-design-system": "workspace:*",
         "@cookielab.io/klovi-plugin-core": "workspace:*",
