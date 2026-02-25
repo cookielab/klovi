@@ -12,7 +12,7 @@ describe("CodeBlock", () => {
     const { container } = render(<CodeBlock language="typescript">const x = 1;</CodeBlock>);
     const header = container.querySelector(".code-block-header");
     expect(header).not.toBeNull();
-    expect(header!.textContent).toBe("typescript");
+    expect(header?.textContent).toBe("typescript");
   });
 
   test("hides language header when no language", () => {
@@ -28,7 +28,7 @@ describe("CodeBlock", () => {
   });
 
   test("strips trailing newline from content", () => {
-    const { container } = render(<CodeBlock language="js">{"line1\nline2\n"}</CodeBlock>);
+    const { container } = render(<CodeBlock language="js">line1\nline2\n</CodeBlock>);
     // SyntaxHighlighter receives children with trailing newline removed
     // We can verify the wrapper renders without issues
     expect(container.querySelector(".code-block-content")).not.toBeNull();

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { PluginProject, ToolPlugin } from "../shared/plugin-types.ts";
+import type { MergedProject, PluginProject, ToolPlugin } from "../shared/plugin-types.ts";
 import type { SessionSummary } from "../shared/types.ts";
 import { PluginRegistry } from "./registry.ts";
 
@@ -101,14 +101,14 @@ describe("PluginRegistry", () => {
     const projects = await registry.discoverAllProjects();
     expect(projects).toHaveLength(1);
 
-    const merged = projects[0]!;
-    expect(merged.resolvedPath).toBe("/Users/foo/project");
-    expect(merged.sessionCount).toBe(8);
-    expect(merged.lastActivity).toBe("2025-01-02T00:00:00Z");
-    expect(merged.encodedPath).toBe("-Users-foo-project");
-    expect(merged.sources).toHaveLength(2);
-    expect(merged.sources).toContainEqual({ pluginId: "plugin-a", nativeId: "native-a" });
-    expect(merged.sources).toContainEqual({ pluginId: "plugin-b", nativeId: "native-b" });
+    const merged = projects[0];
+    expect(merged?.resolvedPath).toBe("/Users/foo/project");
+    expect(merged?.sessionCount).toBe(8);
+    expect(merged?.lastActivity).toBe("2025-01-02T00:00:00Z");
+    expect(merged?.encodedPath).toBe("-Users-foo-project");
+    expect(merged?.sources).toHaveLength(2);
+    expect(merged?.sources).toContainEqual({ pluginId: "plugin-a", nativeId: "native-a" });
+    expect(merged?.sources).toContainEqual({ pluginId: "plugin-b", nativeId: "native-b" });
   });
 
   test("discoverAllProjects keeps separate paths separate", async () => {
@@ -175,9 +175,9 @@ describe("PluginRegistry", () => {
 
     const projects = await registry.discoverAllProjects();
     expect(projects).toHaveLength(3);
-    expect(projects[0]!.resolvedPath).toBe("/Users/foo/new-project");
-    expect(projects[1]!.resolvedPath).toBe("/Users/foo/mid-project");
-    expect(projects[2]!.resolvedPath).toBe("/Users/foo/old-project");
+    expect(projects[0]?.resolvedPath).toBe("/Users/foo/new-project");
+    expect(projects[1]?.resolvedPath).toBe("/Users/foo/mid-project");
+    expect(projects[2]?.resolvedPath).toBe("/Users/foo/old-project");
   });
 
   test("discoverAllProjects handles plugin discovery failure", async () => {
@@ -200,7 +200,7 @@ describe("PluginRegistry", () => {
 
     const projects = await registry.discoverAllProjects();
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.resolvedPath).toBe("/Users/foo/working");
+    expect(projects[0]?.resolvedPath).toBe("/Users/foo/working");
   });
 
   test("listAllSessions aggregates from all sources with pluginId", async () => {
@@ -275,16 +275,17 @@ describe("PluginRegistry", () => {
     const projects = await registry.discoverAllProjects();
     expect(projects).toHaveLength(1);
 
-    const sessions = await registry.listAllSessions(projects[0]!);
+    const project = projects[0] as MergedProject;
+    const sessions = await registry.listAllSessions(project);
     expect(sessions).toHaveLength(3);
 
     // Sorted by timestamp descending
-    expect(sessions[0]!.sessionId).toBe("plugin-b::session-3");
-    expect(sessions[0]!.timestamp).toBe("2025-01-03T10:00:00Z");
-    expect(sessions[1]!.sessionId).toBe("plugin-a::session-2");
-    expect(sessions[1]!.timestamp).toBe("2025-01-02T10:00:00Z");
-    expect(sessions[2]!.sessionId).toBe("plugin-a::session-1");
-    expect(sessions[2]!.timestamp).toBe("2025-01-01T10:00:00Z");
+    expect(sessions[0]?.sessionId).toBe("plugin-b::session-3");
+    expect(sessions[0]?.timestamp).toBe("2025-01-03T10:00:00Z");
+    expect(sessions[1]?.sessionId).toBe("plugin-a::session-2");
+    expect(sessions[1]?.timestamp).toBe("2025-01-02T10:00:00Z");
+    expect(sessions[2]?.sessionId).toBe("plugin-a::session-1");
+    expect(sessions[2]?.timestamp).toBe("2025-01-01T10:00:00Z");
   });
 
   test("listAllSessions handles plugin failure gracefully", async () => {
@@ -323,6 +324,6 @@ describe("PluginRegistry", () => {
 
     const sessions = await registry.listAllSessions(mergedProject);
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.sessionId).toBe("working-plugin::session-ok");
+    expect(sessions[0]?.sessionId).toBe("working-plugin::session-ok");
   });
 });

@@ -129,7 +129,7 @@ describe("useKeyboard", () => {
         <KeyboardTestHarness handlers={{ onNext }} active />
       </div>,
     );
-    const input = container.querySelector("input")!;
+    const input = container.querySelector("input") as HTMLInputElement;
     fireEvent.keyDown(input, { key: "ArrowRight" });
     fireEvent.keyDown(input, { key: " " });
     expect(onNext).toHaveBeenCalledTimes(0);
@@ -143,7 +143,7 @@ describe("useKeyboard", () => {
         <KeyboardTestHarness handlers={{ onNext }} active />
       </div>,
     );
-    const textarea = container.querySelector("textarea")!;
+    const textarea = container.querySelector("textarea") as HTMLTextAreaElement;
     fireEvent.keyDown(textarea, { key: "ArrowRight" });
     expect(onNext).toHaveBeenCalledTimes(0);
   });

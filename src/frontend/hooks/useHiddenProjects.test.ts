@@ -36,7 +36,7 @@ describe("useHiddenProjects", () => {
   test("persists to localStorage with version", () => {
     const { result } = renderHook(() => useHiddenProjects());
     act(() => result.current.hide("project-a"));
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
     expect(stored).toEqual({ version: 1, hiddenIds: ["project-a"] });
   });
 

@@ -27,7 +27,7 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     expect(turns).toHaveLength(1);
-    expect(turns[0]!.kind).toBe("user");
+    expect(turns[0]?.kind).toBe("user");
     expect((turns[0] as UserTurn).text).toBe("Hello world");
   });
 
@@ -110,9 +110,9 @@ describe("buildTurns", () => {
     expect(turns).toHaveLength(1);
     const turn = turns[0] as AssistantTurn;
     expect(turn.contentBlocks).toHaveLength(1);
-    const call = turn.contentBlocks[0]!;
-    expect(call.type).toBe("tool_call");
-    if (call.type === "tool_call") {
+    const call = turn.contentBlocks[0];
+    expect(call?.type).toBe("tool_call");
+    if (call?.type === "tool_call") {
       expect(call.call.name).toBe("Read");
       expect(call.call.result).toBe("file contents here");
       expect(call.call.isError).toBe(false);
@@ -153,9 +153,9 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     const turn = turns[0] as AssistantTurn;
-    const call = turn.contentBlocks[0]!;
-    expect(call.type).toBe("tool_call");
-    if (call.type === "tool_call") {
+    const call = turn.contentBlocks[0];
+    expect(call?.type).toBe("tool_call");
+    if (call?.type === "tool_call") {
       expect(call.call.isError).toBe(true);
       expect(call.call.result).toBe("command failed");
     }
@@ -184,8 +184,8 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     const turn = turns[0] as UserTurn;
     expect(turn.attachments).toHaveLength(1);
-    expect(turn.attachments![0]!.type).toBe("image");
-    expect(turn.attachments![0]!.mediaType).toBe("image/png");
+    expect(turn.attachments?.[0]?.type).toBe("image");
+    expect(turn.attachments?.[0]?.mediaType).toBe("image/png");
   });
 
   test("command message parsing", () => {
@@ -202,7 +202,7 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     const turn = turns[0] as UserTurn;
     expect(turn.command).toBeDefined();
-    expect(turn.command!.name).toBe("/commit");
+    expect(turn.command?.name).toBe("/commit");
     expect(turn.text).toBe("fix: resolve bug");
   });
 
@@ -575,7 +575,7 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     expect(turns).toHaveLength(1);
-    expect(turns[0]!.kind).toBe("system");
+    expect(turns[0]?.kind).toBe("system");
     expect((turns[0] as SystemTurn).text).toBe("System initialized");
   });
 
@@ -599,10 +599,10 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     const turn = turns[0] as AssistantTurn;
     expect(turn.usage).toBeDefined();
-    expect(turn.usage!.inputTokens).toBe(1500);
-    expect(turn.usage!.outputTokens).toBe(300);
-    expect(turn.usage!.cacheReadTokens).toBe(1200);
-    expect(turn.usage!.cacheCreationTokens).toBe(100);
+    expect(turn.usage?.inputTokens).toBe(1500);
+    expect(turn.usage?.outputTokens).toBe(300);
+    expect(turn.usage?.cacheReadTokens).toBe(1200);
+    expect(turn.usage?.cacheCreationTokens).toBe(100);
   });
 
   test("stop reason extraction", () => {
@@ -665,13 +665,13 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines);
     const turn = turns[0] as AssistantTurn;
-    const call = turn.contentBlocks[0]!;
-    expect(call.type).toBe("tool_call");
-    if (call.type === "tool_call") {
+    const call = turn.contentBlocks[0];
+    expect(call?.type).toBe("tool_call");
+    if (call?.type === "tool_call") {
       expect(call.call.result).toBe("Image read successfully");
       expect(call.call.resultImages).toHaveLength(1);
-      expect(call.call.resultImages![0]!.mediaType).toBe("image/png");
-      expect(call.call.resultImages![0]!.data).toBe("AAAA");
+      expect(call.call.resultImages?.[0]?.mediaType).toBe("image/png");
+      expect(call.call.resultImages?.[0]?.data).toBe("AAAA");
     }
   });
 
@@ -728,7 +728,7 @@ describe("buildTurns", () => {
     const turns = buildTurns(lines);
     expect(turns).toHaveLength(2);
     expect((turns[0] as UserTurn).text).toBe("After malformed");
-    expect(turns[1]!.kind).toBe("parse_error");
+    expect(turns[1]?.kind).toBe("parse_error");
     const parseError = turns[1] as import("../shared/types.ts").ParseErrorTurn;
     expect(parseError.errorType).toBe("invalid_structure");
     expect(parseError.rawLine).toContain("just a string");
@@ -754,8 +754,8 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns(lines, parseErrors);
     expect(turns).toHaveLength(2);
-    expect(turns[0]!.kind).toBe("user");
-    expect(turns[1]!.kind).toBe("parse_error");
+    expect(turns[0]?.kind).toBe("user");
+    expect(turns[1]?.kind).toBe("parse_error");
     const error = turns[1] as import("../shared/types.ts").ParseErrorTurn;
     expect(error.lineNumber).toBe(5);
     expect(error.rawLine).toBe("{invalid json");
@@ -783,8 +783,8 @@ describe("buildTurns", () => {
     ];
     const turns = buildTurns([], parseErrors);
     expect(turns).toHaveLength(2);
-    expect(turns[0]!.kind).toBe("parse_error");
-    expect(turns[1]!.kind).toBe("parse_error");
+    expect(turns[0]?.kind).toBe("parse_error");
+    expect(turns[1]?.kind).toBe("parse_error");
   });
 });
 

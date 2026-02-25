@@ -20,7 +20,7 @@ describe("UserMessage", () => {
     );
     const notice = container.querySelector(".status-notice");
     expect(notice).not.toBeNull();
-    expect(notice!.textContent).toBe("[Request interrupted by user]");
+    expect(notice?.textContent).toBe("[Request interrupted by user]");
   });
 
   test("command call badge for slash commands", () => {
@@ -34,10 +34,10 @@ describe("UserMessage", () => {
     );
     const badge = container.querySelector(".command-call-label");
     expect(badge).not.toBeNull();
-    expect(badge!.textContent).toBe("/commit");
+    expect(badge?.textContent).toBe("/commit");
     const skillBadge = container.querySelector(".tool-skill-badge");
     expect(skillBadge).not.toBeNull();
-    expect(skillBadge!.textContent).toBe("skill");
+    expect(skillBadge?.textContent).toBe("skill");
   });
 
   test("attachment badges for images", () => {
@@ -51,7 +51,7 @@ describe("UserMessage", () => {
     );
     const badge = container.querySelector(".attachment-badge");
     expect(badge).not.toBeNull();
-    expect(badge!.textContent).toBe("image/png");
+    expect(badge?.textContent).toBe("image/png");
   });
 
   test("bash-input renders as user card with command section", () => {
@@ -61,7 +61,7 @@ describe("UserMessage", () => {
     expect(container.querySelector(".turn")).not.toBeNull();
     expect(container.querySelector(".turn-badge-user")).not.toBeNull();
     expect(container.querySelector(".tool-section-label")).not.toBeNull();
-    expect(container.querySelector(".tool-section-label")!.textContent).toBe("Command");
+    expect(container.querySelector(".tool-section-label")?.textContent).toBe("Command");
   });
 
   test("ide_opened_file renders with file path styling", () => {
@@ -72,7 +72,7 @@ describe("UserMessage", () => {
     expect(notice).not.toBeNull();
     const path = container.querySelector(".ide-opened-file-path");
     expect(path).not.toBeNull();
-    expect(path!.textContent).toBe("/Users/dev/project/.env");
+    expect(path?.textContent).toBe("/Users/dev/project/.env");
   });
 
   test("bash stdout renders as user card with SmartToolOutput", () => {
@@ -83,7 +83,7 @@ describe("UserMessage", () => {
     expect(container.querySelector(".turn-badge-user")).not.toBeNull();
     const labels = container.querySelectorAll(".tool-section-label");
     expect(labels.length).toBeGreaterThanOrEqual(1);
-    expect(labels[0]!.textContent).toBe("Output");
+    expect(labels[0]?.textContent).toBe("Output");
   });
 
   test("bash stderr renders inside user card", () => {
@@ -121,7 +121,7 @@ describe("UserMessage", () => {
     expect(message).not.toBeNull();
     expect(container.querySelector(".message-root-agent")).toBeNull();
     const role = container.querySelector(".turn-badge");
-    expect(role!.textContent).toContain("User");
+    expect(role?.textContent).toContain("User");
   });
 
   test("renders 'Root Agent' label with .message-root-agent class when isSubAgent", () => {
@@ -130,7 +130,7 @@ describe("UserMessage", () => {
     expect(message).not.toBeNull();
     expect(container.querySelector(".message-user")).toBeNull();
     const role = container.querySelector(".turn-badge");
-    expect(role!.textContent).toContain("Root Agent");
+    expect(role?.textContent).toContain("Root Agent");
   });
 
   test("renders plan session link when planSessionId and project are provided", () => {
@@ -143,8 +143,8 @@ describe("UserMessage", () => {
     );
     const link = container.querySelector(".subagent-link") as HTMLAnchorElement | null;
     expect(link).not.toBeNull();
-    expect(link!.textContent).toBe("View planning session");
-    expect(link!.getAttribute("href")).toBe("#/my-project/plan-123");
+    expect(link?.textContent).toBe("View planning session");
+    expect(link?.getAttribute("href")).toBe("#/my-project/plan-123");
   });
 
   test("does not render plan link for regular user messages", () => {
@@ -180,8 +180,8 @@ describe("UserMessage", () => {
     );
     const link = container.querySelector(".subagent-link") as HTMLAnchorElement | null;
     expect(link).not.toBeNull();
-    expect(link!.textContent).toBe("View implementation session");
-    expect(link!.getAttribute("href")).toBe("#/my-project/impl-456");
+    expect(link?.textContent).toBe("View implementation session");
+    expect(link?.getAttribute("href")).toBe("#/my-project/impl-456");
   });
 
   test("does not render impl link when implSessionId is absent", () => {
@@ -203,6 +203,6 @@ describe("UserMessage", () => {
     );
     const links = container.querySelectorAll(".subagent-link");
     expect(links).toHaveLength(1);
-    expect(links[0]!.textContent).toBe("View planning session");
+    expect(links[0]?.textContent).toBe("View planning session");
   });
 });

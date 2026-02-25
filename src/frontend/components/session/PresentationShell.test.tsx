@@ -51,7 +51,7 @@ describe("PresentationShell", () => {
     const { container } = render(
       <PresentationShell turns={makeTurns()} onExit={() => {}} sessionId="s1" project="proj1" />,
     );
-    expect(container.querySelector(".presentation-progress")!.textContent).toContain("Step");
+    expect(container.querySelector(".presentation-progress")?.textContent).toContain("Step");
   });
 
   test("shows progress bar", () => {
@@ -66,7 +66,7 @@ describe("PresentationShell", () => {
     const { container } = render(
       <PresentationShell turns={makeTurns()} onExit={() => {}} sessionId="s1" project="proj1" />,
     );
-    const progressText = container.querySelector(".presentation-progress")!.textContent!;
+    const progressText = container.querySelector(".presentation-progress")?.textContent;
     expect(progressText).toContain("Esc exit");
     expect(progressText).toContain("fullscreen");
   });

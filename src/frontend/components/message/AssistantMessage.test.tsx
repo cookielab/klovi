@@ -20,7 +20,7 @@ describe("AssistantMessage", () => {
       <AssistantMessage turn={makeTurn({ model: "claude-opus-4-6" })} />,
     );
     const role = container.querySelector(".turn-badge-model");
-    expect(role!.textContent).toContain("Opus");
+    expect(role?.textContent).toContain("Opus");
   });
 
   test("model name display — Sonnet", () => {
@@ -28,7 +28,7 @@ describe("AssistantMessage", () => {
       <AssistantMessage turn={makeTurn({ model: "claude-sonnet-4-5-20250929" })} />,
     );
     const role = container.querySelector(".turn-badge-model");
-    expect(role!.textContent).toContain("Sonnet");
+    expect(role?.textContent).toContain("Sonnet");
   });
 
   test("model name display — Haiku", () => {
@@ -36,7 +36,7 @@ describe("AssistantMessage", () => {
       <AssistantMessage turn={makeTurn({ model: "claude-haiku-4-5-20251001" })} />,
     );
     const role = container.querySelector(".turn-badge-model");
-    expect(role!.textContent).toContain("Haiku");
+    expect(role?.textContent).toContain("Haiku");
   });
 
   test("token usage footer displayed when usage exists", () => {
@@ -55,10 +55,10 @@ describe("AssistantMessage", () => {
     );
     const usage = container.querySelector(".token-usage");
     expect(usage).not.toBeNull();
-    expect(usage!.textContent).toContain("1,500 in");
-    expect(usage!.textContent).toContain("300 out");
-    expect(usage!.textContent).toContain("1,200 cache read");
-    expect(usage!.textContent).toContain("100 cache write");
+    expect(usage?.textContent).toContain("1,500 in");
+    expect(usage?.textContent).toContain("300 out");
+    expect(usage?.textContent).toContain("1,200 cache read");
+    expect(usage?.textContent).toContain("100 cache write");
   });
 
   test("token usage footer hidden when no usage", () => {
@@ -188,7 +188,7 @@ describe("AssistantMessage", () => {
     );
     const usage = container.querySelector(".token-usage");
     expect(usage).not.toBeNull();
-    expect(usage!.textContent).not.toContain("cache read");
-    expect(usage!.textContent).not.toContain("cache write");
+    expect(usage?.textContent).not.toContain("cache read");
+    expect(usage?.textContent).not.toContain("cache write");
   });
 });

@@ -19,7 +19,7 @@ describe("classifySessionTypes", () => {
       session({ sessionId: "s1", firstMessage: "Implement the following plan:\n\n# My plan" }),
     ];
     classifySessionTypes(sessions);
-    expect(sessions[0]!.sessionType).toBe("implementation");
+    expect(sessions[0]?.sessionType).toBe("implementation");
   });
 
   test("marks plan sessions by slug match with implementation session", () => {
@@ -32,8 +32,8 @@ describe("classifySessionTypes", () => {
       }),
     ];
     classifySessionTypes(sessions);
-    expect(sessions[0]!.sessionType).toBe("plan");
-    expect(sessions[1]!.sessionType).toBe("implementation");
+    expect(sessions[0]?.sessionType).toBe("plan");
+    expect(sessions[1]?.sessionType).toBe("implementation");
   });
 
   test("normal sessions have no sessionType", () => {
@@ -42,8 +42,8 @@ describe("classifySessionTypes", () => {
       session({ sessionId: "s2", slug: "feature-b", firstMessage: "Add dark mode" }),
     ];
     classifySessionTypes(sessions);
-    expect(sessions[0]!.sessionType).toBeUndefined();
-    expect(sessions[1]!.sessionType).toBeUndefined();
+    expect(sessions[0]?.sessionType).toBeUndefined();
+    expect(sessions[1]?.sessionType).toBeUndefined();
   });
 
   test("does not mark plan for different slugs", () => {
@@ -56,8 +56,8 @@ describe("classifySessionTypes", () => {
       }),
     ];
     classifySessionTypes(sessions);
-    expect(sessions[0]!.sessionType).toBeUndefined();
-    expect(sessions[1]!.sessionType).toBe("implementation");
+    expect(sessions[0]?.sessionType).toBeUndefined();
+    expect(sessions[1]?.sessionType).toBe("implementation");
   });
 
   test("handles multiple plan+impl pairs", () => {
@@ -77,10 +77,10 @@ describe("classifySessionTypes", () => {
       session({ sessionId: "s5", slug: "feat-3", firstMessage: "Normal session" }),
     ];
     classifySessionTypes(sessions);
-    expect(sessions[0]!.sessionType).toBe("plan");
-    expect(sessions[1]!.sessionType).toBe("implementation");
-    expect(sessions[2]!.sessionType).toBe("plan");
-    expect(sessions[3]!.sessionType).toBe("implementation");
-    expect(sessions[4]!.sessionType).toBeUndefined();
+    expect(sessions[0]?.sessionType).toBe("plan");
+    expect(sessions[1]?.sessionType).toBe("implementation");
+    expect(sessions[2]?.sessionType).toBe("plan");
+    expect(sessions[3]?.sessionType).toBe("implementation");
+    expect(sessions[4]?.sessionType).toBeUndefined();
   });
 });

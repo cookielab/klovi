@@ -80,9 +80,9 @@ describe("buildCodexTurns", () => {
     expect(assistant.kind).toBe("assistant");
     expect(assistant.model).toBe("o4-mini");
     expect(assistant.contentBlocks).toHaveLength(1);
-    expect(assistant.contentBlocks[0]!.type).toBe("text");
-    if (assistant.contentBlocks[0]!.type === "text") {
-      expect(assistant.contentBlocks[0]!.text).toBe("Hello, I can help!");
+    expect(assistant.contentBlocks[0]?.type).toBe("text");
+    if (assistant.contentBlocks[0]?.type === "text") {
+      expect(assistant.contentBlocks[0]?.text).toBe("Hello, I can help!");
     }
     expect(assistant.usage).toEqual({
       inputTokens: 100,
@@ -104,11 +104,11 @@ describe("buildCodexTurns", () => {
     expect(turns).toHaveLength(1);
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(2);
-    expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-    if (assistant.contentBlocks[0]!.type === "thinking") {
-      expect(assistant.contentBlocks[0]!.block.text).toBe("Let me think about this...");
+    expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+    if (assistant.contentBlocks[0]?.type === "thinking") {
+      expect(assistant.contentBlocks[0]?.block.text).toBe("Let me think about this...");
     }
-    expect(assistant.contentBlocks[1]!.type).toBe("text");
+    expect(assistant.contentBlocks[1]?.type).toBe("text");
   });
 
   test("builds tool call from command_execution", () => {
@@ -131,9 +131,9 @@ describe("buildCodexTurns", () => {
     expect(turns).toHaveLength(1);
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(1);
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.name).toBe("command_execution");
       expect(block.call.input).toEqual({ command: "ls -la" });
       expect(block.call.result).toContain("total 42");
@@ -159,8 +159,8 @@ describe("buildCodexTurns", () => {
     const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
     const assistant = turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    if (block?.type === "tool_call") {
       expect(block.call.isError).toBe(true);
     }
   });
@@ -184,9 +184,9 @@ describe("buildCodexTurns", () => {
     const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
     const assistant = turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.name).toBe("file_change");
       expect(block.call.input).toEqual({
         changes: [
@@ -217,9 +217,9 @@ describe("buildCodexTurns", () => {
     const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
     const assistant = turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.name).toBe("search_docs");
       expect(block.call.input).toEqual({ query: "authentication" });
       expect(block.call.result).toBe("Found 3 results");
@@ -239,9 +239,9 @@ describe("buildCodexTurns", () => {
     const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
     const assistant = turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.name).toBe("web_search");
       expect(block.call.input).toEqual({ query: "how to use bun test" });
     }
@@ -279,14 +279,14 @@ describe("buildCodexTurns", () => {
 
     // First turn is assistant, then user (empty, from second turn.started), then assistant
     expect(turns).toHaveLength(3);
-    expect(turns[0]!.kind).toBe("assistant");
-    expect(turns[1]!.kind).toBe("user");
-    expect(turns[2]!.kind).toBe("assistant");
+    expect(turns[0]?.kind).toBe("assistant");
+    expect(turns[1]?.kind).toBe("user");
+    expect(turns[2]?.kind).toBe("assistant");
 
     const first = turns[0] as AssistantTurn;
-    expect(first.contentBlocks[0]!.type).toBe("text");
-    if (first.contentBlocks[0]!.type === "text") {
-      expect(first.contentBlocks[0]!.text).toBe("First response");
+    expect(first.contentBlocks[0]?.type).toBe("text");
+    if (first.contentBlocks[0]?.type === "text") {
+      expect(first.contentBlocks[0]?.text).toBe("First response");
     }
   });
 
@@ -333,10 +333,10 @@ describe("buildCodexTurns", () => {
     expect(turns).toHaveLength(1);
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(4);
-    expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-    expect(assistant.contentBlocks[1]!.type).toBe("text");
-    expect(assistant.contentBlocks[2]!.type).toBe("tool_call");
-    expect(assistant.contentBlocks[3]!.type).toBe("text");
+    expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+    expect(assistant.contentBlocks[1]?.type).toBe("text");
+    expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
+    expect(assistant.contentBlocks[3]?.type).toBe("text");
   });
 
   test("returns empty turns for empty events", () => {
@@ -374,9 +374,9 @@ describe("loadCodexSession", () => {
     expect(assistant.kind).toBe("assistant");
     expect(assistant.model).toBe("o4-mini");
     expect(assistant.contentBlocks).toHaveLength(3);
-    expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-    expect(assistant.contentBlocks[1]!.type).toBe("text");
-    expect(assistant.contentBlocks[2]!.type).toBe("tool_call");
+    expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+    expect(assistant.contentBlocks[1]?.type).toBe("text");
+    expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
   });
 
   test("returns empty session when file not found", async () => {
@@ -404,9 +404,9 @@ describe("loadCodexSession", () => {
 
     expect(session.turns).toHaveLength(1);
     const assistant = session.turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.name).toBe("file_change");
     }
   });
@@ -430,8 +430,8 @@ describe("loadCodexSession", () => {
     const session = await loadCodexSession("/Users/dev/project", "mcp-uuid");
 
     const assistant = session.turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    if (block?.type === "tool_call") {
       expect(block.call.name).toBe("search");
       expect(block.call.input).toEqual({ q: "test" });
       expect(block.call.result).toBe("Found results");
@@ -501,22 +501,22 @@ describe("new envelope format", () => {
       expect(session.pluginId).toBe("codex-cli");
       // First turn: user message, then assistant response
       expect(session.turns).toHaveLength(2);
-      expect(session.turns[0]!.kind).toBe("user");
-      if (session.turns[0]!.kind === "user") {
-        expect(session.turns[0]!.text).toBe("Fix the bug");
+      expect(session.turns[0]?.kind).toBe("user");
+      if (session.turns[0]?.kind === "user") {
+        expect(session.turns[0]?.text).toBe("Fix the bug");
       }
 
       const assistant = session.turns[1] as AssistantTurn;
       expect(assistant.kind).toBe("assistant");
       expect(assistant.model).toBe("o4-mini");
       expect(assistant.contentBlocks).toHaveLength(2);
-      expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-      if (assistant.contentBlocks[0]!.type === "thinking") {
-        expect(assistant.contentBlocks[0]!.block.text).toBe("Let me think...");
+      expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+      if (assistant.contentBlocks[0]?.type === "thinking") {
+        expect(assistant.contentBlocks[0]?.block.text).toBe("Let me think...");
       }
-      expect(assistant.contentBlocks[1]!.type).toBe("text");
-      if (assistant.contentBlocks[1]!.type === "text") {
-        expect(assistant.contentBlocks[1]!.text).toBe("I found the issue.");
+      expect(assistant.contentBlocks[1]?.type).toBe("text");
+      if (assistant.contentBlocks[1]?.type === "text") {
+        expect(assistant.contentBlocks[1]?.text).toBe("I found the issue.");
       }
       expect(assistant.usage).toEqual({
         inputTokens: 200,
@@ -572,9 +572,9 @@ describe("new envelope format", () => {
       expect(session.turns).toHaveLength(1);
       const assistant = session.turns[0] as AssistantTurn;
       expect(assistant.contentBlocks).toHaveLength(1);
-      const block = assistant.contentBlocks[0]!;
-      expect(block.type).toBe("tool_call");
-      if (block.type === "tool_call") {
+      const block = assistant.contentBlocks[0];
+      expect(block?.type).toBe("tool_call");
+      if (block?.type === "tool_call") {
         expect(block.call.name).toBe("exec_command");
         expect(block.call.input).toEqual({ cmd: "ls -la", workdir: "/tmp" });
         expect(block.call.result).toBe("file1.ts\nfile2.ts");
@@ -604,7 +604,7 @@ describe("new envelope format", () => {
 
       expect(session.turns).toHaveLength(1);
       const assistant = session.turns[0] as AssistantTurn;
-      expect(assistant.contentBlocks[0]!.type).toBe("text");
+      expect(assistant.contentBlocks[0]?.type).toBe("text");
     });
 
     test("returns empty session when new-format file not found", async () => {
@@ -701,8 +701,8 @@ describe("new envelope format", () => {
       expect(assistantTurns).toHaveLength(1);
       const assistant = assistantTurns[0] as AssistantTurn;
       expect(assistant.contentBlocks).toHaveLength(2);
-      expect(assistant.contentBlocks[0]!.type).toBe("text");
-      expect(assistant.contentBlocks[1]!.type).toBe("text");
+      expect(assistant.contentBlocks[0]?.type).toBe("text");
+      expect(assistant.contentBlocks[1]?.type).toBe("text");
     });
 
     test("uses turn_context model when model field absent in new format", async () => {

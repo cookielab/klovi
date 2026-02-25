@@ -16,7 +16,7 @@ describe("CollapsibleSection", () => {
     );
     expect(queryByText("Hidden content")).toBeNull();
     const chevron = container.querySelector(".collapsible-chevron");
-    expect(chevron!.classList.contains("open")).toBe(false);
+    expect(chevron?.classList.contains("open")).toBe(false);
   });
 
   test("expanded when defaultOpen=true", () => {
@@ -27,14 +27,14 @@ describe("CollapsibleSection", () => {
     );
     expect(getByText("Visible content")).not.toBeNull();
     const chevron = container.querySelector(".collapsible-chevron");
-    expect(chevron!.classList.contains("open")).toBe(true);
+    expect(chevron?.classList.contains("open")).toBe(true);
   });
 
   test("clicking header toggles open/close", () => {
     const { container, queryByText } = render(
       <CollapsibleSection title="Toggle">Toggled content</CollapsibleSection>,
     );
-    const header = container.querySelector(".collapsible-header")!;
+    const header = container.querySelector(".collapsible-header") as HTMLElement;
 
     // Initially closed
     expect(queryByText("Toggled content")).toBeNull();
@@ -42,12 +42,12 @@ describe("CollapsibleSection", () => {
     // Click to open
     fireEvent.click(header);
     expect(queryByText("Toggled content")).not.toBeNull();
-    expect(container.querySelector(".collapsible-chevron")!.classList.contains("open")).toBe(true);
+    expect(container.querySelector(".collapsible-chevron")?.classList.contains("open")).toBe(true);
 
     // Click to close
     fireEvent.click(header);
     expect(queryByText("Toggled content")).toBeNull();
-    expect(container.querySelector(".collapsible-chevron")!.classList.contains("open")).toBe(false);
+    expect(container.querySelector(".collapsible-chevron")?.classList.contains("open")).toBe(false);
   });
 
   test("renders JSX title", () => {

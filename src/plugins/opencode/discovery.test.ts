@@ -145,11 +145,11 @@ describe("discoverOpenCodeProjects", () => {
     const projects = await discoverOpenCodeProjects();
 
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.pluginId).toBe("opencode");
-    expect(projects[0]!.nativeId).toBe("proj-1");
-    expect(projects[0]!.resolvedPath).toBe("/Users/dev/project-a");
-    expect(projects[0]!.displayName).toBe("Project A");
-    expect(projects[0]!.sessionCount).toBe(2);
+    expect(projects[0]?.pluginId).toBe("opencode");
+    expect(projects[0]?.nativeId).toBe("proj-1");
+    expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
+    expect(projects[0]?.displayName).toBe("Project A");
+    expect(projects[0]?.sessionCount).toBe(2);
   });
 
   test("discovers multiple projects", async () => {
@@ -197,7 +197,7 @@ describe("discoverOpenCodeProjects", () => {
     const projects = await discoverOpenCodeProjects();
 
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.nativeId).toBe("proj-1");
+    expect(projects[0]?.nativeId).toBe("proj-1");
   });
 
   test("uses worktree as display name when name is null", async () => {
@@ -209,7 +209,7 @@ describe("discoverOpenCodeProjects", () => {
     const projects = await discoverOpenCodeProjects();
 
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.displayName).toBe("/Users/dev/project-a");
+    expect(projects[0]?.displayName).toBe("/Users/dev/project-a");
   });
 });
 
@@ -247,14 +247,14 @@ describe("listOpenCodeSessions", () => {
 
     expect(sessions).toHaveLength(2);
     // Most recent first
-    expect(sessions[0]!.sessionId).toBe("sess-2");
-    expect(sessions[0]!.firstMessage).toBe("Add tests");
-    expect(sessions[0]!.model).toBe("gpt-4o");
-    expect(sessions[0]!.pluginId).toBe("opencode");
+    expect(sessions[0]?.sessionId).toBe("sess-2");
+    expect(sessions[0]?.firstMessage).toBe("Add tests");
+    expect(sessions[0]?.model).toBe("gpt-4o");
+    expect(sessions[0]?.pluginId).toBe("opencode");
 
-    expect(sessions[1]!.sessionId).toBe("sess-1");
-    expect(sessions[1]!.firstMessage).toBe("Fix the login bug");
-    expect(sessions[1]!.model).toBe("claude-sonnet-4-20250514");
+    expect(sessions[1]?.sessionId).toBe("sess-1");
+    expect(sessions[1]?.firstMessage).toBe("Fix the login bug");
+    expect(sessions[1]?.model).toBe("claude-sonnet-4-20250514");
   });
 
   test("falls back to first user text part when title is empty", async () => {
@@ -286,7 +286,7 @@ describe("listOpenCodeSessions", () => {
     const sessions = await listOpenCodeSessions("proj-1");
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.firstMessage).toBe("Help me fix the authentication flow");
+    expect(sessions[0]?.firstMessage).toBe("Help me fix the authentication flow");
   });
 
   test("falls back to default message when no title or user text", async () => {
@@ -301,7 +301,7 @@ describe("listOpenCodeSessions", () => {
     const sessions = await listOpenCodeSessions("proj-1");
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.firstMessage).toBe("OpenCode session");
+    expect(sessions[0]?.firstMessage).toBe("OpenCode session");
   });
 
   test("returns empty when DB does not exist", async () => {
@@ -339,7 +339,7 @@ describe("listOpenCodeSessions", () => {
 
     const sessions = await listOpenCodeSessions("proj-1");
 
-    expect(sessions[0]!.sessionId).toBe("sess-new");
-    expect(sessions[1]!.sessionId).toBe("sess-old");
+    expect(sessions[0]?.sessionId).toBe("sess-new");
+    expect(sessions[1]?.sessionId).toBe("sess-old");
   });
 });

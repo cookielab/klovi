@@ -36,7 +36,7 @@ describe("DiffView", () => {
     );
     const header = container.querySelector(".diff-view-header");
     expect(header).not.toBeNull();
-    expect(header!.textContent).toBe("/src/app.ts");
+    expect(header?.textContent).toBe("/src/app.ts");
   });
 
   test("renders diff content", () => {
@@ -45,7 +45,7 @@ describe("DiffView", () => {
     );
     const content = container.querySelector(".diff-view-content");
     expect(content).not.toBeNull();
-    expect(content!.textContent).toContain("-const x = 1;");
-    expect(content!.textContent).toContain("+const x = 2;");
+    expect(content?.textContent).toContain("-const x = 1;");
+    expect(content?.textContent).toContain("+const x = 2;");
   });
 });

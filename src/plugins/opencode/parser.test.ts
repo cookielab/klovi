@@ -159,9 +159,9 @@ describe("buildOpenCodeTurns", () => {
     expect(assistant.kind).toBe("assistant");
     expect(assistant.model).toBe("claude-sonnet-4-20250514");
     expect(assistant.contentBlocks).toHaveLength(1);
-    expect(assistant.contentBlocks[0]!.type).toBe("text");
-    if (assistant.contentBlocks[0]!.type === "text") {
-      expect(assistant.contentBlocks[0]!.text).toBe("I can help you with that!");
+    expect(assistant.contentBlocks[0]?.type).toBe("text");
+    if (assistant.contentBlocks[0]?.type === "text") {
+      expect(assistant.contentBlocks[0]?.text).toBe("I can help you with that!");
     }
     expect(assistant.usage).toEqual({
       inputTokens: 100,
@@ -193,11 +193,11 @@ describe("buildOpenCodeTurns", () => {
     expect(turns).toHaveLength(1);
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(2);
-    expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-    if (assistant.contentBlocks[0]!.type === "thinking") {
-      expect(assistant.contentBlocks[0]!.block.text).toBe("Let me think about this...");
+    expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+    if (assistant.contentBlocks[0]?.type === "thinking") {
+      expect(assistant.contentBlocks[0]?.block.text).toBe("Let me think about this...");
     }
-    expect(assistant.contentBlocks[1]!.type).toBe("text");
+    expect(assistant.contentBlocks[1]?.type).toBe("text");
   });
 
   test("builds tool call from completed tool part", () => {
@@ -233,9 +233,9 @@ describe("buildOpenCodeTurns", () => {
     expect(turns).toHaveLength(1);
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(1);
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.toolUseId).toBe("call-123");
       expect(block.call.name).toBe("read_file");
       expect(block.call.input).toEqual({ path: "/src/main.ts" });
@@ -273,8 +273,8 @@ describe("buildOpenCodeTurns", () => {
     const turns = buildOpenCodeTurns(messages);
 
     const assistant = turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    if (block?.type === "tool_call") {
       expect(block.call.isError).toBe(true);
       expect(block.call.result).toBe("Permission denied");
     }
@@ -307,8 +307,8 @@ describe("buildOpenCodeTurns", () => {
     const turns = buildOpenCodeTurns(messages);
 
     const assistant = turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    if (block?.type === "tool_call") {
       expect(block.call.isError).toBe(true);
       expect(block.call.result).toBe("[Tool execution was interrupted]");
     }
@@ -335,8 +335,8 @@ describe("buildOpenCodeTurns", () => {
 
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(1);
-    if (assistant.contentBlocks[0]!.type === "text") {
-      expect(assistant.contentBlocks[0]!.text).toBe("Visible response");
+    if (assistant.contentBlocks[0]?.type === "text") {
+      expect(assistant.contentBlocks[0]?.text).toBe("Visible response");
     }
   });
 
@@ -376,10 +376,10 @@ describe("buildOpenCodeTurns", () => {
     expect(turns).toHaveLength(1);
     const assistant = turns[0] as AssistantTurn;
     expect(assistant.contentBlocks).toHaveLength(4);
-    expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-    expect(assistant.contentBlocks[1]!.type).toBe("text");
-    expect(assistant.contentBlocks[2]!.type).toBe("tool_call");
-    expect(assistant.contentBlocks[3]!.type).toBe("text");
+    expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+    expect(assistant.contentBlocks[1]?.type).toBe("text");
+    expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
+    expect(assistant.contentBlocks[3]?.type).toBe("text");
   });
 
   test("handles multiple user-assistant turn pairs", () => {
@@ -421,10 +421,10 @@ describe("buildOpenCodeTurns", () => {
     const turns = buildOpenCodeTurns(messages);
 
     expect(turns).toHaveLength(4);
-    expect(turns[0]!.kind).toBe("user");
-    expect(turns[1]!.kind).toBe("assistant");
-    expect(turns[2]!.kind).toBe("user");
-    expect(turns[3]!.kind).toBe("assistant");
+    expect(turns[0]?.kind).toBe("user");
+    expect(turns[1]?.kind).toBe("assistant");
+    expect(turns[2]?.kind).toBe("user");
+    expect(turns[3]?.kind).toBe("assistant");
   });
 
   test("returns empty turns for empty messages", () => {
@@ -567,9 +567,9 @@ describe("loadOpenCodeSession", () => {
     expect(assistant.kind).toBe("assistant");
     expect(assistant.model).toBe("claude-sonnet-4-20250514");
     expect(assistant.contentBlocks).toHaveLength(3);
-    expect(assistant.contentBlocks[0]!.type).toBe("thinking");
-    expect(assistant.contentBlocks[1]!.type).toBe("text");
-    expect(assistant.contentBlocks[2]!.type).toBe("tool_call");
+    expect(assistant.contentBlocks[0]?.type).toBe("thinking");
+    expect(assistant.contentBlocks[1]?.type).toBe("text");
+    expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
     expect(assistant.usage).toEqual({
       inputTokens: 300,
       outputTokens: 150,
@@ -634,9 +634,9 @@ describe("loadOpenCodeSession", () => {
 
     expect(session.turns).toHaveLength(1);
     const assistant = session.turns[0] as AssistantTurn;
-    const block = assistant.contentBlocks[0]!;
-    expect(block.type).toBe("tool_call");
-    if (block.type === "tool_call") {
+    const block = assistant.contentBlocks[0];
+    expect(block?.type).toBe("tool_call");
+    if (block?.type === "tool_call") {
       expect(block.call.isError).toBe(true);
       expect(block.call.result).toBe("Operation not permitted");
     }
@@ -678,8 +678,8 @@ describe("loadOpenCodeSession", () => {
     // Should skip the malformed message and still parse the good one
     expect(session.turns).toHaveLength(1);
     const assistant = session.turns[0] as AssistantTurn;
-    if (assistant.contentBlocks[0]!.type === "text") {
-      expect(assistant.contentBlocks[0]!.text).toBe("This should still work");
+    if (assistant.contentBlocks[0]?.type === "text") {
+      expect(assistant.contentBlocks[0]?.text).toBe("This should still work");
     }
   });
 });

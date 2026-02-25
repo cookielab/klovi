@@ -36,7 +36,7 @@ describe("ImageLightbox", () => {
     const onClose = mock(() => {});
     const { container } = render(<ImageLightbox src="test.png" onClose={onClose} />);
 
-    const overlay = container.querySelector(".lightbox-overlay")!;
+    const overlay = container.querySelector(".lightbox-overlay") as HTMLElement;
     overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     // onClose is called via setTimeout(onClose, 200), so not yet called

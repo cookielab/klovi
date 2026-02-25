@@ -340,7 +340,7 @@ function createAssistantTurn(line: RawLine): AssistantTurn {
     kind: "assistant",
     uuid: line.uuid || "",
     timestamp: line.timestamp || "",
-    model: line.message!.model || "",
+    model: line.message?.model || "",
     contentBlocks: [],
   };
 }
@@ -381,7 +381,8 @@ function processAssistantLine(
   current: AssistantTurn,
   toolResults: ToolResultMap,
 ): void {
-  const msg = line.message!;
+  const msg = line.message;
+  if (!msg) return;
   if (msg.usage) {
     current.usage = {
       inputTokens: msg.usage.input_tokens ?? 0,
@@ -406,7 +407,8 @@ function flushAssistant(current: AssistantTurn | null, turns: Turn[]): null {
 function mergeBashTurns(turns: Turn[]): Turn[] {
   const merged: Turn[] = [];
   for (let i = 0; i < turns.length; i++) {
-    const turn = turns[i]!;
+    const turn = turns[i];
+    if (!turn) continue;
     const next = turns[i + 1];
     if (
       turn.kind === "user" &&

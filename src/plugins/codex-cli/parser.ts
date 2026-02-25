@@ -345,7 +345,8 @@ interface TurnBuilderState {
 function handleUserMessage(state: TurnBuilderState, event: CodexEvent): void {
   // Find the last user turn and set its text
   for (let i = state.turns.length - 1; i >= 0; i--) {
-    const turn = state.turns[i]!;
+    const turn = state.turns[i];
+    if (!turn) continue;
     if (turn.kind === "user" && !turn.text) {
       turn.text = event.text || "";
       return;

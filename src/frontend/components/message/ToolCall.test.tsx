@@ -104,10 +104,12 @@ describe("getToolSummary", () => {
   });
 
   test("EnterPlanMode → static text", () => {
+    // biome-ignore lint/security/noSecrets: test data, not a real secret
     expect(getToolSummary(makeCall({ name: "EnterPlanMode", input: {} }))).toBe("Enter plan mode");
   });
 
   test("ExitPlanMode → static text", () => {
+    // biome-ignore lint/security/noSecrets: test data, not a real secret
     expect(getToolSummary(makeCall({ name: "ExitPlanMode", input: {} }))).toBe("Exit plan mode");
   });
 
@@ -236,8 +238,9 @@ describe("ToolCall component", () => {
       />,
     );
     // Open the collapsible first
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     const images = container.querySelectorAll(".tool-result-image");
     expect(images.length).toBe(1);
   });
@@ -256,8 +259,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     expect(container.querySelector(".diff-view-wrapper")).not.toBeNull();
     expect(container.querySelector(".tool-section-label")).toBeNull();
   });
@@ -272,8 +276,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     expect(container.querySelector(".diff-view-wrapper")).toBeNull();
     expect(container.querySelector(".tool-section-label")).not.toBeNull();
   });
@@ -288,12 +293,13 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     // BashToolContent uses CodeBlock for command, shows "Command" label
     expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
     const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels[0]!.textContent).toBe("Command");
+    expect(labels[0]?.textContent).toBe("Command");
   });
 
   test("non-Bash tool with custom formatter uses plain text input", () => {
@@ -306,8 +312,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     expect(container.querySelector(".tool-call-input")).not.toBeNull();
     expect(container.querySelector(".tool-call-output")).not.toBeNull();
   });
@@ -322,8 +329,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     // JSON fallback input should use CodeBlock, not plain div
     expect(container.querySelector(".tool-call-input")).toBeNull();
     expect(container.querySelector(".code-block-wrapper")).not.toBeNull();
@@ -339,8 +347,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     // Output should use CodeBlock for JSON
     const codeBlocks = container.querySelectorAll(".code-block-wrapper");
     expect(codeBlocks.length).toBe(1);
@@ -358,8 +367,9 @@ describe("ToolCall component", () => {
         })}
       />,
     );
-    const header = container.querySelector(".collapsible-header")!;
-    fireEvent.click(header);
+    const header = container.querySelector(".collapsible-header");
+    expect(header).not.toBeNull();
+    fireEvent.click(header as Element);
     expect(container.querySelector(".tool-call-error")).not.toBeNull();
     expect(container.querySelector(".tool-call-output.tool-call-error")).not.toBeNull();
   });
@@ -376,9 +386,9 @@ describe("ToolCall component", () => {
     );
     const badge = container.querySelector(".tool-skill-badge");
     expect(badge).not.toBeNull();
-    expect(badge!.textContent).toBe("skill");
+    expect(badge?.textContent).toBe("skill");
     const name = container.querySelector(".tool-call-name");
-    expect(name!.textContent).toBe("verify");
+    expect(name?.textContent).toBe("verify");
     // Summary is hidden when skill badge is shown (name IS the summary)
     expect(container.querySelector(".tool-call-summary")).toBeNull();
   });
@@ -395,6 +405,6 @@ describe("ToolCall component", () => {
     );
     expect(container.querySelector(".tool-skill-badge")).toBeNull();
     const name = container.querySelector(".tool-call-name");
-    expect(name!.textContent).toBe("Skill");
+    expect(name?.textContent).toBe("Skill");
   });
 });

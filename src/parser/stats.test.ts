@@ -98,7 +98,7 @@ describe("scanStats", () => {
     const list: SessionSummary[] = [
       {
         sessionId: "s1",
-        timestamp: s1.turns[0]!.timestamp,
+        timestamp: s1.turns[0]?.timestamp,
         slug: "s1",
         firstMessage: "session 1",
         model: "claude-opus",
@@ -106,7 +106,7 @@ describe("scanStats", () => {
       },
       {
         sessionId: "s2",
-        timestamp: s2.turns[0]!.timestamp,
+        timestamp: s2.turns[0]?.timestamp,
         slug: "s2",
         firstMessage: "session 2",
         model: "gpt-5",

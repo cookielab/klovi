@@ -54,14 +54,14 @@ describe("claude-code discovery", () => {
 
     const projects = await discoverClaudeProjects();
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.resolvedPath).toBe("/Users/dev/project-a");
-    expect(projects[0]!.sessionCount).toBe(1);
+    expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
+    expect(projects[0]?.sessionCount).toBe(1);
 
     const sessions = await listClaudeSessions("-Users-dev-project-a");
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.sessionId).toBe("session-1");
-    expect(sessions[0]!.pluginId).toBe("claude-code");
-    expect(sessions[0]!.firstMessage).toBe("Fix login flow");
+    expect(sessions[0]?.sessionId).toBe("session-1");
+    expect(sessions[0]?.pluginId).toBe("claude-code");
+    expect(sessions[0]?.firstMessage).toBe("Fix login flow");
   });
 
   test("prefers cwd from newest session file", async () => {
@@ -94,8 +94,8 @@ describe("claude-code discovery", () => {
 
     const projects = await discoverClaudeProjects();
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.resolvedPath).toBe("/Users/dev/project-new");
-    expect(projects[0]!.lastActivity).toBe("2025-01-15T00:00:00.000Z");
+    expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-new");
+    expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");
   });
 
   test("falls back to older cwd when newest session has no cwd", async () => {
@@ -127,7 +127,7 @@ describe("claude-code discovery", () => {
 
     const projects = await discoverClaudeProjects();
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.resolvedPath).toBe("/Users/dev/project-a");
-    expect(projects[0]!.lastActivity).toBe("2025-01-15T00:00:00.000Z");
+    expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
+    expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");
   });
 });

@@ -78,11 +78,11 @@ describe("normalizeSessionMeta", () => {
     const result = normalizeSessionMeta(newFormat);
 
     expect(result).not.toBeNull();
-    expect(result!.uuid).toBe("new-uuid");
-    expect(result!.cwd).toBe("/tmp/project");
-    expect(result!.model).toBe("o4-mini");
-    expect(result!.provider_id).toBe("openai");
-    expect(result!.timestamps.created).toBeCloseTo(
+    expect(result?.uuid).toBe("new-uuid");
+    expect(result?.cwd).toBe("/tmp/project");
+    expect(result?.model).toBe("o4-mini");
+    expect(result?.provider_id).toBe("openai");
+    expect(result?.timestamps.created).toBeCloseTo(
       new Date("2026-02-18T10:00:00.000Z").getTime() / 1000,
       0,
     );
@@ -100,8 +100,8 @@ describe("normalizeSessionMeta", () => {
     };
 
     const result = normalizeSessionMeta(newFormat);
-    expect(result!.model).toBe("unknown");
-    expect(result!.provider_id).toBe("anthropic");
+    expect(result?.model).toBe("unknown");
+    expect(result?.provider_id).toBe("anthropic");
   });
 
   test("uses file mtime as updated timestamp", () => {
@@ -117,7 +117,7 @@ describe("normalizeSessionMeta", () => {
 
     const fileMtime = 1800000000;
     const result = normalizeSessionMeta(newFormat, fileMtime);
-    expect(result!.timestamps.updated).toBe(fileMtime);
+    expect(result?.timestamps.updated).toBe(fileMtime);
   });
 
   test("returns null for unrecognized format", () => {
@@ -127,6 +127,7 @@ describe("normalizeSessionMeta", () => {
   });
 });
 
+// biome-ignore lint/security/noSecrets: test data, not a real secret
 describe("findCodexSessionFileById", () => {
   test("finds old-format file by exact uuid match", async () => {
     const dir = join(testDir, "sessions", "openai", "2025-01-15");
@@ -174,9 +175,9 @@ describe("scanCodexSessions", () => {
     const sessions = await scanCodexSessions();
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.meta.uuid).toBe("scan-uuid");
-    expect(sessions[0]!.meta.cwd).toBe("/tmp/project");
-    expect(sessions[0]!.meta.model).toBe("o4-mini");
+    expect(sessions[0]?.meta.uuid).toBe("scan-uuid");
+    expect(sessions[0]?.meta.cwd).toBe("/tmp/project");
+    expect(sessions[0]?.meta.model).toBe("o4-mini");
   });
 
   test("uses turn_context model when new-format meta has no model", async () => {
@@ -208,7 +209,7 @@ describe("scanCodexSessions", () => {
     const sessions = await scanCodexSessions();
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.meta.model).toBe("gpt-5.3-codex");
+    expect(sessions[0]?.meta.model).toBe("gpt-5.3-codex");
   });
 
   test("falls back to provider when new-format meta has no model", async () => {
@@ -231,6 +232,6 @@ describe("scanCodexSessions", () => {
     const sessions = await scanCodexSessions();
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.meta.model).toBe("openai");
+    expect(sessions[0]?.meta.model).toBe("openai");
   });
 });

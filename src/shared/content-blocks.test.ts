@@ -31,8 +31,8 @@ describe("groupContentBlocks", () => {
     const groups = groupContentBlocks(blocks);
     expect(groups).toHaveLength(1);
     expect(groups[0]).toHaveLength(2);
-    expect(groups[0]![0]!.type).toBe("thinking");
-    expect(groups[0]![1]!.type).toBe("tool_call");
+    expect(groups[0]?.[0]?.type).toBe("thinking");
+    expect(groups[0]?.[1]?.type).toBe("tool_call");
   });
 
   test("text block breaks non-text group", () => {
@@ -95,7 +95,7 @@ describe("groupContentBlocks", () => {
     expect(groups[1]).toEqual([{ type: "text", text: "message 1" }]);
     // Group 2: thinking
     expect(groups[2]).toHaveLength(1);
-    expect(groups[2]![0]!.type).toBe("thinking");
+    expect(groups[2]?.[0]?.type).toBe("thinking");
     // Group 3: text
     expect(groups[3]).toEqual([{ type: "text", text: "message 2" }]);
   });

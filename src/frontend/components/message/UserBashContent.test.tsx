@@ -18,7 +18,7 @@ describe("UserBashContent", () => {
     const { container } = render(<UserBashContent turn={makeTurn({ bashInput: "ls -la" })} />);
     const label = container.querySelector(".tool-section-label");
     expect(label).not.toBeNull();
-    expect(label!.textContent).toBe("Command");
+    expect(label?.textContent).toBe("Command");
     // No output section
     const labels = container.querySelectorAll(".tool-section-label");
     expect(labels).toHaveLength(1);
@@ -30,7 +30,7 @@ describe("UserBashContent", () => {
     );
     const labels = container.querySelectorAll(".tool-section-label");
     expect(labels).toHaveLength(1);
-    expect(labels[0]!.textContent).toBe("Output");
+    expect(labels[0]?.textContent).toBe("Output");
   });
 
   test("combined command + output", () => {
@@ -39,8 +39,8 @@ describe("UserBashContent", () => {
     );
     const labels = container.querySelectorAll(".tool-section-label");
     expect(labels).toHaveLength(2);
-    expect(labels[0]!.textContent).toBe("Command");
-    expect(labels[1]!.textContent).toBe("Output");
+    expect(labels[0]?.textContent).toBe("Command");
+    expect(labels[1]?.textContent).toBe("Output");
   });
 
   test("stderr-only marked as error", () => {

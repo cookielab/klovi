@@ -33,7 +33,9 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
   const steps = useMemo(() => {
     const result: { turnIndex: number; subStep: number }[] = [];
     for (let i = 0; i < turns.length; i++) {
-      const sub = countSubSteps(turns[i]!);
+      const turn = turns[i];
+      if (!turn) continue;
+      const sub = countSubSteps(turn);
       for (let s = 0; s < sub; s++) {
         result.push({ turnIndex: i, subStep: s });
       }
@@ -48,7 +50,7 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
     const boundaries: number[] = [];
     for (let i = 0; i < steps.length; i++) {
       const next = steps[i + 1];
-      if (!next || next.turnIndex !== steps[i]!.turnIndex) {
+      if (!next || next.turnIndex !== steps[i]?.turnIndex) {
         boundaries.push(i);
       }
     }
@@ -61,14 +63,17 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
       return { visibleTurns: turns, visibleSubSteps: new Map<number, number>() };
     }
 
-    const step = steps[Math.min(currentStep, steps.length - 1)]!;
+    const step = steps[Math.min(currentStep, steps.length - 1)];
+    if (!step) return { visibleTurns: turns, visibleSubSteps: new Map<number, number>() };
     const maxTurnIndex = step.turnIndex;
     const visible = turns.slice(0, maxTurnIndex + 1);
 
     // All turns before the current one show all sub-steps
     const subSteps = new Map<number, number>();
     for (let i = 0; i < maxTurnIndex; i++) {
-      subSteps.set(i, countSubSteps(turns[i]!));
+      const turn = turns[i];
+      if (!turn) continue;
+      subSteps.set(i, countSubSteps(turn));
     }
     // Current turn shows up to current sub-step
     subSteps.set(maxTurnIndex, step.subStep + 1);
@@ -107,7 +112,8 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
   const prevTurn = useCallback(() => {
     setCurrentStep((s) => {
       for (let i = turnBoundaries.length - 1; i >= 0; i--) {
-        if (turnBoundaries[i]! < s) return turnBoundaries[i]!;
+        const boundary = turnBoundaries[i];
+        if (boundary !== undefined && boundary < s) return boundary;
       }
       return s;
     });

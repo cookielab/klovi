@@ -182,7 +182,7 @@ describe("SettingsView", () => {
     const { findAllByText } = render(<SettingsView {...props} />);
     const darkButtons = await findAllByText("Dark");
     // First Dark button is in Global section
-    fireEvent.click(darkButtons[0]!);
+    fireEvent.click(darkButtons[0]);
     expect(props.theme.set).toHaveBeenCalledWith("dark");
   });
 
@@ -194,9 +194,9 @@ describe("SettingsView", () => {
     const { findAllByText } = render(<SettingsView {...props} />);
     const plusButtons = await findAllByText("A+");
     const minusButtons = await findAllByText("A-");
-    fireEvent.click(plusButtons[0]!);
+    fireEvent.click(plusButtons[0]);
     expect(props.fontSize.increase).toHaveBeenCalled();
-    fireEvent.click(minusButtons[0]!);
+    fireEvent.click(minusButtons[0]);
     expect(props.fontSize.decrease).toHaveBeenCalled();
   });
 
@@ -210,7 +210,7 @@ describe("SettingsView", () => {
     await findByText("Presentation");
     const selectors = container.querySelectorAll(".settings-theme-selector");
     // Second selector is presentation
-    expect(selectors[1]!.classList.contains("disabled")).toBe(true);
+    expect(selectors[1]?.classList.contains("disabled")).toBe(true);
   });
 
   test("presentation theme selector is enabled when sameAsGlobal is false", async () => {
@@ -222,7 +222,7 @@ describe("SettingsView", () => {
     const { container, findByText } = render(<SettingsView {...props} />);
     await findByText("Presentation");
     const selectors = container.querySelectorAll(".settings-theme-selector");
-    expect(selectors[1]!.classList.contains("disabled")).toBe(false);
+    expect(selectors[1]?.classList.contains("disabled")).toBe(false);
   });
 
   test("presentation font-size control is disabled when sameAsGlobal is true", async () => {
@@ -234,7 +234,7 @@ describe("SettingsView", () => {
     const { container, findByText } = render(<SettingsView {...props} />);
     await findByText("Presentation");
     const controls = container.querySelectorAll(".settings-font-size-control");
-    expect(controls[1]!.classList.contains("disabled")).toBe(true);
+    expect(controls[1]?.classList.contains("disabled")).toBe(true);
   });
 
   test("Same as global checkboxes are rendered", async () => {
@@ -254,9 +254,9 @@ describe("SettingsView", () => {
     const { findAllByLabelText } = render(<SettingsView {...props} />);
     const sameLabels = await findAllByLabelText("Same as global");
     // First is theme, second is font size
-    fireEvent.click(sameLabels[0]!);
+    fireEvent.click(sameLabels[0]);
     expect(props.presentationTheme.setSameAsGlobal).toHaveBeenCalledWith(false);
-    fireEvent.click(sameLabels[1]!);
+    fireEvent.click(sameLabels[1]);
     expect(props.presentationFontSize.setSameAsGlobal).toHaveBeenCalledWith(false);
   });
 

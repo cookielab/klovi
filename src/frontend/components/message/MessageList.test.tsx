@@ -66,14 +66,14 @@ describe("MessageList", () => {
     const { container } = render(<MessageList turns={turns} />);
     const system = container.querySelector(".message-system");
     expect(system).not.toBeNull();
-    expect(system!.textContent).toContain("System");
+    expect(system?.textContent).toContain("System");
   });
 
   test("renders empty list with no turns", () => {
     const { container } = render(<MessageList turns={[]} />);
     const list = container.querySelector(".message-list");
     expect(list).not.toBeNull();
-    expect(list!.children).toHaveLength(0);
+    expect(list?.children).toHaveLength(0);
   });
 
   test("renders all turn types in sequence", () => {
@@ -85,7 +85,7 @@ describe("MessageList", () => {
     ];
     const { container } = render(<MessageList turns={turns} />);
     const list = container.querySelector(".message-list");
-    expect(list!.children).toHaveLength(4);
+    expect(list?.children).toHaveLength(4);
   });
 
   test("status-only user messages are not given implSessionId", () => {
@@ -99,7 +99,7 @@ describe("MessageList", () => {
     );
     // The first real user message (non-status) should have the link, not the status one
     const list = container.querySelector(".message-list");
-    expect(list!.children).toHaveLength(2);
+    expect(list?.children).toHaveLength(2);
   });
 
   test("marks last turn as active when visibleSubSteps provided", () => {
@@ -108,7 +108,7 @@ describe("MessageList", () => {
     visibleSubSteps.set(1, 1);
     const { container } = render(<MessageList turns={turns} visibleSubSteps={visibleSubSteps} />);
     const list = container.querySelector(".message-list");
-    const lastChild = list!.children[1] as HTMLElement;
+    const lastChild = list?.children[1] as HTMLElement;
     expect(lastChild.classList.contains("active-message")).toBe(true);
   });
 
@@ -123,7 +123,7 @@ describe("MessageList", () => {
     const { container } = render(<MessageList turns={turns} isSubAgent />);
     // In sub-agent mode, user turns show "Root Agent" instead of "You"
     const role = container.querySelector(".turn-badge");
-    expect(role!.textContent).toContain("Root Agent");
+    expect(role?.textContent).toContain("Root Agent");
   });
 
   test("renders parse error messages", () => {
@@ -131,11 +131,11 @@ describe("MessageList", () => {
     const { container } = render(<MessageList turns={turns} />);
     const turn = container.querySelector(".turn");
     expect(turn).not.toBeNull();
-    expect(turn!.textContent).toContain("Parse Error");
-    expect(turn!.textContent).toContain("line 42");
+    expect(turn?.textContent).toContain("Parse Error");
+    expect(turn?.textContent).toContain("line 42");
     const el = container.querySelector(".message-parse-error");
     expect(el).not.toBeNull();
-    expect(el!.textContent).toContain("Invalid JSON");
+    expect(el?.textContent).toContain("Invalid JSON");
   });
 
   test("renders parse error without line number when lineNumber is 0", () => {
@@ -143,7 +143,7 @@ describe("MessageList", () => {
     const { container } = render(<MessageList turns={turns} />);
     const el = container.querySelector(".message-parse-error");
     expect(el).not.toBeNull();
-    expect(el!.textContent).toContain("Invalid Structure");
-    expect(el!.textContent).not.toContain("line 0");
+    expect(el?.textContent).toContain("Invalid Structure");
+    expect(el?.textContent).not.toContain("line 0");
   });
 });

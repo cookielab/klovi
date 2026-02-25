@@ -92,7 +92,7 @@ describe("SmartToolOutput", () => {
   test("shows Output label", () => {
     const { container } = render(<SmartToolOutput output="hello" isError={false} />);
     const label = container.querySelector(".tool-section-label");
-    expect(label!.textContent).toBe("Output");
+    expect(label?.textContent).toBe("Output");
   });
 
   test("clicking an image opens the lightbox", () => {
@@ -106,8 +106,9 @@ describe("SmartToolOutput", () => {
 
     expect(container.querySelector(".lightbox-overlay")).toBeNull();
 
-    const img = container.querySelector(".tool-result-image")!;
-    fireEvent.click(img);
+    const img = container.querySelector(".tool-result-image");
+    expect(img).not.toBeNull();
+    fireEvent.click(img as Element);
 
     const overlay = container.querySelector(".lightbox-overlay");
     expect(overlay).not.toBeNull();
@@ -126,11 +127,15 @@ describe("SmartToolOutput", () => {
     );
 
     // Open lightbox
-    fireEvent.click(container.querySelector(".tool-result-image")!);
+    const toolImg = container.querySelector(".tool-result-image");
+    expect(toolImg).not.toBeNull();
+    fireEvent.click(toolImg as Element);
     expect(container.querySelector(".lightbox-overlay")).not.toBeNull();
 
     // Click overlay to close
-    fireEvent.click(container.querySelector(".lightbox-overlay")!);
+    const overlay = container.querySelector(".lightbox-overlay");
+    expect(overlay).not.toBeNull();
+    fireEvent.click(overlay as Element);
 
     // The lightbox state clears after the 200ms setTimeout
     return new Promise<void>((resolve) => {

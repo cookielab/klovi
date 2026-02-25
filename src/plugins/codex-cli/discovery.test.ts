@@ -68,10 +68,10 @@ describe("discoverCodexProjects", () => {
     const projects = await discoverCodexProjects();
 
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.pluginId).toBe("codex-cli");
-    expect(projects[0]!.nativeId).toBe("/Users/dev/project-a");
-    expect(projects[0]!.resolvedPath).toBe("/Users/dev/project-a");
-    expect(projects[0]!.sessionCount).toBe(2);
+    expect(projects[0]?.pluginId).toBe("codex-cli");
+    expect(projects[0]?.nativeId).toBe("/Users/dev/project-a");
+    expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
+    expect(projects[0]?.sessionCount).toBe(2);
   });
 
   test("groups sessions by cwd into separate projects", async () => {
@@ -133,7 +133,7 @@ describe("discoverCodexProjects", () => {
 
     // Same cwd from different providers should merge into one project
     expect(projects).toHaveLength(1);
-    expect(projects[0]!.sessionCount).toBe(2);
+    expect(projects[0]?.sessionCount).toBe(2);
   });
 });
 
@@ -170,11 +170,11 @@ describe("listCodexSessions", () => {
     const sessions = await listCodexSessions("/Users/dev/project-a");
 
     expect(sessions).toHaveLength(2);
-    expect(sessions[0]!.sessionId).toBe("uuid-2"); // newer first
-    expect(sessions[1]!.sessionId).toBe("uuid-1");
-    expect(sessions[0]!.pluginId).toBe("codex-cli");
-    expect(sessions[0]!.firstMessage).toBe("Add tests");
-    expect(sessions[0]!.model).toBe("o4-mini");
+    expect(sessions[0]?.sessionId).toBe("uuid-2"); // newer first
+    expect(sessions[1]?.sessionId).toBe("uuid-1");
+    expect(sessions[0]?.pluginId).toBe("codex-cli");
+    expect(sessions[0]?.firstMessage).toBe("Add tests");
+    expect(sessions[0]?.model).toBe("o4-mini");
   });
 
   test("uses first agent_message when name is empty", async () => {
@@ -201,7 +201,7 @@ describe("listCodexSessions", () => {
     const sessions = await listCodexSessions("/Users/dev/project-a");
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.firstMessage).toBe("I'll help you fix the bug");
+    expect(sessions[0]?.firstMessage).toBe("I'll help you fix the bug");
   });
 
   test("falls back to default message when no name or agent_message", async () => {
@@ -222,7 +222,7 @@ describe("listCodexSessions", () => {
     const sessions = await listCodexSessions("/Users/dev/project-a");
 
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]!.firstMessage).toBe("Codex session");
+    expect(sessions[0]?.firstMessage).toBe("Codex session");
   });
 
   test("returns empty for non-matching cwd", async () => {
@@ -259,8 +259,8 @@ describe("listCodexSessions", () => {
 
     const sessions = await listCodexSessions("/Users/dev/project");
 
-    expect(sessions[0]!.sessionId).toBe("uuid-new");
-    expect(sessions[1]!.sessionId).toBe("uuid-old");
+    expect(sessions[0]?.sessionId).toBe("uuid-new");
+    expect(sessions[1]?.sessionId).toBe("uuid-old");
   });
 });
 
@@ -282,9 +282,9 @@ describe("new envelope format", () => {
       const projects = await discoverCodexProjects();
 
       expect(projects).toHaveLength(1);
-      expect(projects[0]!.pluginId).toBe("codex-cli");
-      expect(projects[0]!.nativeId).toBe("/Users/dev/new-project");
-      expect(projects[0]!.sessionCount).toBe(1);
+      expect(projects[0]?.pluginId).toBe("codex-cli");
+      expect(projects[0]?.nativeId).toBe("/Users/dev/new-project");
+      expect(projects[0]?.sessionCount).toBe(1);
     });
 
     test("mixes old and new format sessions into same project", async () => {
@@ -310,7 +310,7 @@ describe("new envelope format", () => {
       const projects = await discoverCodexProjects();
 
       expect(projects).toHaveLength(1);
-      expect(projects[0]!.sessionCount).toBe(2);
+      expect(projects[0]?.sessionCount).toBe(2);
     });
   });
 
@@ -331,9 +331,9 @@ describe("new envelope format", () => {
       const sessions = await listCodexSessions("/Users/dev/project");
 
       expect(sessions).toHaveLength(1);
-      expect(sessions[0]!.sessionId).toBe("new-uuid-1");
-      expect(sessions[0]!.pluginId).toBe("codex-cli");
-      expect(sessions[0]!.model).toBe("o4-mini");
+      expect(sessions[0]?.sessionId).toBe("new-uuid-1");
+      expect(sessions[0]?.pluginId).toBe("codex-cli");
+      expect(sessions[0]?.model).toBe("o4-mini");
     });
 
     test("extracts first user message from new-format event_msg", async () => {
@@ -367,7 +367,7 @@ describe("new envelope format", () => {
       const sessions = await listCodexSessions("/Users/dev/project");
 
       expect(sessions).toHaveLength(1);
-      expect(sessions[0]!.firstMessage).toBe("Fix the login bug");
+      expect(sessions[0]?.firstMessage).toBe("Fix the login bug");
     });
 
     test("falls back to Codex session when no messages in new format", async () => {
@@ -385,7 +385,7 @@ describe("new envelope format", () => {
       const sessions = await listCodexSessions("/Users/dev/project");
 
       expect(sessions).toHaveLength(1);
-      expect(sessions[0]!.firstMessage).toBe("Codex session");
+      expect(sessions[0]?.firstMessage).toBe("Codex session");
     });
   });
 });

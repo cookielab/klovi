@@ -57,15 +57,17 @@ function countRecentSessions(sessions: SessionSummary[]): {
 }
 
 function ensureModelUsage(models: Record<string, ModelTokenUsage>, model: string): ModelTokenUsage {
-  if (!models[model]) {
-    models[model] = {
-      inputTokens: 0,
-      outputTokens: 0,
-      cacheReadTokens: 0,
-      cacheCreationTokens: 0,
-    };
-  }
-  return models[model]!;
+  const existing = models[model];
+  if (existing) return existing;
+
+  const usage: ModelTokenUsage = {
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheCreationTokens: 0,
+  };
+  models[model] = usage;
+  return usage;
 }
 
 function countVisibleMessages(turns: Turn[]): number {

@@ -24,7 +24,7 @@ describe("BashToolContent", () => {
   test("shows 'Command' label instead of 'Input'", () => {
     const { container } = render(<BashToolContent call={makeBashCall()} />);
     const labels = container.querySelectorAll(".tool-section-label");
-    expect(labels[0]!.textContent).toBe("Command");
+    expect(labels[0]?.textContent).toBe("Command");
   });
 
   test("renders plain text output without highlighting", () => {
