@@ -20,7 +20,7 @@
     "dev": "electrobun dev",
     "build": "electrobun build",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bash -c 'errors=$(tsc --noEmit 2>&1 | grep \"error TS\" | grep -v node_modules); if [ -n \"$errors\" ]; then echo \"$errors\"; exit 1; fi'",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check .",

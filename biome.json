@@ -36,15 +36,21 @@
       "recommended": true,
       "correctness": {
         "noUnusedImports": "error",
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "error",
+        "noNestedComponentDefinitions": "error",
+        "noUndeclaredDependencies": "error",
+        "noGlobalDirnameFilename": "error"
       },
       "suspicious": {
         "noExplicitAny": "error",
         "noConsole": "warn",
-        "noArrayIndexKey": "warn"
+        "noArrayIndexKey": "warn",
+        "noVar": "error",
+        "useAwait": "error",
+        "noAlert": "error"
       },
       "a11y": {
-        "useSemanticElements": "warn",
+        "useSemanticElements": "error",
         "noStaticElementInteractions": "warn",
         "useKeyWithClickEvents": "warn"
       },
@@ -63,11 +69,29 @@
             "requireAscii": true,
             "filenameCases": ["camelCase", "PascalCase", "kebab-case"]
           }
-        }
+        },
+        "noEnum": "error",
+        "noParameterAssign": "error",
+        "useConsistentCurlyBraces": "warn",
+        "noCommonJs": "error"
       },
       "complexity": {
         "noExcessiveCognitiveComplexity": "error",
-        "useLiteralKeys": "off"
+        "useLiteralKeys": "off",
+        "noUselessStringConcat": "error",
+        "noUselessUndefined": "error",
+        "noExcessiveNestedTestSuites": "error"
+      },
+      "performance": {
+        "noDelete": "error",
+        "noReExportAll": "error",
+        "useTopLevelRegex": "warn"
+      },
+      "security": {
+        "noSecrets": "warn"
+      },
+      "nursery": {
+        "noFloatingPromises": "error"
       }
     }
   },
