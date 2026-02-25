@@ -32,7 +32,7 @@ export function getResumeCommand(
     case "codex-cli":
       return `codex resume ${rawSessionId}`;
     default:
-      return undefined;
+      return;
   }
 }
 

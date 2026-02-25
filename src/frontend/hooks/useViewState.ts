@@ -21,7 +21,7 @@ export function useViewState(): UseViewStateResult {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    restoreFromHash().then((v) => {
+    void restoreFromHash().then((v) => {
       setView(v);
       setReady(true);
     });
@@ -37,7 +37,7 @@ export function useViewState(): UseViewStateResult {
 
   useEffect(() => {
     const handler = () => {
-      restoreFromHash().then(setView);
+      void restoreFromHash().then(setView);
     };
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);

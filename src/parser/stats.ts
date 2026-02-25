@@ -161,6 +161,6 @@ async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
   return stats;
 }
 
-export async function scanStats(registry: PluginRegistry): Promise<DashboardStats> {
+export function scanStats(registry: PluginRegistry): Promise<DashboardStats> {
   return computeStats(registry);
 }

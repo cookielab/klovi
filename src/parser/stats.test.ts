@@ -78,12 +78,12 @@ function createMockPlugin(
         lastActivity: list[0]?.timestamp ?? "",
       },
     ],
-    listSessions: async () => list,
-    loadSession: async (_nativeId, sessionId) => {
-      if (options?.failLoad) throw new Error("load failed");
+    listSessions: () => Promise.resolve(list),
+    loadSession: (_nativeId, sessionId) => {
+      if (options?.failLoad) return Promise.reject(new Error("load failed"));
       const session = sessionsById[sessionId];
-      if (!session) throw new Error("missing session");
-      return session;
+      if (!session) return Promise.reject(new Error("missing session"));
+      return Promise.resolve(session);
     },
   };
 }

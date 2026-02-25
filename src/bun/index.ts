@@ -46,7 +46,7 @@ function getSettingsPath(): string {
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
-      acceptRisks: async () => {
+      acceptRisks: () => {
         if (!registry) {
           const settings = loadSettings(getSettingsPath());
           registry = createRegistry(settings);

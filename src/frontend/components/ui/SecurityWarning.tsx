@@ -62,7 +62,7 @@ interface SecurityWarningProps {
 
 export function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningProps) {
   return (
-    <div className="onboarding" role="region" aria-labelledby="security-warning-heading">
+    <section className="onboarding" aria-labelledby="security-warning-heading">
       <div className="onboarding-content">
         <SecurityNoticeContent
           headingId="security-warning-heading"
@@ -70,6 +70,6 @@ export function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningPr
           onDontShowAgain={onDontShowAgain}
         />
       </div>
-    </div>
+    </section>
   );
 }

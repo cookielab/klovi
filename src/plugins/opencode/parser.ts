@@ -253,7 +253,7 @@ function collectContentBlocks(parts: PartData[], nextToolUseId: () => string): C
 }
 
 function tokensToUsage(tokens: MessageDataAssistant["tokens"]): TokenUsage | undefined {
-  if (!tokens) return undefined;
+  if (!tokens) return;
   return {
     inputTokens: tokens.input,
     outputTokens: tokens.output,
@@ -274,7 +274,7 @@ function extractStepFinishUsage(parts: PartData[]): TokenUsage | undefined {
       };
     }
   }
-  return undefined;
+  return;
 }
 
 function buildUserTurn(msg: OpenCodeMessage, timestamp: string): UserTurn {

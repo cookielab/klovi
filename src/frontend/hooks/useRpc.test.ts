@@ -46,7 +46,7 @@ describe("useRPC", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBe("fail");
 
-    act(() => result.current.retry());
+    void act(() => result.current.retry());
     await waitFor(() => expect(result.current.data).toEqual({ ok: true }));
     expect(result.current.error).toBeNull();
   });

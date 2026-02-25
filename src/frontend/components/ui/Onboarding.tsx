@@ -61,7 +61,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   }, []);
 
   return (
-    <div className="onboarding" role="region" aria-labelledby="onboarding-heading">
+    <section className="onboarding" aria-labelledby="onboarding-heading">
       <div className="onboarding-content">
         <div className="onboarding-steps" aria-hidden="true">
           <div className={`onboarding-dot ${step === 1 ? "active" : ""}`} />
@@ -112,6 +112,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </>
         )}
       </div>
-    </div>
+    </section>
   );
 }

@@ -35,6 +35,7 @@ describe("iterateJsonl", () => {
     iterateJsonl(text, ({ parsed }) => {
       seen.push((parsed as { n: number }).n);
       if (seen.length === 2) return false;
+      return;
     });
 
     expect(seen).toEqual([1, 2]);

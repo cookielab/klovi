@@ -106,6 +106,7 @@ function inferModelFromPrefix(prefixText: string): string | null {
         model = extracted;
         return false;
       }
+      return;
     },
     { startAt: 1, maxLines: 256 },
   );

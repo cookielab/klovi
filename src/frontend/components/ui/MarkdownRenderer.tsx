@@ -73,7 +73,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                   ? {
                       onClick: (e: React.MouseEvent) => {
                         e.preventDefault();
-                        if (href) getRPC().request.openExternal({ url: href });
+                        if (href) void getRPC().request.openExternal({ url: href });
                       },
                     }
                   : {})}

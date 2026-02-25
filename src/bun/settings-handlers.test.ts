@@ -75,7 +75,7 @@ describe("settings RPC handlers", () => {
   test("getGeneralSettings returns true for legacy settings without general", () => {
     mkdirSync(testDir, { recursive: true });
     const settings = getDefaultSettings();
-    delete settings.general;
+    settings.general = undefined;
     saveSettings(settingsPath, settings);
     const result = getGeneralSettings(settingsPath);
     expect(result.showSecurityWarning).toBe(true);

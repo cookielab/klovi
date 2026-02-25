@@ -114,6 +114,7 @@ export async function extractCwd(filePath: string): Promise<string> {
           cwd = obj.cwd;
           return false;
         }
+        return;
       },
       { maxLines: 20 },
     );
@@ -187,6 +188,7 @@ export async function extractSessionMeta(
         const obj = parsed as RawLine;
         processMetaLine(obj, meta);
         if (isMetaComplete(meta)) return false;
+        return;
       },
       {
         maxLines: 50,

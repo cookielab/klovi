@@ -327,13 +327,13 @@ export function AppGate() {
           .then((settings) => {
             if (settings.showSecurityWarning) {
               setScreen("security-warning");
-            } else {
-              setScreen("none");
-              return getRPC()
-                .request.acceptRisks({} as Record<string, never>)
-                .then(() => setAccepted(true))
-                .catch(() => setAccepted(true));
+              return;
             }
+            setScreen("none");
+            return getRPC()
+              .request.acceptRisks({} as Record<string, never>)
+              .then(() => setAccepted(true))
+              .catch(() => setAccepted(true));
           });
       })
       .catch(() => {

@@ -27,11 +27,11 @@ function createFailingPlugin(id: string): ToolPlugin {
     id,
     displayName: id,
     getDefaultDataDir: () => null,
-    discoverProjects: async () => {
-      throw new Error("Discovery failed");
+    discoverProjects: () => {
+      return Promise.reject(new Error("Discovery failed"));
     },
-    listSessions: async () => {
-      throw new Error("Session listing failed");
+    listSessions: () => {
+      return Promise.reject(new Error("Session listing failed"));
     },
     loadSession: async (_nativeId: string, sessionId: string) => ({
       sessionId,

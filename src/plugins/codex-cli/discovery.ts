@@ -83,6 +83,7 @@ function extractFirstUserMessage(text: string): string | null {
           return false;
         }
       }
+      return;
     },
     { startAt: 1 },
   );
