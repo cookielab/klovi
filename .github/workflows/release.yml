@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: write
     outputs:
       version: ${{ steps.release_meta.outputs.version }}
       prerelease: ${{ steps.release_meta.outputs.prerelease }}
@@ -76,8 +75,8 @@ jobs:
           body: ${{ steps.changelog.outputs.changes }}
           prerelease: ${{ steps.release_meta.outputs.prerelease == 'true' }}
 
-  build:
-    runs-on: macos-latest
+  build-macos:
+    runs-on: macos-14
     needs: release
     permissions:
       contents: write
@@ -85,13 +84,19 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.release.outputs.version }}
+
       - uses: oven-sh/setup-bun@v2
+
       - uses: actions/cache@v5
         with:
-          path: ~/.bun/install/cache
+          path: |
+            ~/.bun/install/cache
+            ~\.bun\install\cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
+
       - run: bun install --frozen-lockfile
+
       - name: Set version in package.json
         env:
           VERSION: ${{ needs.release.outputs.version }}
@@ -101,28 +106,179 @@ jobs:
             pkg.version = process.env.VERSION;
             await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
+
       - name: Build Electrobun app
-        run: bun run build
-      - name: Package and upload release asset
+        run: bun run build -- --env=stable
+
+      - name: Package and upload macOS arm64 asset
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release.outputs.version }}
         run: |
-          APP_DIR=$(find build -name "Klovi.app" -maxdepth 3 -type d | head -1)
-          if [ -z "$APP_DIR" ]; then
-            echo "::error::Could not find Klovi.app in build/"
+          BUILD_DIR="build/stable-macos-arm64"
+          if [ ! -d "$BUILD_DIR" ]; then
+            echo "::error::Expected build output in $BUILD_DIR"
+            find build -maxdepth 2 -type d || true
             exit 1
           fi
+
+          APP_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
+          if [ -z "$APP_DIR" ]; then
+            echo "::error::Could not find .app bundle in $BUILD_DIR"
+            exit 1
+          fi
+
           ZIP_NAME="Klovi-${VERSION}-macos-arm64.zip"
           ditto -c -k --keepParent "$APP_DIR" "$ZIP_NAME"
           gh release upload "$VERSION" "$ZIP_NAME" --clobber
+
+  build-linux:
+    runs-on: ${{ matrix.runner }}
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            electrobun_arch: x64
+            artifact_arch: amd64
+          - runner: ubuntu-24.04-arm
+            electrobun_arch: arm64
+            artifact_arch: arm64
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.version }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~\.bun\install\cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Set version in package.json
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          bun -e "
+            const pkg = await Bun.file('package.json').json();
+            pkg.version = process.env.VERSION;
+            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Build Electrobun app
+        run: bun run build -- --env=stable
+
+      - name: Package and upload Linux asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+          ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
+        run: |
+          BUILD_DIR="build/stable-linux-${ELECTROBUN_ARCH}"
+          if [ ! -d "$BUILD_DIR" ]; then
+            echo "::error::Expected build output in $BUILD_DIR"
+            find build -maxdepth 2 -type d || true
+            exit 1
+          fi
+
+          APP_DIR=$(find "$BUILD_DIR" -mindepth 1 -maxdepth 1 -type d | head -1)
+          if [ -z "$APP_DIR" ]; then
+            echo "::error::Could not find app bundle directory in $BUILD_DIR"
+            exit 1
+          fi
+
+          TAR_NAME="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
+          tar -czf "$TAR_NAME" -C "$BUILD_DIR" "$(basename "$APP_DIR")"
+          gh release upload "$VERSION" "$TAR_NAME" --clobber
+
+  build-windows:
+    runs-on: ${{ matrix.runner }}
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            electrobun_arch: x64
+            artifact_arch: amd64
+          - runner: windows-11-arm
+            electrobun_arch: arm64
+            artifact_arch: arm64
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.version }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~\.bun\install\cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Set version in package.json
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          bun -e "
+            const pkg = await Bun.file('package.json').json();
+            pkg.version = process.env.VERSION;
+            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Build Electrobun app
+        run: bun run build -- --env=stable
+
+      - name: Package and upload Windows asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+          ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
+        shell: pwsh
+        run: |
+          $buildDir = "build/stable-win-$env:ELECTROBUN_ARCH"
+          if (-not (Test-Path $buildDir)) {
+            Write-Host "::error::Expected build output in $buildDir"
+            if (Test-Path build) {
+              Get-ChildItem build -Directory -Recurse | ForEach-Object { $_.FullName }
+            }
+            exit 1
+          }
+
+          $appDir = Get-ChildItem -Path $buildDir -Directory | Select-Object -First 1
+          if (-not $appDir) {
+            Write-Host "::error::Could not find app bundle directory in $buildDir"
+            exit 1
+          }
+
+          $zipName = "Klovi-$env:VERSION-windows-$env:ARTIFACT_ARCH.zip"
+          Compress-Archive -Path $appDir.FullName -DestinationPath $zipName -Force
+          gh release upload $env:VERSION $zipName --clobber
 
   update-cask:
     if: ${{ needs.release.outputs.prerelease != 'true' }}
     runs-on: ubuntu-latest
     needs:
       - release
-      - build
+      - build-macos
     environment: homebrew
     steps:
       - name: Download release asset and update Homebrew cask
