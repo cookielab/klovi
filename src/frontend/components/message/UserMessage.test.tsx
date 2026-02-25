@@ -54,18 +54,14 @@ describe("UserMessage", () => {
     expect(badge!.textContent).toBe("image/png");
   });
 
-  test("bash-input renders with terminal styling", () => {
+  test("bash-input renders as user card with command section", () => {
     const { container } = render(
       <UserMessage turn={makeTurn({ text: "", bashInput: "bun run dev" })} />,
     );
-    const notice = container.querySelector(".bash-input-notice");
-    expect(notice).not.toBeNull();
-    const prompt = container.querySelector(".bash-input-prompt");
-    expect(prompt).not.toBeNull();
-    expect(prompt!.textContent).toBe("$");
-    const command = container.querySelector(".bash-input-command");
-    expect(command).not.toBeNull();
-    expect(command!.textContent).toBe("bun run dev");
+    expect(container.querySelector(".turn")).not.toBeNull();
+    expect(container.querySelector(".turn-badge-user")).not.toBeNull();
+    expect(container.querySelector(".tool-section-label")).not.toBeNull();
+    expect(container.querySelector(".tool-section-label")!.textContent).toBe("Command");
   });
 
   test("ide_opened_file renders with file path styling", () => {
@@ -79,33 +75,36 @@ describe("UserMessage", () => {
     expect(path!.textContent).toBe("/Users/dev/project/.env");
   });
 
-  test("bash stdout renders in code block", () => {
+  test("bash stdout renders as user card with SmartToolOutput", () => {
     const { container } = render(
       <UserMessage turn={makeTurn({ text: "", bashStdout: "output line 1\noutput line 2" })} />,
     );
-    const notice = container.querySelector(".bash-output-notice");
-    expect(notice).not.toBeNull();
-    const stdout = container.querySelector(".bash-output-stdout");
-    expect(stdout).not.toBeNull();
-    expect(stdout!.textContent).toBe("output line 1\noutput line 2");
+    expect(container.querySelector(".turn")).not.toBeNull();
+    expect(container.querySelector(".turn-badge-user")).not.toBeNull();
+    const labels = container.querySelectorAll(".tool-section-label");
+    expect(labels.length).toBeGreaterThanOrEqual(1);
+    expect(labels[0]!.textContent).toBe("Output");
   });
 
-  test("bash stderr renders with error styling", () => {
+  test("bash stderr renders inside user card", () => {
     const { container } = render(
       <UserMessage
         turn={makeTurn({ text: "", bashStdout: "ok", bashStderr: "warning: something" })}
       />,
     );
-    const stderr = container.querySelector(".bash-output-stderr");
-    expect(stderr).not.toBeNull();
-    expect(stderr!.textContent).toBe("warning: something");
+    expect(container.querySelector(".turn")).not.toBeNull();
+    expect(container.querySelector(".turn-badge-user")).not.toBeNull();
   });
 
-  test("empty bash stdout and stderr renders nothing", () => {
+  test("merged bash-input + bash-stdout renders command and output", () => {
     const { container } = render(
-      <UserMessage turn={makeTurn({ text: "", bashStdout: "", bashStderr: "" })} />,
+      <UserMessage turn={makeTurn({ text: "", bashInput: "ls", bashStdout: "file.txt" })} />,
     );
-    expect(container.querySelector(".bash-output-notice")).toBeNull();
+    expect(container.querySelector(".turn")).not.toBeNull();
+    const labels = container.querySelectorAll(".tool-section-label");
+    const labelTexts = Array.from(labels).map((l) => l.textContent);
+    expect(labelTexts).toContain("Command");
+    expect(labelTexts).toContain("Output");
   });
 
   test("regular markdown text renders", () => {

@@ -357,6 +357,104 @@ describe("buildTurns", () => {
     expect(turn.text).toBe("");
   });
 
+  test("bash-input followed by bash-stdout merges into one turn", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "<bash-input>ls -la</bash-input>" },
+      }),
+      line({
+        type: "user",
+        message: { role: "user", content: "<bash-stdout>total 42</bash-stdout>" },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.bashInput).toBe("ls -la");
+    expect(turn.bashStdout).toBe("total 42");
+    expect(turn.bashStderr).toBeUndefined();
+  });
+
+  test("bash-input followed by bash-stdout+stderr merges with all fields", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "<bash-input>npm install</bash-input>" },
+      }),
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content:
+            "<bash-stdout>added 5 packages</bash-stdout><bash-stderr>warn deprecated</bash-stderr>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.bashInput).toBe("npm install");
+    expect(turn.bashStdout).toBe("added 5 packages");
+    expect(turn.bashStderr).toBe("warn deprecated");
+  });
+
+  test("standalone bash-input followed by assistant turn stays separate", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "<bash-input>echo hi</bash-input>" },
+      }),
+      line({
+        type: "assistant",
+        message: {
+          role: "assistant",
+          model: "claude-sonnet-4-5-20250929",
+          content: [{ type: "text", text: "OK" }],
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(2);
+    const userTurn = turns[0] as UserTurn;
+    expect(userTurn.bashInput).toBe("echo hi");
+    expect(userTurn.bashStdout).toBeUndefined();
+  });
+
+  test("standalone bash-stdout stays separate", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "<bash-stdout>some output</bash-stdout>" },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.bashStdout).toBe("some output");
+    expect(turn.bashInput).toBeUndefined();
+  });
+
+  test("bash-input followed by non-bash user turn doesn't merge", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: { role: "user", content: "<bash-input>pwd</bash-input>" },
+      }),
+      line({
+        type: "user",
+        message: { role: "user", content: "Hello world" },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(2);
+    const bashTurn = turns[0] as UserTurn;
+    expect(bashTurn.bashInput).toBe("pwd");
+    expect(bashTurn.bashStdout).toBeUndefined();
+    const textTurn = turns[1] as UserTurn;
+    expect(textTurn.text).toBe("Hello world");
+  });
+
   test("system-reminder user messages skipped", () => {
     const lines: RawLine[] = [
       line({

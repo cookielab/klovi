@@ -403,6 +403,26 @@ function flushAssistant(current: AssistantTurn | null, turns: Turn[]): null {
   return null;
 }
 
+function mergeBashTurns(turns: Turn[]): Turn[] {
+  const merged: Turn[] = [];
+  for (let i = 0; i < turns.length; i++) {
+    const turn = turns[i]!;
+    const next = turns[i + 1];
+    if (
+      turn.kind === "user" &&
+      turn.bashInput !== undefined &&
+      next?.kind === "user" &&
+      next.bashStdout !== undefined
+    ) {
+      merged.push({ ...turn, bashStdout: next.bashStdout, bashStderr: next.bashStderr });
+      i++; // skip merged turn
+    } else {
+      merged.push(turn);
+    }
+  }
+  return merged;
+}
+
 function handleUserLine(
   line: RawLine,
   currentAssistant: AssistantTurn | null,
@@ -476,12 +496,14 @@ export function buildTurns(lines: RawLine[], parseErrors: ParseErrorTurn[] = [])
 
   flushAssistant(currentAssistant, turns);
 
+  const mergedTurns = mergeBashTurns(turns);
+
   const allErrors = [...parseErrors, ...structureErrors];
   if (allErrors.length > 0) {
-    turns.push(...allErrors);
+    mergedTurns.push(...allErrors);
   }
 
-  return turns;
+  return mergedTurns;
 }
 
 function extractToolResult(tr: RawToolResultBlock): {

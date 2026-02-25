@@ -1,6 +1,7 @@
 import type { UserTurn } from "../../../shared/types.ts";
 import { formatFullDateTime, formatTimestamp } from "../../utils/time.ts";
 import { MarkdownRenderer } from "../ui/MarkdownRenderer.tsx";
+import { UserBashContent } from "./UserBashContent.tsx";
 
 interface UserMessageProps {
   turn: UserTurn;
@@ -13,17 +14,6 @@ interface UserMessageProps {
 const STATUS_RE = /^\[.+\]$/;
 const PLAN_PREFIX = "Implement the following plan";
 
-function BashOutputNotice({ turn }: { turn: UserTurn }) {
-  const hasOutput = turn.bashStdout || turn.bashStderr;
-  if (!hasOutput) return null;
-  return (
-    <div className="bash-output-notice">
-      {turn.bashStdout && <pre className="bash-output-stdout">{turn.bashStdout}</pre>}
-      {turn.bashStderr && <pre className="bash-output-stderr">{turn.bashStderr}</pre>}
-    </div>
-  );
-}
-
 export function UserMessage({
   turn,
   isSubAgent,
@@ -31,17 +21,26 @@ export function UserMessage({
   implSessionId,
   project,
 }: UserMessageProps) {
-  if (turn.bashInput !== undefined) {
+  if (turn.bashInput !== undefined || turn.bashStdout !== undefined) {
     return (
-      <div className="status-notice bash-input-notice">
-        <span className="bash-input-prompt">$</span>
-        <code className="bash-input-command">{turn.bashInput}</code>
+      <div className="turn">
+        <div className="turn-header">
+          <span className="turn-badge turn-badge-user">User</span>
+          {turn.timestamp && (
+            <time
+              className="turn-timestamp"
+              dateTime={turn.timestamp}
+              data-tooltip={formatFullDateTime(turn.timestamp)}
+            >
+              {formatTimestamp(turn.timestamp)}
+            </time>
+          )}
+        </div>
+        <div className="message message-user">
+          <UserBashContent turn={turn} />
+        </div>
       </div>
     );
-  }
-
-  if (turn.bashStdout !== undefined) {
-    return <BashOutputNotice turn={turn} />;
   }
 
   if (turn.ideOpenedFile !== undefined) {
