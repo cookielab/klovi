@@ -284,6 +284,79 @@ describe("buildTurns", () => {
     expect(turn.text).toBe("<ide_opened_file>Some unexpected format</ide_opened_file>");
   });
 
+  test("bash-stdout only → UserTurn with bashStdout, bashStderr undefined", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: "<bash-stdout>hello world</bash-stdout>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.kind).toBe("user");
+    expect(turn.bashStdout).toBe("hello world");
+    expect(turn.bashStderr).toBeUndefined();
+    expect(turn.text).toBe("");
+  });
+
+  test("bash-stdout + bash-stderr → both fields set", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content:
+            "<bash-stdout>To github.com:repo.git</bash-stdout><bash-stderr>warning: something</bash-stderr>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.bashStdout).toBe("To github.com:repo.git");
+    expect(turn.bashStderr).toBe("warning: something");
+    expect(turn.text).toBe("");
+  });
+
+  test("empty bash-stdout + empty bash-stderr → both empty strings", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: "<bash-stdout></bash-stdout><bash-stderr></bash-stderr>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.bashStdout).toBe("");
+    expect(turn.bashStderr).toBe("");
+    expect(turn.text).toBe("");
+  });
+
+  test("multi-line bash-stdout content", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "user",
+        message: {
+          role: "user",
+          content: "<bash-stdout>line1\nline2\nline3</bash-stdout>",
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    expect(turns).toHaveLength(1);
+    const turn = turns[0] as UserTurn;
+    expect(turn.bashStdout).toBe("line1\nline2\nline3");
+    expect(turn.text).toBe("");
+  });
+
   test("system-reminder user messages skipped", () => {
     const lines: RawLine[] = [
       line({

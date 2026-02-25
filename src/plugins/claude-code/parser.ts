@@ -277,13 +277,23 @@ function isSkippedUserText(text: string): boolean {
 }
 
 const BASH_INPUT_RE = /<bash-input>([\s\S]*?)<\/bash-input>/;
+const BASH_OUTPUT_RE =
+  /^<bash-stdout>([\s\S]*?)<\/bash-stdout>(?:<bash-stderr>([\s\S]*?)<\/bash-stderr>)?$/;
 const IDE_OPENED_FILE_RE =
   /<ide_opened_file>[\s\S]*?opened the file (.*?) in the IDE[\s\S]*?<\/ide_opened_file>/;
 function parseSpecialUserContent(
   text: string,
-): { bashInput: string } | { ideOpenedFile: string } | null {
+):
+  | { bashInput: string }
+  | { bashStdout: string; bashStderr: string | undefined }
+  | { ideOpenedFile: string }
+  | null {
   const bashMatch = BASH_INPUT_RE.exec(text);
   if (bashMatch?.[1] !== undefined) return { bashInput: bashMatch[1] };
+
+  const outputMatch = BASH_OUTPUT_RE.exec(text);
+  if (outputMatch?.[1] !== undefined)
+    return { bashStdout: outputMatch[1], bashStderr: outputMatch[2] };
 
   const ideMatch = IDE_OPENED_FILE_RE.exec(text);
   if (ideMatch?.[1] !== undefined) return { ideOpenedFile: ideMatch[1] };

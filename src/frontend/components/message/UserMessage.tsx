@@ -13,6 +13,17 @@ interface UserMessageProps {
 const STATUS_RE = /^\[.+\]$/;
 const PLAN_PREFIX = "Implement the following plan";
 
+function BashOutputNotice({ turn }: { turn: UserTurn }) {
+  const hasOutput = turn.bashStdout || turn.bashStderr;
+  if (!hasOutput) return null;
+  return (
+    <div className="bash-output-notice">
+      {turn.bashStdout && <pre className="bash-output-stdout">{turn.bashStdout}</pre>}
+      {turn.bashStderr && <pre className="bash-output-stderr">{turn.bashStderr}</pre>}
+    </div>
+  );
+}
+
 export function UserMessage({
   turn,
   isSubAgent,
@@ -27,6 +38,10 @@ export function UserMessage({
         <code className="bash-input-command">{turn.bashInput}</code>
       </div>
     );
+  }
+
+  if (turn.bashStdout !== undefined) {
+    return <BashOutputNotice turn={turn} />;
   }
 
   if (turn.ideOpenedFile !== undefined) {

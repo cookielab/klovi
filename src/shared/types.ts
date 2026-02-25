@@ -44,6 +44,8 @@ export interface UserTurn {
   };
   attachments?: Attachment[];
   bashInput?: string;
+  bashStdout?: string;
+  bashStderr?: string;
   ideOpenedFile?: string;
 }
 

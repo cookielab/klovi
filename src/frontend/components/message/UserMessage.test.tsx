@@ -79,6 +79,35 @@ describe("UserMessage", () => {
     expect(path!.textContent).toBe("/Users/dev/project/.env");
   });
 
+  test("bash stdout renders in code block", () => {
+    const { container } = render(
+      <UserMessage turn={makeTurn({ text: "", bashStdout: "output line 1\noutput line 2" })} />,
+    );
+    const notice = container.querySelector(".bash-output-notice");
+    expect(notice).not.toBeNull();
+    const stdout = container.querySelector(".bash-output-stdout");
+    expect(stdout).not.toBeNull();
+    expect(stdout!.textContent).toBe("output line 1\noutput line 2");
+  });
+
+  test("bash stderr renders with error styling", () => {
+    const { container } = render(
+      <UserMessage
+        turn={makeTurn({ text: "", bashStdout: "ok", bashStderr: "warning: something" })}
+      />,
+    );
+    const stderr = container.querySelector(".bash-output-stderr");
+    expect(stderr).not.toBeNull();
+    expect(stderr!.textContent).toBe("warning: something");
+  });
+
+  test("empty bash stdout and stderr renders nothing", () => {
+    const { container } = render(
+      <UserMessage turn={makeTurn({ text: "", bashStdout: "", bashStderr: "" })} />,
+    );
+    expect(container.querySelector(".bash-output-notice")).toBeNull();
+  });
+
   test("regular markdown text renders", () => {
     const { container } = render(<UserMessage turn={makeTurn({ text: "Hello **world**" })} />);
     const message = container.querySelector(".message-user");
