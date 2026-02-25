@@ -1,0 +1,33 @@
+/* Image lightbox */
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.lightboxVisible {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.lightboxImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.lightboxVisible .lightboxImage {
+  opacity: 1;
+  transform: scale(1);
+}

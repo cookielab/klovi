@@ -23,10 +23,13 @@ export { groupContentBlocks } from "./types/index.ts";
 
 export {
   detectOutputFormat,
+  ErrorBoundary,
+  FetchError,
   formatFullDateTime,
   formatRelativeTime,
   formatTime,
   formatTimestamp,
+  ImageLightbox,
   isClaudeModel,
   shortModel,
 } from "./utilities/index.ts";
