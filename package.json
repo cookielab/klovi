@@ -60,5 +60,8 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.0",
     "remark-gfm": "^4.0.1"
+  },
+  "patchedDependencies": {
+    "electrobun@1.14.4": "patches/electrobun@1.14.4.patch"
   }
 }
