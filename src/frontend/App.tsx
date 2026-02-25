@@ -347,7 +347,10 @@ export function AppGate() {
   }, [initialize]);
 
   useEffect(() => {
-    const handleReset = () => initialize();
+    const handleReset = () => {
+      window.location.hash = "#/";
+      initialize();
+    };
     window.addEventListener("klovi:reset", handleReset);
     return () => window.removeEventListener("klovi:reset", handleReset);
   }, [initialize]);
