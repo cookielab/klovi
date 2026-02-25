@@ -27,10 +27,16 @@ describe("Onboarding", () => {
     expect(getByText(/fully local/)).toBeTruthy();
   });
 
-  test("renders Next button on step 1", () => {
+  test("renders Accept & Continue button on step 1", () => {
     setupMockRPC();
     const { getByRole } = render(<Onboarding onComplete={() => {}} />);
-    expect(getByRole("button", { name: "Next" })).toBeTruthy();
+    expect(getByRole("button", { name: "Accept & Continue" })).toBeTruthy();
+  });
+
+  test("renders Don't show this again checkbox on step 1", () => {
+    setupMockRPC();
+    const { getByLabelText } = render(<Onboarding onComplete={() => {}} />);
+    expect(getByLabelText("Don't show this again")).toBeTruthy();
   });
 
   test("does not show Get Started on step 1", () => {
@@ -39,7 +45,7 @@ describe("Onboarding", () => {
     expect(queryByRole("button", { name: "Get Started" })).toBeNull();
   });
 
-  test("clicking Next shows step 2 with plugins", async () => {
+  test("clicking Accept & Continue shows step 2 with plugins", async () => {
     setupMockRPC({
       getPluginSettings: () =>
         Promise.resolve({
@@ -50,7 +56,7 @@ describe("Onboarding", () => {
         }),
     });
     const { getByRole, findByText } = render(<Onboarding onComplete={() => {}} />);
-    fireEvent.click(getByRole("button", { name: "Next" }));
+    fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
     expect(await findByText("Plugins")).toBeTruthy();
     expect(await findByText("Claude Code")).toBeTruthy();
     expect(await findByText("Codex CLI")).toBeTruthy();
@@ -61,7 +67,7 @@ describe("Onboarding", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const { getByRole, findByRole } = render(<Onboarding onComplete={() => {}} />);
-    fireEvent.click(getByRole("button", { name: "Next" }));
+    fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
     expect(await findByRole("button", { name: "Get Started" })).toBeTruthy();
   });
 
@@ -71,7 +77,7 @@ describe("Onboarding", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const { getByRole, findByRole } = render(<Onboarding onComplete={onComplete} />);
-    fireEvent.click(getByRole("button", { name: "Next" }));
+    fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
     const btn = await findByRole("button", { name: "Get Started" });
     fireEvent.click(btn);
     expect(onComplete).toHaveBeenCalledTimes(1);
@@ -82,11 +88,20 @@ describe("Onboarding", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const { getByRole, findByRole, findByText } = render(<Onboarding onComplete={() => {}} />);
-    fireEvent.click(getByRole("button", { name: "Next" }));
+    fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
     await findByText("Plugins");
     const backBtn = await findByRole("button", { name: "Back" });
     fireEvent.click(backBtn);
     expect(await findByText("Session Data Notice")).toBeTruthy();
+  });
+
+  test("checking Don't show this again and accepting calls updateGeneralSettings", () => {
+    const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
+    setupMockRPC({ updateGeneralSettings });
+    const { getByRole, getByLabelText } = render(<Onboarding onComplete={() => {}} />);
+    fireEvent.click(getByLabelText("Don't show this again"));
+    fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
+    expect(updateGeneralSettings).toHaveBeenCalledTimes(1);
   });
 
   test("renders step indicator dots", () => {

@@ -23,7 +23,7 @@ describe("AppGate", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
     const { findByRole, findByText } = render(<AppGate />);
-    const nextBtn = await findByRole("button", { name: "Next" });
+    const nextBtn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
     fireEvent.click(startBtn);
@@ -38,7 +38,7 @@ describe("AppGate", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
     const { findByRole } = render(<AppGate />);
-    const nextBtn = await findByRole("button", { name: "Next" });
+    const nextBtn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
     fireEvent.click(startBtn);
@@ -124,7 +124,7 @@ describe("AppGate", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
     const { findByRole, findByText } = render(<AppGate />);
-    const nextBtn = await findByRole("button", { name: "Next" });
+    const nextBtn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
     fireEvent.click(startBtn);

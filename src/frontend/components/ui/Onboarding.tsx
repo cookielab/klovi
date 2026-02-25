@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import faviconUrl from "../../../../favicon.svg";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
 import { getRPC } from "../../rpc.ts";
 import { PluginRow } from "../settings/PluginRow.tsx";
 import "./Onboarding.css";
+import { SecurityNoticeContent } from "./SecurityWarning.tsx";
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -70,26 +70,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         {step === 1 && (
-          <>
-            <img src={faviconUrl} alt="" width="64" height="64" className="onboarding-logo" />
-            <h1 id="onboarding-heading" className="onboarding-heading">
-              Session Data Notice
-            </h1>
-            <p>
-              Klovi reads AI coding session history from your local machine. Session data may
-              contain sensitive information such as API keys, credentials, or private code snippets.
-            </p>
-            <p>
-              Klovi is fully local — your data never leaves your machine. Klovi is open source, so
-              you can verify this yourself.
-            </p>
-            <p className="onboarding-muted">
-              Be mindful when screen sharing or using Klovi in public settings.
-            </p>
-            <button type="button" className="onboarding-button" onClick={() => setStep(2)}>
-              Next
-            </button>
-          </>
+          <SecurityNoticeContent
+            headingId="onboarding-heading"
+            onAccept={() => setStep(2)}
+            onDontShowAgain={() => {
+              getRPC()
+                .request.updateGeneralSettings({ showSecurityWarning: false })
+                .catch(() => {});
+            }}
+          />
         )}
 
         {step === 2 && (
