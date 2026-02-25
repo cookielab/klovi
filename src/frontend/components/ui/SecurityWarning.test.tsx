@@ -79,6 +79,6 @@ describe("SecurityWarning", () => {
     const { container } = render(
       <SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />,
     );
-    expect(container.querySelector(".onboarding-logo")).not.toBeNull();
+    expect(container.querySelector(".security-warning-logo")).not.toBeNull();
   });
 });

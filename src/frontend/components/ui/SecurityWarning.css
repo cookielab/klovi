@@ -1,0 +1,51 @@
+.security-warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: 20px;
+}
+
+.security-warning-content {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.security-warning-logo {
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.security-warning-heading {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.security-warning-muted {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.security-warning-button {
+  margin-top: 24px;
+  padding: 10px 32px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--text-inverse);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.security-warning-button:hover {
+  background: var(--accent-hover);
+}

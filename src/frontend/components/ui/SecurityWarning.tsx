@@ -1,6 +1,6 @@
 import { useState } from "react";
 import faviconUrl from "../../../../favicon.svg";
-import "./Onboarding.css";
+import "./SecurityWarning.css";
 
 interface SecurityNoticeContentProps {
   headingId: string;
@@ -24,8 +24,8 @@ export function SecurityNoticeContent({
 
   return (
     <>
-      <img src={faviconUrl} alt="" width="64" height="64" className="onboarding-logo" />
-      <h1 id={headingId} className="onboarding-heading">
+      <img src={faviconUrl} alt="" width="64" height="64" className="security-warning-logo" />
+      <h1 id={headingId} className="security-warning-heading">
         Session Data Notice
       </h1>
       <p>
@@ -36,10 +36,10 @@ export function SecurityNoticeContent({
         Klovi is fully local — your data never leaves your machine. Klovi is open source, so you can
         verify this yourself.
       </p>
-      <p className="onboarding-muted">
+      <p className="security-warning-muted">
         Be mindful when screen sharing or using Klovi in public settings.
       </p>
-      <label className="onboarding-muted" style={{ display: "block", marginTop: "16px" }}>
+      <label className="security-warning-muted" style={{ display: "block", marginTop: "16px" }}>
         <input
           type="checkbox"
           className="custom-checkbox"
@@ -48,7 +48,7 @@ export function SecurityNoticeContent({
         />
         {" Don't show this again"}
       </label>
-      <button type="button" className="onboarding-button" onClick={handleAccept}>
+      <button type="button" className="security-warning-button" onClick={handleAccept}>
         Accept & Continue
       </button>
     </>
@@ -62,8 +62,8 @@ interface SecurityWarningProps {
 
 export function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningProps) {
   return (
-    <section className="onboarding" aria-labelledby="security-warning-heading">
-      <div className="onboarding-content">
+    <section className="security-warning" aria-labelledby="security-warning-heading">
+      <div className="security-warning-content">
         <SecurityNoticeContent
           headingId="security-warning-heading"
           onAccept={onAccept}

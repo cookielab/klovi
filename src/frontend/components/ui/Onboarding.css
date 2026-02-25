@@ -41,21 +41,11 @@
   background: var(--border);
 }
 
-.onboarding-logo {
-  margin-bottom: 20px;
-  opacity: 0.8;
-}
-
 .onboarding-heading {
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
-}
-
-.onboarding-muted {
-  color: var(--text-muted);
-  font-size: 0.85rem;
 }
 
 .onboarding-subtitle {

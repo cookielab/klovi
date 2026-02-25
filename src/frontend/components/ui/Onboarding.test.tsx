@@ -117,7 +117,7 @@ describe("Onboarding", () => {
   test("renders Klovi logo on step 1", () => {
     setupMockRPC();
     const { container } = render(<Onboarding onComplete={() => {}} />);
-    const img = container.querySelector(".onboarding-logo");
+    const img = container.querySelector(".security-warning-logo");
     expect(img).not.toBeNull();
   });
 });
