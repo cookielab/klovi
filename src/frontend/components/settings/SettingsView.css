@@ -128,23 +128,9 @@
   cursor: default;
 }
 
-.settings-general-row {
-  padding: 12px;
-  border: 1px solid var(--border-light);
-  background: var(--bg-primary);
-}
-
-.settings-general-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
 .settings-general-hint {
-  margin: 6px 0 0 24px;
+  margin: 0;
+  padding-left: 22px;
   font-size: 0.8rem;
   color: var(--text-muted);
 }

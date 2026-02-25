@@ -250,26 +250,28 @@ export function SettingsView({
               <div className="settings-loading">Loading...</div>
             ) : (
               <>
-                <div className="settings-general-row">
-                  <label className="settings-general-label">
-                    <input
-                      type="checkbox"
-                      className="custom-checkbox"
-                      checked={showSecurityWarning}
-                      onChange={(e) => {
-                        const value = e.target.checked;
-                        setShowSecurityWarning(value);
-                        getRPC()
-                          .request.updateGeneralSettings({ showSecurityWarning: value })
-                          .then(() => setChanged(true))
-                          .catch(() => {});
-                      }}
-                    />
-                    Show security warning on startup
-                  </label>
-                  <p className="settings-general-hint">
-                    When enabled, the security warning is shown each time Klovi launches.
-                  </p>
+                <div className="settings-control-row">
+                  <div className="settings-control-group">
+                    <label className="settings-same-as-global">
+                      <input
+                        type="checkbox"
+                        className="custom-checkbox"
+                        checked={showSecurityWarning}
+                        onChange={(e) => {
+                          const value = e.target.checked;
+                          setShowSecurityWarning(value);
+                          getRPC()
+                            .request.updateGeneralSettings({ showSecurityWarning: value })
+                            .then(() => setChanged(true))
+                            .catch(() => {});
+                        }}
+                      />
+                      Show security warning on startup
+                    </label>
+                    <p className="settings-general-hint">
+                      When enabled, the security warning is shown each time Klovi launches.
+                    </p>
+                  </div>
                 </div>
 
                 <h4 className="settings-subsection-title">Global</h4>
@@ -332,9 +334,9 @@ export function SettingsView({
                 </div>
 
                 <h4 className="settings-subsection-title">Reset</h4>
-                <div className="settings-general-row">
+                <div className="settings-control-row">
                   {!confirmingReset ? (
-                    <>
+                    <div className="settings-control-group">
                       <button
                         type="button"
                         className="settings-reset-to-defaults-btn"
@@ -346,9 +348,9 @@ export function SettingsView({
                       <p className="settings-general-hint">
                         Deletes all settings and returns to the home screen.
                       </p>
-                    </>
+                    </div>
                   ) : (
-                    <>
+                    <div className="settings-control-group">
                       <p className="settings-reset-confirm-text">
                         Reset all settings to defaults? This cannot be undone.
                       </p>
@@ -370,7 +372,7 @@ export function SettingsView({
                           Cancel
                         </button>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               </>
