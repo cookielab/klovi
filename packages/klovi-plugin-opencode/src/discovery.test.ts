@@ -211,6 +211,116 @@ describe("discoverOpenCodeProjects", () => {
     expect(projects).toHaveLength(1);
     expect(projects[0]?.displayName).toBe("/Users/dev/project-a");
   });
+
+  test("falls back to discovery from session directories when project table is absent", async () => {
+    const dbPath = join(testDir, "opencode.db");
+    const db = new Database(dbPath, { create: true });
+    db.run(`
+      CREATE TABLE session (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        directory TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        time_updated INTEGER NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE message (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        data TEXT NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE part (
+        id TEXT PRIMARY KEY,
+        message_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        data TEXT NOT NULL
+      )
+    `);
+
+    db.run(
+      "INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)",
+      ["sess-1", "legacy-project", "/Users/dev/legacy-a", 1706000000000, 1706000005000],
+    );
+    db.run(
+      "INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)",
+      ["sess-2", "legacy-project", "/Users/dev/legacy-a", 1706000010000, 1706000015000],
+    );
+    db.run(
+      "INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)",
+      ["sess-3", "legacy-project-b", "/Users/dev/legacy-b", 1706000020000, 1706000025000],
+    );
+    db.close();
+
+    const projects = await discoverOpenCodeProjects();
+
+    expect(projects).toHaveLength(2);
+    expect(projects[0]?.nativeId).toBe("/Users/dev/legacy-b");
+    expect(projects[0]?.sessionCount).toBe(1);
+    expect(projects[1]?.nativeId).toBe("/Users/dev/legacy-a");
+    expect(projects[1]?.sessionCount).toBe(2);
+  });
+
+  test("falls back to session discovery when project table lacks worktree column", async () => {
+    const dbPath = join(testDir, "opencode.db");
+    const db = new Database(dbPath, { create: true });
+    db.run(`
+      CREATE TABLE project (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        time_created INTEGER NOT NULL,
+        time_updated INTEGER NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE session (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        directory TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        time_updated INTEGER NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE message (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        data TEXT NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE part (
+        id TEXT PRIMARY KEY,
+        message_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        data TEXT NOT NULL
+      )
+    `);
+
+    db.run("INSERT INTO project (id, name, time_created, time_updated) VALUES (?, ?, ?, ?)", [
+      "proj-no-worktree",
+      "No Worktree",
+      1706000000000,
+      1706000000000,
+    ]);
+    db.run(
+      "INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)",
+      ["sess-1", "proj-no-worktree", "/Users/dev/fallback", 1706000000000, 1706000001000],
+    );
+    db.close();
+
+    const projects = await discoverOpenCodeProjects();
+
+    expect(projects).toHaveLength(1);
+    expect(projects[0]?.nativeId).toBe("/Users/dev/fallback");
+    expect(projects[0]?.resolvedPath).toBe("/Users/dev/fallback");
+  });
 });
 
 describe("listOpenCodeSessions", () => {
@@ -341,5 +451,65 @@ describe("listOpenCodeSessions", () => {
 
     expect(sessions[0]?.sessionId).toBe("sess-new");
     expect(sessions[1]?.sessionId).toBe("sess-old");
+  });
+
+  test("lists sessions by directory when project table is absent", async () => {
+    const dbPath = join(testDir, "opencode.db");
+    const db = new Database(dbPath, { create: true });
+    db.run(`
+      CREATE TABLE session (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        directory TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        time_updated INTEGER NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE message (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        data TEXT NOT NULL
+      )
+    `);
+    db.run(`
+      CREATE TABLE part (
+        id TEXT PRIMARY KEY,
+        message_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        time_created INTEGER NOT NULL,
+        data TEXT NOT NULL
+      )
+    `);
+
+    db.run(
+      "INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)",
+      ["legacy-sess-1", "legacy-proj", "/Users/dev/legacy-app", 1706000000000, 1706000000000],
+    );
+    db.run("INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)", [
+      "legacy-msg-1",
+      "legacy-sess-1",
+      1706000000000,
+      JSON.stringify({ role: "user", time: { created: 1706000000000 } }),
+    ]);
+    db.run(
+      "INSERT INTO part (id, message_id, session_id, time_created, data) VALUES (?, ?, ?, ?, ?)",
+      [
+        "legacy-part-1",
+        "legacy-msg-1",
+        "legacy-sess-1",
+        1706000000001,
+        JSON.stringify({ type: "text", text: "Legacy fallback message" }),
+      ],
+    );
+    db.close();
+
+    const sessions = await listOpenCodeSessions("/Users/dev/legacy-app");
+
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]?.sessionId).toBe("legacy-sess-1");
+    expect(sessions[0]?.slug).toBe("legacy-sess-1");
+    expect(sessions[0]?.firstMessage).toBe("Legacy fallback message");
   });
 });

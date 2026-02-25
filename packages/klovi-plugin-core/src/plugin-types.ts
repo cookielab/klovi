@@ -58,6 +58,7 @@ export interface ToolPlugin<
   displayName: string;
 
   getDefaultDataDir(): string | null;
+  isDataAvailable?(): boolean;
   discoverProjects(): Promise<PluginProject<TPluginId>[]>;
   listSessions(nativeId: string): Promise<TSessionSummary[]>;
   loadSession(nativeId: string, sessionId: string): Promise<TSession>;
