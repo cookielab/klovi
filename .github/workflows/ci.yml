@@ -21,8 +21,3 @@ jobs:
       - run: bun run check
       - run: bun run typecheck
       - run: bun test
-      - run: bun run build
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-      - run: node dist/server.js --help

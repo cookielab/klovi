@@ -60,14 +60,8 @@ jobs:
           tag_name: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
           body: ${{ steps.changelog.outputs.changes }}
 
-      - name: Trigger npm publish
+      - name: Trigger build and release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
-        run: gh workflow run npm-publish.yml --ref "$VERSION" -f version="$VERSION"
-
-      - name: Trigger Homebrew release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version != '' && inputs.version || steps.semver.outputs.nextStrict }}
-        run: gh workflow run homebrew-release.yml --ref "$VERSION" -f version="$VERSION"
+        run: gh workflow run build-and-release.yml --ref "$VERSION" -f version="$VERSION"

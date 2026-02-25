@@ -21,7 +21,7 @@ Download the latest release for your platform from the [Releases page](https://g
 Or install via [Homebrew](https://brew.sh):
 
 ```bash
-brew install cookielab/tap/klovi
+brew install --cask cookielab/tap/klovi
 ```
 
 ### Development
