@@ -11,6 +11,8 @@ export {
 } from "./messages/index.ts";
 export type { KeyboardHandlers, PresentationState } from "./presentation/index.ts";
 export { PresentationShell, useKeyboard, usePresentationMode } from "./presentation/index.ts";
+export type { SearchModalProps } from "./search/index.ts";
+export { SearchModal } from "./search/index.ts";
 export type {
   DashboardStatsProps,
   HiddenProjectListProps,
