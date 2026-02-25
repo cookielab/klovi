@@ -31,7 +31,7 @@ export function useViewState(): UseViewStateResult {
     if (!ready) return;
     const newHash = viewToHash(view);
     if (window.location.hash !== newHash) {
-      history.pushState(null, "", newHash);
+      window.location.hash = newHash;
     }
   }, [view, ready]);
 
@@ -39,8 +39,8 @@ export function useViewState(): UseViewStateResult {
     const handler = () => {
       restoreFromHash().then(setView);
     };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
   }, []);
 
   const selectProject = useCallback((project: Project) => {
