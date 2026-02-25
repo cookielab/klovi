@@ -28,7 +28,11 @@
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "erasableSyntaxOnly": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": true,
+    "isolatedDeclarations": true
   },
   "exclude": ["dist", "node_modules"]
 }
