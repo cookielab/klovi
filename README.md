@@ -31,6 +31,17 @@ bun install
 bun run dev
 ```
 
+### Monorepo Packages
+
+Klovi is a Bun workspace monorepo with these key packages:
+
+- `@cookielab.io/klovi-plugin-core` - shared plugin contracts + registry
+- `@cookielab.io/klovi-plugin-claude-code` - Claude Code discovery/parsing
+- `@cookielab.io/klovi-plugin-codex` - Codex discovery/parsing
+- `@cookielab.io/klovi-plugin-opencode` - OpenCode discovery/parsing
+- `@cookielab.io/klovi-ui` - reusable UI feature components
+- `@cookielab.io/klovi-design-system` - design tokens and UI primitives
+
 ## Features
 
 **Multi-Tool Support**
@@ -44,6 +55,8 @@ bun run dev
 - Dashboard statistics: project/session/tool counts, token usage breakdown, model distribution
 - Filterable project list with session counts and last activity
 - Hide/unhide projects to declutter the list
+- First-launch onboarding for plugin setup and security acknowledgement
+- Settings screen for plugin enable/disable and custom data directories
 - Sessions show first message, model, git branch, and timestamp
 - Plan/implementation session detection with colored badges and cross-session navigation links
 - Full conversation rendering with user/assistant/system messages
@@ -87,15 +100,19 @@ bun run dev
 | `bun run format` | Format with Biome |
 | `bun run check` | Biome check (lint + format, no write) |
 | `bun run check:fix` | Biome check + auto-fix |
+| `bun run storybook` | Run design system Storybook |
 
 ## Tech Stack
 
 - [Electrobun](https://electrobun.dev) - native desktop framework for Bun
 - [Bun](https://bun.sh) - runtime, bundler, test runner
 - React 19 + TypeScript (strict mode)
+- Bun workspaces monorepo (`packages/*`)
+- `@cookielab.io/klovi-ui` for feature UI modules
+- `@cookielab.io/klovi-design-system` for primitives/tokens/globals
 - react-markdown + remark-gfm
 - react-syntax-highlighter (Prism, oneDark theme)
-- CSS custom properties for theming (no CSS framework)
+- CSS custom properties + CSS modules (no CSS framework)
 - Biome for linting and formatting
 - happy-dom + @testing-library/react for tests
 

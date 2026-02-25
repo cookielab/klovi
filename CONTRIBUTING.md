@@ -6,7 +6,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Development Setup
 
-1. **Prerequisites:** [Bun](https://bun.sh) v1.2+
+1. **Prerequisites:** [Bun](https://bun.sh) v1.3+
 2. Clone the repo and install dependencies:
    ```bash
    git clone https://github.com/cookielab/klovi.git
@@ -39,7 +39,7 @@ bun run check:fix
 
 - **Linting & Formatting:** Enforced by [Biome](https://biomejs.dev/). No manual style decisions needed — just run `bun run check:fix`.
 - **TypeScript:** Strict mode with `noUncheckedIndexedAccess`. Use `!` non-null assertions for array index access when the index is known to be valid.
-- **CSS:** Plain CSS with custom properties for theming. No CSS framework. Add new styles to `src/frontend/App.css`.
+- **CSS:** Plain CSS (custom properties + CSS modules). No CSS framework. App shell styles live in `src/frontend/`; reusable package styles live in `packages/klovi-ui/` and `packages/klovi-design-system/`.
 - **Testing:** Use `bun:test` with `@testing-library/react` and `happy-dom`. See `docs/testing.md` for patterns.
 
 ## Commit Messages
@@ -56,7 +56,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 Examples:
 ```
 feat: add search filtering to session list
-fix: prevent path traversal in static file serving
+fix: handle missing plugin data directory gracefully
 docs: update README with contributing section
 ```
 

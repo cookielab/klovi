@@ -2,226 +2,103 @@
 
 ## Setup
 
-Tests use `bun test` with happy-dom for DOM simulation.
+Klovi uses `bun test` as the single test runner across the monorepo.
 
-**Config** (`bunfig.toml`):
+`bunfig.toml` preloads `test-setup.ts`:
+
 ```toml
 [test]
 preload = ["./test-setup.ts"]
 ```
 
-**DOM + RPC setup** (`test-setup.ts`):
-```ts
-import { GlobalWindow } from "happy-dom";
-import { setupMockRPC } from "./src/frontend/test-helpers/mock-rpc.ts";
-// Registers window, document, etc. as globals
-// Sets up default RPC mock for all tests
-setupMockRPC();
-```
+`test-setup.ts`:
 
-happy-dom v20 uses `GlobalWindow` (not `GlobalRegistrator` which was removed).
+- Boots happy-dom (`GlobalWindow`)
+- Registers browser-like globals (`window`, `document`, `localStorage`, `history`, ...)
+- Calls `setupMockRPC()` from `src/frontend/test-helpers/mock-rpc.ts`
 
-The test setup also calls `setupMockRPC()` from `src/frontend/test-helpers/mock-rpc.ts`, which wires up a default mock RPC client so frontend components that call `getRPC()` work without errors. Individual tests can override specific RPC methods by calling `setupMockRPC({ getProjects: () => ... })`.
+This means frontend tests can render immediately without repeating DOM/RPC bootstrap code.
 
 ## Running Tests
 
 ```bash
-bun test                    # All tests
-bun test src/parser         # Parser tests only
-bun test src/plugins        # Plugin tests only
-bun test src/frontend       # Frontend tests only
-bun test --watch            # Watch mode
+bun test                                  # Entire monorepo
+bun test src                              # Desktop app shell tests
+bun test packages/klovi-plugin-core/src   # Core plugin package tests
+bun test packages/klovi-plugin-claude-code/src
+bun test packages/klovi-plugin-codex/src
+bun test packages/klovi-plugin-opencode/src
+bun test packages/klovi-ui/src
+bun test packages/klovi-design-system/src
+bun test --watch
 ```
 
-## Test Files
+## Test Layout
 
-### Parser & Infrastructure
+### App Shell Tests (`src/`)
 
-| File | What it covers |
+| Area | Representative files |
 |---|---|
-| `src/parser/session.test.ts` | `buildTurns()`, `extractSubAgentMap()`, contentBlocks ordering, plan/impl linking |
-| `src/parser/command-message.test.ts` | `parseCommandMessage()`, `cleanCommandMessage()` |
-| `src/parser/claude-dir.test.ts` | Session discovery, `classifySessionTypes()`, slug extraction |
-| `src/parser/stats.test.ts` | `scanStats()` aggregate statistics computation |
+| Main process RPC/settings | `src/bun/rpc-handlers.test.ts`, `src/bun/settings.test.ts`, `src/bun/settings-handlers.test.ts` |
+| Plugin registry wiring | `src/plugins/registry.test.ts`, `src/plugins/auto-discover.test.ts` |
+| Stats aggregation | `src/parser/stats.test.ts` |
+| Shared helpers | `src/shared/content-blocks.test.ts`, `src/shared/iso-time.test.ts` |
+| App flow/routing/plugin wiring | `src/frontend/AppGate.test.tsx`, `src/frontend/view-state.test.ts`, `src/frontend/plugin-registry.test.ts` |
+| Frontend wrappers/layout | `src/frontend/components/layout/*.test.tsx`, `src/frontend/components/session/*.test.tsx`, `src/frontend/components/settings/SettingsView.test.tsx`, `src/frontend/components/ui/*.test.tsx` |
+| Frontend hooks/utils | `src/frontend/hooks/*.test.ts*`, `src/frontend/utils/*.test.ts` |
 
-### Plugins
+### Workspace Package Tests (`packages/`)
 
-| File | What it covers |
+| Package | Representative files |
 |---|---|
-| `src/plugins/registry.test.ts` | PluginRegistry: project merging, session aggregation |
-| `src/plugins/config.test.ts` | Config getters/setters for all tool directories |
-| `src/plugins/claude-code/discovery.test.ts` | Claude Code project/session discovery |
-| `src/plugins/claude-code/subagent.test.ts` | Sub-agent session parsing |
-| `src/plugins/codex-cli/discovery.test.ts` | Codex CLI project/session discovery from nested JSONL dirs |
-| `src/plugins/codex-cli/parser.test.ts` | `buildCodexTurns()` from JSONL events |
-| `src/plugins/codex-cli/session-index.test.ts` | Codex CLI session index management |
-| `src/plugins/opencode/discovery.test.ts` | OpenCode project/session discovery from SQLite |
-| `src/plugins/opencode/parser.test.ts` | `buildOpenCodeTurns()` from SQLite messages/parts |
-| `src/plugins/shared/json-utils.test.ts` | JSON parsing utilities |
-| `src/plugins/shared/jsonl-utils.test.ts` | JSONL file reading utilities |
+| `@cookielab.io/klovi-plugin-core` | `packages/klovi-plugin-core/src/plugin-registry.test.ts`, `ids.test.ts`, `session-id.test.ts`, `iso-time.test.ts` |
+| `@cookielab.io/klovi-plugin-claude-code` | `packages/klovi-plugin-claude-code/src/discovery.test.ts`, `parser.test.ts`, `subagent.test.ts`, `command-message.test.ts`, `shared/*.test.ts` |
+| `@cookielab.io/klovi-plugin-codex` | `packages/klovi-plugin-codex/src/discovery.test.ts`, `parser.test.ts`, `session-index.test.ts`, `extractors.test.ts`, `shared/*.test.ts` |
+| `@cookielab.io/klovi-plugin-opencode` | `packages/klovi-plugin-opencode/src/discovery.test.ts`, `parser.test.ts`, `db.test.ts`, `shared/json-utils.test.ts` |
+| `@cookielab.io/klovi-ui` | `packages/klovi-ui/src/presentation/*.test.ts*`, `search/SearchModal.test.tsx`, `sessions/ProjectList.test.tsx`, `tools/ToolCallDefaults.test.ts`, `utilities/*.test.ts`, `types/index.test.ts` |
+| `@cookielab.io/klovi-design-system` | `packages/klovi-design-system/src/components/components.test.tsx`, `hooks/useTheme.test.ts` |
 
-### Main Process
+## Common Patterns
 
-| File | What it covers |
-|---|---|
-| `src/bun/rpc-handlers.test.ts` | RPC handler implementations |
+### 1. Mock RPC in frontend tests
 
-### Shared
-
-| File | What it covers |
-|---|---|
-| `src/shared/content-blocks.test.ts` | ContentBlock grouping for presentation steps |
-| `src/shared/iso-time.test.ts` | ISO timestamp sorting utilities |
-
-### Frontend — Components
-
-| File | What it covers |
-|---|---|
-| `src/frontend/components/message/UserMessage.test.tsx` | Regular text, commands, status notices, attachments, plan/impl links |
-| `src/frontend/components/message/AssistantMessage.test.tsx` | Thinking, text, tool calls, model display, token usage |
-| `src/frontend/components/message/ToolCall.test.tsx` | `getToolSummary()` for all tool types, MCP parsing |
-| `src/frontend/components/message/SmartToolOutput.test.tsx` | Tool output format detection, image rendering |
-| `src/frontend/components/message/BashToolContent.test.tsx` | Bash tool input/output display |
-| `src/frontend/components/message/MessageList.test.tsx` | Turn-to-component mapping |
-| `src/frontend/components/message/ThinkingBlock.test.tsx` | Thinking block rendering |
-| `src/frontend/components/message/SubAgentView.test.tsx` | Sub-agent inline display |
-| `src/frontend/components/dashboard/DashboardStats.test.tsx` | Dashboard rendering, loading state, model display |
-| `src/frontend/components/search/SearchModal.test.tsx` | Search modal UI |
-| `src/frontend/components/project/ProjectList.test.tsx` | Project list rendering |
-| `src/frontend/components/project/SessionList.test.tsx` | Session list with tool name display |
-| `src/frontend/components/project/HiddenProjectList.test.tsx` | Hidden projects management |
-| `src/frontend/components/session/SessionView.test.tsx` | Session view rendering |
-| `src/frontend/components/session/SessionPresentation.test.tsx` | Presentation mode |
-| `src/frontend/components/session/PresentationShell.test.tsx` | Presentation shell wrapper |
-| `src/frontend/components/session/SubAgentPresentation.test.tsx` | Sub-agent presentation mode |
-| `src/frontend/components/layout/Header.test.tsx` | Header component |
-| `src/frontend/components/layout/Layout.test.tsx` | Layout component |
-| `src/frontend/components/layout/Sidebar.test.tsx` | Sidebar component |
-| `src/frontend/components/ui/CodeBlock.test.tsx` | Code block rendering |
-| `src/frontend/components/ui/CollapsibleSection.test.tsx` | Collapsible section |
-| `src/frontend/components/ui/DiffView.test.tsx` | Diff view rendering |
-| `src/frontend/components/ui/ErrorBoundary.test.tsx` | Error boundary with retry |
-| `src/frontend/components/ui/MarkdownRenderer.test.tsx` | Markdown rendering |
-| `src/frontend/components/ui/ImageLightbox.test.tsx` | Image lightbox overlay |
-
-### Frontend — Hooks & Utils
-
-| File | What it covers |
-|---|---|
-| `src/frontend/hooks/useRPC.test.ts` | Generic RPC data fetching hook |
-| `src/frontend/hooks/useSessionData.test.ts` | Session data fetching hook |
-| `src/frontend/hooks/useHiddenProjects.test.ts` | `useHiddenProjects` hook: hide, unhide, localStorage persistence |
-| `src/frontend/hooks/useKeyboard.test.tsx` | Keyboard event handling |
-| `src/frontend/hooks/usePresentationMode.test.ts` | Step counting, navigation, turn boundaries, visibility |
-| `src/frontend/hooks/useTheme.test.ts` | Theme cycling, font size, localStorage persistence |
-| **Frontend — Utils** | |
-| `src/frontend/utils/time.test.ts` | Relative time strings |
-| `src/frontend/utils/model.test.ts` | Model name shortening (Opus/Sonnet/Haiku/GPT/Gemini) |
-| `src/frontend/utils/project.test.ts` | Project path utilities |
-| `src/frontend/utils/format-detector.test.ts` | Format detection utilities |
-
-## Patterns
-
-### Parser Tests
-
-Test `buildTurns()` directly with synthetic `RawLine` arrays:
-
-```ts
-import { buildTurns } from "./session.ts";
-import type { RawLine } from "./types.ts";
-
-test("merges consecutive assistant lines", () => {
-  const lines: RawLine[] = [
-    {
-      type: "assistant",
-      message: {
-        role: "assistant",
-        model: "claude-opus-4-6",
-        content: [{ type: "text", text: "hello" }],
-      },
-    },
-    // ... more lines
-  ];
-  const turns = buildTurns(lines);
-  expect(turns).toHaveLength(1);
-  expect(turns[0]!.kind).toBe("assistant");
-});
-```
-
-### Component Tests
-
-Use `@testing-library/react` with `render` and queries:
-
-```ts
-import { render } from "@testing-library/react";
-import { UserMessage } from "./UserMessage.tsx";
-import type { UserTurn } from "../../../shared/types.ts";
-
-test("renders user text", () => {
-  const turn: UserTurn = {
-    kind: "user",
-    uuid: "test-1",
-    timestamp: "2025-01-01T00:00:00Z",
-    text: "Hello world",
-  };
-  const { getByText } = render(<UserMessage turn={turn} />);
-  expect(getByText("Hello world")).toBeTruthy();
-});
-```
-
-### RPC Mocking
-
-The test setup preloads `setupMockRPC()` which provides default no-op implementations for all RPC methods. To override specific methods in a test:
+`setupMockRPC()` provides default no-op handlers for all RPC methods. Tests override only what they need.
 
 ```ts
 import { setupMockRPC } from "../test-helpers/mock-rpc.ts";
 
-test("shows projects from RPC", () => {
-  setupMockRPC({
-    getProjects: () => Promise.resolve({
-      projects: [{ name: "my-project", encodedPath: "abc", sources: [] }],
-    }),
-  });
-  // render component that calls getRPC().request.getProjects(...)
+setupMockRPC({
+  getProjects: () => Promise.resolve({ projects: [] }),
 });
 ```
 
-### Key Conventions
+### 2. Temp directories for discovery tests
 
-- Use `!` non-null assertions for array index access (required by `noUncheckedIndexedAccess` in tsconfig)
-- Build synthetic data objects matching the shared types
-- Parser tests focus on turn merging, filtering, and edge cases
-- Component tests focus on rendering output and conditional display
-- Frontend components use `getRPC()` for data; tests mock via `setupMockRPC()`
+Plugin discovery tests usually create temporary directory trees and fixture JSONL files, then point plugin config to the temp location.
 
-### Plugin Tests
-
-Plugin tests follow specific patterns depending on the data source:
-
-**Codex CLI tests** use temporary directories with JSONL fixture files:
 ```ts
-// Create temp dir structure matching ~/.codex/sessions/<project>/<id>.jsonl
-const tmpDir = makeTmpDir();
-mkdirSync(join(tmpDir, "sessions", "project-dir"), { recursive: true });
-writeFileSync(join(tmpDir, "sessions", "project-dir", "session-1.jsonl"), jsonlContent);
-setCodexCliDir(tmpDir);
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { setCodexCliDir } from "./config.ts";
+
+const root = join(tmpdir(), "klovi-test");
+mkdirSync(join(root, "sessions", "openai", "2025-01-15"), { recursive: true });
+writeFileSync(join(root, "sessions", "openai", "2025-01-15", "abc.jsonl"), "{...}\n{...}");
+setCodexCliDir(root);
 ```
 
-**OpenCode tests** use temporary SQLite databases with fixture data:
-```ts
-// Create temp DB matching opencode.db schema (session, message, part tables)
-const db = new Database(join(tmpDir, "opencode.db"));
-db.run("CREATE TABLE session (id TEXT PRIMARY KEY, directory TEXT, ...)");
-db.run("INSERT INTO session VALUES (...)");
-setOpenCodeDir(tmpDir);
-```
+### 3. Temp SQLite for OpenCode tests
 
-Both patterns use `afterEach` cleanup to remove temporary files and reset config.
+OpenCode tests build temporary SQLite DB fixtures matching expected tables (`session`, `message`, `part`) before executing discovery/parser logic.
 
-## Adding Tests
+### 4. Package component tests
 
-1. Create `<module>.test.ts` or `<Component>.test.tsx` next to the source file
-2. Import from `bun:test` for `test`, `expect`, `describe`, `beforeEach`
-3. For components, import `render` from `@testing-library/react`
-4. For parser logic, import `buildTurns` and construct `RawLine[]` fixtures
-5. For components that use RPC, call `setupMockRPC()` with relevant overrides
+`@cookielab.io/klovi-ui` and `@cookielab.io/klovi-design-system` tests validate reusable component behavior independent of app-shell wrappers.
+
+## Writing New Tests
+
+1. Place test files near the module (`*.test.ts` / `*.test.tsx`).
+2. Use `bun:test` (`describe`, `test`, `expect`, lifecycle hooks).
+3. For React tests, use `@testing-library/react`.
+4. For app-shell frontend tests, prefer overriding RPC via `setupMockRPC()`.
+5. For plugin discovery/parser tests, use temp fixtures and clean them up in `afterEach`.
