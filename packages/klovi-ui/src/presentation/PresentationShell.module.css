@@ -1,0 +1,62 @@
+/* Presentation mode wrapper */
+.presentationMode .main-content {
+  margin-left: 0;
+}
+
+.presentationMode .message-list {
+  max-width: 1100px;
+  padding: 40px;
+}
+
+.presentationMode .message {
+  font-size: 1.1em;
+}
+
+.presentationMode .active-message > .message {
+  border-left: 3px solid var(--highlight);
+  padding-left: 16px;
+}
+
+/* Progress bar */
+.progress {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  z-index: 20;
+}
+
+.progressBar {
+  width: 200px;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+/* Fullscreen overlay */
+.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: var(--bg-primary);
+  overflow-y: auto;
+}

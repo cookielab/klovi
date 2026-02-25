@@ -9,6 +9,8 @@ export {
   UserBashContent,
   UserMessage,
 } from "./messages/index.ts";
+export type { KeyboardHandlers, PresentationState } from "./presentation/index.ts";
+export { PresentationShell, useKeyboard, usePresentationMode } from "./presentation/index.ts";
 export type {
   DashboardStatsProps,
   HiddenProjectListProps,
