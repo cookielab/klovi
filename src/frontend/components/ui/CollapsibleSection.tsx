@@ -17,7 +17,7 @@ export function CollapsibleSection({
   return (
     <div className="collapsible">
       <button type="button" className="collapsible-header" onClick={() => setOpen(!open)}>
-        <span className={`collapsible-chevron ${open ? "open" : ""}`}>▶</span>
+        <span className={`collapsible-chevron ${open ? "open" : ""}`}>&#x25B6;</span>
         {title}
       </button>
       {open && <div className="collapsible-content">{children}</div>}

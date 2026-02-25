@@ -5,16 +5,10 @@ import { AppGate } from "../../frontend/App.tsx";
 import { setRPCClient } from "../../frontend/rpc.ts";
 import type { KloviRPC } from "../../shared/rpc-types.ts";
 
-// Import fonts
-import "@fontsource/dm-sans/400.css";
-import "@fontsource/dm-sans/500.css";
-import "@fontsource/dm-sans/700.css";
-import "@fontsource/ibm-plex-mono/400.css";
-import "@fontsource/ibm-plex-mono/500.css";
-import "@fontsource/ibm-plex-mono/600.css";
+// Import design system globals (tokens, reset, fonts)
+import "@cookielab.io/klovi-design-system/globals";
 
-// Import styles
-import "../../frontend/index.css";
+// Import app-specific styles
 import "../../frontend/App.css";
 
 const rpc = Electroview.defineRPC<KloviRPC>({

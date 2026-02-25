@@ -27,7 +27,8 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check .",
-    "check:fix": "biome check --write ."
+    "check:fix": "biome check --write .",
+    "storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.4",
@@ -45,8 +46,7 @@
     "@cookielab.io/klovi-plugin-codex": "workspace:*",
     "@cookielab.io/klovi-plugin-core": "workspace:*",
     "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-    "@fontsource/dm-sans": "^5.2.8",
-    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@cookielab.io/klovi-design-system": "workspace:*",
     "electrobun": "^1.14.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
