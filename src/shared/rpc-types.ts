@@ -21,15 +21,14 @@ export interface PluginSettingInfo {
   isCustomDir: boolean;
 }
 
-// biome-ignore lint/complexity/noBannedTypes: Electrobun RPC schema requires {} for parameterless requests and empty message payloads
 export interface KloviRPC {
   bun: RPCSchema<{
     requests: {
-      acceptRisks: { params: {}; response: { ok: boolean } };
-      isFirstLaunch: { params: {}; response: { firstLaunch: boolean } };
-      getVersion: { params: {}; response: VersionInfo };
-      getStats: { params: {}; response: { stats: DashboardStats } };
-      getProjects: { params: {}; response: { projects: Project[] } };
+      acceptRisks: { params: Record<string, never>; response: { ok: boolean } };
+      isFirstLaunch: { params: Record<string, never>; response: { firstLaunch: boolean } };
+      getVersion: { params: Record<string, never>; response: VersionInfo };
+      getStats: { params: Record<string, never>; response: { stats: DashboardStats } };
+      getProjects: { params: Record<string, never>; response: { projects: Project[] } };
       getSessions: {
         params: { encodedPath: string };
         response: { sessions: SessionSummary[] };
@@ -43,11 +42,11 @@ export interface KloviRPC {
         response: { session: Session };
       };
       searchSessions: {
-        params: {};
+        params: Record<string, never>;
         response: { sessions: GlobalSessionResult[] };
       };
       getPluginSettings: {
-        params: {};
+        params: Record<string, never>;
         response: { plugins: PluginSettingInfo[] };
       };
       updatePluginSetting: {
@@ -55,30 +54,30 @@ export interface KloviRPC {
         response: { plugins: PluginSettingInfo[] };
       };
       getGeneralSettings: {
-        params: {};
+        params: Record<string, never>;
         response: { showSecurityWarning: boolean };
       };
       updateGeneralSettings: {
         params: { showSecurityWarning?: boolean };
         response: { showSecurityWarning: boolean };
       };
-      resetSettings: { params: {}; response: { ok: boolean } };
+      resetSettings: { params: Record<string, never>; response: { ok: boolean } };
       openExternal: { params: { url: string }; response: { ok: boolean } };
       browseDirectory: {
         params: { startingFolder?: string };
         response: { path: string | null };
       };
     };
-    messages: {};
+    messages: Record<string, never>;
   }>;
   webview: RPCSchema<{
-    requests: {};
+    requests: Record<string, never>;
     messages: {
-      cycleTheme: {};
-      increaseFontSize: {};
-      decreaseFontSize: {};
-      togglePresentation: {};
-      openSettings: {};
+      cycleTheme: Record<string, never>;
+      increaseFontSize: Record<string, never>;
+      decreaseFontSize: Record<string, never>;
+      togglePresentation: Record<string, never>;
+      openSettings: Record<string, never>;
     };
   }>;
 }
