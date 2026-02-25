@@ -1,41 +1,39 @@
+import type {
+  Badge as CoreBadge,
+  MergedProject as CoreMergedProject,
+  PluginProject as CorePluginProject,
+  ProjectSource as CoreProjectSource,
+  ToolPlugin as CoreToolPlugin,
+  ToolPluginSessionDetail as CoreToolPluginSessionDetail,
+  ToolPluginSubAgentParams,
+} from "@cookielab.io/klovi-plugin-core";
+import {
+  BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES,
+  BUILTIN_KLOVI_PLUGIN_IDS,
+  isBuiltinKloviPluginId,
+  KLOVI_PLUGIN_PACKAGE_NAMES,
+} from "@cookielab.io/klovi-plugin-core";
 import type { Session, SessionSummary } from "./types.ts";
 
-export interface PluginProject {
-  pluginId: string;
-  nativeId: string; // plugin-specific identifier (e.g., encoded path for Claude)
-  resolvedPath: string; // canonical filesystem path
-  displayName: string;
-  sessionCount: number;
-  lastActivity: string;
-}
+export {
+  BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES,
+  BUILTIN_KLOVI_PLUGIN_IDS,
+  isBuiltinKloviPluginId,
+  KLOVI_PLUGIN_PACKAGE_NAMES,
+};
 
-export interface MergedProject {
-  encodedPath: string; // URL-safe identifier (derived from resolvedPath)
-  resolvedPath: string;
-  name: string;
-  fullPath: string;
-  sessionCount: number;
-  lastActivity: string;
-  sources: Array<{
-    pluginId: string;
-    nativeId: string;
-  }>;
-}
+export type { BuiltinKloviPluginId, KloviPluginPackageName } from "@cookielab.io/klovi-plugin-core";
 
-export interface Badge {
-  label: string;
-  className: string;
-}
+export type Badge = CoreBadge;
 
-export interface ToolPlugin {
-  id: string;
-  displayName: string;
+export type PluginProject = CorePluginProject<string>;
 
-  getDefaultDataDir(): string | null;
-  discoverProjects(): Promise<PluginProject[]>;
-  listSessions(nativeId: string): Promise<SessionSummary[]>;
-  loadSession(nativeId: string, sessionId: string): Promise<Session>;
+export type ProjectSource = CoreProjectSource<string>;
 
-  getResumeCommand?(sessionId: string): string | null;
-  getSessionBadges?(session: SessionSummary): Badge[];
-}
+export type MergedProject = CoreMergedProject<string>;
+
+export type ToolPlugin = CoreToolPlugin<string, SessionSummary, Session>;
+
+export type ToolPluginSessionDetail = CoreToolPluginSessionDetail<Session>;
+
+export type { ToolPluginSubAgentParams };

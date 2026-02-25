@@ -1,0 +1,17 @@
+{
+  "name": "@cookielab.io/klovi-plugin-core",
+  "version": "0.1.0",
+  "description": "Core plugin contracts and registry for Klovi plugin packages",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": false,
+  "files": [
+    "src"
+  ]
+}

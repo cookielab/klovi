@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "A native desktop app for browsing and presenting AI coding session history",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "license": "MIT",
   "author": "Cookielab s.r.o.",
   "repository": {
@@ -34,9 +37,11 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "chrome-devtools-mcp": "^0.18.0",
-    "happy-dom": "^20.5.0"
+    "happy-dom": "^20.5.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@cookielab.io/klovi-plugin-core": "workspace:*",
     "@fontsource/dm-sans": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "electrobun": "^1.14.4",

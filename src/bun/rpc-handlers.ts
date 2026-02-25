@@ -1,12 +1,6 @@
 import { existsSync, unlinkSync } from "node:fs";
 import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
-import {
-  findImplSessionId,
-  findPlanSessionId,
-  loadClaudeSession,
-  parseSubAgentSession,
-} from "../plugins/claude-code/parser.ts";
 import { getClaudeCodeDir, getCodexCliDir, getOpenCodeDir } from "../plugins/config.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import { sortByIsoDesc } from "../shared/iso-time.ts";
@@ -62,38 +56,41 @@ export async function getSession(
   if (!source) throw new Error("Plugin source not found");
 
   const plugin = registry.getPlugin(pluginId);
-
-  if (pluginId === "claude-code") {
-    const [{ session, slug }, sessions] = await Promise.all([
-      loadClaudeSession(source.nativeId, rawSessionId),
-      plugin.listSessions(source.nativeId),
-    ]);
-
-    const planRawId = findPlanSessionId(session.turns, slug, sessions, rawSessionId);
-    const implRawId = findImplSessionId(slug, sessions, rawSessionId);
-
-    session.sessionId = encodeSessionId(pluginId, rawSessionId);
-    session.planSessionId = planRawId ? encodeSessionId(pluginId, planRawId) : undefined;
-    session.implSessionId = implRawId ? encodeSessionId(pluginId, implRawId) : undefined;
-
-    return { session };
-  }
-
-  const session = await plugin.loadSession(source.nativeId, rawSessionId);
+  const sessionDetail = plugin.loadSessionDetail
+    ? await plugin.loadSessionDetail(source.nativeId, rawSessionId)
+    : undefined;
+  const session =
+    sessionDetail?.session ?? (await plugin.loadSession(source.nativeId, rawSessionId));
   session.sessionId = encodeSessionId(pluginId, rawSessionId);
   session.pluginId = pluginId;
+  session.planSessionId = sessionDetail?.planSessionId
+    ? encodeSessionId(pluginId, sessionDetail.planSessionId)
+    : undefined;
+  session.implSessionId = sessionDetail?.implSessionId
+    ? encodeSessionId(pluginId, sessionDetail.implSessionId)
+    : undefined;
   return { session };
 }
 
 export async function getSubAgent(
-  _registry: PluginRegistry,
+  registry: PluginRegistry,
   params: { sessionId: string; project: string; agentId: string },
 ) {
   const parsed = parseSessionId(params.sessionId);
-  if (parsed.pluginId !== "claude-code" || !parsed.rawSessionId) {
-    throw new Error("Invalid sessionId format for sub-agent");
+  if (!parsed.pluginId || !parsed.rawSessionId) {
+    throw new Error("Invalid sessionId format");
   }
-  const session = await parseSubAgentSession(parsed.rawSessionId, params.project, params.agentId);
+
+  const plugin = registry.getPlugin(parsed.pluginId);
+  if (!plugin.loadSubAgentSession) {
+    throw new Error(`Sub-agent sessions are not supported by plugin: ${parsed.pluginId}`);
+  }
+
+  const session = await plugin.loadSubAgentSession({
+    sessionId: parsed.rawSessionId,
+    project: params.project,
+    agentId: params.agentId,
+  });
   return { session };
 }
 
