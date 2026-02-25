@@ -48,7 +48,7 @@ describe("SettingsView", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const { findByText } = render(<SettingsView {...defaultProps()} />);
-    await findByText("Show on-boarding on startup");
+    await findByText("Show security warning on startup");
   });
 
   test("renders plugin list when activeTab is plugins", async () => {
@@ -150,7 +150,7 @@ describe("SettingsView", () => {
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
     });
     const { findByLabelText } = render(<SettingsView {...defaultProps()} />);
-    const checkbox = await findByLabelText("Show on-boarding on startup");
+    const checkbox = await findByLabelText("Show security warning on startup");
     expect((checkbox as HTMLInputElement).checked).toBe(false);
   });
 
