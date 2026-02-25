@@ -40,13 +40,13 @@
       },
       "suspicious": {
         "noExplicitAny": "error",
-        "noConsole": "off",
-        "noArrayIndexKey": "off"
+        "noConsole": "warn",
+        "noArrayIndexKey": "warn"
       },
       "a11y": {
-        "useSemanticElements": "off",
-        "noStaticElementInteractions": "off",
-        "useKeyWithClickEvents": "off"
+        "useSemanticElements": "warn",
+        "noStaticElementInteractions": "warn",
+        "useKeyWithClickEvents": "warn"
       },
       "style": {
         "useImportType": "error",
@@ -56,11 +56,18 @@
             "syntax": "shorthand"
           }
         },
-        "noNonNullAssertion": "off",
-        "useFilenamingConvention": "off"
+        "noNonNullAssertion": "warn",
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "requireAscii": true,
+            "filenameCases": ["camelCase", "PascalCase", "kebab-case"]
+          }
+        }
       },
       "complexity": {
-        "noExcessiveCognitiveComplexity": "warn"
+        "noExcessiveCognitiveComplexity": "error",
+        "useLiteralKeys": "off"
       }
     }
   },
