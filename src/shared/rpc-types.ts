@@ -62,6 +62,7 @@ export interface KloviRPC {
         params: { showSecurityWarning?: boolean };
         response: { showSecurityWarning: boolean };
       };
+      resetSettings: { params: {}; response: { ok: boolean } };
       browseDirectory: {
         params: { startingFolder?: string };
         response: { path: string | null };

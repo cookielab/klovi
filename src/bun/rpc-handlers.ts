@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, unlinkSync } from "node:fs";
 import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
 import {
@@ -159,6 +159,13 @@ export function getGeneralSettings(settingsPath: string): { showSecurityWarning:
 
 export function isFirstLaunch(settingsPath: string): { firstLaunch: boolean } {
   return { firstLaunch: !existsSync(settingsPath) };
+}
+
+export function resetSettings(settingsPath: string): { ok: boolean } {
+  if (existsSync(settingsPath)) {
+    unlinkSync(settingsPath);
+  }
+  return { ok: true };
 }
 
 export function updateGeneralSettings(

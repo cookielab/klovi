@@ -269,6 +269,15 @@ describe("SettingsView", () => {
     const { findByText } = render(<SettingsView {...props} />);
     await findByText("20");
   });
+
+  test("General tab shows Reset to defaults button", async () => {
+    setupMockRPC({
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
+    });
+    const { findByRole } = render(<SettingsView {...defaultProps()} />);
+    const btn = await findByRole("button", { name: "Reset to defaults" });
+    expect(btn).toBeDefined();
+  });
 });
 
 describe("SettingsSidebar", () => {

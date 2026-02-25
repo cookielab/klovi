@@ -6,6 +6,7 @@ import {
   getGeneralSettings,
   getPluginSettings,
   isFirstLaunch,
+  resetSettings,
   updateGeneralSettings,
   updatePluginSetting,
 } from "./rpc-handlers.ts";
@@ -122,5 +123,18 @@ describe("settings RPC handlers", () => {
     saveSettings(settingsPath, getDefaultSettings());
     const result = isFirstLaunch(settingsPath);
     expect(result.firstLaunch).toBe(false);
+  });
+
+  test("resetSettings deletes settings file when it exists", () => {
+    mkdirSync(testDir, { recursive: true });
+    saveSettings(settingsPath, getDefaultSettings());
+    const result = resetSettings(settingsPath);
+    expect(result.ok).toBe(true);
+    expect(isFirstLaunch(settingsPath).firstLaunch).toBe(true);
+  });
+
+  test("resetSettings is idempotent when file does not exist", () => {
+    const result = resetSettings(settingsPath);
+    expect(result.ok).toBe(true);
   });
 });

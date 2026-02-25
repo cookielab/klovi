@@ -264,3 +264,21 @@
   color: var(--text-secondary);
   cursor: pointer;
 }
+
+.settings-reset-to-defaults-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.settings-reset-to-defaults-btn:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+.settings-reset-to-defaults-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

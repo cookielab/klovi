@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
 import type { ThemeSetting } from "../../hooks/useTheme.ts";
 import { getRPC } from "../../rpc.ts";
@@ -111,6 +111,8 @@ export function SettingsView({
   const [loading, setLoading] = useState(true);
   const [changed, setChanged] = useState(false);
   const [showSecurityWarning, setShowSecurityWarning] = useState(true);
+  const [resetting, setResetting] = useState(false);
+  const resettingRef = useRef(false);
 
   useEffect(() => {
     Promise.all([
@@ -186,6 +188,34 @@ export function SettingsView({
         setChanged(true);
       })
       .catch(() => {});
+  }, []);
+
+  const handleResetToDefaults = useCallback(() => {
+    if (resettingRef.current) return;
+    if (!window.confirm("Reset all settings to defaults? This will reload the app.")) return;
+    resettingRef.current = true;
+    setResetting(true);
+    getRPC()
+      .request.resetSettings({} as Record<string, never>)
+      .then(() => {
+        const keys = [
+          "klovi-theme",
+          "klovi-font-size",
+          "klovi-hidden-projects",
+          "klovi-presentation-theme",
+          "klovi-presentation-same-theme",
+          "klovi-presentation-font-size",
+          "klovi-presentation-same-font-size",
+        ];
+        for (const key of keys) {
+          localStorage.removeItem(key);
+        }
+        window.location.reload();
+      })
+      .catch(() => {
+        resettingRef.current = false;
+        setResetting(false);
+      });
   }, []);
 
   return (
@@ -298,6 +328,21 @@ export function SettingsView({
                       disabled={presentationFontSize.sameAsGlobal}
                     />
                   </div>
+                </div>
+
+                <h4 className="settings-subsection-title">Reset</h4>
+                <div className="settings-general-row">
+                  <button
+                    type="button"
+                    className="settings-reset-to-defaults-btn"
+                    disabled={resetting}
+                    onClick={handleResetToDefaults}
+                  >
+                    {resetting ? "Resetting..." : "Reset to defaults"}
+                  </button>
+                  <p className="settings-general-hint">
+                    Deletes all settings and reloads the app into its initial state.
+                  </p>
                 </div>
               </>
             )}

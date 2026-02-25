@@ -34,6 +34,7 @@ export interface RPCClient {
     updateGeneralSettings: (params: {
       showSecurityWarning?: boolean;
     }) => Promise<{ showSecurityWarning: boolean }>;
+    resetSettings: (params: Record<string, never>) => Promise<{ ok: boolean }>;
     browseDirectory: (params: { startingFolder?: string }) => Promise<{ path: string | null }>;
   };
 }

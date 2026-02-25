@@ -42,6 +42,7 @@ export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
       updatePluginSetting: () => Promise.resolve({ plugins: [] }),
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
       updateGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
+      resetSettings: () => Promise.resolve({ ok: true }),
       browseDirectory: () => Promise.resolve({ path: null }),
       ...overrides,
     },
