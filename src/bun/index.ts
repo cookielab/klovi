@@ -33,7 +33,7 @@ function getSettingsPath(): string {
   } catch {
     // Fallback if version.json not readable (e.g. dev mode outside app bundle)
     return join(
-      process.env.HOME ?? "",
+      process.env["HOME"] ?? "",
       "Library",
       "Application Support",
       "io.cookielab.klovi",

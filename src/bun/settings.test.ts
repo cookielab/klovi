@@ -24,7 +24,7 @@ describe("settings", () => {
     expect(settings.version).toBe(1);
     expect(settings.plugins["claude-code"]).toEqual({ enabled: true, dataDir: null });
     expect(settings.plugins["codex-cli"]).toEqual({ enabled: true, dataDir: null });
-    expect(settings.plugins.opencode).toEqual({ enabled: true, dataDir: null });
+    expect(settings.plugins["opencode"]).toEqual({ enabled: true, dataDir: null });
   });
 
   test("loadSettings returns defaults when file does not exist", () => {

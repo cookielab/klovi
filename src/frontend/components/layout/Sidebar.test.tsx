@@ -12,7 +12,7 @@ describe("Sidebar", () => {
         <div>Children</div>
       </Sidebar>,
     );
-    expect(container.querySelector("h1")!.textContent).toBe("Klovi");
+    expect(container.querySelector("h1")?.textContent).toBe("Klovi");
   });
 
   test("renders children in sidebar-content", () => {
@@ -77,6 +77,6 @@ describe("Sidebar", () => {
     );
     const footer = container.querySelector(".sidebar-footer");
     expect(footer).not.toBeNull();
-    expect(footer!.textContent).toContain("cookielab.io");
+    expect(footer?.textContent).toContain("cookielab.io");
   });
 });

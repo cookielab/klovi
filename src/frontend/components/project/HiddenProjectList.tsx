@@ -1,5 +1,5 @@
 import type { Project } from "../../../shared/types.ts";
-import { useRPC } from "../../hooks/useRPC.ts";
+import { useRPC } from "../../hooks/useRpc.ts";
 import { getRPC } from "../../rpc.ts";
 import { projectDisplayName } from "../../utils/project.ts";
 

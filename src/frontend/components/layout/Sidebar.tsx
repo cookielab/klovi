@@ -1,6 +1,6 @@
 import type React from "react";
 import faviconUrl from "../../../../favicon.svg";
-import { useRPC } from "../../hooks/useRPC.ts";
+import { useRPC } from "../../hooks/useRpc.ts";
 import { getRPC } from "../../rpc.ts";
 
 interface VersionInfo {

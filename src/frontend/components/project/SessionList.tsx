@@ -1,5 +1,5 @@
 import type { Project, SessionSummary } from "../../../shared/types.ts";
-import { useRPC } from "../../hooks/useRPC.ts";
+import { useRPC } from "../../hooks/useRpc.ts";
 import { getRPC } from "../../rpc.ts";
 import { pluginDisplayName } from "../../utils/plugin.ts";
 import { formatFullDateTime, formatTime } from "../../utils/time.ts";

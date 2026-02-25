@@ -20,7 +20,7 @@ const version = pkg.version == null || pkg.version === "0.0.0" ? "dev" : pkg.ver
 export function getVersion(): VersionInfo {
   return {
     version,
-    commit: process.env.KLOVI_COMMIT ?? "",
+    commit: process.env["KLOVI_COMMIT"] ?? "",
   };
 }
 

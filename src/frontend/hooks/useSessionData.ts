@@ -1,6 +1,6 @@
 import type { Session } from "../../shared/types.ts";
 import { getRPC } from "../rpc.ts";
-import { useRPC } from "./useRPC.ts";
+import { useRPC } from "./useRpc.ts";
 
 export function useSessionData(sessionId: string, project: string) {
   return useRPC<{ session: Session }>(

@@ -1,5 +1,5 @@
 import type { ModelTokenUsage, DashboardStats as Stats } from "../../../shared/types.ts";
-import { useRPC } from "../../hooks/useRPC.ts";
+import { useRPC } from "../../hooks/useRpc.ts";
 import { getRPC } from "../../rpc.ts";
 
 const fmt = new Intl.NumberFormat();
@@ -31,7 +31,7 @@ export function DashboardStats() {
       <div className="dashboard-stats">
         <div className="stats-row stats-row-3">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="stat-card stat-card-skeleton" />
+            <div key={`skeleton-${i}`} className="stat-card stat-card-skeleton" />
           ))}
         </div>
       </div>

@@ -49,5 +49,6 @@ new Electroview({ rpc });
 setRPCClient(rpc as unknown as import("../../frontend/rpc.ts").RPCClient);
 
 // Mount React app
+// biome-ignore lint/style/noNonNullAssertion: root element is guaranteed to exist in index.html
 const root = createRoot(document.getElementById("root")!);
 root.render(createElement(AppGate));

@@ -100,8 +100,8 @@ describe("DashboardStats", () => {
 
     const modelList = container.querySelector(".model-list");
     expect(modelList).not.toBeNull();
-    const items = modelList!.querySelectorAll("li");
-    expect(items.length).toBe(2);
+    const items = modelList?.querySelectorAll("li");
+    expect(items?.length).toBe(2);
   });
 
   test("renders nothing on fetch error", async () => {

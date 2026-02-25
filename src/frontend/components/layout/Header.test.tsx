@@ -17,7 +17,7 @@ function makeProps(overrides: Partial<Parameters<typeof Header>[0]> = {}) {
 describe("Header", () => {
   test("renders title", () => {
     const { container } = render(<Header {...makeProps()} />);
-    expect(container.querySelector(".header-title")!.textContent).toContain("Test Session");
+    expect(container.querySelector(".header-title")?.textContent).toContain("Test Session");
   });
 
   test("renders breadcrumb when provided", () => {
@@ -41,15 +41,15 @@ describe("Header", () => {
     const { container } = render(<Header {...makeProps({ sessionType: "plan" })} />);
     const badge = container.querySelector(".session-type-badge");
     expect(badge).not.toBeNull();
-    expect(badge!.textContent).toBe("Plan");
-    expect(badge!.classList.contains("plan")).toBe(true);
+    expect(badge?.textContent).toBe("Plan");
+    expect(badge?.classList.contains("plan")).toBe(true);
   });
 
   test("renders session type badge for implementation", () => {
     const { container } = render(<Header {...makeProps({ sessionType: "implementation" })} />);
     const badge = container.querySelector(".session-type-badge");
     expect(badge).not.toBeNull();
-    expect(badge!.textContent).toBe("Impl");
+    expect(badge?.textContent).toBe("Impl");
   });
 
   test("does not render session type badge when not provided", () => {

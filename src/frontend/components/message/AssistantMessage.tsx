@@ -29,7 +29,7 @@ function renderGroup(
     }
     return (
       <ToolCall
-        key={`tool-${i}`}
+        key={`tool-${block.call.toolUseId}`}
         call={block.call}
         sessionId={sessionId}
         project={project}
@@ -67,7 +67,7 @@ export function AssistantMessage({
 
   // Exec-tree for turns with non-text blocks (tools, thinking)
   const hasNonText = turn.contentBlocks.some((b) => b.type !== "text");
-  const firstIsText = groups.length > 0 && groups[0]![0]?.type === "text";
+  const firstIsText = groups.length > 0 && groups[0]?.[0]?.type === "text";
 
   // Split: intro text before tree, rest in tree nodes
   const introGroup = hasNonText && firstIsText ? visibleGroups[0] : null;
@@ -101,7 +101,7 @@ export function AssistantMessage({
           <div className="exec-tree">
             {treeGroups.map((group, i) => (
               <div
-                key={i}
+                key={`tree-${i}`}
                 className={`tree-node${isPresentation && i === treeGroups.length - 1 ? " step-enter" : ""}`}
               >
                 {renderGroup(group, sessionId, project, pluginId)}
@@ -111,7 +111,7 @@ export function AssistantMessage({
         )}
         {flatGroups.map((group, i) => (
           <div
-            key={i}
+            key={`flat-${i}`}
             className={isPresentation && i === flatGroups.length - 1 ? "step-enter" : ""}
           >
             {renderGroup(group, sessionId, project, pluginId)}

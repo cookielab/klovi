@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { act } from "react";
-import { useRPC } from "./useRPC.ts";
+import { useRPC } from "./useRpc.ts";
 
 describe("useRPC", () => {
   afterEach(() => {

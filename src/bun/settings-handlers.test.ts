@@ -32,22 +32,24 @@ describe("settings RPC handlers", () => {
     mkdirSync(testDir, { recursive: true });
     saveSettings(settingsPath, getDefaultSettings());
     const result = getPluginSettings(settingsPath);
-    const claude = result.plugins.find((p) => p.id === "claude-code")!;
-    expect(claude.enabled).toBe(true);
-    expect(claude.isCustomDir).toBe(false);
-    expect(claude.dataDir).toBe(claude.defaultDataDir);
+    const claude = result.plugins.find((p) => p.id === "claude-code");
+    expect(claude).toBeDefined();
+    expect(claude?.enabled).toBe(true);
+    expect(claude?.isCustomDir).toBe(false);
+    expect(claude?.dataDir).toBe(claude?.defaultDataDir);
   });
 
   test("updatePluginSetting disables a plugin", () => {
     mkdirSync(testDir, { recursive: true });
     saveSettings(settingsPath, getDefaultSettings());
     const result = updatePluginSetting(settingsPath, { pluginId: "claude-code", enabled: false });
-    const claude = result.plugins.find((p) => p.id === "claude-code")!;
-    expect(claude.enabled).toBe(false);
+    const claude = result.plugins.find((p) => p.id === "claude-code");
+    expect(claude).toBeDefined();
+    expect(claude?.enabled).toBe(false);
 
     // Verify persisted
     const loaded = loadSettings(settingsPath);
-    expect(loaded.plugins["claude-code"]!.enabled).toBe(false);
+    expect(loaded.plugins["claude-code"]?.enabled).toBe(false);
   });
 
   test("updatePluginSetting sets custom dataDir", () => {
@@ -57,9 +59,10 @@ describe("settings RPC handlers", () => {
       pluginId: "claude-code",
       dataDir: "/custom/path",
     });
-    const claude = result.plugins.find((p) => p.id === "claude-code")!;
-    expect(claude.dataDir).toBe("/custom/path");
-    expect(claude.isCustomDir).toBe(true);
+    const claude = result.plugins.find((p) => p.id === "claude-code");
+    expect(claude).toBeDefined();
+    expect(claude?.dataDir).toBe("/custom/path");
+    expect(claude?.isCustomDir).toBe(true);
   });
 
   test("getGeneralSettings returns true by default", () => {
@@ -101,15 +104,18 @@ describe("settings RPC handlers", () => {
   test("updatePluginSetting resets dataDir to default with null", () => {
     mkdirSync(testDir, { recursive: true });
     const settings = getDefaultSettings();
-    settings.plugins["claude-code"]!.dataDir = "/custom/path";
+    const claudePlugin = settings.plugins["claude-code"];
+    expect(claudePlugin).toBeDefined();
+    if (claudePlugin) claudePlugin.dataDir = "/custom/path";
     saveSettings(settingsPath, settings);
 
     const result = updatePluginSetting(settingsPath, {
       pluginId: "claude-code",
       dataDir: null,
     });
-    const claude = result.plugins.find((p) => p.id === "claude-code")!;
-    expect(claude.isCustomDir).toBe(false);
+    const claude = result.plugins.find((p) => p.id === "claude-code");
+    expect(claude).toBeDefined();
+    expect(claude?.isCustomDir).toBe(false);
   });
 
   test("isFirstLaunch returns true when settings file does not exist", () => {

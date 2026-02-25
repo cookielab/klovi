@@ -7,7 +7,7 @@ interface BashToolContentProps {
 }
 
 export function BashToolContent({ call }: BashToolContentProps) {
-  const command = String(call.input.command || "");
+  const command = String(call.input["command"] || "");
 
   return (
     <>
