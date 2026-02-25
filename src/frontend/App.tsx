@@ -311,7 +311,10 @@ export function AppGate() {
   const [loading, setLoading] = useState(true);
   const [screen, setScreen] = useState<"onboarding" | "security-warning" | "none">("onboarding");
 
-  useEffect(() => {
+  const initialize = useCallback(() => {
+    setAccepted(false);
+    setLoading(true);
+    setScreen("onboarding");
     getRPC()
       .request.isFirstLaunch({} as Record<string, never>)
       .then((data) => {
@@ -334,11 +337,20 @@ export function AppGate() {
           });
       })
       .catch(() => {
-        // On failure, assume first launch (safe fallback)
         setScreen("onboarding");
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    const handleReset = () => initialize();
+    window.addEventListener("klovi:reset", handleReset);
+    return () => window.removeEventListener("klovi:reset", handleReset);
+  }, [initialize]);
 
   const handleOnboardingComplete = useCallback(() => {
     getRPC()

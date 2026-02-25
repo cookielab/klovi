@@ -210,14 +210,14 @@ export function SettingsView({
         for (const key of keys) {
           localStorage.removeItem(key);
         }
-        onNavigateHome();
+        window.dispatchEvent(new CustomEvent("klovi:reset"));
       })
       .catch(() => {
         resettingRef.current = false;
         setResetting(false);
         setConfirmingReset(false);
       });
-  }, [onNavigateHome]);
+  }, []);
 
   return (
     <div className="settings-view">
