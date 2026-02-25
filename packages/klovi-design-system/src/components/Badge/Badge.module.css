@@ -1,0 +1,70 @@
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.68rem;
+  padding: 2px 8px;
+}
+
+.user {
+  color: var(--role-user);
+  background: var(--role-user-bg);
+}
+
+.assistant {
+  color: var(--role-assistant);
+  background: var(--role-assistant-bg);
+}
+
+.agent {
+  color: var(--role-agent);
+  background: var(--role-agent-bg);
+}
+
+.subAgent {
+  color: var(--role-subagent);
+  background: rgba(122, 88, 136, 0.1);
+}
+
+.tool {
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.7rem;
+}
+
+.system {
+  color: var(--text-muted);
+  background: rgba(122, 132, 153, 0.1);
+}
+
+.error {
+  color: var(--error);
+  background: rgba(168, 80, 80, 0.1);
+}
+
+.plan {
+  background: var(--plan-subtle);
+  color: var(--plan-color);
+}
+
+.implementation {
+  background: var(--impl-subtle);
+  color: var(--impl-color);
+}
+
+.default {
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+}

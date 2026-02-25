@@ -1,0 +1,45 @@
+.collapsible {
+  border-radius: var(--radius-sm);
+  margin: 4px 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  text-align: left;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.header:hover {
+  background: var(--bg-secondary);
+}
+
+.chevron {
+  transition: transform 0.15s;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.content {
+  padding: 10px 12px;
+  margin-left: 18px;
+  border-left: 2px solid var(--border-light);
+  max-height: 500px;
+  overflow-y: auto;
+}

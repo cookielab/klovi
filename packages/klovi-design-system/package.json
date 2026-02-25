@@ -1,0 +1,39 @@
+{
+  "name": "@cookielab.io/klovi-design-system",
+  "version": "0.1.0",
+  "description": "Design system components and tokens for Klovi",
+  "type": "module",
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./globals": "./src/globals/index.ts"
+  },
+  "sideEffects": [
+    "src/globals/**"
+  ],
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "storybook": "storybook dev -p 6006"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "dependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "react-syntax-highlighter": "^16.1.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/react": "^8.6.14",
+    "@storybook/react-vite": "^8.6.14",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "storybook": "^8.6.14"
+  }
+}

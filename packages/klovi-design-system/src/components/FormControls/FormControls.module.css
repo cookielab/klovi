@@ -1,0 +1,129 @@
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: var(--accent);
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+
+.toggle:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle:checked::after {
+  transform: translateX(16px);
+  background: var(--text-inverse);
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.toggleLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.segmentedOption {
+  background: var(--bg-primary);
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.segmentedOption:last-child {
+  border-right: none;
+}
+
+.segmentedOption:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+.segmentedOptionActive {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.segmentedOption:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.segmentedDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
