@@ -12,6 +12,7 @@ function SafeComponent() {
 
 describe("ErrorBoundary", () => {
   // Suppress React error boundary console.error noise
+  // biome-ignore lint/suspicious/noConsole: testing console error suppression
   const originalError = console.error;
   beforeEach(() => {
     console.error = (...args: unknown[]) => {

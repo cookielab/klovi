@@ -276,6 +276,7 @@ function session1_plan(): void {
         text(
           "I have a good picture of the project. Let me enter plan mode to design the architecture.",
         ),
+        // biome-ignore lint/security/noSecrets: demo data, not a real secret
         toolUse(t5, "EnterPlanMode", {}),
       ],
       "tool_use",
@@ -361,6 +362,7 @@ CREATE TABLE todos (
 3. **Optimistic updates** — toggle completion instantly, sync in background
 4. **Plain CSS** — custom properties for theming, no Tailwind`,
         ),
+        // biome-ignore lint/security/noSecrets: demo data, not a real secret
         toolUse(t6, "ExitPlanMode", {}),
       ],
       "tool_use",
@@ -728,6 +730,7 @@ function session3_bugfix(): void {
     // User reports a bug
     userLine(
       ts,
+      // biome-ignore lint/security/noSecrets: demo data, not a real secret
       "The login form crashes when I submit an empty email. The browser console shows `TypeError: Cannot read properties of undefined (reading 'toLowerCase')`. Can you fix it?",
       common,
     ),
@@ -738,6 +741,7 @@ function session3_bugfix(): void {
       OPUS,
       [
         thinking(
+          // biome-ignore lint/security/noSecrets: demo data, not a real secret
           "The error suggests that `email` is undefined when `.toLowerCase()` is called on it. This is likely a missing null check in the authentication handler or form validation. Let me search for where `toLowerCase` is used in the auth-related code.",
         ),
         text("Let me find where this error originates."),
@@ -796,6 +800,7 @@ function session3_bugfix(): void {
           "The bug is clear: `validateEmail()` receives `email` from form data which can be `null` or `undefined` when the form field is empty. The function's TypeScript type says `string` but at runtime it receives `undefined` from `formData.get('email')`. I need to add a guard at the top of the function.",
         ),
         text(
+          // biome-ignore lint/security/noSecrets: demo data, not a real secret
           "Found the bug at `src/auth/validate.ts:12`. The `email` parameter can be `undefined` at runtime when the form field is empty, but there's no guard before calling `.toLowerCase()`. Let me fix it.",
         ),
         toolUse(t3, "Edit", {
@@ -904,6 +909,7 @@ function session3_bugfix(): void {
       OPUS,
       [
         text(
+          // biome-ignore lint/security/noSecrets: demo data, not a real secret
           "All 6 tests pass. Here's what I fixed:\n\n**Root cause:** `validateEmail()` in `src/auth/validate.ts` called `.toLowerCase()` on the `email` parameter without checking for `null`/`undefined`. When the form is submitted with an empty email field, `formData.get('email')` returns `null`.\n\n**Fix:** Added a guard clause at the top of `validateEmail()` that checks for falsy/empty values before processing, and updated the parameter type to accept `null | undefined`.",
         ),
       ],
@@ -1017,6 +1023,7 @@ function session4_charts(): void {
 
   // Tiny 1x1 red PNG for demo image (base64)
   const TINY_PNG =
+    // biome-ignore lint/security/noSecrets: demo data, not a real secret
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
   const lines = [
@@ -1434,6 +1441,7 @@ Sidebar.test.tsx:
     userLine(ts, [
       toolResult(
         t6,
+        // biome-ignore lint/security/noSecrets: demo data, not a real secret
         "bun test v1.2.4\n\nDashboard.test.tsx:\n✓ renders dashboard header [8ms]\n✓ displays project list [12ms]\n✓ shows correct session count [4ms]\n\nBarChart.test.tsx:\n✓ renders chart with data [14ms]\n✓ handles empty data [3ms]\n\nSidebar.test.tsx:\n✓ renders navigation links [4ms]\n✓ highlights active route [5ms]\n✓ collapses on mobile [6ms]\n\n 8 pass\n 0 fail\n Ran 8 tests in 198ms",
       ),
     ]),
@@ -1594,6 +1602,7 @@ console.log(JSON.stringify(db.query('EXPLAIN QUERY PLAN SELECT * FROM users WHER
     userLine(ts, [
       toolResult(
         t2,
+        // biome-ignore lint/security/noSecrets: demo data, not a real secret
         "Notebook: query-analysis.ipynb\n\nCell 1 [markdown]:\n# Query Performance Analysis\nBaseline measurements for API endpoints.\n\nCell 2 [code]:\nimport time\nresults = {}\n\nCell 3 [code]:\n# Users endpoint - current performance\nstart = time.time()\nfor i in range(100):\n    resp = requests.get('http://localhost:3000/api/users')\nresults['users_avg'] = (time.time() - start) / 100\nprint(f\"Average: {results['users_avg']:.3f}s\")\n\nOutput: Average: 2.341s\n\nCell 4 [markdown]:\n## Results\n| Endpoint | Avg Response Time |\n|----------|------------------|\n| /api/users | 2.341s |\n| /api/posts | 0.045s |",
       ),
       toolResult(
@@ -1656,6 +1665,7 @@ console.log(JSON.stringify(db.query('EXPLAIN QUERY PLAN SELECT * FROM users WHER
           notebook_path: `${API_CWD}/benchmarks/query-analysis.ipynb`,
           cell_number: 4,
           new_source:
+            // biome-ignore lint/security/noSecrets: demo data, not a real secret
             "# After optimization\nstart = time.time()\nfor i in range(100):\n    resp = requests.get('http://localhost:3000/api/users?limit=20')\nresults['users_optimized'] = (time.time() - start) / 100\nprint(f\"Optimized: {results['users_optimized']:.3f}s\")\nprint(f\"Improvement: {results['users_avg'] / results['users_optimized']:.1f}x faster\")",
           cell_type: "code",
           edit_mode: "insert",
@@ -1876,6 +1886,7 @@ function session7_cicd(): void {
     userLine(ts, [
       toolResult(
         t5,
+        // biome-ignore lint/security/noSecrets: demo data, not a real secret
         "Step 1/12 : FROM oven/bun:1 AS deps\n ---> a3f4b5c6d7e8\nStep 2/12 : WORKDIR /app\n ---> Using cache\nStep 3/12 : COPY package.json bun.lock ./\nCOPY failed: file not found in build context: bun.lock",
         true,
       ),
@@ -1927,6 +1938,7 @@ function session7_cicd(): void {
     userLine(ts, [
       toolResult(
         t7,
+        // biome-ignore lint/security/noSecrets: demo data, not a real secret
         'Step 1/12 : FROM oven/bun:1 AS deps\n ---> a3f4b5c6d7e8\nStep 2/12 : WORKDIR /app\nStep 3/12 : COPY package.json bun.lockb ./\nStep 4/12 : RUN bun install --frozen-lockfile --production\n ---> Running in abc123\nInstalled 45 packages in 1.2s\nStep 12/12 : CMD ["bun", "run", "dist/index.js"]\nSuccessfully built e9f8a7b6c5d4\nSuccessfully tagged api-backend:test',
       ),
     ]),
@@ -1961,6 +1973,7 @@ function session7_cicd(): void {
       HAIKU,
       [
         text(
+          // biome-ignore lint/security/noSecrets: demo data, not a real secret
           "CI/CD pipeline is set up and verified!\n\n**Created files:**\n- `.github/workflows/ci.yml` — 3-stage pipeline (lint → test → Docker build+push)\n- `Dockerfile` — multi-stage build with `oven/bun:1` base image\n\n**Pipeline stages:**\n1. **Lint** — runs `bun run check` (Biome)\n2. **Test** — runs `bun test`\n3. **Build** — Docker multi-stage build, pushes to `ghcr.io` (main branch only)\n\n**Features:**\n- GitHub Actions cache for Docker layers (`type=gha`)\n- Frozen lockfile installs for reproducibility\n- Production-only dependencies in final image\n- Slim base image (`oven/bun:1-slim`) for smaller footprint",
         ),
       ],
@@ -2005,10 +2018,3 @@ session4_charts();
 session5_tests();
 session6_optimize();
 session7_cicd();
-
-console.log("Demo data generated in demo-data/claude-code/projects/");
-console.log("\nProjects:");
-console.log("  - todo-app (3 sessions: plan, implementation, bugfix)");
-console.log("  - react-dashboard (2 sessions: charts, test fixes)");
-console.log("  - api-backend (2 sessions: query optimization, CI/CD setup)");
-console.log("\nUse: bun run dev -- --claude-code-dir ./demo-data/claude-code");

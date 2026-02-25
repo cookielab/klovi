@@ -12,7 +12,7 @@ describe("MarkdownRenderer", () => {
     const { container } = render(<MarkdownRenderer content="Hello **bold** world" />);
     const strong = container.querySelector("strong");
     expect(strong).not.toBeNull();
-    expect(strong!.textContent).toBe("bold");
+    expect(strong?.textContent).toBe("bold");
   });
 
   test("renders external links with onClick handler", () => {
@@ -21,16 +21,16 @@ describe("MarkdownRenderer", () => {
     );
     const link = container.querySelector("a");
     expect(link).not.toBeNull();
-    expect(link!.getAttribute("href")).toBe("https://example.com");
+    expect(link?.getAttribute("href")).toBe("https://example.com");
     // External links use onClick to open via Electrobun's openExternal RPC
-    expect(link!.onclick).not.toBeNull();
+    expect(link?.onclick).not.toBeNull();
   });
 
   test("renders file references with @", () => {
     const { container } = render(<MarkdownRenderer content="See @src/utils/time.ts for details" />);
     const fileRef = container.querySelector(".file-ref");
     expect(fileRef).not.toBeNull();
-    expect(fileRef!.textContent).toBe("@src/utils/time.ts");
+    expect(fileRef?.textContent).toBe("@src/utils/time.ts");
   });
 
   test("renders inline code", () => {
@@ -45,6 +45,7 @@ describe("MarkdownRenderer", () => {
   });
 
   test("renders fenced code blocks", () => {
+    // biome-ignore lint/security/noSecrets: test data, not a real secret
     const content = "```js\nconsole.log('hi')\n```";
     const { container } = render(<MarkdownRenderer content={content} />);
     // Should render through CodeBlock component

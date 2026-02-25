@@ -40,19 +40,23 @@ describe("config", () => {
     expect(getProjectsDir()).toBe("/tmp/test-claude/projects");
   });
 
+  // biome-ignore lint/security/noSecrets: test data, not a real secret
   test("getCodexCliDir returns default ~/.codex", () => {
     expect(getCodexCliDir()).toContain(".codex");
   });
 
+  // biome-ignore lint/security/noSecrets: test data, not a real secret
   test("setCodexCliDir updates the directory", () => {
     setCodexCliDir("/tmp/test-codex");
     expect(getCodexCliDir()).toBe("/tmp/test-codex");
   });
 
+  // biome-ignore lint/security/noSecrets: test data, not a real secret
   test("getOpenCodeDir returns default path", () => {
     expect(getOpenCodeDir()).toContain("opencode");
   });
 
+  // biome-ignore lint/security/noSecrets: test data, not a real secret
   test("setOpenCodeDir updates the directory", () => {
     setOpenCodeDir("/tmp/test-opencode");
     expect(getOpenCodeDir()).toBe("/tmp/test-opencode");

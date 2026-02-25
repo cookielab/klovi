@@ -129,6 +129,7 @@ index abc123..def456 100644
   // Python
   describe("Python", () => {
     test("detects function definition", () => {
+      // biome-ignore lint/security/noSecrets: test data, not a real secret
       expect(detectOutputFormat("def hello():\n    print('world')")).toBe("python");
     });
 

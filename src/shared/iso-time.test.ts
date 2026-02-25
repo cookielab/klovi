@@ -15,6 +15,7 @@ describe("iso-time helpers", () => {
     expect(latest).toBe("2025-03-15T10:20:30.000Z");
   });
 
+  // biome-ignore lint/security/noSecrets: test data, not a real secret
   test("sortByIsoDesc sorts objects by selected ISO field", () => {
     const items = [
       { id: "a", timestamp: "2025-01-01T00:00:00.000Z" },
