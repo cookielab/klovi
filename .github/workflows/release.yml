@@ -184,22 +184,18 @@ jobs:
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         run: |
-          BUILD_DIR="build/stable-linux-${ELECTROBUN_ARCH}"
-          if [ ! -d "$BUILD_DIR" ]; then
-            echo "::error::Expected build output in $BUILD_DIR"
-            find build -maxdepth 2 -type d || true
+          # Electrobun stable builds produce a self-extracting installer in artifacts/
+          INSTALLER="artifacts/stable-linux-${ELECTROBUN_ARCH}-Klovi-Setup.tar.gz"
+          if [ ! -f "$INSTALLER" ]; then
+            echo "::error::Expected installer at $INSTALLER"
+            find artifacts -type f 2>/dev/null || echo "No artifacts directory found"
+            find build -maxdepth 2 -type f -name "*.tar.gz" 2>/dev/null || true
             exit 1
           fi
 
-          APP_DIR=$(find "$BUILD_DIR" -mindepth 1 -maxdepth 1 -type d | head -1)
-          if [ -z "$APP_DIR" ]; then
-            echo "::error::Could not find app bundle directory in $BUILD_DIR"
-            exit 1
-          fi
-
-          TAR_NAME="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
-          tar -czf "$TAR_NAME" -C "$BUILD_DIR" "$(basename "$APP_DIR")"
-          gh release upload "$VERSION" "$TAR_NAME" --clobber
+          ASSET_NAME="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
+          cp "$INSTALLER" "$ASSET_NAME"
+          gh release upload "$VERSION" "$ASSET_NAME" --clobber
 
   build-windows:
     runs-on: ${{ matrix.runner }}
@@ -254,24 +250,22 @@ jobs:
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         shell: pwsh
         run: |
-          $buildDir = "build/stable-win-$env:ELECTROBUN_ARCH"
-          if (-not (Test-Path $buildDir)) {
-            Write-Host "::error::Expected build output in $buildDir"
+          # Electrobun stable builds produce a self-extracting installer zip in artifacts/
+          $installer = "artifacts/stable-win-$env:ELECTROBUN_ARCH-Klovi-Setup.zip"
+          if (-not (Test-Path $installer)) {
+            Write-Host "::error::Expected installer at $installer"
+            if (Test-Path artifacts) {
+              Get-ChildItem artifacts -File -Recurse | ForEach-Object { $_.FullName }
+            }
             if (Test-Path build) {
-              Get-ChildItem build -Directory -Recurse | ForEach-Object { $_.FullName }
+              Get-ChildItem build -File -Recurse -Filter "*.zip" | ForEach-Object { $_.FullName }
             }
             exit 1
           }
 
-          $appDir = Get-ChildItem -Path $buildDir -Directory | Select-Object -First 1
-          if (-not $appDir) {
-            Write-Host "::error::Could not find app bundle directory in $buildDir"
-            exit 1
-          }
-
-          $zipName = "Klovi-$env:VERSION-windows-$env:ARTIFACT_ARCH.zip"
-          Compress-Archive -Path $appDir.FullName -DestinationPath $zipName -Force
-          gh release upload $env:VERSION $zipName --clobber
+          $assetName = "Klovi-$env:VERSION-windows-$env:ARTIFACT_ARCH.zip"
+          Copy-Item $installer $assetName
+          gh release upload $env:VERSION $assetName --clobber
 
   update-cask:
     if: ${{ needs.release.outputs.prerelease != 'true' }}
