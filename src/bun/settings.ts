@@ -2,6 +2,14 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
 
+export type UpdateChannel = "stable" | "candidate" | "beta";
+
+export type UpdateSettings = {
+  channel: UpdateChannel;
+  checkIntervalHours: number;
+  autoDownload: boolean;
+};
+
 export type PluginSettings = {
   version: 1;
   plugins: {
@@ -15,6 +23,7 @@ export type PluginSettings = {
         showSecurityWarning?: boolean | undefined;
       }
     | undefined;
+  updates?: UpdateSettings | undefined;
 };
 
 function createDefaultPluginStates(): PluginSettings["plugins"] {
@@ -29,6 +38,11 @@ export function getDefaultSettings(): PluginSettings {
     plugins: createDefaultPluginStates(),
     general: {
       showSecurityWarning: true,
+    },
+    updates: {
+      channel: "stable",
+      checkIntervalHours: 6,
+      autoDownload: true,
     },
   };
 }

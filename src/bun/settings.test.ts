@@ -61,4 +61,25 @@ describe("settings", () => {
     const settings = loadSettings(path);
     expect(settings).toEqual(getDefaultSettings());
   });
+
+  test("getDefaultSettings includes updates with stable channel", () => {
+    const settings = getDefaultSettings();
+    expect(settings.updates).toEqual({
+      channel: "stable",
+      checkIntervalHours: 6,
+      autoDownload: true,
+    });
+  });
+
+  test("loadSettings preserves updates field", () => {
+    mkdirSync(testDir, { recursive: true });
+    const path = settingsPath();
+    const settings: PluginSettings = {
+      ...getDefaultSettings(),
+      updates: { channel: "beta", checkIntervalHours: 1, autoDownload: false },
+    };
+    saveSettings(path, settings);
+    const loaded = loadSettings(path);
+    expect(loaded.updates).toEqual({ channel: "beta", checkIntervalHours: 1, autoDownload: false });
+  });
 });
