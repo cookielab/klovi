@@ -13,6 +13,7 @@ import { SessionView } from "./components/session/SessionView.tsx";
 import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
 import type { SettingsTab } from "./components/settings/SettingsSidebar.tsx";
 import { SettingsView } from "./components/settings/SettingsView.tsx";
+import { UpdateNotification } from "./components/UpdateNotification.tsx";
 import { Onboarding } from "./components/ui/Onboarding.tsx";
 import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
@@ -23,6 +24,7 @@ import {
   usePresentationTheme,
   useTheme,
 } from "./hooks/useTheme.ts";
+import { useUpdateStatus } from "./hooks/useUpdateStatus.ts";
 import { useViewState } from "./hooks/useViewState.ts";
 import { getRPC } from "./rpc.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
@@ -52,6 +54,7 @@ export function App() {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSessions, setSearchSessions] = useState<GlobalSessionResult[]>([]);
+  const { updateStatus, updateDismissed, dismissUpdate } = useUpdateStatus();
 
   const fetchSearchSessions = useCallback(() => {
     getRPC()
@@ -239,6 +242,11 @@ export function App() {
           presentationActive={isPresenting}
           onTogglePresentation={togglePresentation}
           showPresentationToggle={canPresent}
+        />
+        <UpdateNotification
+          status={updateStatus}
+          dismissed={updateDismissed}
+          onDismiss={dismissUpdate}
         />
         <ErrorBoundary>
           {view.kind === "home" && (
