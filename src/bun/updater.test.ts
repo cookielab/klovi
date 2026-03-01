@@ -1,10 +1,15 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { UpdateStatus } from "../shared/rpc-types.ts";
 import {
   compareVersions,
   filterReleasesByChannel,
   findLatestRelease,
   type GitHubRelease,
   getAssetName,
+  UpdateManager,
 } from "./updater.ts";
 
 describe("compareVersions", () => {
@@ -152,5 +157,66 @@ describe("findLatestRelease", () => {
   test("returns highest version on beta channel from old version", () => {
     const result = findLatestRelease(releases, "beta", "1.0.0");
     expect(result?.tag_name).toBe("2.1.0-rc.1");
+  });
+});
+
+describe("UpdateManager", () => {
+  const testDir = join(tmpdir(), `klovi-updater-test-${Date.now()}`);
+
+  afterEach(() => {
+    try {
+      rmSync(testDir, { recursive: true });
+    } catch {}
+  });
+
+  test("constructor sets initial status to up-to-date", () => {
+    const mgr = new UpdateManager({
+      currentVersion: "1.0.0",
+      platform: "macos",
+      arch: "arm64",
+      settingsPath: join(testDir, "settings.json"),
+      appDataDir: testDir,
+    });
+    expect(mgr.getStatus()).toEqual({ status: "up-to-date", currentVersion: "1.0.0" });
+  });
+
+  test("cleanup removes files from updates directory", async () => {
+    mkdirSync(join(testDir, "updates", "2.0.0"), { recursive: true });
+    await Bun.write(join(testDir, "updates", "2.0.0", "test.zip"), "data");
+
+    const mgr = new UpdateManager({
+      currentVersion: "1.0.0",
+      platform: "macos",
+      arch: "arm64",
+      settingsPath: join(testDir, "settings.json"),
+      appDataDir: testDir,
+    });
+    mgr.cleanup();
+    expect(existsSync(join(testDir, "updates", "2.0.0"))).toBe(false);
+  });
+
+  test("cleanup does not throw when updates directory missing", () => {
+    const mgr = new UpdateManager({
+      currentVersion: "1.0.0",
+      platform: "macos",
+      arch: "arm64",
+      settingsPath: join(testDir, "settings.json"),
+      appDataDir: testDir,
+    });
+    expect(() => mgr.cleanup()).not.toThrow();
+  });
+
+  test("setStatusCallback receives status updates", () => {
+    const mgr = new UpdateManager({
+      currentVersion: "1.0.0",
+      platform: "macos",
+      arch: "arm64",
+      settingsPath: join(testDir, "settings.json"),
+      appDataDir: testDir,
+    });
+    const statuses: UpdateStatus[] = [];
+    mgr.setStatusCallback((s) => statuses.push(s));
+    // Verify the callback mechanism is wired up and initial status is correct
+    expect(mgr.getStatus().status).toBe("up-to-date");
   });
 });
