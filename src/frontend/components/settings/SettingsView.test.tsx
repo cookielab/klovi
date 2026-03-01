@@ -307,4 +307,14 @@ describe("SettingsSidebar", () => {
     fireEvent.click(getByRole("button", { name: "Plugins" }));
     expect(onTabChange).toHaveBeenCalledWith("plugins");
   });
+
+  test("renders Updates button", () => {
+    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />);
+    expect(getByRole("button", { name: "Updates" })).toBeDefined();
+  });
+
+  test("marks Updates as active when activeTab is updates", () => {
+    const { getByRole } = render(<SettingsSidebar activeTab="updates" onTabChange={() => {}} />);
+    expect(getByRole("button", { name: "Updates" }).classList.contains("active")).toBe(true);
+  });
 });

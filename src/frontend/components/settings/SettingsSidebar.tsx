@@ -1,6 +1,6 @@
 import "./SettingsView.css";
 
-export type SettingsTab = "general" | "plugins";
+export type SettingsTab = "general" | "plugins" | "updates";
 
 interface SettingsSidebarProps {
   activeTab: SettingsTab;
@@ -23,6 +23,13 @@ export function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps
         onClick={() => onTabChange("plugins")}
       >
         Plugins
+      </button>
+      <button
+        type="button"
+        className={`settings-nav-item ${activeTab === "updates" ? "active" : ""}`}
+        onClick={() => onTabChange("updates")}
+      >
+        Updates
       </button>
     </nav>
   );
