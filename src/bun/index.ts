@@ -75,6 +75,21 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         registry = createRegistry(loadSettings(getSettingsPath()));
         return result;
       },
+      getUpdateSettings: () => ({
+        channel: "stable" as const,
+        checkIntervalHours: 6,
+        autoDownload: true,
+      }),
+      updateUpdateSettings: () => ({
+        channel: "stable" as const,
+        checkIntervalHours: 6,
+        autoDownload: true,
+      }),
+      checkForUpdate: () => ({
+        status: "up-to-date" as const,
+        currentVersion: getVersion().version,
+      }),
+      applyUpdate: () => ({ ok: true }),
       openExternal: (params) => {
         Utils.openExternal(params.url);
         return { ok: true };

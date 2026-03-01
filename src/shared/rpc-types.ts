@@ -21,6 +21,22 @@ export interface PluginSettingInfo {
   isCustomDir: boolean;
 }
 
+export type UpdateChannel = "stable" | "candidate" | "beta";
+
+export type UpdateSettingsInfo = {
+  channel: UpdateChannel;
+  checkIntervalHours: number;
+  autoDownload: boolean;
+};
+
+export type UpdateStatus = {
+  status: "up-to-date" | "available" | "downloading" | "ready" | "error";
+  currentVersion: string;
+  latestVersion?: string;
+  progress?: number;
+  error?: string;
+};
+
 export interface KloviRPC {
   bun: RPCSchema<{
     requests: {
@@ -62,6 +78,22 @@ export interface KloviRPC {
         response: { showSecurityWarning: boolean };
       };
       resetSettings: { params: Record<string, never>; response: { ok: boolean } };
+      getUpdateSettings: {
+        params: Record<string, never>;
+        response: UpdateSettingsInfo;
+      };
+      updateUpdateSettings: {
+        params: { channel?: UpdateChannel; checkIntervalHours?: number; autoDownload?: boolean };
+        response: UpdateSettingsInfo;
+      };
+      checkForUpdate: {
+        params: Record<string, never>;
+        response: UpdateStatus;
+      };
+      applyUpdate: {
+        params: Record<string, never>;
+        response: { ok: boolean };
+      };
       openExternal: { params: { url: string }; response: { ok: boolean } };
       browseDirectory: {
         params: { startingFolder?: string };
@@ -78,6 +110,7 @@ export interface KloviRPC {
       decreaseFontSize: Record<string, never>;
       togglePresentation: Record<string, never>;
       openSettings: Record<string, never>;
+      updateStatus: UpdateStatus;
     };
   }>;
 }

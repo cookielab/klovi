@@ -31,6 +31,9 @@ const rpc = Electroview.defineRPC<KloviRPC>({
       openSettings: () => {
         window.dispatchEvent(new CustomEvent("klovi:openSettings"));
       },
+      updateStatus: () => {
+        // Will dispatch CustomEvent in a later task
+      },
     },
   },
 });

@@ -43,6 +43,21 @@ export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
       updateGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
       resetSettings: () => Promise.resolve({ ok: true }),
+      getUpdateSettings: () =>
+        Promise.resolve({
+          channel: "stable" as const,
+          checkIntervalHours: 6,
+          autoDownload: true,
+        }),
+      updateUpdateSettings: () =>
+        Promise.resolve({
+          channel: "stable" as const,
+          checkIntervalHours: 6,
+          autoDownload: true,
+        }),
+      checkForUpdate: () =>
+        Promise.resolve({ status: "up-to-date" as const, currentVersion: "test" }),
+      applyUpdate: () => Promise.resolve({ ok: true }),
       openExternal: () => Promise.resolve({ ok: true }),
       browseDirectory: () => Promise.resolve({ path: null }),
       ...overrides,

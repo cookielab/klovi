@@ -1,4 +1,9 @@
-import type { PluginSettingInfo } from "../shared/rpc-types.ts";
+import type {
+  PluginSettingInfo,
+  UpdateChannel,
+  UpdateSettingsInfo,
+  UpdateStatus,
+} from "../shared/rpc-types.ts";
 import type {
   DashboardStats,
   GlobalSessionResult,
@@ -35,6 +40,14 @@ export interface RPCClient {
       showSecurityWarning?: boolean;
     }) => Promise<{ showSecurityWarning: boolean }>;
     resetSettings: (params: Record<string, never>) => Promise<{ ok: boolean }>;
+    getUpdateSettings: (params: Record<string, never>) => Promise<UpdateSettingsInfo>;
+    updateUpdateSettings: (params: {
+      channel?: UpdateChannel;
+      checkIntervalHours?: number;
+      autoDownload?: boolean;
+    }) => Promise<UpdateSettingsInfo>;
+    checkForUpdate: (params: Record<string, never>) => Promise<UpdateStatus>;
+    applyUpdate: (params: Record<string, never>) => Promise<{ ok: boolean }>;
     openExternal: (params: { url: string }) => Promise<{ ok: boolean }>;
     browseDirectory: (params: { startingFolder?: string }) => Promise<{ path: string | null }>;
   };
