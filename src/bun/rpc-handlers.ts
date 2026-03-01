@@ -4,7 +4,12 @@ import { scanStats } from "../parser/stats.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "../plugins/catalog.ts";
 import type { PluginRegistry } from "../plugins/registry.ts";
 import { sortByIsoDesc } from "../shared/iso-time.ts";
-import type { PluginSettingInfo, VersionInfo } from "../shared/rpc-types.ts";
+import type {
+  PluginSettingInfo,
+  UpdateChannel,
+  UpdateSettingsInfo,
+  VersionInfo,
+} from "../shared/rpc-types.ts";
 import { encodeSessionId, parseSessionId } from "../shared/session-id.ts";
 import type { GlobalSessionResult, SessionSummary } from "../shared/types.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
@@ -194,4 +199,38 @@ export function updatePluginSetting(
   settings.plugins[params.pluginId] = existing;
   saveSettings(settingsPath, settings);
   return buildPluginSettingsResponse(settingsPath);
+}
+
+export function getUpdateSettings(settingsPath: string): UpdateSettingsInfo {
+  const settings = loadSettings(settingsPath);
+  return {
+    channel: settings.updates?.channel ?? "stable",
+    checkIntervalHours: settings.updates?.checkIntervalHours ?? 6,
+    autoDownload: settings.updates?.autoDownload ?? true,
+  };
+}
+
+export function updateUpdateSettings(
+  settingsPath: string,
+  params: { channel?: UpdateChannel; checkIntervalHours?: number; autoDownload?: boolean },
+): UpdateSettingsInfo {
+  const settings = loadSettings(settingsPath);
+  if (!settings.updates) {
+    settings.updates = { channel: "stable", checkIntervalHours: 6, autoDownload: true };
+  }
+  if (params.channel !== undefined) {
+    settings.updates.channel = params.channel;
+  }
+  if (params.checkIntervalHours !== undefined) {
+    settings.updates.checkIntervalHours = params.checkIntervalHours;
+  }
+  if (params.autoDownload !== undefined) {
+    settings.updates.autoDownload = params.autoDownload;
+  }
+  saveSettings(settingsPath, settings);
+  return {
+    channel: settings.updates.channel,
+    checkIntervalHours: settings.updates.checkIntervalHours,
+    autoDownload: settings.updates.autoDownload,
+  };
 }

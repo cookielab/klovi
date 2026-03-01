@@ -11,12 +11,14 @@ import {
   getSessions,
   getStats,
   getSubAgent,
+  getUpdateSettings,
   getVersion,
   isFirstLaunch,
   resetSettings,
   searchSessions,
   updateGeneralSettings,
   updatePluginSetting,
+  updateUpdateSettings,
 } from "./rpc-handlers.ts";
 import { loadSettings } from "./settings.ts";
 
@@ -75,16 +77,8 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         registry = createRegistry(loadSettings(getSettingsPath()));
         return result;
       },
-      getUpdateSettings: () => ({
-        channel: "stable" as const,
-        checkIntervalHours: 6,
-        autoDownload: true,
-      }),
-      updateUpdateSettings: () => ({
-        channel: "stable" as const,
-        checkIntervalHours: 6,
-        autoDownload: true,
-      }),
+      getUpdateSettings: () => getUpdateSettings(getSettingsPath()),
+      updateUpdateSettings: (params) => updateUpdateSettings(getSettingsPath(), params),
       checkForUpdate: () => ({
         status: "up-to-date" as const,
         currentVersion: getVersion().version,
