@@ -21,8 +21,24 @@ import {
   updateUpdateSettings,
 } from "./rpc-handlers.ts";
 import { loadSettings } from "./settings.ts";
+import { UpdateManager } from "./updater.ts";
 
 let registry: PluginRegistry | null = null;
+let updateManager: UpdateManager | null = null;
+
+function getUpdateManager(): UpdateManager {
+  if (!updateManager) {
+    updateManager = new UpdateManager({
+      currentVersion: getVersion().version,
+      platform:
+        process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux",
+      arch: process.arch === "arm64" ? "arm64" : "x64",
+      settingsPath: getSettingsPath(),
+      appDataDir: Utils.paths.userData,
+    });
+  }
+  return updateManager;
+}
 
 function getRegistry(): PluginRegistry {
   if (!registry) throw new Error("Risk not accepted yet");
@@ -53,6 +69,14 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
           const settings = loadSettings(getSettingsPath());
           registry = createRegistry(settings);
         }
+
+        // Start update checking
+        const mgr = getUpdateManager();
+        mgr.setStatusCallback((status) => {
+          win.webview.rpc?.send.updateStatus(status);
+        });
+        mgr.startSchedule();
+
         return { ok: true };
       },
       // getVersion, isFirstLaunch, and getGeneralSettings read settings only — intentionally ungated
@@ -78,12 +102,20 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         return result;
       },
       getUpdateSettings: () => getUpdateSettings(getSettingsPath()),
-      updateUpdateSettings: (params) => updateUpdateSettings(getSettingsPath(), params),
-      checkForUpdate: () => ({
-        status: "up-to-date" as const,
-        currentVersion: getVersion().version,
-      }),
-      applyUpdate: () => ({ ok: true }),
+      updateUpdateSettings: (params) => {
+        const result = updateUpdateSettings(getSettingsPath(), params);
+        updateManager?.restartSchedule();
+        return result;
+      },
+      checkForUpdate: () => {
+        const mgr = getUpdateManager();
+        return mgr.check();
+      },
+      applyUpdate: async () => {
+        const mgr = getUpdateManager();
+        await mgr.apply();
+        return { ok: true };
+      },
       openExternal: (params) => {
         Utils.openExternal(params.url);
         return { ok: true };
