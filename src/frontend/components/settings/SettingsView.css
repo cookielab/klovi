@@ -311,3 +311,23 @@
 .settings-reset-cancel-btn:hover:not(:disabled) {
   background: var(--bg-secondary);
 }
+
+.settings-select {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.settings-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.settings-update-status {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}

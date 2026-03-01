@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
+import type {
+  PluginSettingInfo,
+  UpdateChannel,
+  UpdateSettingsInfo,
+  UpdateStatus,
+} from "../../../shared/rpc-types.ts";
 import type { ThemeSetting } from "../../hooks/useTheme.ts";
 import { getRPC } from "../../rpc.ts";
 import { PluginRow } from "./PluginRow.tsx";
@@ -99,6 +104,138 @@ function FontSizeControl({
   );
 }
 
+function formatUpdateStatus(updateStatus: UpdateStatus | null): string {
+  if (updateStatus?.status === "downloading" && updateStatus.progress !== undefined) {
+    return `Downloading v${updateStatus.latestVersion} (${updateStatus.progress}%)`;
+  }
+  if (updateStatus?.status === "ready") {
+    return `v${updateStatus.latestVersion} ready to install`;
+  }
+  if (updateStatus?.status === "available") {
+    return `v${updateStatus.latestVersion} available`;
+  }
+  if (updateStatus?.status === "error") {
+    return `Error: ${updateStatus.error}`;
+  }
+  return "Up to date";
+}
+
+function UpdatesTab({
+  loading,
+  updateSettings,
+  setUpdateSettings,
+  setChanged,
+}: {
+  loading: boolean;
+  updateSettings: UpdateSettingsInfo | null;
+  setUpdateSettings: (s: UpdateSettingsInfo) => void;
+  setChanged: (v: boolean) => void;
+}) {
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  return (
+    <>
+      <h3 className="settings-section-title">Updates</h3>
+      {loading ? (
+        <div className="settings-loading">Loading...</div>
+      ) : (
+        updateSettings && (
+          <>
+            <div className="settings-control-row">
+              <span className="settings-control-label">Update Channel</span>
+              <select
+                className="settings-select"
+                value={updateSettings.channel}
+                onChange={(e) => {
+                  const channel = e.target.value as UpdateChannel;
+                  setUpdateSettings({ ...updateSettings, channel });
+                  getRPC()
+                    .request.updateUpdateSettings({ channel })
+                    .then(() => setChanged(true))
+                    .catch(() => {});
+                }}
+              >
+                <option value="stable">Stable</option>
+                <option value="candidate">Release Candidate</option>
+                <option value="beta">Beta</option>
+              </select>
+            </div>
+
+            <div className="settings-control-row">
+              <span className="settings-control-label">Check Interval</span>
+              <select
+                className="settings-select"
+                value={updateSettings.checkIntervalHours}
+                onChange={(e) => {
+                  const checkIntervalHours = Number(e.target.value);
+                  setUpdateSettings({ ...updateSettings, checkIntervalHours });
+                  getRPC()
+                    .request.updateUpdateSettings({ checkIntervalHours })
+                    .then(() => setChanged(true))
+                    .catch(() => {});
+                }}
+              >
+                <option value={1}>Every hour</option>
+                <option value={3}>Every 3 hours</option>
+                <option value={6}>Every 6 hours</option>
+                <option value={12}>Every 12 hours</option>
+                <option value={24}>Every 24 hours</option>
+              </select>
+            </div>
+
+            <div className="settings-control-row">
+              <div className="settings-control-group">
+                <label className="settings-same-as-global">
+                  <input
+                    type="checkbox"
+                    className="custom-checkbox"
+                    checked={updateSettings.autoDownload}
+                    onChange={(e) => {
+                      const autoDownload = e.target.checked;
+                      setUpdateSettings({ ...updateSettings, autoDownload });
+                      getRPC()
+                        .request.updateUpdateSettings({ autoDownload })
+                        .then(() => setChanged(true))
+                        .catch(() => {});
+                    }}
+                  />
+                  Auto-download updates
+                </label>
+                <p className="settings-general-hint">
+                  When enabled, updates are downloaded in the background automatically.
+                </p>
+              </div>
+            </div>
+
+            <h4 className="settings-subsection-title">Status</h4>
+            <div className="settings-control-row">
+              <div className="settings-control-group">
+                <div className="settings-update-status">{formatUpdateStatus(updateStatus)}</div>
+                <button
+                  type="button"
+                  className="settings-reset-to-defaults-btn"
+                  disabled={checking}
+                  onClick={() => {
+                    setChecking(true);
+                    getRPC()
+                      .request.checkForUpdate({} as Record<string, never>)
+                      .then((result) => setUpdateStatus(result))
+                      .catch(() => {})
+                      .finally(() => setChecking(false));
+                  }}
+                >
+                  {checking ? "Checking..." : "Check now"}
+                </button>
+              </div>
+            </div>
+          </>
+        )
+      )}
+    </>
+  );
+}
+
 export function SettingsView({
   activeTab,
   onNavigateHome,
@@ -114,15 +251,18 @@ export function SettingsView({
   const [resetting, setResetting] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const resettingRef = useRef(false);
+  const [updateSettings, setUpdateSettings] = useState<UpdateSettingsInfo | null>(null);
 
   useEffect(() => {
     Promise.all([
       getRPC().request.getPluginSettings({} as Record<string, never>),
       getRPC().request.getGeneralSettings({} as Record<string, never>),
+      getRPC().request.getUpdateSettings({} as Record<string, never>),
     ])
-      .then(([pluginData, generalData]) => {
+      .then(([pluginData, generalData, updateData]) => {
         setPlugins(pluginData.plugins);
         setShowSecurityWarning(generalData.showSecurityWarning);
+        setUpdateSettings(updateData);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -242,6 +382,14 @@ export function SettingsView({
               </div>
             )}
           </>
+        )}
+        {activeTab === "updates" && (
+          <UpdatesTab
+            loading={loading}
+            updateSettings={updateSettings}
+            setUpdateSettings={setUpdateSettings}
+            setChanged={setChanged}
+          />
         )}
         {activeTab === "general" && (
           <>
