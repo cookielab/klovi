@@ -1,7 +1,11 @@
-import { homedir } from "node:os";
 import { join } from "node:path";
 
-export const DEFAULT_OPENCODE_DIR = join(homedir(), ".local", "share", "opencode");
+export const DEFAULT_OPENCODE_DIR = join(
+  Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "",
+  ".local",
+  "share",
+  "opencode",
+);
 
 let openCodeDir = DEFAULT_OPENCODE_DIR;
 

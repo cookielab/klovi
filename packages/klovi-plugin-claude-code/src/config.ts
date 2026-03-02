@@ -1,7 +1,9 @@
-import { homedir } from "node:os";
 import { join } from "node:path";
 
-export const DEFAULT_CLAUDE_CODE_DIR = join(homedir(), ".claude");
+export const DEFAULT_CLAUDE_CODE_DIR = join(
+  Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "",
+  ".claude",
+);
 
 let claudeCodeDir = DEFAULT_CLAUDE_CODE_DIR;
 

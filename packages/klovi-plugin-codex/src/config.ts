@@ -1,7 +1,9 @@
-import { homedir } from "node:os";
 import { join } from "node:path";
 
-export const DEFAULT_CODEX_CLI_DIR = join(homedir(), ".codex");
+export const DEFAULT_CODEX_CLI_DIR = join(
+  Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "",
+  ".codex",
+);
 
 let codexCliDir = DEFAULT_CODEX_CLI_DIR;
 
