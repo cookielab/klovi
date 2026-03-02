@@ -279,40 +279,34 @@ describe("SettingsView", () => {
     expect(btn).toBeDefined();
   });
 
-  test("renders Updates content when activeTab is updates", async () => {
+  test("General tab shows Updates section with channel selector", async () => {
     setupMockRPC({
-      getPluginSettings: () => Promise.resolve({ plugins: [] }),
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
       getUpdateSettings: () =>
         Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: true }),
     });
-    const props = defaultProps();
-    props.activeTab = "updates" as SettingsTab;
-    const { findByText } = render(<SettingsView {...props} />);
+    const { findByText } = render(<SettingsView {...defaultProps()} />);
     await findByText("Updates");
     await findByText("Update Channel");
   });
 
-  test("Updates tab shows current channel selection", async () => {
+  test("General tab shows current update channel selection", async () => {
     setupMockRPC({
-      getPluginSettings: () => Promise.resolve({ plugins: [] }),
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
       getUpdateSettings: () =>
         Promise.resolve({ channel: "beta" as const, checkIntervalHours: 6, autoDownload: true }),
     });
-    const props = defaultProps();
-    props.activeTab = "updates" as SettingsTab;
-    const { findByDisplayValue } = render(<SettingsView {...props} />);
+    const { findByDisplayValue } = render(<SettingsView {...defaultProps()} />);
     await findByDisplayValue("Beta");
   });
 
-  test("Updates tab shows Check now button", async () => {
+  test("General tab shows Check now button", async () => {
     setupMockRPC({
-      getPluginSettings: () => Promise.resolve({ plugins: [] }),
+      getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
       getUpdateSettings: () =>
         Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: true }),
     });
-    const props = defaultProps();
-    props.activeTab = "updates" as SettingsTab;
-    const { findByRole } = render(<SettingsView {...props} />);
+    const { findByRole } = render(<SettingsView {...defaultProps()} />);
     await findByRole("button", { name: "Check now" });
   });
 });
@@ -343,15 +337,5 @@ describe("SettingsSidebar", () => {
     const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={onTabChange} />);
     fireEvent.click(getByRole("button", { name: "Plugins" }));
     expect(onTabChange).toHaveBeenCalledWith("plugins");
-  });
-
-  test("renders Updates button", () => {
-    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />);
-    expect(getByRole("button", { name: "Updates" })).toBeDefined();
-  });
-
-  test("marks Updates as active when activeTab is updates", () => {
-    const { getByRole } = render(<SettingsSidebar activeTab="updates" onTabChange={() => {}} />);
-    expect(getByRole("button", { name: "Updates" }).classList.contains("active")).toBe(true);
   });
 });

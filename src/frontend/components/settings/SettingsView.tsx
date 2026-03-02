@@ -136,7 +136,7 @@ function UpdatesTab({
 
   return (
     <>
-      <h3 className="settings-section-title">Updates</h3>
+      <h4 className="settings-subsection-title">Updates</h4>
       {loading ? (
         <div className="settings-loading">Loading...</div>
       ) : (
@@ -383,14 +383,6 @@ export function SettingsView({
             )}
           </>
         )}
-        {activeTab === "updates" && (
-          <UpdatesTab
-            loading={loading}
-            updateSettings={updateSettings}
-            setUpdateSettings={setUpdateSettings}
-            setChanged={setChanged}
-          />
-        )}
         {activeTab === "general" && (
           <>
             <h3 className="settings-section-title">General</h3>
@@ -480,6 +472,13 @@ export function SettingsView({
                     />
                   </div>
                 </div>
+
+                <UpdatesTab
+                  loading={false}
+                  updateSettings={updateSettings}
+                  setUpdateSettings={setUpdateSettings}
+                  setChanged={setChanged}
+                />
 
                 <h4 className="settings-subsection-title">Reset</h4>
                 <div className="settings-control-row">
