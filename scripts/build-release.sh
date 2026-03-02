@@ -30,13 +30,15 @@ if [[ ! -f "$ENV_FILE" ]]; then
   echo "  APPLE_TEAM_ID=..."
   echo "  APPLE_ID=..."
   echo "  APPLE_APP_PASSWORD=..."
+  echo "  APPLE_CERTIFICATE=<base64-encoded .p12>"
+  echo "  APPLE_CERTIFICATE_PASSWORD=..."
   exit 1
 fi
 
 # shellcheck source=/dev/null
 source "$ENV_FILE"
 
-for var in APPLE_TEAM_ID APPLE_ID APPLE_APP_PASSWORD; do
+for var in APPLE_TEAM_ID APPLE_ID APPLE_APP_PASSWORD APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD; do
   if [[ -z "${!var:-}" ]]; then
     echo "Error: $var is not set in $ENV_FILE"
     exit 1
@@ -45,11 +47,33 @@ done
 
 IDENTITY="Developer ID Application: Cookielab s.r.o. ($APPLE_TEAM_ID)"
 
-# --- Restore package.json on exit ---
+# --- Import certificate into temporary keychain ---
+echo "Importing signing certificate..."
+CERT_FILE=$(mktemp /tmp/certificate.XXXXXX.p12)
+KEYCHAIN_FILE=$(mktemp /tmp/keychain.XXXXXX)
+rm -f "$KEYCHAIN_FILE"
+KEYCHAIN_FILE="${KEYCHAIN_FILE}.keychain-db"
+KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERT_FILE"
+
+security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_FILE"
+security set-keychain-settings -lut 21600 "$KEYCHAIN_FILE"
+security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_FILE"
+security import "$CERT_FILE" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_FILE"
+security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_FILE"
+security list-keychains -d user -s "$KEYCHAIN_FILE" login.keychain
+
+rm "$CERT_FILE"
+echo "  Certificate imported into temporary keychain"
+
+# --- Cleanup on exit ---
 cleanup() {
   echo ""
   echo "Restoring package.json..."
   git -C "$PROJECT_DIR" checkout package.json
+  echo "Removing temporary keychain..."
+  security delete-keychain "$KEYCHAIN_FILE" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -81,18 +105,18 @@ echo "Signing $APP_DIR..."
 
 echo "  Signing dylibs and shared objects..."
 find "$APP_DIR" -type f \( -name "*.dylib" -o -name "*.so" \) -exec \
-  codesign --force --options runtime --sign "$IDENTITY" {} \;
+  codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
 echo "  Signing frameworks..."
 find "$APP_DIR" -type d -name "*.framework" -exec \
-  codesign --force --options runtime --sign "$IDENTITY" {} \;
+  codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
 echo "  Signing executables..."
 find "$APP_DIR/Contents/MacOS" -type f -perm +111 -exec \
-  codesign --force --options runtime --sign "$IDENTITY" {} \;
+  codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
 echo "  Signing app bundle..."
-codesign --force --options runtime --sign "$IDENTITY" "$APP_DIR"
+codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" "$APP_DIR"
 
 echo "  Verifying signature..."
 codesign --verify --deep --strict "$APP_DIR"
@@ -117,7 +141,7 @@ echo "Stapling notarization ticket..."
 xcrun stapler staple "$APP_DIR"
 
 # --- Package ---
-ZIP_NAME="Klovi-${VERSION}-macos-arm64.zip"
+ZIP_NAME="build/Klovi-${VERSION}-macos-arm64.zip"
 echo ""
 echo "Packaging $ZIP_NAME..."
 ditto -c -k --keepParent "$APP_DIR" "$ZIP_NAME"
