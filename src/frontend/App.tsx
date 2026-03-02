@@ -54,7 +54,8 @@ export function App() {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSessions, setSearchSessions] = useState<GlobalSessionResult[]>([]);
-  const { updateStatus, updateDismissed, dismissUpdate } = useUpdateStatus();
+  const { updateStatus, updateDismissed, dismissUpdate, manualCheckResult, dismissManualCheck } =
+    useUpdateStatus();
 
   const fetchSearchSessions = useCallback(() => {
     getRPC()
@@ -247,6 +248,8 @@ export function App() {
           status={updateStatus}
           dismissed={updateDismissed}
           onDismiss={dismissUpdate}
+          manualCheckResult={manualCheckResult}
+          onDismissManualCheck={dismissManualCheck}
         />
         <ErrorBoundary>
           {view.kind === "home" && (

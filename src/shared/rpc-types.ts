@@ -111,6 +111,7 @@ export interface KloviRPC {
       togglePresentation: Record<string, never>;
       openSettings: Record<string, never>;
       updateStatus: UpdateStatus;
+      checkForUpdatesResult: UpdateStatus;
     };
   }>;
 }

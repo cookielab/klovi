@@ -34,6 +34,9 @@ const rpc = Electroview.defineRPC<KloviRPC>({
       updateStatus: (data) => {
         window.dispatchEvent(new CustomEvent("klovi:updateStatus", { detail: data }));
       },
+      checkForUpdatesResult: (data) => {
+        window.dispatchEvent(new CustomEvent("klovi:checkForUpdatesResult", { detail: data }));
+      },
     },
   },
 });

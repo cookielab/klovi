@@ -200,6 +200,9 @@ Electrobun.events.on("application-menu-clicked", (e) => {
     case "checkForUpdates":
       getUpdateManager()
         .check()
+        .then((result) => {
+          win.webview.rpc?.send.checkForUpdatesResult(result);
+        })
         .catch(() => {});
       break;
   }
