@@ -362,15 +362,19 @@ export class UpdateManager {
     mkdirSync(stagingDir, { recursive: true });
 
     try {
-      // Extract the archive
+      // Extract the archive using platform-native tools
       if (this.platform === "linux") {
-        // tar.gz extraction using system tar
         const result = Bun.spawnSync(["tar", "xzf", this.downloadedAssetPath, "-C", stagingDir]);
         if (!result.success) {
           throw new Error(`tar extraction failed with exit code ${result.exitCode}`);
         }
+      } else if (this.platform === "macos") {
+        const result = Bun.spawnSync(["ditto", "-xk", this.downloadedAssetPath, stagingDir]);
+        if (!result.success) {
+          throw new Error(`zip extraction failed with exit code ${result.exitCode}`);
+        }
       } else {
-        // zip extraction using Bun.Archive (macOS + Windows)
+        // Windows: use Bun.Archive
         const archiveBytes = await Bun.file(this.downloadedAssetPath).arrayBuffer();
         const archive = new Bun.Archive(archiveBytes);
         await archive.extract(stagingDir);
