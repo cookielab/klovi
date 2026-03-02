@@ -326,8 +326,31 @@
   border-color: var(--accent);
 }
 
+.settings-update-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .settings-update-status {
   font-size: 0.9rem;
   color: var(--text-secondary);
-  padding: 4px 0;
+}
+
+.settings-update-apply-btn {
+  background: var(--accent);
+  border: none;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.settings-update-apply-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.settings-update-apply-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }

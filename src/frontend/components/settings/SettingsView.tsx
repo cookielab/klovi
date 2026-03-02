@@ -133,6 +133,25 @@ function UpdatesTab({
 }) {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [checking, setChecking] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+
+  const statusText = applyError ? `Update failed: ${applyError}` : formatUpdateStatus(updateStatus);
+
+  const handleApply = async () => {
+    setApplying(true);
+    setApplyError(null);
+    try {
+      const result = await getRPC().request.applyUpdate({} as Record<string, never>);
+      if (!result.ok) {
+        setApplyError(result.error ?? "Update failed");
+        setApplying(false);
+      }
+    } catch {
+      setApplyError("Update failed");
+      setApplying(false);
+    }
+  };
 
   return (
     <>
@@ -208,16 +227,16 @@ function UpdatesTab({
               </div>
             </div>
 
-            <h4 className="settings-subsection-title">Status</h4>
             <div className="settings-control-row">
-              <div className="settings-control-group">
-                <div className="settings-update-status">{formatUpdateStatus(updateStatus)}</div>
+              <div className="settings-update-status-row">
+                <span className="settings-update-status">{statusText}</span>
                 <button
                   type="button"
                   className="settings-reset-to-defaults-btn"
                   disabled={checking}
                   onClick={() => {
                     setChecking(true);
+                    setApplyError(null);
                     getRPC()
                       .request.checkForUpdate({} as Record<string, never>)
                       .then((result) => setUpdateStatus(result))
@@ -227,6 +246,16 @@ function UpdatesTab({
                 >
                   {checking ? "Checking..." : "Check now"}
                 </button>
+                {updateStatus?.status === "ready" && (
+                  <button
+                    type="button"
+                    className="settings-update-apply-btn"
+                    disabled={applying}
+                    onClick={handleApply}
+                  >
+                    {applying ? "Restarting…" : "Restart to update"}
+                  </button>
+                )}
               </div>
             </div>
           </>
