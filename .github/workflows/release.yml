@@ -237,13 +237,15 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Set version in package.json
+      - name: Set version and commit in package.json
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
+          COMMIT=$(git rev-parse --short HEAD)
           bun -e "
             const pkg = await Bun.file('package.json').json();
             pkg.version = process.env.VERSION;
+            pkg.commit = '$COMMIT';
             await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
 
@@ -299,13 +301,15 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Set version in package.json
+      - name: Set version and commit in package.json
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
+          COMMIT=$(git rev-parse --short HEAD)
           bun -e "
             const pkg = await Bun.file('package.json').json();
             pkg.version = process.env.VERSION;
+            pkg.commit = '$COMMIT';
             await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
 

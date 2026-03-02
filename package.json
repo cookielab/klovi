@@ -1,6 +1,7 @@
 {
   "name": "@cookielab.io/klovi",
   "version": "0.0.0",
+  "commit": "",
   "description": "A native desktop app for browsing and presenting AI coding session history",
   "type": "module",
   "workspaces": [
