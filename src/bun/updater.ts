@@ -1,4 +1,3 @@
-import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
@@ -151,8 +150,8 @@ export class UpdateManager {
     this.onStatusChange?.(status);
   }
 
-  private getSettings(): UpdateSettingsInfo {
-    const settings = loadSettings(this.settingsPath);
+  private async getSettings(): Promise<UpdateSettingsInfo> {
+    const settings = await loadSettings(this.settingsPath);
     return {
       channel: settings.updates?.channel ?? "stable",
       checkIntervalHours: settings.updates?.checkIntervalHours ?? 6,
@@ -164,8 +163,8 @@ export class UpdateManager {
     return join(this.appDataDir, "updates");
   }
 
-  startSchedule(immediateCheck = true): void {
-    const settings = this.getSettings();
+  async startSchedule(immediateCheck = true): Promise<void> {
+    const settings = await this.getSettings();
     const intervalMs = settings.checkIntervalHours * 60 * 60 * 1000;
 
     if (immediateCheck) {
@@ -184,9 +183,9 @@ export class UpdateManager {
     }
   }
 
-  restartSchedule(): void {
+  async restartSchedule(): Promise<void> {
     this.stopSchedule();
-    this.startSchedule(false);
+    await this.startSchedule(false);
   }
 
   async check(): Promise<UpdateStatus> {
@@ -197,7 +196,7 @@ export class UpdateManager {
     }
     this.lastCheckTimestamp = now;
 
-    const settings = this.getSettings();
+    const settings = await this.getSettings();
 
     try {
       const releases = await fetchReleases();
@@ -431,7 +430,10 @@ export class UpdateManager {
     // Remove quarantine xattr to prevent "damaged" error.
     // All paths are app-internal, not user-supplied.
     try {
-      execSync(`xattr -r -d com.apple.quarantine "${runningAppPath}"`, { stdio: "ignore" });
+      Bun.spawnSync(["xattr", "-r", "-d", "com.apple.quarantine", runningAppPath], {
+        stdout: "ignore",
+        stderr: "ignore",
+      });
     } catch {}
 
     // Relaunch after current process exits
@@ -493,11 +495,11 @@ export class UpdateManager {
     // All paths are app-internal, not user-supplied.
     const launcherPath = join(runningAppPath, "bin", "launcher");
     if (existsSync(launcherPath)) {
-      execSync(`chmod +x "${launcherPath}"`);
+      Bun.spawnSync(["chmod", "+x", launcherPath]);
     }
     const bunPath = join(runningAppPath, "bin", "bun");
     if (existsSync(bunPath)) {
-      execSync(`chmod +x "${bunPath}"`);
+      Bun.spawnSync(["chmod", "+x", bunPath]);
     }
 
     // Relaunch
@@ -572,13 +574,23 @@ del "%~f0"
     const scriptPathWin = updateScriptPath.replace(/\//g, "\\");
     const taskName = `KloviUpdate_${Date.now()}`;
 
-    execSync(
-      `schtasks /create /tn "${taskName}" /tr "cmd /c \\"${scriptPathWin}\\"" /sc once /st 00:00 /f`,
-      {
-        stdio: "ignore",
-      },
+    Bun.spawnSync(
+      [
+        "schtasks",
+        "/create",
+        "/tn",
+        taskName,
+        "/tr",
+        `cmd /c "${scriptPathWin}"`,
+        "/sc",
+        "once",
+        "/st",
+        "00:00",
+        "/f",
+      ],
+      { stdout: "ignore", stderr: "ignore" },
     );
-    execSync(`schtasks /run /tn "${taskName}"`, { stdio: "ignore" });
+    Bun.spawnSync(["schtasks", "/run", "/tn", taskName], { stdout: "ignore", stderr: "ignore" });
 
     // Quit the app
     const { Utils } = await import("electrobun/bun");
