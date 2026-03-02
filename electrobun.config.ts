@@ -2,7 +2,7 @@ import type { ElectrobunConfig } from "electrobun";
 import pkg from "./package.json" with { type: "json" };
 
 const version = pkg.version == null || pkg.version === "0.0.0" ? "dev" : pkg.version;
-const isDev = process.argv.includes("dev");
+const isDev = Bun.argv.includes("dev");
 
 export default {
   app: {

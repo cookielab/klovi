@@ -1,5 +1,5 @@
 import type { Dirent } from "node:fs";
-import { open, readdir, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
 
@@ -54,14 +54,7 @@ export async function listFilesWithMtime(dir: string, suffix: string): Promise<F
 }
 
 export async function readTextPrefix(filePath: string, maxBytes: number): Promise<string> {
-  const handle = await open(filePath, "r");
-  try {
-    const buffer = Buffer.alloc(maxBytes);
-    const { bytesRead } = await handle.read(buffer, 0, maxBytes, 0);
-    return buffer.toString("utf-8", 0, bytesRead);
-  } finally {
-    await handle.close();
-  }
+  return await Bun.file(filePath).slice(0, maxBytes).text();
 }
 
 export function decodeEncodedPath(encoded: string): string {

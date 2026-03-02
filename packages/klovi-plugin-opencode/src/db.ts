@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { getOpenCodeDir } from "./config.ts";
 
@@ -18,7 +17,7 @@ export function getOpenCodeDbPath(): string {
 
 export async function openOpenCodeDb(): Promise<SqliteDb | null> {
   const dbPath = getOpenCodeDbPath();
-  if (!existsSync(dbPath)) return null;
+  if (!(await Bun.file(dbPath).exists())) return null;
 
   try {
     const sqlite = await import("bun:sqlite");
