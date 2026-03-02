@@ -92,7 +92,7 @@ export interface KloviRPC {
       };
       applyUpdate: {
         params: Record<string, never>;
-        response: { ok: boolean };
+        response: { ok: boolean; error?: string };
       };
       openExternal: { params: { url: string }; response: { ok: boolean } };
       browseDirectory: {

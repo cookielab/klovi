@@ -22,8 +22,13 @@
   cursor: pointer;
 }
 
-.update-notification-action:hover {
+.update-notification-action:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.update-notification-action:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .update-notification-dismiss {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
 import { getRPC } from "../rpc.ts";
 import "./UpdateNotification.css";
@@ -59,19 +60,46 @@ export function UpdateNotification({
     return null;
   }
 
+  return <ReadyBanner latestVersion={status.latestVersion} onDismiss={onDismiss} />;
+}
+
+function ReadyBanner({
+  latestVersion,
+  onDismiss,
+}: {
+  latestVersion: string;
+  onDismiss: () => void;
+}) {
+  const [applying, setApplying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleApply = async () => {
+    setApplying(true);
+    setError(null);
+    try {
+      const result = await getRPC().request.applyUpdate({} as Record<string, never>);
+      if (!result.ok) {
+        setError(result.error ?? "Update failed");
+        setApplying(false);
+      }
+    } catch {
+      setError("Update failed");
+      setApplying(false);
+    }
+  };
+
   return (
     <div className="update-notification">
-      <span className="update-notification-text">Klovi v{status.latestVersion} is ready</span>
+      <span className="update-notification-text">
+        {error ? `Update failed: ${error}` : `Klovi v${latestVersion} is ready`}
+      </span>
       <button
         type="button"
         className="update-notification-action"
-        onClick={() => {
-          getRPC()
-            .request.applyUpdate({} as Record<string, never>)
-            .catch(() => {});
-        }}
+        disabled={applying}
+        onClick={handleApply}
       >
-        Restart to update
+        {applying ? "Restarting…" : "Restart to update"}
       </button>
       <button
         type="button"

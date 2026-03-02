@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
 import { setupMockRPC } from "../test-helpers/mock-rpc.ts";
 import { UpdateNotification } from "./UpdateNotification.tsx";
 
 const VERSION_READY_PATTERN = /v2\.0\.0 is ready/;
+const EXTRACT_FAILED_PATTERN = /Extract failed/;
+const UPDATE_FAILED_PATTERN = /Update failed/;
+const NETWORK_TIMEOUT_PATTERN = /Network timeout/;
 
 function defaultProps() {
   return {
@@ -68,6 +71,44 @@ describe("UpdateNotification", () => {
     expect(applyUpdate).toHaveBeenCalled();
   });
 
+  test("shows Restarting text and disables button while applying", () => {
+    const applyUpdate = mock(() => new Promise<{ ok: boolean }>(() => {})); // never resolves
+    setupMockRPC({ applyUpdate });
+    const props = defaultProps();
+    props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
+    const { getByRole } = render(<UpdateNotification {...props} />);
+    fireEvent.click(getByRole("button", { name: "Restart to update" }));
+    const button = getByRole("button", { name: "Restarting…" });
+    expect(button).toBeDefined();
+    expect(button.hasAttribute("disabled")).toBe(true);
+  });
+
+  test("shows error when applyUpdate returns ok: false", async () => {
+    const applyUpdate = mock(() => Promise.resolve({ ok: false, error: "Extract failed" }));
+    setupMockRPC({ applyUpdate });
+    const props = defaultProps();
+    props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
+    const { getByRole, getByText } = render(<UpdateNotification {...props} />);
+    fireEvent.click(getByRole("button", { name: "Restart to update" }));
+    await waitFor(() => {
+      expect(getByText(EXTRACT_FAILED_PATTERN)).toBeDefined();
+    });
+    // Button should be re-enabled after error
+    expect(getByRole("button", { name: "Restart to update" }).hasAttribute("disabled")).toBe(false);
+  });
+
+  test("shows error when applyUpdate rejects", async () => {
+    const applyUpdate = mock(() => Promise.reject(new Error("RPC error")));
+    setupMockRPC({ applyUpdate });
+    const props = defaultProps();
+    props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
+    const { getByRole, getByText } = render(<UpdateNotification {...props} />);
+    fireEvent.click(getByRole("button", { name: "Restart to update" }));
+    await waitFor(() => {
+      expect(getByText(UPDATE_FAILED_PATTERN)).toBeDefined();
+    });
+  });
+
   test("shows up-to-date message for manual check result", () => {
     const props = defaultProps();
     props.manualCheckResult = { status: "up-to-date", currentVersion: "1.0.0" };
@@ -83,7 +124,7 @@ describe("UpdateNotification", () => {
       error: "Network timeout",
     };
     const { getByText } = render(<UpdateNotification {...props} />);
-    expect(getByText(/Network timeout/)).toBeDefined();
+    expect(getByText(NETWORK_TIMEOUT_PATTERN)).toBeDefined();
   });
 
   test("calls onDismissManualCheck when dismissing manual check result", () => {

@@ -114,8 +114,12 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       },
       applyUpdate: async () => {
         const mgr = getUpdateManager();
-        await mgr.apply();
-        return { ok: true };
+        try {
+          await mgr.apply();
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, error: error instanceof Error ? error.message : "Update failed" };
+        }
       },
       openExternal: (params) => {
         Utils.openExternal(params.url);

@@ -355,7 +355,7 @@ export class UpdateManager {
 
   async apply(): Promise<void> {
     if (!this.downloadedAssetPath || !this.latestRelease) {
-      return;
+      throw new Error("No downloaded update to apply");
     }
 
     const stagingDir = join(this.updatesDir(), "staging");
@@ -388,6 +388,12 @@ export class UpdateManager {
       try {
         rmSync(stagingDir, { recursive: true });
       } catch {}
+      this.emitStatus({
+        status: "error",
+        currentVersion: this.currentVersion,
+        latestVersion: this.latestRelease.tag_name,
+        error: error instanceof Error ? error.message : "Update failed",
+      });
       throw error;
     }
   }

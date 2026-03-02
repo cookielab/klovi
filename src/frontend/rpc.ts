@@ -47,7 +47,7 @@ export interface RPCClient {
       autoDownload?: boolean;
     }) => Promise<UpdateSettingsInfo>;
     checkForUpdate: (params: Record<string, never>) => Promise<UpdateStatus>;
-    applyUpdate: (params: Record<string, never>) => Promise<{ ok: boolean }>;
+    applyUpdate: (params: Record<string, never>) => Promise<{ ok: boolean; error?: string }>;
     openExternal: (params: { url: string }) => Promise<{ ok: boolean }>;
     browseDirectory: (params: { startingFolder?: string }) => Promise<{ path: string | null }>;
   };
