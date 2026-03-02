@@ -191,11 +191,11 @@ describe("UpdateManager", () => {
       settingsPath: join(testDir, "settings.json"),
       appDataDir: testDir,
     });
-    mgr.cleanup();
+    await mgr.cleanup();
     expect(existsSync(join(testDir, "updates", "2.0.0"))).toBe(false);
   });
 
-  test("cleanup does not throw when updates directory missing", () => {
+  test("cleanup does not throw when updates directory missing", async () => {
     const mgr = new UpdateManager({
       currentVersion: "1.0.0",
       platform: "macos",
@@ -203,7 +203,7 @@ describe("UpdateManager", () => {
       settingsPath: join(testDir, "settings.json"),
       appDataDir: testDir,
     });
-    expect(() => mgr.cleanup()).not.toThrow();
+    await expect(mgr.cleanup()).resolves.toBeUndefined();
   });
 
   test("setStatusCallback receives status updates", () => {

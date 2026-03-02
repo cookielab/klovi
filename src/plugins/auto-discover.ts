@@ -1,20 +1,25 @@
-import { existsSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import type { PluginSettings } from "../bun/settings.ts";
 import type { ToolPlugin } from "../shared/plugin-types.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
 import { PluginRegistry } from "./registry.ts";
 
-function hasDataDir(plugin: ToolPlugin): boolean {
+async function hasDataDir(plugin: ToolPlugin): Promise<boolean> {
   if (plugin.isDataAvailable) {
     return plugin.isDataAvailable();
   }
 
   const dataDir = plugin.getDefaultDataDir();
   if (!dataDir) return false;
-  return existsSync(dataDir);
+  try {
+    await stat(dataDir);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-export function createRegistry(settings?: PluginSettings): PluginRegistry {
+export async function createRegistry(settings?: PluginSettings): Promise<PluginRegistry> {
   const registry = new PluginRegistry();
 
   // Reset all dirs to defaults first, then apply custom paths.
@@ -32,7 +37,7 @@ export function createRegistry(settings?: PluginSettings): PluginRegistry {
     // If settings exist and plugin is disabled, skip it
     if (pluginSettings && !pluginSettings.enabled) continue;
 
-    if (hasDataDir(plugin)) {
+    if (await hasDataDir(plugin)) {
       registry.register(plugin);
     }
   }

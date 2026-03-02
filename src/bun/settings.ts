@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, renameSync } from "node:fs";
+import { mkdir, rename } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
 import type { UpdateChannel } from "../shared/rpc-types.ts";
@@ -61,10 +61,8 @@ export async function loadSettings(path: string): Promise<PluginSettings> {
 
 export async function saveSettings(path: string, settings: PluginSettings): Promise<void> {
   const dir = dirname(path);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+  await mkdir(dir, { recursive: true });
   const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
   await Bun.write(tmpPath, JSON.stringify(settings, null, 2));
-  renameSync(tmpPath, path);
+  await rename(tmpPath, path);
 }

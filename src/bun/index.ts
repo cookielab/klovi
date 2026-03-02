@@ -67,7 +67,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       acceptRisks: async () => {
         if (!registry) {
           const settings = await loadSettings(getSettingsPath());
-          registry = createRegistry(settings);
+          registry = await createRegistry(settings);
         }
 
         // Start update checking
@@ -75,7 +75,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         mgr.setStatusCallback((status) => {
           win.webview.rpc?.send.updateStatus(status);
         });
-        mgr.cleanup();
+        await mgr.cleanup();
         await mgr.startSchedule();
 
         return { ok: true };
@@ -99,7 +99,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       getPluginSettings: () => getPluginSettings(getSettingsPath()),
       updatePluginSetting: async (params) => {
         const result = await updatePluginSetting(getSettingsPath(), params);
-        registry = createRegistry(await loadSettings(getSettingsPath()));
+        registry = await createRegistry(await loadSettings(getSettingsPath()));
         return result;
       },
       getUpdateSettings: () => getUpdateSettings(getSettingsPath()),

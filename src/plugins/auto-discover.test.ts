@@ -30,7 +30,7 @@ describe("createRegistry with settings", () => {
     rmSync(testDir, { recursive: true, force: true });
   });
 
-  test("disabled plugin is not registered even if dir exists", () => {
+  test("disabled plugin is not registered even if dir exists", async () => {
     const claudeDir = join(testDir, ".claude");
     mkdirSync(join(claudeDir, "projects"), { recursive: true });
     setClaudeCodeDir(claudeDir);
@@ -43,11 +43,11 @@ describe("createRegistry with settings", () => {
       },
     };
 
-    const registry = createRegistry(settings);
+    const registry = await createRegistry(settings);
     expect(registry.getAllPlugins().find((p) => p.id === "claude-code")).toBeUndefined();
   });
 
-  test("custom dataDir is used for discovery", () => {
+  test("custom dataDir is used for discovery", async () => {
     const customDir = join(testDir, "custom-claude");
     mkdirSync(join(customDir, "projects"), { recursive: true });
 
@@ -59,13 +59,13 @@ describe("createRegistry with settings", () => {
       },
     };
 
-    const registry = createRegistry(settings);
+    const registry = await createRegistry(settings);
     const plugin = registry.getAllPlugins().find((p) => p.id === "claude-code");
     expect(plugin).toBeDefined();
   });
 
-  test("without settings argument, behaves as before (all enabled, default dirs)", () => {
-    const registry = createRegistry();
+  test("without settings argument, behaves as before (all enabled, default dirs)", async () => {
+    const registry = await createRegistry();
     expect(registry).toBeDefined();
   });
 });

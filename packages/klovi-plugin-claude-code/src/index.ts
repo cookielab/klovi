@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-plugin-core";
 import { getClaudeCodeDir } from "./config.ts";
 import { discoverClaudeProjects, listClaudeSessions } from "./discovery.ts";
@@ -13,7 +13,14 @@ export const claudeCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
   id: "claude-code",
   displayName: "Claude Code",
   getDefaultDataDir: () => getClaudeCodeDir(),
-  isDataAvailable: () => existsSync(getClaudeCodeDir()),
+  isDataAvailable: async () => {
+    try {
+      await stat(getClaudeCodeDir());
+      return true;
+    } catch {
+      return false;
+    }
+  },
   discoverProjects: () => discoverClaudeProjects(),
   listSessions: (nativeId: string) => listClaudeSessions(nativeId),
   loadSession: (nativeId: string, sessionId: string) =>

@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-plugin-core";
 import { getOpenCodeDir } from "./config.ts";
 import { getOpenCodeDbPath } from "./db.ts";
@@ -9,7 +8,7 @@ export const openCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
   id: "opencode",
   displayName: "OpenCode",
   getDefaultDataDir: () => getOpenCodeDir(),
-  isDataAvailable: () => existsSync(getOpenCodeDbPath()),
+  isDataAvailable: () => Bun.file(getOpenCodeDbPath()).exists(),
   discoverProjects: () => discoverOpenCodeProjects(),
   listSessions: (nativeId: string) => listOpenCodeSessions(nativeId),
   loadSession: (nativeId: string, sessionId: string) => loadOpenCodeSession(nativeId, sessionId),

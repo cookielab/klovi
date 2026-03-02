@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
+import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
 import { loadSettings } from "./settings.ts";
@@ -271,7 +271,7 @@ export class UpdateManager {
     // Verify file size matches Content-Length (C4)
     if (totalBytes && bytesDownloaded !== totalBytes) {
       try {
-        rmSync(destPath);
+        await rm(destPath);
       } catch {}
       throw new Error(
         `Download size mismatch: expected ${totalBytes} bytes, got ${bytesDownloaded}`,
@@ -290,7 +290,7 @@ export class UpdateManager {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error("Download failed");
         try {
-          rmSync(destPath);
+          await rm(destPath);
         } catch {}
         if (attempt < MAX_RETRIES - 1) {
           const delay = 2 ** attempt * 1000; // 1s, 2s, 4s
@@ -326,14 +326,14 @@ export class UpdateManager {
     });
 
     const dir = join(this.updatesDir(), version);
-    mkdirSync(dir, { recursive: true });
+    await mkdir(dir, { recursive: true });
     const destPath = join(dir, assetName);
 
     try {
       await this.fetchWithRetry(asset.browser_download_url, destPath, version);
     } catch (error) {
       try {
-        rmSync(dir, { recursive: true });
+        await rm(dir, { recursive: true });
       } catch {}
       this.emitStatus({
         status: "error",
@@ -358,19 +358,21 @@ export class UpdateManager {
     }
 
     const stagingDir = join(this.updatesDir(), "staging");
-    mkdirSync(stagingDir, { recursive: true });
+    await mkdir(stagingDir, { recursive: true });
 
     try {
       // Extract the archive using platform-native tools
       if (this.platform === "linux") {
-        const result = Bun.spawnSync(["tar", "xzf", this.downloadedAssetPath, "-C", stagingDir]);
-        if (!result.success) {
-          throw new Error(`tar extraction failed with exit code ${result.exitCode}`);
+        const proc = Bun.spawn(["tar", "xzf", this.downloadedAssetPath, "-C", stagingDir]);
+        await proc.exited;
+        if (proc.exitCode !== 0) {
+          throw new Error(`tar extraction failed with exit code ${proc.exitCode}`);
         }
       } else if (this.platform === "macos") {
-        const result = Bun.spawnSync(["ditto", "-xk", this.downloadedAssetPath, stagingDir]);
-        if (!result.success) {
-          throw new Error(`zip extraction failed with exit code ${result.exitCode}`);
+        const proc = Bun.spawn(["ditto", "-xk", this.downloadedAssetPath, stagingDir]);
+        await proc.exited;
+        if (proc.exitCode !== 0) {
+          throw new Error(`zip extraction failed with exit code ${proc.exitCode}`);
         }
       } else {
         // Windows: use Bun.Archive
@@ -389,7 +391,7 @@ export class UpdateManager {
     } catch (error) {
       // Clean up staging
       try {
-        rmSync(stagingDir, { recursive: true });
+        await rm(stagingDir, { recursive: true });
       } catch {}
       // Don't emitStatus here — it would change the status prop to "error",
       // unmounting ReadyBanner before the RPC response arrives. The error
@@ -400,40 +402,43 @@ export class UpdateManager {
 
   private async applyMacOS(stagingDir: string): Promise<void> {
     // Find the .app bundle in extracted directory
-    const entries = readdirSync(stagingDir);
+    const entries = await readdir(stagingDir);
     const appBundle = entries.find((e) => e.endsWith(".app"));
     if (!appBundle) throw new Error("Could not find .app bundle in extracted archive");
 
     const newAppPath = join(stagingDir, appBundle);
-    if (!existsSync(newAppPath)) throw new Error("Extracted .app bundle does not exist");
+    if (!(await Bun.file(newAppPath).exists())) {
+      throw new Error("Extracted .app bundle does not exist");
+    }
 
     // The running app's bundle path: process.execPath is at Contents/MacOS/binary
     const runningAppPath = resolve(dirname(process.execPath), "..", "..");
 
     // Backup-then-swap: rename old app to backup, move new in, delete backup
     const backupPath = `${runningAppPath}.bak`;
-    renameSync(runningAppPath, backupPath);
+    await rename(runningAppPath, backupPath);
     try {
-      renameSync(newAppPath, runningAppPath);
+      await rename(newAppPath, runningAppPath);
     } catch (error) {
       // Restore from backup if move fails
       try {
-        renameSync(backupPath, runningAppPath);
+        await rename(backupPath, runningAppPath);
       } catch {}
       throw error;
     }
     // Remove backup after successful swap
     try {
-      rmSync(backupPath, { recursive: true });
+      await rm(backupPath, { recursive: true });
     } catch {}
 
     // Remove quarantine xattr to prevent "damaged" error.
     // All paths are app-internal, not user-supplied.
     try {
-      Bun.spawnSync(["xattr", "-r", "-d", "com.apple.quarantine", runningAppPath], {
+      const proc = Bun.spawn(["xattr", "-r", "-d", "com.apple.quarantine", runningAppPath], {
         stdout: "ignore",
         stderr: "ignore",
       });
+      await proc.exited;
     } catch {}
 
     // Relaunch after current process exits
@@ -450,7 +455,7 @@ export class UpdateManager {
 
     // Clean up staging
     try {
-      rmSync(join(this.updatesDir(), "staging"), { recursive: true });
+      await rm(join(this.updatesDir(), "staging"), { recursive: true });
     } catch {}
 
     // Quit the app
@@ -460,46 +465,54 @@ export class UpdateManager {
 
   private async applyLinux(stagingDir: string): Promise<void> {
     // Find the app bundle directory
-    const entries = readdirSync(stagingDir);
-    const appBundleDir = entries.find((e) => {
+    const entries = await readdir(stagingDir);
+    let foundDir: string | undefined;
+    for (const e of entries) {
       const fullPath = join(stagingDir, e);
-      return statSync(fullPath).isDirectory();
-    });
-    if (!appBundleDir) throw new Error("Could not find app bundle directory in extracted archive");
+      if ((await stat(fullPath)).isDirectory()) {
+        foundDir = e;
+        break;
+      }
+    }
+    if (!foundDir) throw new Error("Could not find app bundle directory in extracted archive");
 
-    const newAppPath = join(stagingDir, appBundleDir);
+    const newAppPath = join(stagingDir, foundDir);
     const runningAppPath = join(this.appDataDir, "app");
 
     // Backup-then-swap: rename old app to backup, move new in, delete backup
     const backupPath = `${runningAppPath}.bak`;
-    if (existsSync(runningAppPath)) {
-      renameSync(runningAppPath, backupPath);
+    try {
+      await stat(runningAppPath);
+      await rename(runningAppPath, backupPath);
+    } catch {
+      // runningAppPath doesn't exist, no backup needed
     }
     try {
-      renameSync(newAppPath, runningAppPath);
+      await rename(newAppPath, runningAppPath);
     } catch (error) {
       // Restore from backup if move fails
-      if (existsSync(backupPath)) {
-        try {
-          renameSync(backupPath, runningAppPath);
-        } catch {}
-      }
+      try {
+        await stat(backupPath);
+        await rename(backupPath, runningAppPath);
+      } catch {}
       throw error;
     }
     // Remove backup after successful swap
     try {
-      rmSync(backupPath, { recursive: true });
+      await rm(backupPath, { recursive: true });
     } catch {}
 
     // Ensure binaries are executable.
     // All paths are app-internal, not user-supplied.
     const launcherPath = join(runningAppPath, "bin", "launcher");
-    if (existsSync(launcherPath)) {
-      Bun.spawnSync(["chmod", "+x", launcherPath]);
+    if (await Bun.file(launcherPath).exists()) {
+      const proc = Bun.spawn(["chmod", "+x", launcherPath]);
+      await proc.exited;
     }
     const bunPath = join(runningAppPath, "bin", "bun");
-    if (existsSync(bunPath)) {
-      Bun.spawnSync(["chmod", "+x", bunPath]);
+    if (await Bun.file(bunPath).exists()) {
+      const proc = Bun.spawn(["chmod", "+x", bunPath]);
+      await proc.exited;
     }
 
     // Relaunch
@@ -508,7 +521,7 @@ export class UpdateManager {
 
     // Clean up staging
     try {
-      rmSync(join(this.updatesDir(), "staging"), { recursive: true });
+      await rm(join(this.updatesDir(), "staging"), { recursive: true });
     } catch {}
 
     // Quit the app
@@ -520,14 +533,18 @@ export class UpdateManager {
     const runningAppPath = join(this.appDataDir, "app");
 
     // Find app directory in staging
-    const entries = readdirSync(stagingDir);
-    const appBundleDir = entries.find((e) => {
+    const entries = await readdir(stagingDir);
+    let foundDir: string | undefined;
+    for (const e of entries) {
       const fullPath = join(stagingDir, e);
-      return statSync(fullPath).isDirectory();
-    });
-    if (!appBundleDir) throw new Error("Could not find app bundle in extracted archive");
+      if ((await stat(fullPath)).isDirectory()) {
+        foundDir = e;
+        break;
+      }
+    }
+    if (!foundDir) throw new Error("Could not find app bundle in extracted archive");
 
-    const newAppPath = join(stagingDir, appBundleDir);
+    const newAppPath = join(stagingDir, foundDir);
     const launcherPath = join(runningAppPath, "bin", "launcher.exe");
 
     // Write update batch script.
@@ -574,7 +591,7 @@ del "%~f0"
     const scriptPathWin = updateScriptPath.replace(/\//g, "\\");
     const taskName = `KloviUpdate_${Date.now()}`;
 
-    Bun.spawnSync(
+    const createProc = Bun.spawn(
       [
         "schtasks",
         "/create",
@@ -590,21 +607,26 @@ del "%~f0"
       ],
       { stdout: "ignore", stderr: "ignore" },
     );
-    Bun.spawnSync(["schtasks", "/run", "/tn", taskName], { stdout: "ignore", stderr: "ignore" });
+    await createProc.exited;
+    const runProc = Bun.spawn(["schtasks", "/run", "/tn", taskName], {
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    await runProc.exited;
 
     // Quit the app
     const { Utils } = await import("electrobun/bun");
     Utils.quit();
   }
 
-  cleanup(): void {
+  async cleanup(): Promise<void> {
     const dir = this.updatesDir();
     try {
-      const entries = readdirSync(dir);
+      const entries = await readdir(dir);
       for (const entry of entries) {
         const fullPath = join(dir, entry);
         try {
-          rmSync(fullPath, { recursive: true });
+          await rm(fullPath, { recursive: true });
         } catch {}
       }
     } catch {}

@@ -1,4 +1,4 @@
-import { unlinkSync } from "node:fs";
+import { unlink } from "node:fs/promises";
 import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "../plugins/catalog.ts";
@@ -163,7 +163,7 @@ export async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch
 
 export async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
   if (await Bun.file(settingsPath).exists()) {
-    unlinkSync(settingsPath);
+    await unlink(settingsPath);
   }
   return { ok: true };
 }

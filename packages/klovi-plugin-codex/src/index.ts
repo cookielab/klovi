@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-plugin-core";
 import { getCodexCliDir } from "./config.ts";
 import { discoverCodexProjects, listCodexSessions } from "./discovery.ts";
@@ -8,7 +8,14 @@ export const codexCliPlugin: ToolPlugin<string, SessionSummary, Session> = {
   id: "codex-cli",
   displayName: "Codex",
   getDefaultDataDir: () => getCodexCliDir(),
-  isDataAvailable: () => existsSync(getCodexCliDir()),
+  isDataAvailable: async () => {
+    try {
+      await stat(getCodexCliDir());
+      return true;
+    } catch {
+      return false;
+    }
+  },
   discoverProjects: () => discoverCodexProjects(),
   listSessions: (nativeId: string) => listCodexSessions(nativeId),
   loadSession: (nativeId: string, sessionId: string) => loadCodexSession(nativeId, sessionId),
