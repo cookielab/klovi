@@ -1,0 +1,34 @@
+name: Sync Biome Schema
+
+on:
+  pull_request:
+    paths:
+      - "package.json"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync biome.json schema version
+        run: |
+          VERSION=$(jq -r '.devDependencies["@biomejs/biome"]' package.json)
+          jq --arg v "$VERSION" '."$schema" = "https://biomejs.dev/schemas/\($v)/schema.json"' biome.json > biome.tmp.json
+          mv biome.tmp.json biome.json
+
+      - name: Commit if changed
+        run: |
+          git diff --quiet biome.json && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add biome.json
+          git commit -m "deps: sync biome.json schema version"
+          git push
