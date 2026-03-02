@@ -75,6 +75,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         mgr.setStatusCallback((status) => {
           win.webview.rpc?.send.updateStatus(status);
         });
+        mgr.cleanup();
         mgr.startSchedule();
 
         return { ok: true };

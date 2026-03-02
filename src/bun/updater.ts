@@ -164,14 +164,14 @@ export class UpdateManager {
     return join(this.appDataDir, "updates");
   }
 
-  startSchedule(): void {
+  startSchedule(immediateCheck = true): void {
     const settings = this.getSettings();
     const intervalMs = settings.checkIntervalHours * 60 * 60 * 1000;
 
-    // Check immediately on startup
-    this.check().catch(() => {});
+    if (immediateCheck) {
+      this.check().catch(() => {});
+    }
 
-    // Set up periodic check
     this.checkTimer = setInterval(() => {
       this.check().catch(() => {});
     }, intervalMs);
@@ -186,7 +186,7 @@ export class UpdateManager {
 
   restartSchedule(): void {
     this.stopSchedule();
-    this.startSchedule();
+    this.startSchedule(false);
   }
 
   async check(): Promise<UpdateStatus> {
@@ -268,6 +268,38 @@ export class UpdateManager {
     }
     await writer.flush();
     writer.end();
+
+    // Verify file size matches Content-Length (C4)
+    if (totalBytes && bytesDownloaded !== totalBytes) {
+      try {
+        rmSync(destPath);
+      } catch {}
+      throw new Error(
+        `Download size mismatch: expected ${totalBytes} bytes, got ${bytesDownloaded}`,
+      );
+    }
+  }
+
+  private async fetchWithRetry(url: string, destPath: string, version: string): Promise<void> {
+    const MAX_RETRIES = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        await this.fetchAndSave(url, destPath, version);
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error("Download failed");
+        try {
+          rmSync(destPath);
+        } catch {}
+        if (attempt < MAX_RETRIES - 1) {
+          const delay = 2 ** attempt * 1000; // 1s, 2s, 4s
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+    throw lastError;
   }
 
   async download(): Promise<void> {
@@ -299,27 +331,26 @@ export class UpdateManager {
     const destPath = join(dir, assetName);
 
     try {
-      await this.fetchAndSave(asset.browser_download_url, destPath, version);
-
-      this.downloadedAssetPath = destPath;
-      this.emitStatus({
-        status: "ready",
-        currentVersion: this.currentVersion,
-        latestVersion: version,
-      });
+      await this.fetchWithRetry(asset.browser_download_url, destPath, version);
     } catch (error) {
-      // Clean up partial download
       try {
         rmSync(dir, { recursive: true });
       } catch {}
-
       this.emitStatus({
         status: "error",
         currentVersion: this.currentVersion,
         latestVersion: version,
         error: error instanceof Error ? error.message : "Download failed",
       });
+      return;
     }
+
+    this.downloadedAssetPath = destPath;
+    this.emitStatus({
+      status: "ready",
+      currentVersion: this.currentVersion,
+      latestVersion: version,
+    });
   }
 
   async apply(): Promise<void> {
@@ -368,12 +399,27 @@ export class UpdateManager {
     if (!appBundle) throw new Error("Could not find .app bundle in extracted archive");
 
     const newAppPath = join(stagingDir, appBundle);
+    if (!existsSync(newAppPath)) throw new Error("Extracted .app bundle does not exist");
+
     // The running app's bundle path: process.execPath is at Contents/MacOS/binary
     const runningAppPath = resolve(dirname(process.execPath), "..", "..");
 
-    // Remove old app and move new app into place
-    rmSync(runningAppPath, { recursive: true });
-    renameSync(newAppPath, runningAppPath);
+    // Backup-then-swap: rename old app to backup, move new in, delete backup
+    const backupPath = `${runningAppPath}.bak`;
+    renameSync(runningAppPath, backupPath);
+    try {
+      renameSync(newAppPath, runningAppPath);
+    } catch (error) {
+      // Restore from backup if move fails
+      try {
+        renameSync(backupPath, runningAppPath);
+      } catch {}
+      throw error;
+    }
+    // Remove backup after successful swap
+    try {
+      rmSync(backupPath, { recursive: true });
+    } catch {}
 
     // Remove quarantine xattr to prevent "damaged" error.
     // All paths are app-internal, not user-supplied.
@@ -415,12 +461,26 @@ export class UpdateManager {
     const newAppPath = join(stagingDir, appBundleDir);
     const runningAppPath = join(this.appDataDir, "app");
 
-    // Remove old app
+    // Backup-then-swap: rename old app to backup, move new in, delete backup
+    const backupPath = `${runningAppPath}.bak`;
     if (existsSync(runningAppPath)) {
-      rmSync(runningAppPath, { recursive: true });
+      renameSync(runningAppPath, backupPath);
     }
-    // Move new app
-    renameSync(newAppPath, runningAppPath);
+    try {
+      renameSync(newAppPath, runningAppPath);
+    } catch (error) {
+      // Restore from backup if move fails
+      if (existsSync(backupPath)) {
+        try {
+          renameSync(backupPath, runningAppPath);
+        } catch {}
+      }
+      throw error;
+    }
+    // Remove backup after successful swap
+    try {
+      rmSync(backupPath, { recursive: true });
+    } catch {}
 
     // Ensure binaries are executable.
     // All paths are app-internal, not user-supplied.
@@ -471,11 +531,12 @@ export class UpdateManager {
     const stagingDirWin = stagingDir.replace(/\//g, "\\");
     const launcherPathWin = launcherPath.replace(/\//g, "\\");
 
+    const pid = process.pid;
     const updateScript = `@echo off
 setlocal
 
 :waitloop
-tasklist /FI "IMAGENAME eq launcher.exe" 2>NUL | find /I /N "launcher.exe">NUL
+tasklist /FI "PID eq ${pid}" 2>NUL | find /I /N "${pid}">NUL
 if "%ERRORLEVEL%"=="0" (
     timeout /t 1 /nobreak >nul
     goto waitloop

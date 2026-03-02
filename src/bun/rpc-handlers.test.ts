@@ -53,4 +53,12 @@ describe("update settings handlers", () => {
     const result = updateUpdateSettings(path, { autoDownload: false });
     expect(result.autoDownload).toBe(false);
   });
+
+  test("updateUpdateSettings clamps checkIntervalHours to 1-24", () => {
+    mkdirSync(testDir, { recursive: true });
+    const path = join(testDir, "settings.json");
+    expect(updateUpdateSettings(path, { checkIntervalHours: 0 }).checkIntervalHours).toBe(1);
+    expect(updateUpdateSettings(path, { checkIntervalHours: 100 }).checkIntervalHours).toBe(24);
+    expect(updateUpdateSettings(path, { checkIntervalHours: 3.7 }).checkIntervalHours).toBe(4);
+  });
 });

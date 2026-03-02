@@ -1,8 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
-
-export type UpdateChannel = "stable" | "candidate" | "beta";
+import type { UpdateChannel } from "../shared/rpc-types.ts";
 
 export type UpdateSettings = {
   channel: UpdateChannel;

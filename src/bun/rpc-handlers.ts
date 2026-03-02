@@ -222,7 +222,8 @@ export function updateUpdateSettings(
     settings.updates.channel = params.channel;
   }
   if (params.checkIntervalHours !== undefined) {
-    settings.updates.checkIntervalHours = params.checkIntervalHours;
+    const clamped = Math.max(1, Math.min(24, Math.round(params.checkIntervalHours)));
+    settings.updates.checkIntervalHours = clamped;
   }
   if (params.autoDownload !== undefined) {
     settings.updates.autoDownload = params.autoDownload;
