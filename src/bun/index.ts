@@ -143,6 +143,7 @@ ApplicationMenu.setApplicationMenu([
       { label: "About Klovi", role: "about" },
       { type: "separator" },
       { label: "Preferences...", action: "openSettings", accelerator: "CmdOrCtrl+," },
+      { label: "Check for Updates...", action: "checkForUpdates" },
       { type: "separator" },
       { label: "Quit Klovi", role: "quit", accelerator: "q" },
     ],
@@ -194,6 +195,11 @@ Electrobun.events.on("application-menu-clicked", (e) => {
       break;
     case "openSettings":
       rpcSend.openSettings({});
+      break;
+    case "checkForUpdates":
+      getUpdateManager()
+        .check()
+        .catch(() => {});
       break;
   }
 });
