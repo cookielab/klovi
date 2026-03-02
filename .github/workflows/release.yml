@@ -278,9 +278,6 @@ jobs:
           - runner: windows-2025
             electrobun_arch: x64
             artifact_arch: amd64
-          - runner: windows-11-arm
-            electrobun_arch: arm64
-            artifact_arch: arm64
     permissions:
       contents: write
     steps:
