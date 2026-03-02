@@ -80,7 +80,7 @@ trap cleanup EXIT
 # --- Set version in package.json ---
 echo "Setting version to $VERSION in package.json..."
 cd "$PROJECT_DIR"
-bun -e "
+VERSION="$VERSION" bun -e "
   const pkg = await Bun.file('package.json').json();
   pkg.version = process.env.VERSION;
   await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
