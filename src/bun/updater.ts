@@ -1,5 +1,6 @@
-import { mkdirSync, readdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { execSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
 import { loadSettings } from "./settings.ts";
 
@@ -119,6 +120,7 @@ export class UpdateManager {
   private checkTimer: ReturnType<typeof setInterval> | null = null;
   private lastCheckTimestamp = 0;
   private latestRelease: GitHubRelease | null = null;
+  private downloadedAssetPath: string | null = null;
   private currentStatus: UpdateStatus;
 
   constructor(opts: {
@@ -299,6 +301,7 @@ export class UpdateManager {
     try {
       await this.fetchAndSave(asset.browser_download_url, destPath, version);
 
+      this.downloadedAssetPath = destPath;
       this.emitStatus({
         status: "ready",
         currentVersion: this.currentVersion,
@@ -320,7 +323,198 @@ export class UpdateManager {
   }
 
   async apply(): Promise<void> {
-    // Placeholder — platform-specific logic implemented in Task 11
+    if (!this.downloadedAssetPath || !this.latestRelease) {
+      return;
+    }
+
+    const stagingDir = join(this.updatesDir(), "staging");
+    mkdirSync(stagingDir, { recursive: true });
+
+    try {
+      // Extract the archive
+      if (this.platform === "linux") {
+        // tar.gz extraction using system tar
+        const result = Bun.spawnSync(["tar", "xzf", this.downloadedAssetPath, "-C", stagingDir]);
+        if (!result.success) {
+          throw new Error(`tar extraction failed with exit code ${result.exitCode}`);
+        }
+      } else {
+        // zip extraction using Bun.Archive (macOS + Windows)
+        const archiveBytes = await Bun.file(this.downloadedAssetPath).arrayBuffer();
+        const archive = new Bun.Archive(archiveBytes);
+        await archive.extract(stagingDir);
+      }
+
+      if (this.platform === "macos") {
+        await this.applyMacOS(stagingDir);
+      } else if (this.platform === "linux") {
+        await this.applyLinux(stagingDir);
+      } else if (this.platform === "win") {
+        await this.applyWindows(stagingDir);
+      }
+    } catch (error) {
+      // Clean up staging
+      try {
+        rmSync(stagingDir, { recursive: true });
+      } catch {}
+      throw error;
+    }
+  }
+
+  private async applyMacOS(stagingDir: string): Promise<void> {
+    // Find the .app bundle in extracted directory
+    const entries = readdirSync(stagingDir);
+    const appBundle = entries.find((e) => e.endsWith(".app"));
+    if (!appBundle) throw new Error("Could not find .app bundle in extracted archive");
+
+    const newAppPath = join(stagingDir, appBundle);
+    // The running app's bundle path: process.execPath is at Contents/MacOS/binary
+    const runningAppPath = resolve(dirname(process.execPath), "..", "..");
+
+    // Remove old app and move new app into place
+    rmSync(runningAppPath, { recursive: true });
+    renameSync(newAppPath, runningAppPath);
+
+    // Remove quarantine xattr to prevent "damaged" error.
+    // All paths are app-internal, not user-supplied.
+    try {
+      execSync(`xattr -r -d com.apple.quarantine "${runningAppPath}"`, { stdio: "ignore" });
+    } catch {}
+
+    // Relaunch after current process exits
+    const pid = process.pid;
+    Bun.spawn(
+      [
+        "sh",
+        "-c",
+        `while kill -0 ${pid} 2>/dev/null; do sleep 0.5; done; sleep 1; open "${runningAppPath}"`,
+      ],
+      // biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option needed for process survival
+      { detached: true, stdio: ["ignore", "ignore", "ignore"] } as any,
+    );
+
+    // Clean up staging
+    try {
+      rmSync(join(this.updatesDir(), "staging"), { recursive: true });
+    } catch {}
+
+    // Quit the app
+    const { Utils } = await import("electrobun/bun");
+    Utils.quit();
+  }
+
+  private async applyLinux(stagingDir: string): Promise<void> {
+    // Find the app bundle directory
+    const entries = readdirSync(stagingDir);
+    const appBundleDir = entries.find((e) => {
+      const fullPath = join(stagingDir, e);
+      return statSync(fullPath).isDirectory();
+    });
+    if (!appBundleDir) throw new Error("Could not find app bundle directory in extracted archive");
+
+    const newAppPath = join(stagingDir, appBundleDir);
+    const runningAppPath = join(this.appDataDir, "app");
+
+    // Remove old app
+    if (existsSync(runningAppPath)) {
+      rmSync(runningAppPath, { recursive: true });
+    }
+    // Move new app
+    renameSync(newAppPath, runningAppPath);
+
+    // Ensure binaries are executable.
+    // All paths are app-internal, not user-supplied.
+    const launcherPath = join(runningAppPath, "bin", "launcher");
+    if (existsSync(launcherPath)) {
+      execSync(`chmod +x "${launcherPath}"`);
+    }
+    const bunPath = join(runningAppPath, "bin", "bun");
+    if (existsSync(bunPath)) {
+      execSync(`chmod +x "${bunPath}"`);
+    }
+
+    // Relaunch
+    // biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option needed for process survival
+    Bun.spawn(["sh", "-c", `"${launcherPath}" &`], { detached: true } as any);
+
+    // Clean up staging
+    try {
+      rmSync(join(this.updatesDir(), "staging"), { recursive: true });
+    } catch {}
+
+    // Quit the app
+    const { Utils } = await import("electrobun/bun");
+    Utils.quit();
+  }
+
+  private async applyWindows(stagingDir: string): Promise<void> {
+    const runningAppPath = join(this.appDataDir, "app");
+
+    // Find app directory in staging
+    const entries = readdirSync(stagingDir);
+    const appBundleDir = entries.find((e) => {
+      const fullPath = join(stagingDir, e);
+      return statSync(fullPath).isDirectory();
+    });
+    if (!appBundleDir) throw new Error("Could not find app bundle in extracted archive");
+
+    const newAppPath = join(stagingDir, appBundleDir);
+    const launcherPath = join(runningAppPath, "bin", "launcher.exe");
+
+    // Write update batch script.
+    // All paths are app-internal, not user-supplied.
+    const parentDir = dirname(runningAppPath);
+    const updateScriptPath = join(parentDir, "update.bat");
+
+    const runningAppWin = runningAppPath.replace(/\//g, "\\");
+    const newAppWin = newAppPath.replace(/\//g, "\\");
+    const stagingDirWin = stagingDir.replace(/\//g, "\\");
+    const launcherPathWin = launcherPath.replace(/\//g, "\\");
+
+    const updateScript = `@echo off
+setlocal
+
+:waitloop
+tasklist /FI "IMAGENAME eq launcher.exe" 2>NUL | find /I /N "launcher.exe">NUL
+if "%ERRORLEVEL%"=="0" (
+    timeout /t 1 /nobreak >nul
+    goto waitloop
+)
+
+timeout /t 2 /nobreak >nul
+
+if exist "${runningAppWin}" (
+    rmdir /s /q "${runningAppWin}"
+)
+
+move "${newAppWin}" "${runningAppWin}"
+
+rmdir /s /q "${stagingDirWin}" 2>nul
+
+start "" "${launcherPathWin}"
+
+ping -n 2 127.0.0.1 >nul
+del "%~f0"
+`;
+
+    await Bun.write(updateScriptPath, updateScript);
+
+    // Use Windows Task Scheduler to run the update script independently.
+    // All paths are app-internal, not user-supplied.
+    const scriptPathWin = updateScriptPath.replace(/\//g, "\\");
+    const taskName = `KloviUpdate_${Date.now()}`;
+
+    execSync(
+      `schtasks /create /tn "${taskName}" /tr "cmd /c \\"${scriptPathWin}\\"" /sc once /st 00:00 /f`,
+      {
+        stdio: "ignore",
+      },
+    );
+    execSync(`schtasks /run /tn "${taskName}"`, { stdio: "ignore" });
+
+    // Quit the app
+    const { Utils } = await import("electrobun/bun");
+    Utils.quit();
   }
 
   cleanup(): void {
