@@ -110,10 +110,32 @@ jobs:
       - name: Build Electrobun app
         run: bun run build -- --env=stable
 
-      - name: Package and upload macOS arm64 asset
+      - name: Import code signing certificate
         env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.release.outputs.version }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          CERT_FILE=$(mktemp /tmp/certificate.XXXXXX.p12)
+          KEYCHAIN_FILE=$(mktemp /tmp/keychain.XXXXXX.keychain-db)
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERT_FILE"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_FILE"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_FILE"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_FILE"
+          security import "$CERT_FILE" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_FILE"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_FILE"
+          security list-keychains -d user -s "$KEYCHAIN_FILE" login.keychain
+
+          echo "KEYCHAIN_FILE=$KEYCHAIN_FILE" >> "$GITHUB_ENV"
+          rm "$CERT_FILE"
+
+      - name: Sign and notarize macOS app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
           BUILD_DIR="build/stable-macos-arm64"
           if [ ! -d "$BUILD_DIR" ]; then
@@ -128,9 +150,58 @@ jobs:
             exit 1
           fi
 
+          IDENTITY="Developer ID Application: Cookielab s.r.o. ($APPLE_TEAM_ID)"
+
+          # Sign all nested binaries, frameworks, and dylibs from the inside out
+          find "$APP_DIR" -type f \( -name "*.dylib" -o -name "*.so" \) -exec \
+            codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
+
+          find "$APP_DIR" -type d -name "*.framework" -exec \
+            codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
+
+          # Sign any helper executables inside the bundle
+          find "$APP_DIR/Contents/MacOS" -type f -perm +111 -exec \
+            codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
+
+          # Sign the app bundle itself
+          codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" "$APP_DIR"
+
+          echo "Verifying signature..."
+          codesign --verify --deep --strict "$APP_DIR"
+
+          # Create zip for notarization
+          NOTARIZE_ZIP=$(mktemp /tmp/notarize.XXXXXX.zip)
+          ditto -c -k --keepParent "$APP_DIR" "$NOTARIZE_ZIP"
+
+          echo "Submitting for notarization..."
+          xcrun notarytool submit "$NOTARIZE_ZIP" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait
+
+          rm "$NOTARIZE_ZIP"
+
+          echo "Stapling notarization ticket..."
+          xcrun stapler staple "$APP_DIR"
+
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+      - name: Package and upload macOS arm64 asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
           ZIP_NAME="Klovi-${VERSION}-macos-arm64.zip"
           ditto -c -k --keepParent "$APP_DIR" "$ZIP_NAME"
           gh release upload "$VERSION" "$ZIP_NAME" --clobber
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          if [ -n "$KEYCHAIN_FILE" ] && [ -f "$KEYCHAIN_FILE" ]; then
+            security delete-keychain "$KEYCHAIN_FILE"
+          fi
 
   build-linux:
     runs-on: ${{ matrix.runner }}
