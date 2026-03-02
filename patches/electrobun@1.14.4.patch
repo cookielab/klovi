@@ -25,6 +25,23 @@ index 1234567..abcdefg 100644
  import { ffi } from "../proc/native";
  import electrobunEventEmitter from "../events/eventEmitter";
  import { BrowserView } from "./BrowserView";
+diff --git a/dist/api/bun/core/BuildConfig.ts b/dist/api/bun/core/BuildConfig.ts
+index 1234567..abcdefg 100644
+--- a/dist/api/bun/core/BuildConfig.ts
++++ b/dist/api/bun/core/BuildConfig.ts
+@@ -1,3 +1,5 @@
++import { join, dirname } from "path";
++
+ export type BuildConfigType = {
+ 	defaultRenderer: "native" | "cef";
+ 	availableRenderers: ("native" | "cef")[];
+@@ -23,5 +25,5 @@
+ 		try {
+ 			const resourcesDir = "Resources";
+-			buildConfig = await Bun.file(`../${resourcesDir}/build.json`).json();
++			buildConfig = await Bun.file(join(dirname(process.execPath), "..", resourcesDir, "build.json")).json();
+ 			return buildConfig!;
+ 		} catch (error) {
 diff --git a/dist/api/bun/core/ContextMenu.ts b/dist/api/bun/core/ContextMenu.ts
 index 1234567..abcdefg 100644
 --- a/dist/api/bun/core/ContextMenu.ts
@@ -109,6 +126,13 @@ index c747d1f91d7ad2451c5a9c1cf16ba7720da48e03..f4df82b3572367bae109cb1bccfe8909
  						}
 
  						// Move new app bundle directory to app location
+@@ -1118,5 +1119,5 @@
+ 		try {
+ 			const resourcesDir = "Resources"; // Always use capitalized Resources
+-			localInfo = await Bun.file(`../${resourcesDir}/version.json`).json();
++			localInfo = await Bun.file(join(dirname(process.execPath), "..", resourcesDir, "version.json")).json();
+ 			return localInfo;
+ 		} catch (error) {
 diff --git a/dist/api/bun/core/Utils.ts b/dist/api/bun/core/Utils.ts
 index 1234567..abcdefg 100644
 --- a/dist/api/bun/core/Utils.ts
