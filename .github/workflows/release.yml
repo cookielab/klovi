@@ -116,7 +116,9 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
           CERT_FILE=$(mktemp /tmp/certificate.XXXXXX.p12)
-          KEYCHAIN_FILE=$(mktemp /tmp/keychain.XXXXXX.keychain-db)
+          KEYCHAIN_FILE=$(mktemp /tmp/keychain.XXXXXX)
+          rm -f "$KEYCHAIN_FILE"
+          KEYCHAIN_FILE="${KEYCHAIN_FILE}.keychain-db"
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
 
           echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERT_FILE"
