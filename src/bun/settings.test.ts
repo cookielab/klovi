@@ -27,12 +27,12 @@ describe("settings", () => {
     expect(settings.plugins["opencode"]).toEqual({ enabled: true, dataDir: null });
   });
 
-  test("loadSettings returns defaults when file does not exist", () => {
-    const settings = loadSettings(join(testDir, "nonexistent", "settings.json"));
+  test("loadSettings returns defaults when file does not exist", async () => {
+    const settings = await loadSettings(join(testDir, "nonexistent", "settings.json"));
     expect(settings).toEqual(getDefaultSettings());
   });
 
-  test("saveSettings writes and loadSettings reads back", () => {
+  test("saveSettings writes and loadSettings reads back", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = settingsPath();
     const settings: PluginSettings = {
@@ -43,22 +43,22 @@ describe("settings", () => {
         opencode: { enabled: true, dataDir: null },
       },
     };
-    saveSettings(path, settings);
-    const loaded = loadSettings(path);
+    await saveSettings(path, settings);
+    const loaded = await loadSettings(path);
     expect(loaded).toEqual(settings);
   });
 
-  test("saveSettings creates parent directories", () => {
+  test("saveSettings creates parent directories", async () => {
     const deep = join(testDir, "a", "b", "settings.json");
-    saveSettings(deep, getDefaultSettings());
+    await saveSettings(deep, getDefaultSettings());
     expect(existsSync(deep)).toBe(true);
   });
 
-  test("loadSettings returns defaults for corrupted JSON", () => {
+  test("loadSettings returns defaults for corrupted JSON", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = settingsPath();
-    Bun.write(path, "not valid json{{{");
-    const settings = loadSettings(path);
+    await Bun.write(path, "not valid json{{{");
+    const settings = await loadSettings(path);
     expect(settings).toEqual(getDefaultSettings());
   });
 
@@ -71,15 +71,15 @@ describe("settings", () => {
     });
   });
 
-  test("loadSettings preserves updates field", () => {
+  test("loadSettings preserves updates field", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = settingsPath();
     const settings: PluginSettings = {
       ...getDefaultSettings(),
       updates: { channel: "beta", checkIntervalHours: 1, autoDownload: false },
     };
-    saveSettings(path, settings);
-    const loaded = loadSettings(path);
+    await saveSettings(path, settings);
+    const loaded = await loadSettings(path);
     expect(loaded.updates).toEqual({ channel: "beta", checkIntervalHours: 1, autoDownload: false });
   });
 });

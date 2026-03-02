@@ -23,42 +23,48 @@ describe("update settings handlers", () => {
     } catch {}
   });
 
-  test("getUpdateSettings returns defaults when no settings exist", () => {
+  test("getUpdateSettings returns defaults when no settings exist", async () => {
     const path = join(testDir, "nonexistent", "settings.json");
-    const result = getUpdateSettings(path);
+    const result = await getUpdateSettings(path);
     expect(result.channel).toBe("stable");
     expect(result.checkIntervalHours).toBe(6);
     expect(result.autoDownload).toBe(true);
   });
 
-  test("updateUpdateSettings persists channel change", () => {
+  test("updateUpdateSettings persists channel change", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
-    const result = updateUpdateSettings(path, { channel: "beta" });
+    const result = await updateUpdateSettings(path, { channel: "beta" });
     expect(result.channel).toBe("beta");
-    const reloaded = getUpdateSettings(path);
+    const reloaded = await getUpdateSettings(path);
     expect(reloaded.channel).toBe("beta");
   });
 
-  test("updateUpdateSettings persists checkIntervalHours change", () => {
+  test("updateUpdateSettings persists checkIntervalHours change", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
-    const result = updateUpdateSettings(path, { checkIntervalHours: 1 });
+    const result = await updateUpdateSettings(path, { checkIntervalHours: 1 });
     expect(result.checkIntervalHours).toBe(1);
   });
 
-  test("updateUpdateSettings persists autoDownload change", () => {
+  test("updateUpdateSettings persists autoDownload change", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
-    const result = updateUpdateSettings(path, { autoDownload: false });
+    const result = await updateUpdateSettings(path, { autoDownload: false });
     expect(result.autoDownload).toBe(false);
   });
 
-  test("updateUpdateSettings clamps checkIntervalHours to 1-24", () => {
+  test("updateUpdateSettings clamps checkIntervalHours to 1-24", async () => {
     mkdirSync(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
-    expect(updateUpdateSettings(path, { checkIntervalHours: 0 }).checkIntervalHours).toBe(1);
-    expect(updateUpdateSettings(path, { checkIntervalHours: 100 }).checkIntervalHours).toBe(24);
-    expect(updateUpdateSettings(path, { checkIntervalHours: 3.7 }).checkIntervalHours).toBe(4);
+    expect((await updateUpdateSettings(path, { checkIntervalHours: 0 })).checkIntervalHours).toBe(
+      1,
+    );
+    expect((await updateUpdateSettings(path, { checkIntervalHours: 100 })).checkIntervalHours).toBe(
+      24,
+    );
+    expect((await updateUpdateSettings(path, { checkIntervalHours: 3.7 })).checkIntervalHours).toBe(
+      4,
+    );
   });
 });

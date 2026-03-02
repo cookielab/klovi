@@ -51,7 +51,7 @@ function getSettingsPath(): string {
   } catch {
     // Fallback if version.json not readable (e.g. dev mode outside app bundle)
     return join(
-      process.env["HOME"] ?? "",
+      Bun.env["HOME"] ?? "",
       "Library",
       "Application Support",
       "io.cookielab.klovi",
@@ -64,9 +64,9 @@ function getSettingsPath(): string {
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
-      acceptRisks: () => {
+      acceptRisks: async () => {
         if (!registry) {
-          const settings = loadSettings(getSettingsPath());
+          const settings = await loadSettings(getSettingsPath());
           registry = createRegistry(settings);
         }
 
@@ -76,15 +76,15 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
           win.webview.rpc?.send.updateStatus(status);
         });
         mgr.cleanup();
-        mgr.startSchedule();
+        await mgr.startSchedule();
 
         return { ok: true };
       },
       // getVersion, isFirstLaunch, and getGeneralSettings read settings only — intentionally ungated
       getVersion: () => getVersion(),
       isFirstLaunch: () => isFirstLaunch(getSettingsPath()),
-      resetSettings: () => {
-        const result = resetSettings(getSettingsPath());
+      resetSettings: async () => {
+        const result = await resetSettings(getSettingsPath());
         registry = null;
         return result;
       },
@@ -97,15 +97,15 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       getSubAgent: (params) => getSubAgent(getRegistry(), params),
       searchSessions: () => searchSessions(getRegistry()),
       getPluginSettings: () => getPluginSettings(getSettingsPath()),
-      updatePluginSetting: (params) => {
-        const result = updatePluginSetting(getSettingsPath(), params);
-        registry = createRegistry(loadSettings(getSettingsPath()));
+      updatePluginSetting: async (params) => {
+        const result = await updatePluginSetting(getSettingsPath(), params);
+        registry = createRegistry(await loadSettings(getSettingsPath()));
         return result;
       },
       getUpdateSettings: () => getUpdateSettings(getSettingsPath()),
-      updateUpdateSettings: (params) => {
-        const result = updateUpdateSettings(getSettingsPath(), params);
-        updateManager?.restartSchedule();
+      updateUpdateSettings: async (params) => {
+        const result = await updateUpdateSettings(getSettingsPath(), params);
+        await updateManager?.restartSchedule();
         return result;
       },
       checkForUpdate: () => {

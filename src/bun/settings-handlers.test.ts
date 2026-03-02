@@ -20,18 +20,18 @@ describe("settings RPC handlers", () => {
     rmSync(testDir, { recursive: true, force: true });
   });
 
-  test("getPluginSettings returns all three plugins", () => {
+  test("getPluginSettings returns all three plugins", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = getPluginSettings(settingsPath);
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await getPluginSettings(settingsPath);
     expect(result.plugins).toHaveLength(3);
     expect(result.plugins.map((p) => p.id)).toEqual(["claude-code", "codex-cli", "opencode"]);
   });
 
-  test("getPluginSettings shows enabled and default dirs", () => {
+  test("getPluginSettings shows enabled and default dirs", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = getPluginSettings(settingsPath);
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await getPluginSettings(settingsPath);
     const claude = result.plugins.find((p) => p.id === "claude-code");
     expect(claude).toBeDefined();
     expect(claude?.enabled).toBe(true);
@@ -39,23 +39,26 @@ describe("settings RPC handlers", () => {
     expect(claude?.dataDir).toBe(claude?.defaultDataDir);
   });
 
-  test("updatePluginSetting disables a plugin", () => {
+  test("updatePluginSetting disables a plugin", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = updatePluginSetting(settingsPath, { pluginId: "claude-code", enabled: false });
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await updatePluginSetting(settingsPath, {
+      pluginId: "claude-code",
+      enabled: false,
+    });
     const claude = result.plugins.find((p) => p.id === "claude-code");
     expect(claude).toBeDefined();
     expect(claude?.enabled).toBe(false);
 
     // Verify persisted
-    const loaded = loadSettings(settingsPath);
+    const loaded = await loadSettings(settingsPath);
     expect(loaded.plugins["claude-code"]?.enabled).toBe(false);
   });
 
-  test("updatePluginSetting sets custom dataDir", () => {
+  test("updatePluginSetting sets custom dataDir", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = updatePluginSetting(settingsPath, {
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await updatePluginSetting(settingsPath, {
       pluginId: "claude-code",
       dataDir: "/custom/path",
     });
@@ -65,51 +68,51 @@ describe("settings RPC handlers", () => {
     expect(claude?.isCustomDir).toBe(true);
   });
 
-  test("getGeneralSettings returns true by default", () => {
+  test("getGeneralSettings returns true by default", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = getGeneralSettings(settingsPath);
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await getGeneralSettings(settingsPath);
     expect(result.showSecurityWarning).toBe(true);
   });
 
-  test("getGeneralSettings returns true for legacy settings without general", () => {
+  test("getGeneralSettings returns true for legacy settings without general", async () => {
     mkdirSync(testDir, { recursive: true });
     const settings = getDefaultSettings();
     settings.general = undefined;
-    saveSettings(settingsPath, settings);
-    const result = getGeneralSettings(settingsPath);
+    await saveSettings(settingsPath, settings);
+    const result = await getGeneralSettings(settingsPath);
     expect(result.showSecurityWarning).toBe(true);
   });
 
-  test("updateGeneralSettings sets showSecurityWarning to false", () => {
+  test("updateGeneralSettings sets showSecurityWarning to false", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = updateGeneralSettings(settingsPath, { showSecurityWarning: false });
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await updateGeneralSettings(settingsPath, { showSecurityWarning: false });
     expect(result.showSecurityWarning).toBe(false);
 
     // Verify persisted
-    const loaded = loadSettings(settingsPath);
+    const loaded = await loadSettings(settingsPath);
     expect(loaded.general?.showSecurityWarning).toBe(false);
   });
 
-  test("updateGeneralSettings sets showSecurityWarning to true", () => {
+  test("updateGeneralSettings sets showSecurityWarning to true", async () => {
     mkdirSync(testDir, { recursive: true });
     const settings = getDefaultSettings();
     settings.general = { showSecurityWarning: false };
-    saveSettings(settingsPath, settings);
-    const result = updateGeneralSettings(settingsPath, { showSecurityWarning: true });
+    await saveSettings(settingsPath, settings);
+    const result = await updateGeneralSettings(settingsPath, { showSecurityWarning: true });
     expect(result.showSecurityWarning).toBe(true);
   });
 
-  test("updatePluginSetting resets dataDir to default with null", () => {
+  test("updatePluginSetting resets dataDir to default with null", async () => {
     mkdirSync(testDir, { recursive: true });
     const settings = getDefaultSettings();
     const claudePlugin = settings.plugins["claude-code"];
     expect(claudePlugin).toBeDefined();
     if (claudePlugin) claudePlugin.dataDir = "/custom/path";
-    saveSettings(settingsPath, settings);
+    await saveSettings(settingsPath, settings);
 
-    const result = updatePluginSetting(settingsPath, {
+    const result = await updatePluginSetting(settingsPath, {
       pluginId: "claude-code",
       dataDir: null,
     });
@@ -118,29 +121,29 @@ describe("settings RPC handlers", () => {
     expect(claude?.isCustomDir).toBe(false);
   });
 
-  test("isFirstLaunch returns true when settings file does not exist", () => {
+  test("isFirstLaunch returns true when settings file does not exist", async () => {
     // testDir cleaned by afterEach — no settings file present
-    const result = isFirstLaunch(settingsPath);
+    const result = await isFirstLaunch(settingsPath);
     expect(result.firstLaunch).toBe(true);
   });
 
-  test("isFirstLaunch returns false when settings file exists", () => {
+  test("isFirstLaunch returns false when settings file exists", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = isFirstLaunch(settingsPath);
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await isFirstLaunch(settingsPath);
     expect(result.firstLaunch).toBe(false);
   });
 
-  test("resetSettings deletes settings file when it exists", () => {
+  test("resetSettings deletes settings file when it exists", async () => {
     mkdirSync(testDir, { recursive: true });
-    saveSettings(settingsPath, getDefaultSettings());
-    const result = resetSettings(settingsPath);
+    await saveSettings(settingsPath, getDefaultSettings());
+    const result = await resetSettings(settingsPath);
     expect(result.ok).toBe(true);
-    expect(isFirstLaunch(settingsPath).firstLaunch).toBe(true);
+    expect((await isFirstLaunch(settingsPath)).firstLaunch).toBe(true);
   });
 
-  test("resetSettings is idempotent when file does not exist", () => {
-    const result = resetSettings(settingsPath);
+  test("resetSettings is idempotent when file does not exist", async () => {
+    const result = await resetSettings(settingsPath);
     expect(result.ok).toBe(true);
   });
 });

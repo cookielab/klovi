@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
 import type { UpdateChannel } from "../shared/rpc-types.ts";
@@ -46,11 +46,10 @@ export function getDefaultSettings(): PluginSettings {
   };
 }
 
-export function loadSettings(path: string): PluginSettings {
+export async function loadSettings(path: string): Promise<PluginSettings> {
   try {
-    if (!existsSync(path)) return getDefaultSettings();
-    const raw = readFileSync(path, "utf-8");
-    const parsed = JSON.parse(raw);
+    if (!(await Bun.file(path).exists())) return getDefaultSettings();
+    const parsed = await Bun.file(path).json();
     if (parsed.version !== 1 || typeof parsed.plugins !== "object") {
       return getDefaultSettings();
     }
@@ -60,12 +59,12 @@ export function loadSettings(path: string): PluginSettings {
   }
 }
 
-export function saveSettings(path: string, settings: PluginSettings): void {
+export async function saveSettings(path: string, settings: PluginSettings): Promise<void> {
   const dir = dirname(path);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
   const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
-  writeFileSync(tmpPath, JSON.stringify(settings, null, 2));
+  await Bun.write(tmpPath, JSON.stringify(settings, null, 2));
   renameSync(tmpPath, path);
 }

@@ -1,4 +1,4 @@
-import { existsSync, unlinkSync } from "node:fs";
+import { unlinkSync } from "node:fs";
 import pkg from "../../package.json" with { type: "json" };
 import { scanStats } from "../parser/stats.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "../plugins/catalog.ts";
@@ -124,8 +124,10 @@ export async function searchSessions(registry: PluginRegistry) {
   return { sessions: allSessions };
 }
 
-function buildPluginSettingsResponse(settingsPath: string): { plugins: PluginSettingInfo[] } {
-  const settings = loadSettings(settingsPath);
+async function buildPluginSettingsResponse(
+  settingsPath: string,
+): Promise<{ plugins: PluginSettingInfo[] }> {
+  const settings = await loadSettings(settingsPath);
   const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir }) => {
     const id = plugin.id;
     const displayName = plugin.displayName;
@@ -144,49 +146,51 @@ function buildPluginSettingsResponse(settingsPath: string): { plugins: PluginSet
   return { plugins };
 }
 
-export function getPluginSettings(settingsPath: string): { plugins: PluginSettingInfo[] } {
+export function getPluginSettings(settingsPath: string): Promise<{ plugins: PluginSettingInfo[] }> {
   return buildPluginSettingsResponse(settingsPath);
 }
 
-export function getGeneralSettings(settingsPath: string): { showSecurityWarning: boolean } {
-  const settings = loadSettings(settingsPath);
+export async function getGeneralSettings(
+  settingsPath: string,
+): Promise<{ showSecurityWarning: boolean }> {
+  const settings = await loadSettings(settingsPath);
   return { showSecurityWarning: settings.general?.showSecurityWarning ?? true };
 }
 
-export function isFirstLaunch(settingsPath: string): { firstLaunch: boolean } {
-  return { firstLaunch: !existsSync(settingsPath) };
+export async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch: boolean }> {
+  return { firstLaunch: !(await Bun.file(settingsPath).exists()) };
 }
 
-export function resetSettings(settingsPath: string): { ok: boolean } {
-  if (existsSync(settingsPath)) {
+export async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
+  if (await Bun.file(settingsPath).exists()) {
     unlinkSync(settingsPath);
   }
   return { ok: true };
 }
 
-export function updateGeneralSettings(
+export async function updateGeneralSettings(
   settingsPath: string,
   params: { showSecurityWarning?: boolean },
-): { showSecurityWarning: boolean } {
-  const settings = loadSettings(settingsPath);
+): Promise<{ showSecurityWarning: boolean }> {
+  const settings = await loadSettings(settingsPath);
   if (!settings.general) {
     settings.general = {};
   }
   if (params.showSecurityWarning !== undefined) {
     settings.general.showSecurityWarning = params.showSecurityWarning;
   }
-  saveSettings(settingsPath, settings);
+  await saveSettings(settingsPath, settings);
   return { showSecurityWarning: settings.general.showSecurityWarning ?? true };
 }
 
-export function updatePluginSetting(
+export async function updatePluginSetting(
   settingsPath: string,
   params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
-): { plugins: PluginSettingInfo[] } {
+): Promise<{ plugins: PluginSettingInfo[] }> {
   if (!BUILTIN_PLUGIN_ID_SET.has(params.pluginId)) {
     throw new Error(`Unknown plugin: ${params.pluginId}`);
   }
-  const settings = loadSettings(settingsPath);
+  const settings = await loadSettings(settingsPath);
   const existing = settings.plugins[params.pluginId] ?? { enabled: true, dataDir: null };
 
   if (params.enabled !== undefined) {
@@ -197,12 +201,12 @@ export function updatePluginSetting(
   }
 
   settings.plugins[params.pluginId] = existing;
-  saveSettings(settingsPath, settings);
+  await saveSettings(settingsPath, settings);
   return buildPluginSettingsResponse(settingsPath);
 }
 
-export function getUpdateSettings(settingsPath: string): UpdateSettingsInfo {
-  const settings = loadSettings(settingsPath);
+export async function getUpdateSettings(settingsPath: string): Promise<UpdateSettingsInfo> {
+  const settings = await loadSettings(settingsPath);
   return {
     channel: settings.updates?.channel ?? "stable",
     checkIntervalHours: settings.updates?.checkIntervalHours ?? 6,
@@ -210,11 +214,11 @@ export function getUpdateSettings(settingsPath: string): UpdateSettingsInfo {
   };
 }
 
-export function updateUpdateSettings(
+export async function updateUpdateSettings(
   settingsPath: string,
   params: { channel?: UpdateChannel; checkIntervalHours?: number; autoDownload?: boolean },
-): UpdateSettingsInfo {
-  const settings = loadSettings(settingsPath);
+): Promise<UpdateSettingsInfo> {
+  const settings = await loadSettings(settingsPath);
   if (!settings.updates) {
     settings.updates = { channel: "stable", checkIntervalHours: 6, autoDownload: true };
   }
@@ -228,7 +232,7 @@ export function updateUpdateSettings(
   if (params.autoDownload !== undefined) {
     settings.updates.autoDownload = params.autoDownload;
   }
-  saveSettings(settingsPath, settings);
+  await saveSettings(settingsPath, settings);
   return {
     channel: settings.updates.channel,
     checkIntervalHours: settings.updates.checkIntervalHours,
