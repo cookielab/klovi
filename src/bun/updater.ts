@@ -388,12 +388,9 @@ export class UpdateManager {
       try {
         rmSync(stagingDir, { recursive: true });
       } catch {}
-      this.emitStatus({
-        status: "error",
-        currentVersion: this.currentVersion,
-        latestVersion: this.latestRelease.tag_name,
-        error: error instanceof Error ? error.message : "Update failed",
-      });
+      // Don't emitStatus here — it would change the status prop to "error",
+      // unmounting ReadyBanner before the RPC response arrives. The error
+      // is propagated via the thrown error → RPC handler → { ok: false }.
       throw error;
     }
   }
