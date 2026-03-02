@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import type {
   AssistantTurn,
   ContentBlock,
@@ -491,7 +490,7 @@ export async function loadCodexSession(_nativeId: string, sessionId: string): Pr
     };
   }
 
-  const text = await readFile(filePath, "utf-8");
+  const text = await Bun.file(filePath).text();
 
   let meta: unknown = null;
   const events: CodexEvent[] = [];

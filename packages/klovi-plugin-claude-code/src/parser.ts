@@ -184,8 +184,7 @@ interface ParsedLines {
 }
 
 async function readJsonlLines(filePath: string): Promise<ParsedLines> {
-  const { readFile } = await import("node:fs/promises");
-  const text = await readFile(filePath, "utf-8");
+  const text = await Bun.file(filePath).text();
 
   const rawLines: RawLine[] = [];
   const parseErrors: ParseErrorTurn[] = [];

@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import type { PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
 import { type SessionFileInfo, scanCodexSessions } from "./session-index.ts";
@@ -101,7 +100,7 @@ export async function listCodexSessions(nativeId: string): Promise<SessionSummar
       const prefix = await readTextPrefix(s.filePath, SESSION_TITLE_SCAN_BYTES);
       firstMessage = extractFirstUserMessage(prefix) || "";
       if (!firstMessage) {
-        const fullText = await readFile(s.filePath, "utf-8");
+        const fullText = await Bun.file(s.filePath).text();
         firstMessage = extractFirstUserMessage(fullText) || "";
       }
       firstMessage ||= "Codex session";
