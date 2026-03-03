@@ -1,5 +1,6 @@
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { semver } from "bun";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
 import { loadSettings } from "./settings.ts";
 
@@ -15,40 +16,6 @@ export interface GitHubRelease {
 export interface GitHubAsset {
   name: string;
   browser_download_url: string;
-}
-
-export function compareVersions(a: string, b: string): number {
-  const parseVersion = (v: string) => {
-    const [main = "", pre] = v.split("-");
-    const parts = main.split(".").map(Number);
-    let preType = 2; // no prerelease = highest
-    let preNum = 0;
-    if (pre) {
-      if (pre.startsWith("rc.")) {
-        preType = 1;
-        preNum = Number(pre.slice(3));
-      } else if (pre.startsWith("beta.")) {
-        preType = 0;
-        preNum = Number(pre.slice(5));
-      }
-    }
-    return {
-      major: parts[0] ?? 0,
-      minor: parts[1] ?? 0,
-      patch: parts[2] ?? 0,
-      preType,
-      preNum,
-    };
-  };
-
-  const pa = parseVersion(a);
-  const pb = parseVersion(b);
-
-  if (pa.major !== pb.major) return pa.major - pb.major;
-  if (pa.minor !== pb.minor) return pa.minor - pb.minor;
-  if (pa.patch !== pb.patch) return pa.patch - pb.patch;
-  if (pa.preType !== pb.preType) return pa.preType - pb.preType;
-  return pa.preNum - pb.preNum;
 }
 
 export function filterReleasesByChannel(
@@ -98,8 +65,8 @@ export function findLatestRelease(
   const filtered = filterReleasesByChannel(releases, channel);
   let best: GitHubRelease | null = null;
   for (const release of filtered) {
-    if (compareVersions(release.tag_name, currentVersion) > 0) {
-      if (!best || compareVersions(release.tag_name, best.tag_name) > 0) {
+    if (semver.order(release.tag_name, currentVersion) > 0) {
+      if (!best || semver.order(release.tag_name, best.tag_name) > 0) {
         best = release;
       }
     }

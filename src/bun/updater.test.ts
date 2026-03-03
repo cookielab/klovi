@@ -2,9 +2,9 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { semver } from "bun";
 import type { UpdateStatus } from "../shared/rpc-types.ts";
 import {
-  compareVersions,
   filterReleasesByChannel,
   findLatestRelease,
   type GitHubRelease,
@@ -12,37 +12,37 @@ import {
   UpdateManager,
 } from "./updater.ts";
 
-describe("compareVersions", () => {
+describe("semver.order", () => {
   test("returns positive when a > b", () => {
-    expect(compareVersions("2.0.0", "1.0.0")).toBeGreaterThan(0);
+    expect(semver.order("2.0.0", "1.0.0")).toBeGreaterThan(0);
   });
 
   test("returns negative when a < b", () => {
-    expect(compareVersions("1.0.0", "2.0.0")).toBeLessThan(0);
+    expect(semver.order("1.0.0", "2.0.0")).toBeLessThan(0);
   });
 
   test("returns 0 when equal", () => {
-    expect(compareVersions("1.2.3", "1.2.3")).toBe(0);
+    expect(semver.order("1.2.3", "1.2.3")).toBe(0);
   });
 
   test("compares minor versions", () => {
-    expect(compareVersions("1.2.0", "1.1.0")).toBeGreaterThan(0);
+    expect(semver.order("1.2.0", "1.1.0")).toBeGreaterThan(0);
   });
 
   test("compares patch versions", () => {
-    expect(compareVersions("1.0.2", "1.0.1")).toBeGreaterThan(0);
+    expect(semver.order("1.0.2", "1.0.1")).toBeGreaterThan(0);
   });
 
   test("prerelease is less than release", () => {
-    expect(compareVersions("1.0.0-beta.1", "1.0.0")).toBeLessThan(0);
+    expect(semver.order("1.0.0-beta.1", "1.0.0")).toBeLessThan(0);
   });
 
   test("rc is greater than beta", () => {
-    expect(compareVersions("1.0.0-rc.1", "1.0.0-beta.1")).toBeGreaterThan(0);
+    expect(semver.order("1.0.0-rc.1", "1.0.0-beta.1")).toBeGreaterThan(0);
   });
 
   test("beta.2 is greater than beta.1", () => {
-    expect(compareVersions("1.0.0-beta.2", "1.0.0-beta.1")).toBeGreaterThan(0);
+    expect(semver.order("1.0.0-beta.2", "1.0.0-beta.1")).toBeGreaterThan(0);
   });
 });
 
