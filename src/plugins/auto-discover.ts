@@ -1,22 +1,16 @@
-import { stat } from "node:fs/promises";
 import type { PluginSettings } from "../bun/settings.ts";
 import type { ToolPlugin } from "../shared/plugin-types.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
 import { PluginRegistry } from "./registry.ts";
 
-async function hasDataDir(plugin: ToolPlugin): Promise<boolean> {
+function hasDataDir(plugin: ToolPlugin): Promise<boolean> {
   if (plugin.isDataAvailable) {
     return plugin.isDataAvailable();
   }
 
   const dataDir = plugin.getDefaultDataDir();
-  if (!dataDir) return false;
-  try {
-    await stat(dataDir);
-    return true;
-  } catch {
-    return false;
-  }
+  if (!dataDir) return Promise.resolve(false);
+  return Bun.file(dataDir).exists();
 }
 
 export async function createRegistry(settings?: PluginSettings): Promise<PluginRegistry> {
