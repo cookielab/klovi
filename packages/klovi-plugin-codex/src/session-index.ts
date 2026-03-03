@@ -121,8 +121,8 @@ async function parseSessionMeta(filePath: string): Promise<CodexSessionMeta | nu
   if (!trimmedFirstLine) return null;
   try {
     const parsed: unknown = JSON.parse(trimmedFirstLine);
-    const fileStat = await stat(filePath).catch(() => null);
-    const fileMtimeEpoch = fileStat ? fileStat.mtime.getTime() / 1000 : undefined;
+    const f = Bun.file(filePath);
+    const fileMtimeEpoch = (await f.exists()) ? f.lastModified / 1000 : undefined;
     const meta = normalizeSessionMeta(parsed, fileMtimeEpoch);
     if (!meta) return null;
     if (isKnownModel(meta.model)) return meta;
@@ -168,13 +168,13 @@ export async function scanCodexSessions(): Promise<SessionFileInfo[]> {
     const meta = await parseSessionMeta(filePath);
     if (!meta) return;
 
-    const fileStat = await stat(filePath).catch(() => null);
-    if (!fileStat) return;
+    const f = Bun.file(filePath);
+    if (!(await f.exists())) return;
 
     sessions.push({
       filePath,
       meta,
-      mtime: fileStat.mtime.toISOString(),
+      mtime: new Date(f.lastModified).toISOString(),
     });
   });
 

@@ -1,5 +1,5 @@
 import type { Dirent } from "node:fs";
-import { readdir, stat } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
 
@@ -30,9 +30,10 @@ export async function listFilesBySuffix(dir: string, suffix: string): Promise<st
 export async function getLatestMtime(dir: string, files: string[]): Promise<string> {
   let lastActivity = "";
   for (const file of files) {
-    const fileStat = await stat(join(dir, file)).catch(() => null);
-    const mtime = fileStat?.mtime.toISOString();
-    if (mtime && mtime > lastActivity) lastActivity = mtime;
+    const f = Bun.file(join(dir, file));
+    if (!(await f.exists())) continue;
+    const mtime = new Date(f.lastModified).toISOString();
+    if (mtime > lastActivity) lastActivity = mtime;
   }
   return lastActivity;
 }
@@ -42,11 +43,9 @@ export async function listFilesWithMtime(dir: string, suffix: string): Promise<F
   const results: FileWithMtime[] = [];
 
   for (const fileName of files) {
-    const fileStat = await stat(join(dir, fileName)).catch(() => null);
-    const mtime = fileStat?.mtime.toISOString();
-    if (mtime) {
-      results.push({ fileName, mtime });
-    }
+    const f = Bun.file(join(dir, fileName));
+    if (!(await f.exists())) continue;
+    results.push({ fileName, mtime: new Date(f.lastModified).toISOString() });
   }
 
   sortByIsoDesc(results, (item) => item.mtime);

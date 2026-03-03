@@ -8,7 +8,7 @@
  * showcasing every feature Klovi can render.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const OUT = join(import.meta.dir, "..", "demo-data", "claude-code", "projects");
@@ -22,16 +22,21 @@ function L(obj: Record<string, unknown>): string {
   return JSON.stringify(obj);
 }
 
-function writeSession(project: string, sessionId: string, lines: string[]): void {
+async function writeSession(project: string, sessionId: string, lines: string[]): Promise<void> {
   const dir = join(OUT, project);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${sessionId}.jsonl`), `${lines.join("\n")}\n`);
+  await Bun.write(join(dir, `${sessionId}.jsonl`), `${lines.join("\n")}\n`);
 }
 
-function writeSubAgent(project: string, sessionId: string, agentId: string, lines: string[]): void {
+async function writeSubAgent(
+  project: string,
+  sessionId: string,
+  agentId: string,
+  lines: string[],
+): Promise<void> {
   const dir = join(OUT, project, sessionId, "subagents");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `agent-${agentId}.jsonl`), `${lines.join("\n")}\n`);
+  await Bun.write(join(dir, `agent-${agentId}.jsonl`), `${lines.join("\n")}\n`);
 }
 
 /** Incrementing timestamp generator starting from a base ISO string. */
@@ -164,7 +169,7 @@ const TODO_PROJECT = "-Users-demo-projects-todo-app";
 const TODO_CWD = "/Users/demo/projects/todo-app";
 
 // --- Session 1: Plan the architecture (PLAN session) ---
-function session1_plan(): void {
+async function session1_plan(): Promise<void> {
   const SESSION_ID = "a1b2c3d4-e5f6-4a7b-8c9d-e0f1a2b3c4d5";
   const SLUG = "todo-app-architecture";
   const ts = timestamps("2026-02-10T09:00:00Z");
@@ -400,11 +405,11 @@ CREATE TABLE todos (
     summaryLine(),
   ];
 
-  writeSession(TODO_PROJECT, SESSION_ID, lines);
+  await writeSession(TODO_PROJECT, SESSION_ID, lines);
 }
 
 // --- Session 2: Implement the plan (IMPLEMENTATION session, with sub-agent) ---
-function session2_implementation(): void {
+async function session2_implementation(): Promise<void> {
   const SESSION_ID = "b2c3d4e5-f6a7-4b8c-9d0e-f1a2b3c4d5e6";
   const SLUG = "todo-app-architecture"; // same slug → linked to plan session
   const ts = timestamps("2026-02-10T10:30:00Z");
@@ -650,7 +655,7 @@ function session2_implementation(): void {
     ),
   ];
 
-  writeSession(TODO_PROJECT, SESSION_ID, lines);
+  await writeSession(TODO_PROJECT, SESSION_ID, lines);
 
   // Sub-agent session file
   const agentTs = timestamps("2026-02-10T10:45:00Z");
@@ -707,11 +712,11 @@ function session2_implementation(): void {
     ),
   ];
 
-  writeSubAgent(TODO_PROJECT, SESSION_ID, AGENT_ID, agentLines);
+  await writeSubAgent(TODO_PROJECT, SESSION_ID, AGENT_ID, agentLines);
 }
 
 // --- Session 3: Fix auth bug (bugfix session) ---
-function session3_bugfix(): void {
+async function session3_bugfix(): Promise<void> {
   const SESSION_ID = "c3d4e5f6-a7b8-4c9d-0e1f-a2b3c4d5e6f7";
   const SLUG = "todo-bugfix-auth";
   const ts = timestamps("2026-02-12T14:00:00Z");
@@ -995,7 +1000,7 @@ function session3_bugfix(): void {
     ),
   ];
 
-  writeSession(TODO_PROJECT, SESSION_ID, lines);
+  await writeSession(TODO_PROJECT, SESSION_ID, lines);
 }
 
 // ---------------------------------------------------------------------------
@@ -1005,7 +1010,7 @@ const DASHBOARD_PROJECT = "-Users-demo-projects-react-dashboard";
 const DASHBOARD_CWD = "/Users/demo/projects/react-dashboard";
 
 // --- Session 4: Add chart component (with MCP tools, images, WebSearch) ---
-function session4_charts(): void {
+async function session4_charts(): Promise<void> {
   const SESSION_ID = "d4e5f6a7-b8c9-4d0e-1f2a-b3c4d5e6f7a8";
   const SLUG = "dashboard-charts";
   const ts = timestamps("2026-02-13T09:00:00Z");
@@ -1266,11 +1271,11 @@ function session4_charts(): void {
     ),
   ];
 
-  writeSession(DASHBOARD_PROJECT, SESSION_ID, lines);
+  await writeSession(DASHBOARD_PROJECT, SESSION_ID, lines);
 }
 
 // --- Session 5: Fix broken tests (with slash command, error results) ---
-function session5_tests(): void {
+async function session5_tests(): Promise<void> {
   const SESSION_ID = "e5f6a7b8-c9d0-4e1f-2a3b-c4d5e6f7a8b9";
   const SLUG = "dashboard-fix-tests";
   const ts = timestamps("2026-02-14T11:00:00Z");
@@ -1504,7 +1509,7 @@ Sidebar.test.tsx:
     }),
   ];
 
-  writeSession(DASHBOARD_PROJECT, SESSION_ID, lines);
+  await writeSession(DASHBOARD_PROJECT, SESSION_ID, lines);
 }
 
 // ---------------------------------------------------------------------------
@@ -1514,7 +1519,7 @@ const API_PROJECT = "-Users-demo-projects-api-backend";
 const API_CWD = "/Users/demo/projects/api-backend";
 
 // --- Session 6: Optimize database queries (NotebookRead/Edit, status notices) ---
-function session6_optimize(): void {
+async function session6_optimize(): Promise<void> {
   const SESSION_ID = "f6a7b8c9-d0e1-4f2a-3b4c-d5e6f7a8b9c0";
   const SLUG = "api-optimize-queries";
   const ts = timestamps("2026-02-15T08:00:00Z");
@@ -1740,11 +1745,11 @@ console.log('Average query time: ' + avg.toFixed(1) + 'ms');
     ),
   ];
 
-  writeSession(API_PROJECT, SESSION_ID, lines);
+  await writeSession(API_PROJECT, SESSION_ID, lines);
 }
 
 // --- Session 7: Setup CI/CD (AskUserQuestion, Skill, bash-input, ide_opened_file, TodoWrite, KillShell, WebSearch) ---
-function session7_cicd(): void {
+async function session7_cicd(): Promise<void> {
   const SESSION_ID = "a7b8c9d0-e1f2-4a3b-4c5d-e6f7a8b9c0d1";
   const SLUG = "api-cicd-setup";
   const ts = timestamps("2026-02-16T10:00:00Z");
@@ -2005,16 +2010,16 @@ function session7_cicd(): void {
     }),
   ];
 
-  writeSession(API_PROJECT, SESSION_ID, lines);
+  await writeSession(API_PROJECT, SESSION_ID, lines);
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-session1_plan();
-session2_implementation();
-session3_bugfix();
-session4_charts();
-session5_tests();
-session6_optimize();
-session7_cicd();
+await session1_plan();
+await session2_implementation();
+await session3_bugfix();
+await session4_charts();
+await session5_tests();
+await session6_optimize();
+await session7_cicd();
