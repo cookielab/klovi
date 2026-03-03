@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getClaudeCodeDir, setClaudeCodeDir } from "@cookielab.io/klovi-plugin-claude-code";
@@ -16,23 +16,23 @@ describe("createRegistry with settings", () => {
   let origCodex: string;
   let origOpenCode: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     origClaude = getClaudeCodeDir();
     origCodex = getCodexCliDir();
     origOpenCode = getOpenCodeDir();
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     setClaudeCodeDir(origClaude);
     setCodexCliDir(origCodex);
     setOpenCodeDir(origOpenCode);
-    rmSync(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true });
   });
 
   test("disabled plugin is not registered even if dir exists", async () => {
     const claudeDir = join(testDir, ".claude");
-    mkdirSync(join(claudeDir, "projects"), { recursive: true });
+    await mkdir(join(claudeDir, "projects"), { recursive: true });
     setClaudeCodeDir(claudeDir);
 
     const settings: PluginSettings = {
@@ -49,7 +49,7 @@ describe("createRegistry with settings", () => {
 
   test("custom dataDir is used for discovery", async () => {
     const customDir = join(testDir, "custom-claude");
-    mkdirSync(join(customDir, "projects"), { recursive: true });
+    await mkdir(join(customDir, "projects"), { recursive: true });
 
     const settings: PluginSettings = {
       ...getDefaultSettings(),

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index.ts";
@@ -12,7 +12,7 @@ async function writeSession(
   events: Record<string, unknown>[] = [],
 ): Promise<void> {
   const dir = join(testDir, "sessions", "openai", "2025-01-15");
-  mkdirSync(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
   const filePath = join(dir, `${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((event) => JSON.stringify(event))];
   await Bun.write(filePath, lines.join("\n"));
@@ -21,16 +21,16 @@ async function writeSession(
 describe("codexCliPlugin", () => {
   let originalDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalDir = getCodexCliDir();
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
     setCodexCliDir(testDir);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     setCodexCliDir(originalDir);
-    rmSync(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true });
   });
 
   test("exposes plugin identity and resume command", () => {

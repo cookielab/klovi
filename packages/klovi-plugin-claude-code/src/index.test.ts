@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { claudeCodePlugin, getClaudeCodeDir, setClaudeCodeDir } from "./index.ts";
@@ -7,23 +7,23 @@ import { claudeCodePlugin, getClaudeCodeDir, setClaudeCodeDir } from "./index.ts
 const testDir = join(tmpdir(), `klovi-claude-index-test-${Date.now()}`);
 
 async function writeJsonl(filePath: string, lines: Record<string, unknown>[]): Promise<void> {
-  mkdirSync(dirname(filePath), { recursive: true });
+  await mkdir(dirname(filePath), { recursive: true });
   await Bun.write(filePath, lines.map((line) => JSON.stringify(line)).join("\n"));
 }
 
 describe("claudeCodePlugin", () => {
   let originalDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalDir = getClaudeCodeDir();
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
     setClaudeCodeDir(testDir);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     setClaudeCodeDir(originalDir);
-    rmSync(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true });
   });
 
   test("exposes plugin identity and resume command", () => {

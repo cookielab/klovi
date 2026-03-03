@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { getClaudeCodeDir, setClaudeCodeDir } from "./config.ts";
@@ -10,15 +10,15 @@ const testDir = join(tmpdir(), `klovi-claude-subagent-test-${Date.now()}`);
 describe("parseSubAgentSession", () => {
   let originalClaudeDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalClaudeDir = getClaudeCodeDir();
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
     setClaudeCodeDir(testDir);
   });
 
-  afterEach(() => {
-    rmSync(testDir, { recursive: true, force: true });
+  afterEach(async () => {
+    await rm(testDir, { recursive: true, force: true });
     setClaudeCodeDir(originalClaudeDir);
   });
 
@@ -42,7 +42,7 @@ describe("parseSubAgentSession", () => {
       "subagents",
       "agent-42.jsonl",
     );
-    mkdirSync(dirname(filePath), { recursive: true });
+    await mkdir(dirname(filePath), { recursive: true });
     await Bun.write(
       filePath,
       JSON.stringify({

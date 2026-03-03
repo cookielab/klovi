@@ -1,6 +1,6 @@
 // src/bun/settings.test.ts
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { PluginSettings } from "./settings.ts";
@@ -15,7 +15,7 @@ function settingsPath(): string {
 describe("settings", () => {
   afterEach(async () => {
     if (await Bun.file(testDir).exists()) {
-      rmSync(testDir, { recursive: true });
+      await rm(testDir, { recursive: true });
     }
   });
 
@@ -33,7 +33,7 @@ describe("settings", () => {
   });
 
   test("saveSettings writes and loadSettings reads back", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = settingsPath();
     const settings: PluginSettings = {
       version: 1,
@@ -55,7 +55,7 @@ describe("settings", () => {
   });
 
   test("loadSettings returns defaults for corrupted JSON", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = settingsPath();
     await Bun.write(path, "not valid json{{{");
     const settings = await loadSettings(path);
@@ -72,7 +72,7 @@ describe("settings", () => {
   });
 
   test("loadSettings preserves updates field", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = settingsPath();
     const settings: PluginSettings = {
       ...getDefaultSettings(),

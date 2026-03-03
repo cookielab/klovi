@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getOpenCodeDir, openCodePlugin, setOpenCodeDir } from "./index.ts";
@@ -126,16 +126,16 @@ function createDbWithSingleSession(): void {
 describe("openCodePlugin", () => {
   let originalDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalDir = getOpenCodeDir();
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
     setOpenCodeDir(testDir);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     setOpenCodeDir(originalDir);
-    rmSync(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true });
   });
 
   test("exposes plugin identity and no resume command", () => {

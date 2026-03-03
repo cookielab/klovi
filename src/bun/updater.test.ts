@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { UpdateStatus } from "../shared/rpc-types.ts";
@@ -163,9 +163,9 @@ describe("findLatestRelease", () => {
 describe("UpdateManager", () => {
   const testDir = join(tmpdir(), `klovi-updater-test-${Date.now()}`);
 
-  afterEach(() => {
+  afterEach(async () => {
     try {
-      rmSync(testDir, { recursive: true });
+      await rm(testDir, { recursive: true });
     } catch {}
   });
 
@@ -181,7 +181,7 @@ describe("UpdateManager", () => {
   });
 
   test("cleanup removes files from updates directory", async () => {
-    mkdirSync(join(testDir, "updates", "2.0.0"), { recursive: true });
+    await mkdir(join(testDir, "updates", "2.0.0"), { recursive: true });
     await Bun.write(join(testDir, "updates", "2.0.0", "test.zip"), "data");
 
     const mgr = new UpdateManager({

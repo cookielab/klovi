@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, utimesSync } from "node:fs";
+import { mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -14,14 +14,14 @@ import {
 const testDir = join(tmpdir(), `klovi-claude-discovery-utils-test-${Date.now()}`);
 const originalPlatform = process.platform;
 
-beforeEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
-  mkdirSync(testDir, { recursive: true });
+beforeEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
+  await mkdir(testDir, { recursive: true });
 });
 
-afterEach(() => {
+afterEach(async () => {
   Object.defineProperty(process, "platform", { value: originalPlatform });
-  rmSync(testDir, { recursive: true, force: true });
+  await rm(testDir, { recursive: true, force: true });
 });
 
 describe("claude discovery utils", () => {
@@ -45,8 +45,12 @@ describe("claude discovery utils", () => {
 
     await Bun.write(first, "{}");
     await Bun.write(second, "{}");
-    utimesSync(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
-    utimesSync(second, new Date("2025-01-15T00:00:00.000Z"), new Date("2025-01-15T00:00:00.000Z"));
+    await utimes(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
+    await utimes(
+      second,
+      new Date("2025-01-15T00:00:00.000Z"),
+      new Date("2025-01-15T00:00:00.000Z"),
+    );
 
     const latest = await getLatestMtime(testDir, ["missing.jsonl", "a.jsonl", "b.jsonl"]);
     expect(latest).toBe("2025-01-15T00:00:00.000Z");
@@ -58,8 +62,12 @@ describe("claude discovery utils", () => {
 
     await Bun.write(first, "{}");
     await Bun.write(second, "{}");
-    utimesSync(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
-    utimesSync(second, new Date("2025-01-15T00:00:00.000Z"), new Date("2025-01-15T00:00:00.000Z"));
+    await utimes(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
+    await utimes(
+      second,
+      new Date("2025-01-15T00:00:00.000Z"),
+      new Date("2025-01-15T00:00:00.000Z"),
+    );
 
     const files = await listFilesWithMtime(testDir, ".jsonl");
     expect(files.map((f) => f.fileName)).toEqual(["b.jsonl", "a.jsonl"]);

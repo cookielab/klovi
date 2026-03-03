@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, utimesSync } from "node:fs";
+import { mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { SessionSummary } from "@cookielab.io/klovi-plugin-core";
@@ -14,20 +14,20 @@ async function writeSession(
   lines: string[],
 ): Promise<string> {
   const projectDir = join(testDir, "projects", projectId);
-  mkdirSync(projectDir, { recursive: true });
+  await mkdir(projectDir, { recursive: true });
   const filePath = join(projectDir, `${sessionId}.jsonl`);
   await Bun.write(filePath, lines.join("\n"));
   return filePath;
 }
 
-beforeEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
-  mkdirSync(testDir, { recursive: true });
+beforeEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
+  await mkdir(testDir, { recursive: true });
   setClaudeCodeDir(testDir);
 });
 
-afterEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
+afterEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
 });
 
 describe("claude-code discovery", () => {
@@ -94,8 +94,16 @@ describe("claude-code discovery", () => {
       }),
     ]);
 
-    utimesSync(oldPath, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
-    utimesSync(newPath, new Date("2025-01-15T00:00:00.000Z"), new Date("2025-01-15T00:00:00.000Z"));
+    await utimes(
+      oldPath,
+      new Date("2025-01-14T00:00:00.000Z"),
+      new Date("2025-01-14T00:00:00.000Z"),
+    );
+    await utimes(
+      newPath,
+      new Date("2025-01-15T00:00:00.000Z"),
+      new Date("2025-01-15T00:00:00.000Z"),
+    );
 
     const projects = await discoverClaudeProjects();
     expect(projects).toHaveLength(1);
@@ -127,8 +135,16 @@ describe("claude-code discovery", () => {
       }),
     ]);
 
-    utimesSync(oldPath, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
-    utimesSync(newPath, new Date("2025-01-15T00:00:00.000Z"), new Date("2025-01-15T00:00:00.000Z"));
+    await utimes(
+      oldPath,
+      new Date("2025-01-14T00:00:00.000Z"),
+      new Date("2025-01-14T00:00:00.000Z"),
+    );
+    await utimes(
+      newPath,
+      new Date("2025-01-15T00:00:00.000Z"),
+      new Date("2025-01-15T00:00:00.000Z"),
+    );
 
     const projects = await discoverClaudeProjects();
     expect(projects).toHaveLength(1);

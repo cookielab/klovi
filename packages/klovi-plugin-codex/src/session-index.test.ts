@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setCodexCliDir } from "./config.ts";
@@ -12,13 +12,13 @@ import {
 
 const testDir = join(tmpdir(), `klovi-codex-session-index-test-${Date.now()}`);
 
-beforeEach(() => {
-  mkdirSync(join(testDir, "sessions"), { recursive: true });
+beforeEach(async () => {
+  await mkdir(join(testDir, "sessions"), { recursive: true });
   setCodexCliDir(testDir);
 });
 
-afterEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
+afterEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
 });
 
 describe("isCodexSessionMeta", () => {
@@ -131,7 +131,7 @@ describe("normalizeSessionMeta", () => {
 describe("findCodexSessionFileById", () => {
   test("finds old-format file by exact uuid match", async () => {
     const dir = join(testDir, "sessions", "openai", "2025-01-15");
-    mkdirSync(dir, { recursive: true });
+    await mkdir(dir, { recursive: true });
     await Bun.write(join(dir, "my-uuid.jsonl"), "{}");
 
     const result = await findCodexSessionFileById("my-uuid");
@@ -140,7 +140,7 @@ describe("findCodexSessionFileById", () => {
 
   test("finds new-format file by suffix match", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
-    mkdirSync(dir, { recursive: true });
+    await mkdir(dir, { recursive: true });
     await Bun.write(join(dir, "rollout-2026-02-18-my-uuid.jsonl"), "{}");
 
     const result = await findCodexSessionFileById("my-uuid");
@@ -156,7 +156,7 @@ describe("findCodexSessionFileById", () => {
 describe("scanCodexSessions", () => {
   test("scans new-format session files", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
-    mkdirSync(dir, { recursive: true });
+    await mkdir(dir, { recursive: true });
     await Bun.write(
       join(dir, "rollout-2026-02-18-scan-uuid.jsonl"),
       JSON.stringify({
@@ -182,7 +182,7 @@ describe("scanCodexSessions", () => {
 
   test("uses turn_context model when new-format meta has no model", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
-    mkdirSync(dir, { recursive: true });
+    await mkdir(dir, { recursive: true });
     await Bun.write(
       join(dir, "rollout-2026-02-18-turn-context-model.jsonl"),
       [
@@ -214,7 +214,7 @@ describe("scanCodexSessions", () => {
 
   test("falls back to provider when new-format meta has no model", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
-    mkdirSync(dir, { recursive: true });
+    await mkdir(dir, { recursive: true });
     await Bun.write(
       join(dir, "rollout-2026-02-18-provider-model.jsonl"),
       JSON.stringify({

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AssistantTurn } from "@cookielab.io/klovi-plugin-core";
@@ -14,7 +14,7 @@ async function writeSession(
   events: Record<string, unknown>[] = [],
 ): Promise<string> {
   const dir = join(testDir, "sessions", "openai", "2025-01-15");
-  mkdirSync(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
   const filePath = join(dir, `${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
   await Bun.write(filePath, lines.join("\n"));
@@ -27,7 +27,7 @@ async function writeNewFormatSession(
   events: Record<string, unknown>[] = [],
 ): Promise<string> {
   const dir = join(testDir, "sessions", "2026", "02", "18");
-  mkdirSync(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
   const filePath = join(dir, `rollout-2026-02-18-${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
   await Bun.write(filePath, lines.join("\n"));
@@ -56,13 +56,13 @@ const newBaseMeta = {
   },
 };
 
-beforeEach(() => {
-  mkdirSync(join(testDir, "sessions"), { recursive: true });
+beforeEach(async () => {
+  await mkdir(join(testDir, "sessions"), { recursive: true });
   setCodexCliDir(testDir);
 });
 
-afterEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
+afterEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
 });
 
 describe("buildCodexTurns", () => {

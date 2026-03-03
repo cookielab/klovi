@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -16,12 +16,12 @@ const testDir = join(tmpdir(), `klovi-handlers-test-${Date.now()}`);
 const settingsPath = join(testDir, "settings.json");
 
 describe("settings RPC handlers", () => {
-  afterEach(() => {
-    rmSync(testDir, { recursive: true, force: true });
+  afterEach(async () => {
+    await rm(testDir, { recursive: true, force: true });
   });
 
   test("getPluginSettings returns all three plugins", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await getPluginSettings(settingsPath);
     expect(result.plugins).toHaveLength(3);
@@ -29,7 +29,7 @@ describe("settings RPC handlers", () => {
   });
 
   test("getPluginSettings shows enabled and default dirs", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await getPluginSettings(settingsPath);
     const claude = result.plugins.find((p) => p.id === "claude-code");
@@ -40,7 +40,7 @@ describe("settings RPC handlers", () => {
   });
 
   test("updatePluginSetting disables a plugin", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await updatePluginSetting(settingsPath, {
       pluginId: "claude-code",
@@ -56,7 +56,7 @@ describe("settings RPC handlers", () => {
   });
 
   test("updatePluginSetting sets custom dataDir", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await updatePluginSetting(settingsPath, {
       pluginId: "claude-code",
@@ -69,14 +69,14 @@ describe("settings RPC handlers", () => {
   });
 
   test("getGeneralSettings returns true by default", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await getGeneralSettings(settingsPath);
     expect(result.showSecurityWarning).toBe(true);
   });
 
   test("getGeneralSettings returns true for legacy settings without general", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const settings = getDefaultSettings();
     settings.general = undefined;
     await saveSettings(settingsPath, settings);
@@ -85,7 +85,7 @@ describe("settings RPC handlers", () => {
   });
 
   test("updateGeneralSettings sets showSecurityWarning to false", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await updateGeneralSettings(settingsPath, { showSecurityWarning: false });
     expect(result.showSecurityWarning).toBe(false);
@@ -96,7 +96,7 @@ describe("settings RPC handlers", () => {
   });
 
   test("updateGeneralSettings sets showSecurityWarning to true", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const settings = getDefaultSettings();
     settings.general = { showSecurityWarning: false };
     await saveSettings(settingsPath, settings);
@@ -105,7 +105,7 @@ describe("settings RPC handlers", () => {
   });
 
   test("updatePluginSetting resets dataDir to default with null", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const settings = getDefaultSettings();
     const claudePlugin = settings.plugins["claude-code"];
     expect(claudePlugin).toBeDefined();
@@ -128,14 +128,14 @@ describe("settings RPC handlers", () => {
   });
 
   test("isFirstLaunch returns false when settings file exists", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await isFirstLaunch(settingsPath);
     expect(result.firstLaunch).toBe(false);
   });
 
   test("resetSettings deletes settings file when it exists", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     await saveSettings(settingsPath, getDefaultSettings());
     const result = await resetSettings(settingsPath);
     expect(result.ok).toBe(true);

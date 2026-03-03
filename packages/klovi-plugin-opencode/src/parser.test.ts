@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AssistantTurn, UserTurn } from "@cookielab.io/klovi-plugin-core";
@@ -108,13 +108,13 @@ function insertPart(
   );
 }
 
-beforeEach(() => {
-  mkdirSync(testDir, { recursive: true });
+beforeEach(async () => {
+  await mkdir(testDir, { recursive: true });
   setOpenCodeDir(testDir);
 });
 
-afterEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
+afterEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
 });
 
 describe("buildOpenCodeTurns", () => {
@@ -579,8 +579,8 @@ describe("loadOpenCodeSession", () => {
   });
 
   test("returns empty session when DB does not exist", async () => {
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
 
     const session = await loadOpenCodeSession("proj-1", "nonexistent-sess");
 

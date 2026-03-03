@@ -8,7 +8,7 @@
  * showcasing every feature Klovi can render.
  */
 
-import { mkdirSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const OUT = join(import.meta.dir, "..", "demo-data", "claude-code", "projects");
@@ -24,7 +24,7 @@ function L(obj: Record<string, unknown>): string {
 
 async function writeSession(project: string, sessionId: string, lines: string[]): Promise<void> {
   const dir = join(OUT, project);
-  mkdirSync(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
   await Bun.write(join(dir, `${sessionId}.jsonl`), `${lines.join("\n")}\n`);
 }
 
@@ -35,7 +35,7 @@ async function writeSubAgent(
   lines: string[],
 ): Promise<void> {
   const dir = join(OUT, project, sessionId, "subagents");
-  mkdirSync(dir, { recursive: true });
+  await mkdir(dir, { recursive: true });
   await Bun.write(join(dir, `agent-${agentId}.jsonl`), `${lines.join("\n")}\n`);
 }
 

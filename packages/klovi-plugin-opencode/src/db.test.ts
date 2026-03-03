@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getOpenCodeDir, setOpenCodeDir } from "./config.ts";
@@ -10,16 +10,16 @@ const testDir = join(tmpdir(), `klovi-opencode-db-test-${Date.now()}`);
 describe("opencode db helpers", () => {
   let originalDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalDir = getOpenCodeDir();
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
     setOpenCodeDir(testDir);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     setOpenCodeDir(originalDir);
-    rmSync(testDir, { recursive: true, force: true });
+    await rm(testDir, { recursive: true, force: true });
   });
 
   test("returns db path in configured data directory", () => {
@@ -32,7 +32,7 @@ describe("opencode db helpers", () => {
   });
 
   test("openOpenCodeDb returns null when sqlite open throws", async () => {
-    mkdirSync(join(testDir, "opencode.db"), { recursive: true });
+    await mkdir(join(testDir, "opencode.db"), { recursive: true });
     const db = await openOpenCodeDb();
     expect(db).toBeNull();
   });

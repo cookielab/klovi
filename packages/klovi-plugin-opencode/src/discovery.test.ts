@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setOpenCodeDir } from "./config.ts";
@@ -125,13 +125,13 @@ function insertPart(
   );
 }
 
-beforeEach(() => {
-  mkdirSync(testDir, { recursive: true });
+beforeEach(async () => {
+  await mkdir(testDir, { recursive: true });
   setOpenCodeDir(testDir);
 });
 
-afterEach(() => {
-  rmSync(testDir, { recursive: true, force: true });
+afterEach(async () => {
+  await rm(testDir, { recursive: true, force: true });
 });
 
 describe("discoverOpenCodeProjects", () => {
@@ -169,8 +169,8 @@ describe("discoverOpenCodeProjects", () => {
 
   test("returns empty array when DB does not exist", async () => {
     // Don't create the DB file
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
 
     const projects = await discoverOpenCodeProjects();
     expect(projects).toEqual([]);
@@ -415,8 +415,8 @@ describe("listOpenCodeSessions", () => {
   });
 
   test("returns empty when DB does not exist", async () => {
-    rmSync(testDir, { recursive: true, force: true });
-    mkdirSync(testDir, { recursive: true });
+    await rm(testDir, { recursive: true, force: true });
+    await mkdir(testDir, { recursive: true });
 
     const sessions = await listOpenCodeSessions("proj-1");
     expect(sessions).toEqual([]);

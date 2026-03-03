@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getUpdateSettings, getVersion, updateUpdateSettings } from "./rpc-handlers.ts";
@@ -17,9 +17,9 @@ describe("rpc-handlers", () => {
 const testDir = join(tmpdir(), `klovi-rpc-test-${Date.now()}`);
 
 describe("update settings handlers", () => {
-  afterEach(() => {
+  afterEach(async () => {
     try {
-      rmSync(testDir, { recursive: true });
+      await rm(testDir, { recursive: true });
     } catch {}
   });
 
@@ -32,7 +32,7 @@ describe("update settings handlers", () => {
   });
 
   test("updateUpdateSettings persists channel change", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
     const result = await updateUpdateSettings(path, { channel: "beta" });
     expect(result.channel).toBe("beta");
@@ -41,21 +41,21 @@ describe("update settings handlers", () => {
   });
 
   test("updateUpdateSettings persists checkIntervalHours change", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
     const result = await updateUpdateSettings(path, { checkIntervalHours: 1 });
     expect(result.checkIntervalHours).toBe(1);
   });
 
   test("updateUpdateSettings persists autoDownload change", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
     const result = await updateUpdateSettings(path, { autoDownload: false });
     expect(result.autoDownload).toBe(false);
   });
 
   test("updateUpdateSettings clamps checkIntervalHours to 1-24", async () => {
-    mkdirSync(testDir, { recursive: true });
+    await mkdir(testDir, { recursive: true });
     const path = join(testDir, "settings.json");
     expect((await updateUpdateSettings(path, { checkIntervalHours: 0 })).checkIntervalHours).toBe(
       1,
