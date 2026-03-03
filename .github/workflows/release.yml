@@ -252,7 +252,7 @@ jobs:
       - name: Build Electrobun app
         run: bun run build -- --env=stable
 
-      - name: Package and upload Linux asset
+      - name: Package tar.gz installer
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release.outputs.version }}
@@ -271,6 +271,34 @@ jobs:
           ASSET_NAME="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
           cp "$INSTALLER" "$ASSET_NAME"
           gh release upload "$VERSION" "$ASSET_NAME" --clobber
+
+      - name: Install nfpm
+        run: |
+          curl -sfL https://github.com/goreleaser/nfpm/releases/download/v2.41.1/nfpm_2.41.1_Linux_$(uname -m).tar.gz | tar xz -C /usr/local/bin nfpm
+
+      - name: Build .deb and .rpm packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+          ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
+          BUILD_DIR: build/stable-linux-${{ matrix.electrobun_arch }}
+          NFPM_ARCH: ${{ matrix.artifact_arch }}
+        run: |
+          if [ ! -d "$BUILD_DIR" ]; then
+            echo "::error::Expected build output in $BUILD_DIR"
+            find build -maxdepth 2 -type d || true
+            exit 1
+          fi
+
+          nfpm package -p deb -f packaging/linux/nfpm.yaml
+          nfpm package -p rpm -f packaging/linux/nfpm.yaml
+
+          DEB_FILE=$(ls klovi_*.deb)
+          RPM_FILE=$(ls klovi-*.rpm)
+
+          gh release upload "$VERSION" "$DEB_FILE" --clobber
+          gh release upload "$VERSION" "$RPM_FILE" --clobber
 
   build-windows:
     runs-on: ${{ matrix.runner }}
