@@ -217,3 +217,7 @@ Electrobun.events.on("application-menu-clicked", (e) => {
       break;
   }
 });
+
+Electrobun.events.on("before-quit", () => {
+  updateManager?.stopSchedule();
+});
