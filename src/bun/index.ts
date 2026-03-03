@@ -50,14 +50,20 @@ function getSettingsPath(): string {
     return join(Utils.paths.userData, "settings.json");
   } catch {
     // Fallback if version.json not readable (e.g. dev mode outside app bundle)
-    return join(
-      Bun.env["HOME"] ?? "",
-      "Library",
-      "Application Support",
-      "io.cookielab.klovi",
-      "stable",
-      "settings.json",
-    );
+    const home = Bun.env["HOME"] ?? "";
+    if (process.platform === "darwin") {
+      return join(
+        home,
+        "Library",
+        "Application Support",
+        "io.cookielab.klovi",
+        "stable",
+        "settings.json",
+      );
+    }
+    // Linux: use XDG_CONFIG_HOME or ~/.config
+    const configHome = Bun.env["XDG_CONFIG_HOME"] ?? join(home, ".config");
+    return join(configHome, "klovi", "settings.json");
   }
 }
 
@@ -177,7 +183,7 @@ ApplicationMenu.setApplicationMenu([
 const win = new BrowserWindow({
   title: "Klovi",
   url: "views://main/index.html",
-  frame: { x: 100, y: 100, width: 1400, height: 900 },
+  frame: { x: 0, y: 0, width: 1400, height: 900 },
   rpc,
 });
 
