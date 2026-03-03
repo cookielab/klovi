@@ -36,6 +36,19 @@ overrides:
       - pango
       - cairo
       - alsa-lib
+  archlinux:
+    depends:
+      - gtk3
+      - nss
+      - at-spi2-core
+      - libdrm
+      - libxcomposite
+      - libxdamage
+      - libxrandr
+      - mesa
+      - pango
+      - cairo
+      - alsa-lib
 
 scripts:
   postinstall: packaging/linux/postinstall.sh

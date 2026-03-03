@@ -278,7 +278,7 @@ jobs:
           [ "$ARCH" = "aarch64" ] && ARCH="arm64"
           curl -sfL "https://github.com/goreleaser/nfpm/releases/download/v2.41.1/nfpm_2.41.1_Linux_${ARCH}.tar.gz" | tar xz -C /usr/local/bin nfpm
 
-      - name: Build .deb and .rpm packages
+      - name: Build .deb, .rpm, and .pkg.tar.zst packages
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release.outputs.version }}
@@ -296,12 +296,15 @@ jobs:
           envsubst < packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
           nfpm package -p deb -f /tmp/nfpm.yaml
           nfpm package -p rpm -f /tmp/nfpm.yaml
+          nfpm package -p archlinux -f /tmp/nfpm.yaml
 
           DEB_FILE=$(ls klovi_*.deb)
           RPM_FILE=$(ls klovi-*.rpm)
+          ARCH_FILE=$(ls klovi-*.pkg.tar.zst)
 
           gh release upload "$VERSION" "$DEB_FILE" --clobber
           gh release upload "$VERSION" "$RPM_FILE" --clobber
+          gh release upload "$VERSION" "$ARCH_FILE" --clobber
 
   build-windows:
     runs-on: ${{ matrix.runner }}
