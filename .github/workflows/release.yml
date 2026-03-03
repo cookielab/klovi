@@ -302,6 +302,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Set version and commit in package.json
+        shell: bash
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
