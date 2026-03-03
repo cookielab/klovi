@@ -274,7 +274,9 @@ jobs:
 
       - name: Install nfpm
         run: |
-          curl -sfL https://github.com/goreleaser/nfpm/releases/download/v2.41.1/nfpm_2.41.1_Linux_$(uname -m).tar.gz | tar xz -C /usr/local/bin nfpm
+          ARCH=$(uname -m)
+          [ "$ARCH" = "aarch64" ] && ARCH="arm64"
+          curl -sfL "https://github.com/goreleaser/nfpm/releases/download/v2.41.1/nfpm_2.41.1_Linux_${ARCH}.tar.gz" | tar xz -C /usr/local/bin nfpm
 
       - name: Build .deb and .rpm packages
         env:
@@ -291,8 +293,9 @@ jobs:
             exit 1
           fi
 
-          nfpm package -p deb -f packaging/linux/nfpm.yaml
-          nfpm package -p rpm -f packaging/linux/nfpm.yaml
+          envsubst < packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
+          nfpm package -p deb -f /tmp/nfpm.yaml
+          nfpm package -p rpm -f /tmp/nfpm.yaml
 
           DEB_FILE=$(ls klovi_*.deb)
           RPM_FILE=$(ls klovi-*.rpm)
