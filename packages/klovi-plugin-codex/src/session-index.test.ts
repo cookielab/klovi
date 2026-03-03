@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setCodexCliDir } from "./config.ts";
@@ -132,7 +132,7 @@ describe("findCodexSessionFileById", () => {
   test("finds old-format file by exact uuid match", async () => {
     const dir = join(testDir, "sessions", "openai", "2025-01-15");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "my-uuid.jsonl"), "{}");
+    await Bun.write(join(dir, "my-uuid.jsonl"), "{}");
 
     const result = await findCodexSessionFileById("my-uuid");
     expect(result).toBe(join(dir, "my-uuid.jsonl"));
@@ -141,7 +141,7 @@ describe("findCodexSessionFileById", () => {
   test("finds new-format file by suffix match", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "rollout-2026-02-18-my-uuid.jsonl"), "{}");
+    await Bun.write(join(dir, "rollout-2026-02-18-my-uuid.jsonl"), "{}");
 
     const result = await findCodexSessionFileById("my-uuid");
     expect(result).toBe(join(dir, "rollout-2026-02-18-my-uuid.jsonl"));
@@ -157,7 +157,7 @@ describe("scanCodexSessions", () => {
   test("scans new-format session files", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
+    await Bun.write(
       join(dir, "rollout-2026-02-18-scan-uuid.jsonl"),
       JSON.stringify({
         type: "session_meta",
@@ -183,7 +183,7 @@ describe("scanCodexSessions", () => {
   test("uses turn_context model when new-format meta has no model", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
+    await Bun.write(
       join(dir, "rollout-2026-02-18-turn-context-model.jsonl"),
       [
         JSON.stringify({
@@ -215,7 +215,7 @@ describe("scanCodexSessions", () => {
   test("falls back to provider when new-format meta has no model", async () => {
     const dir = join(testDir, "sessions", "2026", "02", "18");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
+    await Bun.write(
       join(dir, "rollout-2026-02-18-provider-model.jsonl"),
       JSON.stringify({
         type: "session_meta",

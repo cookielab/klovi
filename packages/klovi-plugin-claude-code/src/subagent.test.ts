@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { getClaudeCodeDir, setClaudeCodeDir } from "./config.ts";
@@ -43,7 +43,7 @@ describe("parseSubAgentSession", () => {
       "agent-42.jsonl",
     );
     mkdirSync(dirname(filePath), { recursive: true });
-    writeFileSync(
+    await Bun.write(
       filePath,
       JSON.stringify({
         type: "user",

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AssistantTurn } from "@cookielab.io/klovi-plugin-core";
@@ -8,29 +8,29 @@ import { buildCodexTurns, type CodexEvent, loadCodexSession } from "./parser.ts"
 
 const testDir = join(tmpdir(), `klovi-codex-parser-test-${Date.now()}`);
 
-function writeSession(
+async function writeSession(
   uuid: string,
   meta: Record<string, unknown>,
   events: Record<string, unknown>[] = [],
-): string {
+): Promise<string> {
   const dir = join(testDir, "sessions", "openai", "2025-01-15");
   mkdirSync(dir, { recursive: true });
   const filePath = join(dir, `${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
-  writeFileSync(filePath, lines.join("\n"));
+  await Bun.write(filePath, lines.join("\n"));
   return filePath;
 }
 
-function writeNewFormatSession(
+async function writeNewFormatSession(
   uuid: string,
   meta: Record<string, unknown>,
   events: Record<string, unknown>[] = [],
-): string {
+): Promise<string> {
   const dir = join(testDir, "sessions", "2026", "02", "18");
   mkdirSync(dir, { recursive: true });
   const filePath = join(dir, `rollout-2026-02-18-${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
-  writeFileSync(filePath, lines.join("\n"));
+  await Bun.write(filePath, lines.join("\n"));
   return filePath;
 }
 
@@ -347,7 +347,7 @@ describe("buildCodexTurns", () => {
 
 describe("loadCodexSession", () => {
   test("loads and parses a full session file", async () => {
-    writeSession("test-uuid", baseMeta, [
+    await writeSession("test-uuid", baseMeta, [
       { type: "thread.started" },
       { type: "turn.started" },
       { type: "item.completed", item: { type: "reasoning", text: "Let me analyze..." } },
@@ -388,7 +388,7 @@ describe("loadCodexSession", () => {
   });
 
   test("loads session with file_change events", async () => {
-    writeSession("fc-uuid", { ...baseMeta, uuid: "fc-uuid" }, [
+    await writeSession("fc-uuid", { ...baseMeta, uuid: "fc-uuid" }, [
       { type: "turn.started" },
       {
         type: "item.completed",
@@ -412,7 +412,7 @@ describe("loadCodexSession", () => {
   });
 
   test("loads session with mcp_tool_call events", async () => {
-    writeSession("mcp-uuid", { ...baseMeta, uuid: "mcp-uuid" }, [
+    await writeSession("mcp-uuid", { ...baseMeta, uuid: "mcp-uuid" }, [
       { type: "turn.started" },
       {
         type: "item.completed",
@@ -439,7 +439,7 @@ describe("loadCodexSession", () => {
   });
 
   test("handles usage tracking across turns", async () => {
-    writeSession("usage-uuid", { ...baseMeta, uuid: "usage-uuid" }, [
+    await writeSession("usage-uuid", { ...baseMeta, uuid: "usage-uuid" }, [
       { type: "turn.started" },
       { type: "item.completed", item: { type: "agent_message", text: "Response 1" } },
       {
@@ -462,7 +462,7 @@ describe("loadCodexSession", () => {
 describe("new envelope format", () => {
   describe("loadCodexSession", () => {
     test("loads session with new-format metadata and events", async () => {
-      writeNewFormatSession("new-test-uuid", newBaseMeta, [
+      await writeNewFormatSession("new-test-uuid", newBaseMeta, [
         {
           type: "event_msg",
           timestamp: "2026-02-18T10:00:01.000Z",
@@ -526,7 +526,7 @@ describe("new envelope format", () => {
     });
 
     test("loads new-format session with command execution", async () => {
-      writeNewFormatSession(
+      await writeNewFormatSession(
         "cmd-uuid",
         { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "cmd-uuid" } },
         [
@@ -583,7 +583,7 @@ describe("new envelope format", () => {
     });
 
     test("finds new-format file by session ID with rollout prefix", async () => {
-      writeNewFormatSession(
+      await writeNewFormatSession(
         "rollout-uuid",
         { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "rollout-uuid" } },
         [
@@ -615,7 +615,7 @@ describe("new envelope format", () => {
     });
 
     test("extracts tokens from nested info.last_token_usage in new format", async () => {
-      writeNewFormatSession(
+      await writeNewFormatSession(
         "nested-tokens-uuid",
         { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "nested-tokens-uuid" } },
         [
@@ -662,7 +662,7 @@ describe("new envelope format", () => {
     });
 
     test("token_count does not prematurely flush assistant turn", async () => {
-      writeNewFormatSession(
+      await writeNewFormatSession(
         "no-flush-uuid",
         { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "no-flush-uuid" } },
         [
@@ -717,7 +717,7 @@ describe("new envelope format", () => {
         },
       };
 
-      writeNewFormatSession("provider-uuid", metaNoModel, [
+      await writeNewFormatSession("provider-uuid", metaNoModel, [
         {
           type: "turn_context",
           timestamp: "2026-02-18T10:00:00.500Z",
@@ -755,7 +755,7 @@ describe("new envelope format", () => {
         },
       };
 
-      writeNewFormatSession("provider-only-uuid", metaNoModel, [
+      await writeNewFormatSession("provider-only-uuid", metaNoModel, [
         {
           type: "event_msg",
           timestamp: "2026-02-18T10:00:01.000Z",

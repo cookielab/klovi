@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { claudeCodePlugin, getClaudeCodeDir, setClaudeCodeDir } from "./index.ts";
 
 const testDir = join(tmpdir(), `klovi-claude-index-test-${Date.now()}`);
 
-function writeJsonl(filePath: string, lines: Record<string, unknown>[]): void {
+async function writeJsonl(filePath: string, lines: Record<string, unknown>[]): Promise<void> {
   mkdirSync(dirname(filePath), { recursive: true });
-  writeFileSync(filePath, lines.map((line) => JSON.stringify(line)).join("\n"));
+  await Bun.write(filePath, lines.map((line) => JSON.stringify(line)).join("\n"));
 }
 
 describe("claudeCodePlugin", () => {
@@ -36,7 +36,7 @@ describe("claudeCodePlugin", () => {
   test("discovers, lists, loads, and links plan/implementation sessions", async () => {
     const projectId = "-Users-dev-project";
 
-    writeJsonl(join(testDir, "projects", projectId, "plan-1.jsonl"), [
+    await writeJsonl(join(testDir, "projects", projectId, "plan-1.jsonl"), [
       {
         type: "user",
         uuid: "plan-user-1",
@@ -48,7 +48,7 @@ describe("claudeCodePlugin", () => {
       },
     ]);
 
-    writeJsonl(join(testDir, "projects", projectId, "impl-1.jsonl"), [
+    await writeJsonl(join(testDir, "projects", projectId, "impl-1.jsonl"), [
       {
         type: "user",
         uuid: "impl-user-1",
@@ -97,14 +97,17 @@ describe("claudeCodePlugin", () => {
 
   test("loadSubAgentSession loads sub-agent transcript through plugin API", async () => {
     const projectId = "-Users-dev-project";
-    writeJsonl(join(testDir, "projects", projectId, "impl-1", "subagents", "agent-42.jsonl"), [
-      {
-        type: "user",
-        uuid: "subagent-user-1",
-        timestamp: "2025-01-15T11:00:00.000Z",
-        message: { role: "user", content: "sub-agent hello" },
-      },
-    ]);
+    await writeJsonl(
+      join(testDir, "projects", projectId, "impl-1", "subagents", "agent-42.jsonl"),
+      [
+        {
+          type: "user",
+          uuid: "subagent-user-1",
+          timestamp: "2025-01-15T11:00:00.000Z",
+          message: { role: "user", content: "sub-agent hello" },
+        },
+      ],
+    );
 
     const subSession = await claudeCodePlugin.loadSubAgentSession?.({
       sessionId: "impl-1",

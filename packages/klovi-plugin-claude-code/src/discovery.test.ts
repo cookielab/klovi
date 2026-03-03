@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { SessionSummary } from "@cookielab.io/klovi-plugin-core";
@@ -8,11 +8,15 @@ import { classifySessionTypes, discoverClaudeProjects, listClaudeSessions } from
 
 const testDir = join(tmpdir(), `klovi-claude-discovery-test-${Date.now()}`);
 
-function writeSession(projectId: string, sessionId: string, lines: string[]): string {
+async function writeSession(
+  projectId: string,
+  sessionId: string,
+  lines: string[],
+): Promise<string> {
   const projectDir = join(testDir, "projects", projectId);
   mkdirSync(projectDir, { recursive: true });
   const filePath = join(projectDir, `${sessionId}.jsonl`);
-  writeFileSync(filePath, lines.join("\n"));
+  await Bun.write(filePath, lines.join("\n"));
   return filePath;
 }
 
@@ -38,7 +42,7 @@ describe("claude-code discovery", () => {
   });
 
   test("discovers projects and lists sessions from valid jsonl files", async () => {
-    writeSession("-Users-dev-project-a", "session-1", [
+    await writeSession("-Users-dev-project-a", "session-1", [
       JSON.stringify({
         type: "user",
         timestamp: "2025-01-15T10:00:00.000Z",
@@ -66,7 +70,7 @@ describe("claude-code discovery", () => {
   });
 
   test("prefers cwd from newest session file", async () => {
-    const oldPath = writeSession("-Users-dev-project-a", "session-1", [
+    const oldPath = await writeSession("-Users-dev-project-a", "session-1", [
       JSON.stringify({
         type: "user",
         timestamp: "2025-01-14T10:00:00.000Z",
@@ -78,7 +82,7 @@ describe("claude-code discovery", () => {
       }),
     ]);
 
-    const newPath = writeSession("-Users-dev-project-a", "session-2", [
+    const newPath = await writeSession("-Users-dev-project-a", "session-2", [
       JSON.stringify({
         type: "user",
         timestamp: "2025-01-15T10:00:00.000Z",
@@ -100,7 +104,7 @@ describe("claude-code discovery", () => {
   });
 
   test("falls back to older cwd when newest session has no cwd", async () => {
-    const oldPath = writeSession("-Users-dev-project-a", "session-1", [
+    const oldPath = await writeSession("-Users-dev-project-a", "session-1", [
       JSON.stringify({
         type: "user",
         timestamp: "2025-01-14T10:00:00.000Z",
@@ -112,7 +116,7 @@ describe("claude-code discovery", () => {
       }),
     ]);
 
-    const newPath = writeSession("-Users-dev-project-a", "session-2", [
+    const newPath = await writeSession("-Users-dev-project-a", "session-2", [
       JSON.stringify({
         type: "user",
         timestamp: "2025-01-15T10:00:00.000Z",

@@ -1,21 +1,21 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-index-test-${Date.now()}`);
 
-function writeSession(
+async function writeSession(
   uuid: string,
   meta: Record<string, unknown>,
   events: Record<string, unknown>[] = [],
-): void {
+): Promise<void> {
   const dir = join(testDir, "sessions", "openai", "2025-01-15");
   mkdirSync(dir, { recursive: true });
   const filePath = join(dir, `${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((event) => JSON.stringify(event))];
-  writeFileSync(filePath, lines.join("\n"));
+  await Bun.write(filePath, lines.join("\n"));
 }
 
 describe("codexCliPlugin", () => {
@@ -41,7 +41,7 @@ describe("codexCliPlugin", () => {
   });
 
   test("discovers, lists, and loads sessions through plugin interface", async () => {
-    writeSession(
+    await writeSession(
       "uuid-1",
       {
         uuid: "uuid-1",

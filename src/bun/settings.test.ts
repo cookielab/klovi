@@ -1,6 +1,6 @@
 // src/bun/settings.test.ts
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { PluginSettings } from "./settings.ts";
@@ -13,8 +13,8 @@ function settingsPath(): string {
 }
 
 describe("settings", () => {
-  afterEach(() => {
-    if (existsSync(testDir)) {
+  afterEach(async () => {
+    if (await Bun.file(testDir).exists()) {
       rmSync(testDir, { recursive: true });
     }
   });
@@ -51,7 +51,7 @@ describe("settings", () => {
   test("saveSettings creates parent directories", async () => {
     const deep = join(testDir, "a", "b", "settings.json");
     await saveSettings(deep, getDefaultSettings());
-    expect(existsSync(deep)).toBe(true);
+    expect(await Bun.file(deep).exists()).toBe(true);
   });
 
   test("loadSettings returns defaults for corrupted JSON", async () => {

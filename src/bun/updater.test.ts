@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { UpdateStatus } from "../shared/rpc-types.ts";
@@ -192,7 +192,7 @@ describe("UpdateManager", () => {
       appDataDir: testDir,
     });
     await mgr.cleanup();
-    expect(existsSync(join(testDir, "updates", "2.0.0"))).toBe(false);
+    expect(await Bun.file(join(testDir, "updates", "2.0.0")).exists()).toBe(false);
   });
 
   test("cleanup does not throw when updates directory missing", async () => {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -31,9 +31,9 @@ describe("claude discovery utils", () => {
   });
 
   test("listFilesBySuffix filters matching files", async () => {
-    writeFileSync(join(testDir, "a.jsonl"), "{}");
-    writeFileSync(join(testDir, "b.txt"), "x");
-    writeFileSync(join(testDir, "c.jsonl"), "{}");
+    await Bun.write(join(testDir, "a.jsonl"), "{}");
+    await Bun.write(join(testDir, "b.txt"), "x");
+    await Bun.write(join(testDir, "c.jsonl"), "{}");
 
     const files = await listFilesBySuffix(testDir, ".jsonl");
     expect(files.sort()).toEqual(["a.jsonl", "c.jsonl"]);
@@ -43,8 +43,8 @@ describe("claude discovery utils", () => {
     const first = join(testDir, "a.jsonl");
     const second = join(testDir, "b.jsonl");
 
-    writeFileSync(first, "{}");
-    writeFileSync(second, "{}");
+    await Bun.write(first, "{}");
+    await Bun.write(second, "{}");
     utimesSync(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
     utimesSync(second, new Date("2025-01-15T00:00:00.000Z"), new Date("2025-01-15T00:00:00.000Z"));
 
@@ -56,8 +56,8 @@ describe("claude discovery utils", () => {
     const first = join(testDir, "a.jsonl");
     const second = join(testDir, "b.jsonl");
 
-    writeFileSync(first, "{}");
-    writeFileSync(second, "{}");
+    await Bun.write(first, "{}");
+    await Bun.write(second, "{}");
     utimesSync(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
     utimesSync(second, new Date("2025-01-15T00:00:00.000Z"), new Date("2025-01-15T00:00:00.000Z"));
 
@@ -67,7 +67,7 @@ describe("claude discovery utils", () => {
 
   test("readTextPrefix reads only requested prefix length", async () => {
     const filePath = join(testDir, "sample.txt");
-    writeFileSync(filePath, "abcdef");
+    await Bun.write(filePath, "abcdef");
 
     const prefix = await readTextPrefix(filePath, 3);
     expect(prefix).toBe("abc");

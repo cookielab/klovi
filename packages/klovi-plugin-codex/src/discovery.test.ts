@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setCodexCliDir } from "./config.ts";
@@ -7,32 +7,32 @@ import { discoverCodexProjects, listCodexSessions } from "./discovery.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-discovery-test-${Date.now()}`);
 
-function writeSession(
+async function writeSession(
   provider: string,
   date: string,
   uuid: string,
   meta: Record<string, unknown>,
   events: Record<string, unknown>[] = [],
-): string {
+): Promise<string> {
   const dir = join(testDir, "sessions", provider, date);
   mkdirSync(dir, { recursive: true });
   const filePath = join(dir, `${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
-  writeFileSync(filePath, lines.join("\n"));
+  await Bun.write(filePath, lines.join("\n"));
   return filePath;
 }
 
-function writeNewFormatSession(
+async function writeNewFormatSession(
   datePath: string,
   uuid: string,
   meta: Record<string, unknown>,
   events: Record<string, unknown>[] = [],
-): string {
+): Promise<string> {
   const dir = join(testDir, "sessions", datePath);
   mkdirSync(dir, { recursive: true });
   const filePath = join(dir, `rollout-${datePath.replace(/\//g, "-")}-${uuid}.jsonl`);
   const lines = [JSON.stringify(meta), ...events.map((e) => JSON.stringify(e))];
-  writeFileSync(filePath, lines.join("\n"));
+  await Bun.write(filePath, lines.join("\n"));
   return filePath;
 }
 
@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe("discoverCodexProjects", () => {
   test("discovers projects from session files", async () => {
-    writeSession("openai", "2025-01-15", "uuid-1", {
+    await writeSession("openai", "2025-01-15", "uuid-1", {
       uuid: "uuid-1",
       name: "Fix bug",
       cwd: "/Users/dev/project-a",
@@ -56,7 +56,7 @@ describe("discoverCodexProjects", () => {
       provider_id: "openai",
     });
 
-    writeSession("openai", "2025-01-16", "uuid-2", {
+    await writeSession("openai", "2025-01-16", "uuid-2", {
       uuid: "uuid-2",
       name: "Add feature",
       cwd: "/Users/dev/project-a",
@@ -75,7 +75,7 @@ describe("discoverCodexProjects", () => {
   });
 
   test("groups sessions by cwd into separate projects", async () => {
-    writeSession("openai", "2025-01-15", "uuid-1", {
+    await writeSession("openai", "2025-01-15", "uuid-1", {
       uuid: "uuid-1",
       cwd: "/Users/dev/project-a",
       timestamps: { created: 1706000000, updated: 1706001000 },
@@ -83,7 +83,7 @@ describe("discoverCodexProjects", () => {
       provider_id: "openai",
     });
 
-    writeSession("openai", "2025-01-15", "uuid-2", {
+    await writeSession("openai", "2025-01-15", "uuid-2", {
       uuid: "uuid-2",
       cwd: "/Users/dev/project-b",
       timestamps: { created: 1706000000, updated: 1706001000 },
@@ -106,14 +106,14 @@ describe("discoverCodexProjects", () => {
   test("skips files with malformed first line", async () => {
     const dir = join(testDir, "sessions", "openai", "2025-01-15");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "bad-uuid.jsonl"), "not valid json\n");
+    await Bun.write(join(dir, "bad-uuid.jsonl"), "not valid json\n");
 
     const projects = await discoverCodexProjects();
     expect(projects).toEqual([]);
   });
 
   test("handles multiple providers", async () => {
-    writeSession("openai", "2025-01-15", "uuid-1", {
+    await writeSession("openai", "2025-01-15", "uuid-1", {
       uuid: "uuid-1",
       cwd: "/Users/dev/project",
       timestamps: { created: 1706000000, updated: 1706001000 },
@@ -121,7 +121,7 @@ describe("discoverCodexProjects", () => {
       provider_id: "openai",
     });
 
-    writeSession("anthropic", "2025-01-15", "uuid-2", {
+    await writeSession("anthropic", "2025-01-15", "uuid-2", {
       uuid: "uuid-2",
       cwd: "/Users/dev/project",
       timestamps: { created: 1706100000, updated: 1706101000 },
@@ -139,7 +139,7 @@ describe("discoverCodexProjects", () => {
 
 describe("listCodexSessions", () => {
   test("lists sessions matching a project cwd", async () => {
-    writeSession("openai", "2025-01-15", "uuid-1", {
+    await writeSession("openai", "2025-01-15", "uuid-1", {
       uuid: "uuid-1",
       name: "Fix the login bug",
       cwd: "/Users/dev/project-a",
@@ -148,7 +148,7 @@ describe("listCodexSessions", () => {
       provider_id: "openai",
     });
 
-    writeSession("openai", "2025-01-16", "uuid-2", {
+    await writeSession("openai", "2025-01-16", "uuid-2", {
       uuid: "uuid-2",
       name: "Add tests",
       cwd: "/Users/dev/project-a",
@@ -158,7 +158,7 @@ describe("listCodexSessions", () => {
     });
 
     // Different project, should not be included
-    writeSession("openai", "2025-01-15", "uuid-3", {
+    await writeSession("openai", "2025-01-15", "uuid-3", {
       uuid: "uuid-3",
       name: "Other project",
       cwd: "/Users/dev/project-b",
@@ -178,7 +178,7 @@ describe("listCodexSessions", () => {
   });
 
   test("uses first agent_message when name is empty", async () => {
-    writeSession(
+    await writeSession(
       "openai",
       "2025-01-15",
       "uuid-1",
@@ -205,7 +205,7 @@ describe("listCodexSessions", () => {
   });
 
   test("falls back to default message when no name or agent_message", async () => {
-    writeSession(
+    await writeSession(
       "openai",
       "2025-01-15",
       "uuid-1",
@@ -226,7 +226,7 @@ describe("listCodexSessions", () => {
   });
 
   test("returns empty for non-matching cwd", async () => {
-    writeSession("openai", "2025-01-15", "uuid-1", {
+    await writeSession("openai", "2025-01-15", "uuid-1", {
       uuid: "uuid-1",
       cwd: "/Users/dev/project-a",
       timestamps: { created: 1706000000, updated: 1706001000 },
@@ -239,7 +239,7 @@ describe("listCodexSessions", () => {
   });
 
   test("sessions sorted by timestamp descending", async () => {
-    writeSession("openai", "2025-01-15", "uuid-old", {
+    await writeSession("openai", "2025-01-15", "uuid-old", {
       uuid: "uuid-old",
       name: "Old session",
       cwd: "/Users/dev/project",
@@ -248,7 +248,7 @@ describe("listCodexSessions", () => {
       provider_id: "openai",
     });
 
-    writeSession("openai", "2025-01-16", "uuid-new", {
+    await writeSession("openai", "2025-01-16", "uuid-new", {
       uuid: "uuid-new",
       name: "New session",
       cwd: "/Users/dev/project",
@@ -267,7 +267,7 @@ describe("listCodexSessions", () => {
 describe("new envelope format", () => {
   describe("discoverCodexProjects", () => {
     test("discovers projects from new-format session files", async () => {
-      writeNewFormatSession("2026/02/18", "new-uuid-1", {
+      await writeNewFormatSession("2026/02/18", "new-uuid-1", {
         type: "session_meta",
         timestamp: "2026-02-18T10:00:00.000Z",
         payload: {
@@ -288,7 +288,7 @@ describe("new envelope format", () => {
     });
 
     test("mixes old and new format sessions into same project", async () => {
-      writeSession("openai", "2025-01-15", "old-uuid", {
+      await writeSession("openai", "2025-01-15", "old-uuid", {
         uuid: "old-uuid",
         cwd: "/Users/dev/project",
         timestamps: { created: 1706000000, updated: 1706001000 },
@@ -296,7 +296,7 @@ describe("new envelope format", () => {
         provider_id: "openai",
       });
 
-      writeNewFormatSession("2026/02/18", "new-uuid", {
+      await writeNewFormatSession("2026/02/18", "new-uuid", {
         type: "session_meta",
         timestamp: "2026-02-18T10:00:00.000Z",
         payload: {
@@ -316,7 +316,7 @@ describe("new envelope format", () => {
 
   describe("listCodexSessions", () => {
     test("lists new-format sessions", async () => {
-      writeNewFormatSession("2026/02/18", "new-uuid-1", {
+      await writeNewFormatSession("2026/02/18", "new-uuid-1", {
         type: "session_meta",
         timestamp: "2026-02-18T10:00:00.000Z",
         payload: {
@@ -337,7 +337,7 @@ describe("new envelope format", () => {
     });
 
     test("extracts first user message from new-format event_msg", async () => {
-      writeNewFormatSession(
+      await writeNewFormatSession(
         "2026/02/18",
         "msg-uuid",
         {
@@ -371,7 +371,7 @@ describe("new envelope format", () => {
     });
 
     test("falls back to Codex session when no messages in new format", async () => {
-      writeNewFormatSession("2026/02/18", "empty-uuid", {
+      await writeNewFormatSession("2026/02/18", "empty-uuid", {
         type: "session_meta",
         timestamp: "2026-02-18T10:00:00.000Z",
         payload: {
