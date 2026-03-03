@@ -4,9 +4,6 @@
   "description": "Core plugin contracts and registry for Klovi plugin packages",
   "type": "module",
   "license": "MIT",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },
