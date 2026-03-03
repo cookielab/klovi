@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Klovi
+Comment=Desktop viewer for AI coding sessions
+Exec=klovi %U
+Icon=klovi
+Type=Application
+Categories=Development;
+StartupWMClass=klovi
+Terminal=false
