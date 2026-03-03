@@ -261,7 +261,7 @@ export class UpdateManager {
         } catch {}
         if (attempt < MAX_RETRIES - 1) {
           const delay = 2 ** attempt * 1000; // 1s, 2s, 4s
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await Bun.sleep(delay);
         }
       }
     }
