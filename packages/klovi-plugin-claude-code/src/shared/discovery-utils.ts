@@ -20,8 +20,12 @@ export async function readDirEntriesSafe(dir: string): Promise<Dirent[]> {
 
 export async function listFilesBySuffix(dir: string, suffix: string): Promise<string[]> {
   try {
-    const files = await readdir(dir);
-    return files.filter((file) => file.endsWith(suffix));
+    const glob = new Bun.Glob(`*${suffix}`);
+    const results: string[] = [];
+    for await (const file of glob.scan({ cwd: dir })) {
+      results.push(file);
+    }
+    return results;
   } catch {
     return [];
   }
