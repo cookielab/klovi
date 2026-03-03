@@ -77,13 +77,13 @@ setupMockRPC({
 Plugin discovery tests usually create temporary directory trees and fixture JSONL files, then point plugin config to the temp location.
 
 ```ts
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { setCodexCliDir } from "./config.ts";
 
 const root = join(tmpdir(), "klovi-test");
-mkdirSync(join(root, "sessions", "openai", "2025-01-15"), { recursive: true });
-writeFileSync(join(root, "sessions", "openai", "2025-01-15", "abc.jsonl"), "{...}\n{...}");
+await mkdir(join(root, "sessions", "openai", "2025-01-15"), { recursive: true });
+await Bun.write(join(root, "sessions", "openai", "2025-01-15", "abc.jsonl"), "{...}\n{...}");
 setCodexCliDir(root);
 ```
 
