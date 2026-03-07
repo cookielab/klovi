@@ -33,6 +33,28 @@ bun test packages/klovi-design-system/src
 bun test --watch
 ```
 
+## Dual-Runtime Coverage
+
+Bun is the default development and test runtime. The plugin layer also supports
+Node.js via `@effect/platform-node` providers. CI runs a dedicated Node smoke
+test to catch accidental Bun-only coupling in plugin code.
+
+```bash
+bun run test:node-smoke   # Node plugin runtime smoke (uses npx tsx)
+```
+
+The smoke test (`scripts/plugin-runtime-node-smoke.ts`) verifies:
+
+- All plugin packages import cleanly under Node
+- A `PluginRegistry` can be built with `NodePluginLayer`
+- File-backed plugins (Claude Code) can discover, list, and load sessions
+- The OpenCode SQLite adapter initializes without errors
+
+To add new runtime smoke coverage, add assertions to
+`scripts/plugin-runtime-node-smoke.ts`. Keep the full test suite in `bun test`;
+the Node smoke path is a targeted compatibility check, not a mirror of the
+entire suite.
+
 ## Test Layout
 
 ### App Shell Tests (`apps/desktop/src/`)
