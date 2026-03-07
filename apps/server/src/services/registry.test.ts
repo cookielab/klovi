@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { MergedProject, PluginProject, ToolPlugin } from "../shared/plugin-types.ts";
-import type { SessionSummary } from "../shared/types.ts";
+import type { SessionSummary } from "@cookielab.io/klovi-ui/types";
+import type { MergedProject, PluginProject, ToolPlugin } from "./plugin-types.ts";
 import { PluginRegistry } from "./registry.ts";
 
 function createMockPlugin(

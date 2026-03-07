@@ -24,6 +24,7 @@
         "@cookielab.io/klovi-plugin-codex": "workspace:*",
         "@cookielab.io/klovi-plugin-core": "workspace:*",
         "@cookielab.io/klovi-plugin-opencode": "workspace:*",
+        "@cookielab.io/klovi-server": "workspace:*",
         "@cookielab.io/klovi-ui": "workspace:*",
         "@cookielab.io/klovi-web": "workspace:*",
         "electrobun": "^1.14.4",
@@ -32,6 +33,17 @@
       },
       "devDependencies": {
         "@testing-library/react": "^16.3.2",
+      },
+    },
+    "apps/server": {
+      "name": "@cookielab.io/klovi-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+        "@cookielab.io/klovi-plugin-codex": "workspace:*",
+        "@cookielab.io/klovi-plugin-core": "workspace:*",
+        "@cookielab.io/klovi-plugin-opencode": "workspace:*",
+        "@cookielab.io/klovi-ui": "workspace:*",
       },
     },
     "apps/web": {
@@ -184,6 +196,8 @@
     "@cookielab.io/klovi-plugin-core": ["@cookielab.io/klovi-plugin-core@workspace:packages/klovi-plugin-core"],
 
     "@cookielab.io/klovi-plugin-opencode": ["@cookielab.io/klovi-plugin-opencode@workspace:packages/klovi-plugin-opencode"],
+
+    "@cookielab.io/klovi-server": ["@cookielab.io/klovi-server@workspace:apps/server"],
 
     "@cookielab.io/klovi-ui": ["@cookielab.io/klovi-ui@workspace:packages/klovi-ui"],
 

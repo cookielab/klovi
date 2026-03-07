@@ -1,12 +1,12 @@
-import type { PluginRegistry } from "../plugins/registry.ts";
-import { parseSessionId } from "../shared/session-id.ts";
 import type {
   DashboardStats,
   ModelTokenUsage,
   SessionSummary,
   TokenUsage,
   Turn,
-} from "../shared/types.ts";
+} from "@cookielab.io/klovi-ui/types";
+import type { PluginRegistry } from "./registry.ts";
+import { parseSessionId } from "./session-id.ts";
 
 interface SessionWithProject {
   project: Awaited<ReturnType<PluginRegistry["discoverAllProjects"]>>[number];

@@ -1,8 +1,8 @@
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import { semver } from "bun";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
-import { loadSettings } from "./settings.ts";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
 

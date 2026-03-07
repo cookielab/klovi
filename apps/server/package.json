@@ -1,0 +1,25 @@
+{
+  "name": "@cookielab.io/klovi-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Klovi application server and services",
+  "type": "module",
+  "exports": {
+    "./services/app-services": "./src/services/app-services.ts",
+    "./services/auto-discover": "./src/services/auto-discover.ts",
+    "./services/catalog": "./src/services/catalog.ts",
+    "./services/registry": "./src/services/registry.ts",
+    "./services/settings": "./src/services/settings.ts",
+    "./services/stats": "./src/services/stats.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+    "@cookielab.io/klovi-plugin-codex": "workspace:*",
+    "@cookielab.io/klovi-plugin-core": "workspace:*",
+    "@cookielab.io/klovi-plugin-opencode": "workspace:*",
+    "@cookielab.io/klovi-ui": "workspace:*"
+  }
+}

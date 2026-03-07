@@ -1,7 +1,7 @@
 import { mkdir, rename } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
-import type { UpdateChannel } from "../shared/rpc-types.ts";
+export type UpdateChannel = "stable" | "candidate" | "beta";
 
 export type UpdateSettings = {
   channel: UpdateChannel;

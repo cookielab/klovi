@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { PluginRegistry } from "../plugins/registry.ts";
-import type { ToolPlugin } from "../shared/plugin-types.ts";
-import type { Session, SessionSummary } from "../shared/types.ts";
+import type { Session, SessionSummary } from "@cookielab.io/klovi-ui/types";
+import type { ToolPlugin } from "./plugin-types.ts";
+import { PluginRegistry } from "./registry.ts";
 import { scanStats } from "./stats.ts";
 
 function isoDaysAgo(days: number): string {

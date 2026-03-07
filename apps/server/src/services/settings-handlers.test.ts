@@ -3,18 +3,14 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  getDefaultSettings,
-  loadSettings,
-  saveSettings,
-} from "@cookielab.io/klovi-server/services/settings";
-import {
   getGeneralSettings,
   getPluginSettings,
   isFirstLaunch,
   resetSettings,
   updateGeneralSettings,
   updatePluginSetting,
-} from "./rpc-handlers.ts";
+} from "./app-services.ts";
+import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
 
 const testDir = join(tmpdir(), `klovi-handlers-test-${Date.now()}`);
 const settingsPath = join(testDir, "settings.json");

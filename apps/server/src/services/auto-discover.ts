@@ -1,7 +1,7 @@
-import type { PluginSettings } from "../bun/settings.ts";
-import type { ToolPlugin } from "../shared/plugin-types.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
+import type { ToolPlugin } from "./plugin-types.ts";
 import { PluginRegistry } from "./registry.ts";
+import type { PluginSettings } from "./settings.ts";
 
 function hasDataDir(plugin: ToolPlugin): Promise<boolean> {
   if (plugin.isDataAvailable) {
