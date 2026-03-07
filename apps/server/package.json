@@ -5,6 +5,7 @@
   "description": "Klovi application server and services",
   "type": "module",
   "exports": {
+    "./server": "./src/server.ts",
     "./services/app-services": "./src/services/app-services.ts",
     "./services/auto-discover": "./src/services/auto-discover.ts",
     "./services/catalog": "./src/services/catalog.ts",
