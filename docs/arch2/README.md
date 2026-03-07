@@ -49,6 +49,8 @@ The documents here are written for AI implementers. They are intentionally speci
   Purpose: isolate OpenCode SQLite access behind Effect services so the plugin can run under Bun and Node.
 - [plans/18-add-node-and-bun-plugin-runtime-coverage.md](./plans/18-add-node-and-bun-plugin-runtime-coverage.md)
   Purpose: add targeted dual-runtime coverage so the plugin migration is verified under Bun and Node.
+- [plans/19-migrate-server-to-effect-platform.md](./plans/19-migrate-server-to-effect-platform.md)
+  Purpose: move `apps/server` onto `@effect/platform` so the shared server can run on Bun and Node with thin runtime-specific adapters.
 
 ## Recommended Follow-up Order
 
@@ -58,6 +60,7 @@ The documents here are written for AI implementers. They are intentionally speci
 4. [16-migrate-claude-code-and-codex-plugins-to-effect-platform.md](./plans/16-migrate-claude-code-and-codex-plugins-to-effect-platform.md)
 5. [17-migrate-opencode-plugin-to-effect-sqlite-adapter.md](./plans/17-migrate-opencode-plugin-to-effect-sqlite-adapter.md)
 6. [18-add-node-and-bun-plugin-runtime-coverage.md](./plans/18-add-node-and-bun-plugin-runtime-coverage.md)
+7. [19-migrate-server-to-effect-platform.md](./plans/19-migrate-server-to-effect-platform.md)
 
 ## Recommended Execution Order
 
@@ -107,3 +110,4 @@ After applying follow-up remediation plans:
 - built-in plugin registry rebuilds use fresh plugin instances rather than mutating shared singletons
 - Claude Code, Codex, and OpenCode plugin execution paths are structured to support both Bun and Node runtimes
 - the repository has explicit Bun-plus-Node coverage for the migrated plugin layer
+- `apps/server` runs through `@effect/platform` and is startable from Bun and Node without changing its public embedding contract
