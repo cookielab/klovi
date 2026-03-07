@@ -4,6 +4,11 @@
   "private": true,
   "description": "Shared application UI for Klovi",
   "type": "module",
+  "exports": {
+    "./bootstrap": "./src/bootstrap.tsx",
+    "./app": "./src/app/App.tsx",
+    "./app/*": "./src/app/*"
+  },
   "scripts": {
     "dev": "bun build src/main.tsx --outdir dist --watch",
     "build": "bun build src/main.tsx --outdir dist --minify",
@@ -11,8 +16,15 @@
   },
   "dependencies": {
     "@cookielab.io/klovi-design-system": "workspace:*",
+    "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+    "@cookielab.io/klovi-plugin-codex": "workspace:*",
+    "@cookielab.io/klovi-plugin-core": "workspace:*",
+    "@cookielab.io/klovi-plugin-opencode": "workspace:*",
     "@cookielab.io/klovi-ui": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2"
   }
 }

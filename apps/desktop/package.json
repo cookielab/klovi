@@ -29,6 +29,7 @@
     "@cookielab.io/klovi-plugin-opencode": "workspace:*",
     "@cookielab.io/klovi-design-system": "workspace:*",
     "@cookielab.io/klovi-ui": "workspace:*",
+    "@cookielab.io/klovi-web": "workspace:*",
     "electrobun": "^1.14.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"

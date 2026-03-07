@@ -1,5 +1,9 @@
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
+import { AppGate } from "./app/App.tsx";
+
+export type { RPCClient } from "./app/rpc.ts";
+export { getRPC, setRPCClient } from "./app/rpc.ts";
 
 export interface KloviHostCapabilities {
   desktop: boolean;
@@ -45,11 +49,7 @@ export interface MountKloviAppConfig {
   initialUrl?: string | undefined;
 }
 
-function KloviPlaceholder() {
-  return createElement("div", { style: { padding: "2rem", fontFamily: "system-ui" } }, "Klovi");
-}
-
 export function mountKloviApp(config: MountKloviAppConfig): void {
   const root = createRoot(config.container);
-  root.render(createElement(KloviPlaceholder));
+  root.render(createElement(AppGate));
 }
