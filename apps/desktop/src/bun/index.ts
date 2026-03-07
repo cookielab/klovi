@@ -1,60 +1,25 @@
 import { join } from "node:path";
-import { createRegistry } from "@cookielab.io/klovi/services/auto-discover";
-import type { PluginRegistry } from "@cookielab.io/klovi/services/registry";
-import { loadSettings } from "@cookielab.io/klovi/services/settings";
+import { startKloviServer } from "@cookielab.io/klovi/server";
+import {
+  getUpdateSettings,
+  setVersion,
+  updateUpdateSettings,
+} from "@cookielab.io/klovi/services/app-services";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
-import {
-  getGeneralSettings,
-  getPluginSettings,
-  getProjects,
-  getSession,
-  getSessions,
-  getStats,
-  getSubAgent,
-  getUpdateSettings,
-  getVersion,
-  isFirstLaunch,
-  resetSettings,
-  searchSessions,
-  setVersion,
-  updateGeneralSettings,
-  updatePluginSetting,
-  updateUpdateSettings,
-} from "./rpc-handlers.ts";
 import { UpdateManager } from "./updater.ts";
 
 // Initialize version from package.json
 setVersion(pkg.version ?? "0.0.0", pkg.commit ?? "");
 
-let registry: PluginRegistry | null = null;
 let updateManager: UpdateManager | null = null;
-
-function getUpdateManager(): UpdateManager {
-  if (!updateManager) {
-    updateManager = new UpdateManager({
-      currentVersion: getVersion().version,
-      platform:
-        process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux",
-      arch: process.arch === "arm64" ? "arm64" : "x64",
-      settingsPath: getSettingsPath(),
-      appDataDir: Utils.paths.userData,
-    });
-  }
-  return updateManager;
-}
-
-function getRegistry(): PluginRegistry {
-  if (!registry) throw new Error("Risk not accepted yet");
-  return registry;
-}
+let serverUrl = "";
 
 function getSettingsPath(): string {
   try {
     return join(Utils.paths.userData, "settings.json");
   } catch {
-    // Fallback if version.json not readable (e.g. dev mode outside app bundle)
     const home = Bun.env["HOME"] ?? "";
     if (process.platform === "darwin") {
       return join(
@@ -66,65 +31,64 @@ function getSettingsPath(): string {
         "settings.json",
       );
     }
-    // Linux: use XDG_CONFIG_HOME or ~/.config
     const configHome = Bun.env["XDG_CONFIG_HOME"] ?? join(home, ".config");
     return join(configHome, "klovi", "settings.json");
   }
 }
 
+function getUpdateManager(): UpdateManager {
+  if (!updateManager) {
+    updateManager = new UpdateManager({
+      currentVersion: pkg.version ?? "dev",
+      platform:
+        process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux",
+      arch: process.arch === "arm64" ? "arm64" : "x64",
+      settingsPath: getSettingsPath(),
+      appDataDir: Utils.paths.userData,
+    });
+  }
+  return updateManager;
+}
+
+// Start embedded server
+const server = await startKloviServer({
+  host: "127.0.0.1",
+  port: 0,
+  mode: "embedded",
+});
+serverUrl = server.url;
+
+// Start update checking
+const mgr = getUpdateManager();
+mgr.setStatusCallback((status) => {
+  win.webview.rpc?.send.updateStatus(status);
+});
+await mgr.cleanup();
+await mgr.startSchedule();
+
+// Desktop RPC: only native host bridge methods
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
-      acceptRisks: async () => {
-        if (!registry) {
-          const settings = await loadSettings(getSettingsPath());
-          registry = await createRegistry(settings);
-        }
-
-        // Start update checking
-        const mgr = getUpdateManager();
-        mgr.setStatusCallback((status) => {
-          win.webview.rpc?.send.updateStatus(status);
+      getServerUrl: () => ({ url: serverUrl }),
+      browseDirectory: async (params) => {
+        const paths = await Utils.openFileDialog({
+          startingFolder: params.startingFolder ?? "~/",
+          canChooseFiles: false,
+          canChooseDirectory: true,
+          allowsMultipleSelection: false,
         });
-        await mgr.cleanup();
-        await mgr.startSchedule();
-
-        return { ok: true };
-      },
-      // getVersion, isFirstLaunch, and getGeneralSettings read settings only — intentionally ungated
-      getVersion: () => getVersion(),
-      isFirstLaunch: () => isFirstLaunch(getSettingsPath()),
-      resetSettings: async () => {
-        const result = await resetSettings(getSettingsPath());
-        registry = null;
-        return result;
-      },
-      getGeneralSettings: () => getGeneralSettings(getSettingsPath()),
-      updateGeneralSettings: (params) => updateGeneralSettings(getSettingsPath(), params),
-      getStats: () => getStats(getRegistry()),
-      getProjects: () => getProjects(getRegistry()),
-      getSessions: (params) => getSessions(getRegistry(), params),
-      getSession: (params) => getSession(getRegistry(), params),
-      getSubAgent: (params) => getSubAgent(getRegistry(), params),
-      searchSessions: () => searchSessions(getRegistry()),
-      getPluginSettings: () => getPluginSettings(getSettingsPath()),
-      updatePluginSetting: async (params) => {
-        const result = await updatePluginSetting(getSettingsPath(), params);
-        registry = await createRegistry(await loadSettings(getSettingsPath()));
-        return result;
+        const selected = paths[0];
+        return { path: selected && selected !== "" ? selected : null };
       },
       getUpdateSettings: () => getUpdateSettings(getSettingsPath()),
       updateUpdateSettings: async (params) => {
         const result = await updateUpdateSettings(getSettingsPath(), params);
-        await updateManager?.restartSchedule();
+        await mgr.restartSchedule();
         return result;
       },
-      checkForUpdate: () => {
-        const mgr = getUpdateManager();
-        return mgr.check();
-      },
+      checkForUpdate: () => mgr.check(),
       applyUpdate: async () => {
-        const mgr = getUpdateManager();
         try {
           await mgr.apply();
           return { ok: true };
@@ -135,16 +99,6 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       openExternal: (params) => {
         Utils.openExternal(params.url);
         return { ok: true };
-      },
-      browseDirectory: async (params) => {
-        const paths = await Utils.openFileDialog({
-          startingFolder: params.startingFolder ?? "~/",
-          canChooseFiles: false,
-          canChooseDirectory: true,
-          allowsMultipleSelection: false,
-        });
-        const selected = paths[0];
-        return { path: selected && selected !== "" ? selected : null };
       },
     },
     messages: {},
@@ -225,4 +179,5 @@ Electrobun.events.on("application-menu-clicked", (e) => {
 
 Electrobun.events.on("before-quit", () => {
   updateManager?.stopSchedule();
+  server.stop();
 });
