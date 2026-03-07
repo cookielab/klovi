@@ -12,8 +12,8 @@
     "./lib/*": "./src/lib/*"
   },
   "scripts": {
-    "dev": "bun build src/main.tsx --outdir dist --watch",
-    "build": "bun build src/main.tsx --outdir dist --minify",
+    "dev": "bun build src/index.html --outdir dist --watch",
+    "build": "bun build src/index.html --outdir dist --minify",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

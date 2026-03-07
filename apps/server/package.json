@@ -14,9 +14,11 @@
     "./services/stats": "./src/services/stats.ts"
   },
   "scripts": {
+    "start": "bun run src/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@cookielab.io/klovi-web": "workspace:*",
     "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
     "@cookielab.io/klovi-plugin-codex": "workspace:*",
     "@cookielab.io/klovi-plugin-core": "workspace:*",

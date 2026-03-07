@@ -44,6 +44,7 @@
         "@cookielab.io/klovi-plugin-core": "workspace:*",
         "@cookielab.io/klovi-plugin-opencode": "workspace:*",
         "@cookielab.io/klovi-ui": "workspace:*",
+        "@cookielab.io/klovi-web": "workspace:*",
       },
     },
     "apps/web": {
