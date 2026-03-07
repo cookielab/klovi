@@ -1,7 +1,7 @@
 import { join } from "node:path";
-import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
-import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
-import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
+import { createRegistry } from "@cookielab.io/klovi/services/auto-discover";
+import type { PluginRegistry } from "@cookielab.io/klovi/services/registry";
+import { loadSettings } from "@cookielab.io/klovi/services/settings";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";

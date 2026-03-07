@@ -6,7 +6,7 @@ import {
   getDefaultSettings,
   loadSettings,
   saveSettings,
-} from "@cookielab.io/klovi-server/services/settings";
+} from "@cookielab.io/klovi/services/settings";
 import {
   getGeneralSettings,
   getPluginSettings,

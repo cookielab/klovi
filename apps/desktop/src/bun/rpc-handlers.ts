@@ -1,4 +1,4 @@
-// All application service logic now lives in @cookielab.io/klovi-server.
+// All application service logic now lives in @cookielab.io/klovi.
 // Desktop delegates to the shared implementation.
 export {
   getGeneralSettings,
@@ -17,4 +17,4 @@ export {
   updateGeneralSettings,
   updatePluginSetting,
   updateUpdateSettings,
-} from "@cookielab.io/klovi-server/services/app-services";
+} from "@cookielab.io/klovi/services/app-services";
