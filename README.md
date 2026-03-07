@@ -31,10 +31,13 @@ bun install
 bun run dev
 ```
 
+The root scripts are workspace wrappers. The desktop app itself lives in `apps/desktop`.
+
 ### Monorepo Packages
 
-Klovi is a Bun workspace monorepo with these key packages:
+Klovi is a Bun workspace monorepo with these key workspaces:
 
+- `apps/desktop` - native desktop app shell, Electrobun config, assets, and packaging
 - `@cookielab.io/klovi-plugin-core` - shared plugin contracts + registry
 - `@cookielab.io/klovi-plugin-claude-code` - Claude Code discovery/parsing
 - `@cookielab.io/klovi-plugin-codex` - Codex discovery/parsing
@@ -107,7 +110,7 @@ Klovi is a Bun workspace monorepo with these key packages:
 - [Electrobun](https://electrobun.dev) - native desktop framework for Bun
 - [Bun](https://bun.sh) - runtime, bundler, test runner
 - React 19 + TypeScript (strict mode)
-- Bun workspaces monorepo (`packages/*`)
+- Bun workspaces monorepo (`apps/*` + `packages/*`)
 - `@cookielab.io/klovi-ui` for feature UI modules
 - `@cookielab.io/klovi-design-system` for primitives/tokens/globals
 - react-markdown + remark-gfm

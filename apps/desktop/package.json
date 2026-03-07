@@ -1,0 +1,39 @@
+{
+  "name": "@cookielab.io/klovi",
+  "version": "0.0.0",
+  "commit": "",
+  "description": "A native desktop app for browsing and presenting AI coding session history",
+  "type": "module",
+  "license": "MIT",
+  "author": "Cookielab s.r.o.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cookielab/klovi.git"
+  },
+  "homepage": "https://github.com/cookielab/klovi",
+  "bugs": {
+    "url": "https://github.com/cookielab/klovi/issues"
+  },
+  "engines": {
+    "bun": ">=1.3"
+  },
+  "scripts": {
+    "dev": "electrobun dev",
+    "build": "electrobun build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+    "@cookielab.io/klovi-plugin-codex": "workspace:*",
+    "@cookielab.io/klovi-plugin-core": "workspace:*",
+    "@cookielab.io/klovi-plugin-opencode": "workspace:*",
+    "@cookielab.io/klovi-design-system": "workspace:*",
+    "@cookielab.io/klovi-ui": "workspace:*",
+    "electrobun": "^1.14.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2"
+  }
+}

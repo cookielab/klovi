@@ -33,5 +33,5 @@
     "allowUnusedLabels": false,
     "exactOptionalPropertyTypes": true
   },
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["build", "dist", "apps/*/build", "apps/*/dist", "node_modules"]
 }
