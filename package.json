@@ -9,7 +9,11 @@
   ],
   "scripts": {
     "dev": "bun run --filter @cookielab.io/klovi-desktop dev",
+    "dev:desktop": "bun run --filter @cookielab.io/klovi-desktop dev",
+    "dev:web": "bun run --filter @cookielab.io/klovi-web dev",
+    "dev:server": "bun run --filter @cookielab.io/klovi start",
     "build": "bun run --filter @cookielab.io/klovi-desktop build",
+    "build:web": "bun run --filter @cookielab.io/klovi-web build",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
