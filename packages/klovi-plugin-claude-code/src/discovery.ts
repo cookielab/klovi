@@ -1,8 +1,12 @@
 import { join } from "node:path";
-import type { PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
-import { sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
+import {
+  PluginConfig,
+  type PluginProject,
+  type SessionSummary,
+  sortByIsoDesc,
+} from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
 import { cleanCommandMessage } from "./command-message.ts";
-import { getProjectsDir } from "./config.ts";
 import type { RawContentBlock, RawLine } from "./raw-types.ts";
 import {
   decodeEncodedPath,
@@ -17,70 +21,78 @@ const CWD_SCAN_BYTES = 64 * 1024;
 const SESSION_META_SCAN_BYTES = 1024 * 1024;
 const BRACKETED_TEXT_REGEX = /^\[.+\]$/;
 
-async function inspectProjectSessions(
+function inspectProjectSessions(
   projectDir: string,
   sessionFiles: { fileName: string; mtime: string }[],
-): Promise<{ lastActivity: string; resolvedPath: string }> {
-  const lastActivity = sessionFiles[0]?.mtime || "";
-  let resolvedPath = "";
+) {
+  return Effect.gen(function* () {
+    const lastActivity = sessionFiles[0]?.mtime || "";
+    let resolvedPath = "";
 
-  for (const sessionFile of sessionFiles) {
-    const filePath = join(projectDir, sessionFile.fileName);
-    if (!resolvedPath) {
-      resolvedPath = await extractCwd(filePath);
+    for (const sessionFile of sessionFiles) {
+      const filePath = join(projectDir, sessionFile.fileName);
+      if (!resolvedPath) {
+        resolvedPath = yield* extractCwd(filePath);
+      }
     }
-  }
 
-  return { lastActivity, resolvedPath };
+    return { lastActivity, resolvedPath };
+  });
 }
 
-export async function discoverClaudeProjects(): Promise<PluginProject[]> {
-  const projectsDir = getProjectsDir();
-  const entries = await readDirEntriesSafe(projectsDir);
-  const projects: PluginProject[] = [];
+export function discoverClaudeProjects() {
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    const projectsDir = join(config.dataDir, "projects");
+    const entries = yield* readDirEntriesSafe(projectsDir);
+    const projects: PluginProject[] = [];
 
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
+    for (const entry of entries) {
+      if (!entry.isDirectory) continue;
 
-    const projectDir = join(projectsDir, entry.name);
-    const sessionFiles = await listFilesWithMtime(projectDir, ".jsonl");
-    if (sessionFiles.length === 0) continue;
+      const projectDir = join(projectsDir, entry.name);
+      const sessionFiles = yield* listFilesWithMtime(projectDir, ".jsonl");
+      if (sessionFiles.length === 0) continue;
 
-    const projectInfo = await inspectProjectSessions(projectDir, sessionFiles);
-    const resolvedPath = projectInfo.resolvedPath || decodeEncodedPath(entry.name);
+      const projectInfo = yield* inspectProjectSessions(projectDir, sessionFiles);
+      const resolvedPath = projectInfo.resolvedPath || decodeEncodedPath(entry.name);
 
-    projects.push({
-      pluginId: "claude-code",
-      nativeId: entry.name,
-      resolvedPath,
-      displayName: resolvedPath,
-      sessionCount: sessionFiles.length,
-      lastActivity: projectInfo.lastActivity,
-    });
-  }
+      projects.push({
+        pluginId: "claude-code",
+        nativeId: entry.name,
+        resolvedPath,
+        displayName: resolvedPath,
+        sessionCount: sessionFiles.length,
+        lastActivity: projectInfo.lastActivity,
+      });
+    }
 
-  sortByIsoDesc(projects, (project) => project.lastActivity);
-  return projects;
+    sortByIsoDesc(projects, (project) => project.lastActivity);
+    return projects;
+  });
 }
 
 const PLAN_PREFIX = "Implement the following plan";
 
-export async function listClaudeSessions(nativeId: string): Promise<SessionSummary[]> {
-  const projectDir = join(getProjectsDir(), nativeId);
-  const files = await listFilesBySuffix(projectDir, ".jsonl");
-  const sessions: SessionSummary[] = [];
+export function listClaudeSessions(nativeId: string) {
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    const projectDir = join(config.dataDir, "projects", nativeId);
+    const files = yield* listFilesBySuffix(projectDir, ".jsonl");
+    const sessions: SessionSummary[] = [];
 
-  for (const file of files) {
-    const filePath = join(projectDir, file);
-    const sessionId = file.replace(".jsonl", "");
-    const meta = await extractSessionMeta(filePath);
-    if (meta) sessions.push({ sessionId, pluginId: "claude-code", ...meta });
-  }
+    for (const file of files) {
+      const filePath = join(projectDir, file);
+      const sessionId = file.replace(".jsonl", "");
+      const meta = yield* extractSessionMeta(filePath);
+      if (meta) sessions.push({ sessionId, pluginId: "claude-code", ...meta });
+    }
 
-  classifySessionTypes(sessions);
+    classifySessionTypes(sessions);
 
-  sortByIsoDesc(sessions, (session) => session.timestamp);
-  return sessions;
+    sortByIsoDesc(sessions, (session) => session.timestamp);
+    return sessions;
+  });
 }
 
 export function classifySessionTypes(sessions: SessionSummary[]): void {
@@ -101,9 +113,13 @@ export function classifySessionTypes(sessions: SessionSummary[]): void {
   }
 }
 
-export async function extractCwd(filePath: string): Promise<string> {
-  try {
-    const text = await readTextPrefix(filePath, CWD_SCAN_BYTES);
+export function extractCwd(filePath: string) {
+  return Effect.gen(function* () {
+    const text = yield* readTextPrefix(filePath, CWD_SCAN_BYTES).pipe(
+      Effect.catchAll(() => Effect.succeed("")),
+    );
+    if (!text) return "";
+
     let cwd = "";
 
     iterateJsonl(
@@ -120,9 +136,7 @@ export async function extractCwd(filePath: string): Promise<string> {
     );
 
     return cwd;
-  } catch {
-    return "";
-  }
+  });
 }
 
 interface MetaFields {
@@ -169,11 +183,13 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
   }
 }
 
-export async function extractSessionMeta(
-  filePath: string,
-): Promise<Omit<SessionSummary, "sessionId"> | null> {
-  try {
-    const text = await readTextPrefix(filePath, SESSION_META_SCAN_BYTES);
+export function extractSessionMeta(filePath: string) {
+  return Effect.gen(function* () {
+    const text = yield* readTextPrefix(filePath, SESSION_META_SCAN_BYTES).pipe(
+      Effect.catchAll(() => Effect.succeed("")),
+    );
+    if (!text) return null;
+
     const meta: MetaFields = {
       timestamp: "",
       slug: "",
@@ -206,8 +222,6 @@ export async function extractSessionMeta(
       firstMessage: meta.firstMessage,
       model: meta.model || "unknown",
       gitBranch: meta.gitBranch || "",
-    };
-  } catch {
-    return null;
-  }
+    } as Omit<SessionSummary, "sessionId">;
+  });
 }

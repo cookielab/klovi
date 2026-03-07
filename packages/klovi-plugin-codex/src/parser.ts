@@ -8,7 +8,9 @@ import type {
   UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso } from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
 import { findCodexSessionFileById, normalizeSessionMeta } from "./session-index.ts";
+import { readFileText } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
 interface CodexItemCommand {
@@ -479,61 +481,64 @@ export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: 
   return state.turns;
 }
 
-export async function loadCodexSession(_nativeId: string, sessionId: string): Promise<Session> {
-  const filePath = await findCodexSessionFileById(sessionId);
-  if (!filePath) {
+export function loadCodexSession(_nativeId: string, sessionId: string) {
+  return Effect.gen(function* () {
+    const filePath = yield* findCodexSessionFileById(sessionId);
+    if (!filePath) {
+      return {
+        sessionId,
+        project: _nativeId,
+        turns: [],
+        pluginId: "codex-cli",
+      } as Session;
+    }
+
+    const text = yield* readFileText(filePath);
+
+    let meta: unknown = null;
+    const events: CodexEvent[] = [];
+    let turnContextModel: string | null = null;
+
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: callback parses heterogeneous JSONL events
+    iterateJsonl(text, ({ parsed, lineIndex }) => {
+      if (lineIndex === 0) {
+        const normalized = normalizeSessionMeta(parsed);
+        if (normalized) {
+          meta = normalized;
+          return;
+        }
+      }
+
+      if (!isKnownModel(turnContextModel)) {
+        const extracted = extractTurnContextModel(parsed);
+        if (isKnownModel(extracted)) {
+          turnContextModel = extracted;
+        }
+      }
+
+      const event = normalizeEvent(parsed);
+      if (event) {
+        events.push(event);
+      }
+    });
+
+    const metaInfo = normalizeSessionMeta(meta);
+    const model = isKnownModel(metaInfo?.model)
+      ? metaInfo.model
+      : isKnownModel(turnContextModel)
+        ? turnContextModel
+        : isKnownModel(metaInfo?.provider_id)
+          ? metaInfo.provider_id
+          : "unknown";
+    const timestamp = metaInfo ? epochSecondsToIso(metaInfo.timestamps.created) : "";
+
+    const turns = buildCodexTurns(events, model, timestamp);
+
     return {
       sessionId,
       project: _nativeId,
-      turns: [],
+      turns,
       pluginId: "codex-cli",
-    };
-  }
-
-  const text = await Bun.file(filePath).text();
-
-  let meta: unknown = null;
-  const events: CodexEvent[] = [];
-  let turnContextModel: string | null = null;
-
-  iterateJsonl(text, ({ parsed, lineIndex }) => {
-    if (lineIndex === 0) {
-      const normalized = normalizeSessionMeta(parsed);
-      if (normalized) {
-        meta = normalized;
-        return;
-      }
-    }
-
-    if (!isKnownModel(turnContextModel)) {
-      const extracted = extractTurnContextModel(parsed);
-      if (isKnownModel(extracted)) {
-        turnContextModel = extracted;
-      }
-    }
-
-    const event = normalizeEvent(parsed);
-    if (event) {
-      events.push(event);
-    }
+    } as Session;
   });
-
-  const metaInfo = normalizeSessionMeta(meta);
-  const model = isKnownModel(metaInfo?.model)
-    ? metaInfo.model
-    : isKnownModel(turnContextModel)
-      ? turnContextModel
-      : isKnownModel(metaInfo?.provider_id)
-        ? metaInfo.provider_id
-        : "unknown";
-  const timestamp = metaInfo ? epochSecondsToIso(metaInfo.timestamps.created) : "";
-
-  const turns = buildCodexTurns(events, model, timestamp);
-
-  return {
-    sessionId,
-    project: _nativeId,
-    turns,
-    pluginId: "codex-cli",
-  };
 }

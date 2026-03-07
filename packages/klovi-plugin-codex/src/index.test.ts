@@ -2,9 +2,22 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-index-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+  Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
+);
+
+function run<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
+}
 
 async function writeSession(
   uuid: string,
@@ -36,7 +49,7 @@ describe("codexCliPlugin", () => {
   test("exposes plugin identity and resume command", () => {
     expect(codexCliPlugin.id).toBe("codex-cli");
     expect(codexCliPlugin.displayName).toBe("Codex");
-    expect(codexCliPlugin.getDefaultDataDir()).toBe(testDir);
+    expect(codexCliPlugin.getDefaultDataDir()).toBeNull();
     expect(codexCliPlugin.getResumeCommand?.("session-123")).toBe("codex resume session-123");
   });
 
@@ -61,16 +74,16 @@ describe("codexCliPlugin", () => {
       ],
     );
 
-    const projects = await codexCliPlugin.discoverProjects();
+    const projects = await run(codexCliPlugin.discoverProjects);
     expect(projects).toHaveLength(1);
     expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
 
-    const sessions = await codexCliPlugin.listSessions("/Users/dev/project-a");
+    const sessions = await run(codexCliPlugin.listSessions("/Users/dev/project-a"));
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.pluginId).toBe("codex-cli");
     expect(sessions[0]?.sessionId).toBe("uuid-1");
 
-    const session = await codexCliPlugin.loadSession("/Users/dev/project-a", "uuid-1");
+    const session = await run(codexCliPlugin.loadSession("/Users/dev/project-a", "uuid-1"));
     expect(session.pluginId).toBe("codex-cli");
     expect(session.project).toBe("/Users/dev/project-a");
     expect(session.sessionId).toBe("uuid-1");
@@ -78,7 +91,7 @@ describe("codexCliPlugin", () => {
   });
 
   test("returns empty lists for unknown projects", async () => {
-    const sessions = await codexCliPlugin.listSessions("/Users/dev/missing");
+    const sessions = await run(codexCliPlugin.listSessions("/Users/dev/missing"));
     expect(sessions).toEqual([]);
   });
 });

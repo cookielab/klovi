@@ -2,10 +2,17 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setCodexCliDir } from "./config.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { discoverCodexProjects, listCodexSessions } from "./discovery.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-discovery-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+);
 
 async function writeSession(
   provider: string,
@@ -38,7 +45,6 @@ async function writeNewFormatSession(
 
 beforeEach(async () => {
   await mkdir(join(testDir, "sessions"), { recursive: true });
-  setCodexCliDir(testDir);
 });
 
 afterEach(async () => {
@@ -65,7 +71,9 @@ describe("discoverCodexProjects", () => {
       provider_id: "openai",
     });
 
-    const projects = await discoverCodexProjects();
+    const projects = await Effect.runPromise(
+      discoverCodexProjects().pipe(Effect.provide(testLayer)),
+    );
 
     expect(projects).toHaveLength(1);
     expect(projects[0]?.pluginId).toBe("codex-cli");
@@ -91,7 +99,9 @@ describe("discoverCodexProjects", () => {
       provider_id: "openai",
     });
 
-    const projects = await discoverCodexProjects();
+    const projects = await Effect.runPromise(
+      discoverCodexProjects().pipe(Effect.provide(testLayer)),
+    );
 
     expect(projects).toHaveLength(2);
     const paths = projects.map((p) => p.resolvedPath).sort();
@@ -99,7 +109,9 @@ describe("discoverCodexProjects", () => {
   });
 
   test("returns empty array when no sessions exist", async () => {
-    const projects = await discoverCodexProjects();
+    const projects = await Effect.runPromise(
+      discoverCodexProjects().pipe(Effect.provide(testLayer)),
+    );
     expect(projects).toEqual([]);
   });
 
@@ -108,7 +120,9 @@ describe("discoverCodexProjects", () => {
     await mkdir(dir, { recursive: true });
     await Bun.write(join(dir, "bad-uuid.jsonl"), "not valid json\n");
 
-    const projects = await discoverCodexProjects();
+    const projects = await Effect.runPromise(
+      discoverCodexProjects().pipe(Effect.provide(testLayer)),
+    );
     expect(projects).toEqual([]);
   });
 
@@ -129,7 +143,9 @@ describe("discoverCodexProjects", () => {
       provider_id: "anthropic",
     });
 
-    const projects = await discoverCodexProjects();
+    const projects = await Effect.runPromise(
+      discoverCodexProjects().pipe(Effect.provide(testLayer)),
+    );
 
     // Same cwd from different providers should merge into one project
     expect(projects).toHaveLength(1);
@@ -167,7 +183,9 @@ describe("listCodexSessions", () => {
       provider_id: "openai",
     });
 
-    const sessions = await listCodexSessions("/Users/dev/project-a");
+    const sessions = await Effect.runPromise(
+      listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)),
+    );
 
     expect(sessions).toHaveLength(2);
     expect(sessions[0]?.sessionId).toBe("uuid-2"); // newer first
@@ -198,7 +216,9 @@ describe("listCodexSessions", () => {
       ],
     );
 
-    const sessions = await listCodexSessions("/Users/dev/project-a");
+    const sessions = await Effect.runPromise(
+      listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)),
+    );
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.firstMessage).toBe("I'll help you fix the bug");
@@ -219,7 +239,9 @@ describe("listCodexSessions", () => {
       [{ type: "turn.started" }, { type: "turn.completed" }],
     );
 
-    const sessions = await listCodexSessions("/Users/dev/project-a");
+    const sessions = await Effect.runPromise(
+      listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)),
+    );
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.firstMessage).toBe("Codex session");
@@ -234,7 +256,9 @@ describe("listCodexSessions", () => {
       provider_id: "openai",
     });
 
-    const sessions = await listCodexSessions("/Users/dev/nonexistent");
+    const sessions = await Effect.runPromise(
+      listCodexSessions("/Users/dev/nonexistent").pipe(Effect.provide(testLayer)),
+    );
     expect(sessions).toEqual([]);
   });
 
@@ -257,7 +281,9 @@ describe("listCodexSessions", () => {
       provider_id: "openai",
     });
 
-    const sessions = await listCodexSessions("/Users/dev/project");
+    const sessions = await Effect.runPromise(
+      listCodexSessions("/Users/dev/project").pipe(Effect.provide(testLayer)),
+    );
 
     expect(sessions[0]?.sessionId).toBe("uuid-new");
     expect(sessions[1]?.sessionId).toBe("uuid-old");
@@ -279,7 +305,9 @@ describe("new envelope format", () => {
         },
       });
 
-      const projects = await discoverCodexProjects();
+      const projects = await Effect.runPromise(
+        discoverCodexProjects().pipe(Effect.provide(testLayer)),
+      );
 
       expect(projects).toHaveLength(1);
       expect(projects[0]?.pluginId).toBe("codex-cli");
@@ -307,7 +335,9 @@ describe("new envelope format", () => {
         },
       });
 
-      const projects = await discoverCodexProjects();
+      const projects = await Effect.runPromise(
+        discoverCodexProjects().pipe(Effect.provide(testLayer)),
+      );
 
       expect(projects).toHaveLength(1);
       expect(projects[0]?.sessionCount).toBe(2);
@@ -328,7 +358,9 @@ describe("new envelope format", () => {
         },
       });
 
-      const sessions = await listCodexSessions("/Users/dev/project");
+      const sessions = await Effect.runPromise(
+        listCodexSessions("/Users/dev/project").pipe(Effect.provide(testLayer)),
+      );
 
       expect(sessions).toHaveLength(1);
       expect(sessions[0]?.sessionId).toBe("new-uuid-1");
@@ -364,7 +396,9 @@ describe("new envelope format", () => {
         ],
       );
 
-      const sessions = await listCodexSessions("/Users/dev/project");
+      const sessions = await Effect.runPromise(
+        listCodexSessions("/Users/dev/project").pipe(Effect.provide(testLayer)),
+      );
 
       expect(sessions).toHaveLength(1);
       expect(sessions[0]?.firstMessage).toBe("Fix the login bug");
@@ -382,7 +416,9 @@ describe("new envelope format", () => {
         },
       });
 
-      const sessions = await listCodexSessions("/Users/dev/project");
+      const sessions = await Effect.runPromise(
+        listCodexSessions("/Users/dev/project").pipe(Effect.provide(testLayer)),
+      );
 
       expect(sessions).toHaveLength(1);
       expect(sessions[0]?.firstMessage).toBe("Codex session");

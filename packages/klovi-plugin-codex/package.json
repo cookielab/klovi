@@ -13,6 +13,11 @@
     "src"
   ],
   "dependencies": {
-    "@cookielab.io/klovi-plugin-core": "workspace:*"
+    "@cookielab.io/klovi-plugin-core": "workspace:*",
+    "effect": "*",
+    "@effect/platform": "*"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "*"
   }
 }

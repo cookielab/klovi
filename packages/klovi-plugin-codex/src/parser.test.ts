@@ -3,10 +3,17 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AssistantTurn } from "@cookielab.io/klovi-plugin-core";
-import { setCodexCliDir } from "./config.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { buildCodexTurns, type CodexEvent, loadCodexSession } from "./parser.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-parser-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+);
 
 async function writeSession(
   uuid: string,
@@ -58,7 +65,6 @@ const newBaseMeta = {
 
 beforeEach(async () => {
   await mkdir(join(testDir, "sessions"), { recursive: true });
-  setCodexCliDir(testDir);
 });
 
 afterEach(async () => {
@@ -364,7 +370,9 @@ describe("loadCodexSession", () => {
       { type: "turn.completed", usage: { input_tokens: 300, output_tokens: 150 } },
     ]);
 
-    const session = await loadCodexSession("/Users/dev/project", "test-uuid");
+    const session = await Effect.runPromise(
+      loadCodexSession("/Users/dev/project", "test-uuid").pipe(Effect.provide(testLayer)),
+    );
 
     expect(session.sessionId).toBe("test-uuid");
     expect(session.pluginId).toBe("codex-cli");
@@ -380,7 +388,9 @@ describe("loadCodexSession", () => {
   });
 
   test("returns empty session when file not found", async () => {
-    const session = await loadCodexSession("/Users/dev/project", "nonexistent-uuid");
+    const session = await Effect.runPromise(
+      loadCodexSession("/Users/dev/project", "nonexistent-uuid").pipe(Effect.provide(testLayer)),
+    );
 
     expect(session.sessionId).toBe("nonexistent-uuid");
     expect(session.pluginId).toBe("codex-cli");
@@ -400,7 +410,9 @@ describe("loadCodexSession", () => {
       { type: "turn.completed" },
     ]);
 
-    const session = await loadCodexSession("/Users/dev/project", "fc-uuid");
+    const session = await Effect.runPromise(
+      loadCodexSession("/Users/dev/project", "fc-uuid").pipe(Effect.provide(testLayer)),
+    );
 
     expect(session.turns).toHaveLength(1);
     const assistant = session.turns[0] as AssistantTurn;
@@ -427,7 +439,9 @@ describe("loadCodexSession", () => {
       { type: "turn.completed" },
     ]);
 
-    const session = await loadCodexSession("/Users/dev/project", "mcp-uuid");
+    const session = await Effect.runPromise(
+      loadCodexSession("/Users/dev/project", "mcp-uuid").pipe(Effect.provide(testLayer)),
+    );
 
     const assistant = session.turns[0] as AssistantTurn;
     const block = assistant.contentBlocks[0];
@@ -448,7 +462,9 @@ describe("loadCodexSession", () => {
       },
     ]);
 
-    const session = await loadCodexSession("/Users/dev/project", "usage-uuid");
+    const session = await Effect.runPromise(
+      loadCodexSession("/Users/dev/project", "usage-uuid").pipe(Effect.provide(testLayer)),
+    );
 
     const assistant = session.turns[0] as AssistantTurn;
     expect(assistant.usage).toEqual({
@@ -495,7 +511,9 @@ describe("new envelope format", () => {
         },
       ]);
 
-      const session = await loadCodexSession("/Users/dev/project", "new-test-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "new-test-uuid").pipe(Effect.provide(testLayer)),
+      );
 
       expect(session.sessionId).toBe("new-test-uuid");
       expect(session.pluginId).toBe("codex-cli");
@@ -567,7 +585,9 @@ describe("new envelope format", () => {
         ],
       );
 
-      const session = await loadCodexSession("/Users/dev/project", "cmd-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "cmd-uuid").pipe(Effect.provide(testLayer)),
+      );
 
       expect(session.turns).toHaveLength(1);
       const assistant = session.turns[0] as AssistantTurn;
@@ -600,7 +620,9 @@ describe("new envelope format", () => {
         ],
       );
 
-      const session = await loadCodexSession("/Users/dev/project", "rollout-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "rollout-uuid").pipe(Effect.provide(testLayer)),
+      );
 
       expect(session.turns).toHaveLength(1);
       const assistant = session.turns[0] as AssistantTurn;
@@ -608,7 +630,11 @@ describe("new envelope format", () => {
     });
 
     test("returns empty session when new-format file not found", async () => {
-      const session = await loadCodexSession("/Users/dev/project", "nonexistent-new-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "nonexistent-new-uuid").pipe(
+          Effect.provide(testLayer),
+        ),
+      );
 
       expect(session.sessionId).toBe("nonexistent-new-uuid");
       expect(session.turns).toEqual([]);
@@ -651,7 +677,11 @@ describe("new envelope format", () => {
         ],
       );
 
-      const session = await loadCodexSession("/Users/dev/project", "nested-tokens-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "nested-tokens-uuid").pipe(
+          Effect.provide(testLayer),
+        ),
+      );
 
       const assistant = session.turns[0] as AssistantTurn;
       expect(assistant.usage).toEqual({
@@ -694,7 +724,9 @@ describe("new envelope format", () => {
         ],
       );
 
-      const session = await loadCodexSession("/Users/dev/project", "no-flush-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "no-flush-uuid").pipe(Effect.provide(testLayer)),
+      );
 
       // Both messages should be in the same assistant turn (not split by token_count)
       const assistantTurns = session.turns.filter((t) => t.kind === "assistant");
@@ -737,7 +769,9 @@ describe("new envelope format", () => {
         },
       ]);
 
-      const session = await loadCodexSession("/Users/dev/project", "provider-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "provider-uuid").pipe(Effect.provide(testLayer)),
+      );
 
       const assistant = session.turns[0] as AssistantTurn;
       expect(assistant.model).toBe("gpt-5.3-codex");
@@ -768,7 +802,11 @@ describe("new envelope format", () => {
         },
       ]);
 
-      const session = await loadCodexSession("/Users/dev/project", "provider-only-uuid");
+      const session = await Effect.runPromise(
+        loadCodexSession("/Users/dev/project", "provider-only-uuid").pipe(
+          Effect.provide(testLayer),
+        ),
+      );
 
       const assistant = session.turns[0] as AssistantTurn;
       expect(assistant.model).toBe("openai");

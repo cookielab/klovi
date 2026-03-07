@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setCodexCliDir } from "./config.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import {
   findCodexSessionFileById,
   isCodexSessionMeta,
@@ -12,9 +14,13 @@ import {
 
 const testDir = join(tmpdir(), `klovi-codex-session-index-test-${Date.now()}`);
 
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+);
+
 beforeEach(async () => {
   await mkdir(join(testDir, "sessions"), { recursive: true });
-  setCodexCliDir(testDir);
 });
 
 afterEach(async () => {
@@ -134,7 +140,9 @@ describe("findCodexSessionFileById", () => {
     await mkdir(dir, { recursive: true });
     await Bun.write(join(dir, "my-uuid.jsonl"), "{}");
 
-    const result = await findCodexSessionFileById("my-uuid");
+    const result = await Effect.runPromise(
+      findCodexSessionFileById("my-uuid").pipe(Effect.provide(testLayer)),
+    );
     expect(result).toBe(join(dir, "my-uuid.jsonl"));
   });
 
@@ -143,12 +151,16 @@ describe("findCodexSessionFileById", () => {
     await mkdir(dir, { recursive: true });
     await Bun.write(join(dir, "rollout-2026-02-18-my-uuid.jsonl"), "{}");
 
-    const result = await findCodexSessionFileById("my-uuid");
+    const result = await Effect.runPromise(
+      findCodexSessionFileById("my-uuid").pipe(Effect.provide(testLayer)),
+    );
     expect(result).toBe(join(dir, "rollout-2026-02-18-my-uuid.jsonl"));
   });
 
   test("returns null when no file matches", async () => {
-    const result = await findCodexSessionFileById("nonexistent");
+    const result = await Effect.runPromise(
+      findCodexSessionFileById("nonexistent").pipe(Effect.provide(testLayer)),
+    );
     expect(result).toBeNull();
   });
 });
@@ -172,7 +184,7 @@ describe("scanCodexSessions", () => {
       }),
     );
 
-    const sessions = await scanCodexSessions();
+    const sessions = await Effect.runPromise(scanCodexSessions().pipe(Effect.provide(testLayer)));
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.meta.uuid).toBe("scan-uuid");
@@ -206,7 +218,7 @@ describe("scanCodexSessions", () => {
       ].join("\n"),
     );
 
-    const sessions = await scanCodexSessions();
+    const sessions = await Effect.runPromise(scanCodexSessions().pipe(Effect.provide(testLayer)));
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.meta.model).toBe("gpt-5.3-codex");
@@ -229,7 +241,7 @@ describe("scanCodexSessions", () => {
       }),
     );
 
-    const sessions = await scanCodexSessions();
+    const sessions = await Effect.runPromise(scanCodexSessions().pipe(Effect.provide(testLayer)));
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.meta.model).toBe("openai");
