@@ -1,7 +1,19 @@
 import { describe, expect, test } from "bun:test";
+import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
+import { PluginError, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import type { SessionSummary } from "@cookielab.io/klovi-ui/types";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import type { MergedProject, PluginProject, ToolPlugin } from "./plugin-types.ts";
 import { PluginRegistry } from "./registry.ts";
+
+const testConfig = { dataDir: "/test" };
+const testLayer = Layer.merge(
+  NodeFileSystem.layer,
+  Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
+);
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 function createMockPlugin(
   id: string,
@@ -12,13 +24,15 @@ function createMockPlugin(
     id,
     displayName: id,
     getDefaultDataDir: () => null,
-    discoverProjects: async () => projects,
-    listSessions: async (nativeId: string) => sessions?.[nativeId] ?? [],
-    loadSession: async (_nativeId: string, sessionId: string) => ({
-      sessionId,
-      project: "",
-      turns: [],
-    }),
+    isDataAvailable: Effect.succeed(true),
+    discoverProjects: Effect.succeed(projects),
+    listSessions: (nativeId: string) => Effect.succeed(sessions?.[nativeId] ?? []),
+    loadSession: (_nativeId: string, sessionId: string) =>
+      Effect.succeed({
+        sessionId,
+        project: "",
+        turns: [],
+      }),
   };
 }
 
@@ -27,17 +41,24 @@ function createFailingPlugin(id: string): ToolPlugin {
     id,
     displayName: id,
     getDefaultDataDir: () => null,
-    discoverProjects: () => {
-      return Promise.reject(new Error("Discovery failed"));
-    },
-    listSessions: () => {
-      return Promise.reject(new Error("Session listing failed"));
-    },
-    loadSession: async (_nativeId: string, sessionId: string) => ({
-      sessionId,
-      project: "",
-      turns: [],
-    }),
+    isDataAvailable: Effect.succeed(false),
+    discoverProjects: Effect.fail(
+      new PluginError({ pluginId: id, operation: "discover", message: "Discovery failed" }),
+    ),
+    listSessions: () =>
+      Effect.fail(
+        new PluginError({
+          pluginId: id,
+          operation: "listSessions",
+          message: "Session listing failed",
+        }),
+      ),
+    loadSession: (_nativeId: string, sessionId: string) =>
+      Effect.succeed({
+        sessionId,
+        project: "",
+        turns: [],
+      }),
   };
 }
 
@@ -46,7 +67,7 @@ describe("PluginRegistry", () => {
     const registry = new PluginRegistry();
     const plugin = createMockPlugin("test-plugin", []);
 
-    registry.register(plugin);
+    registry.register(plugin, testConfig);
 
     expect(registry.getPlugin("test-plugin")).toBe(plugin);
   });
@@ -56,8 +77,8 @@ describe("PluginRegistry", () => {
     const plugin1 = createMockPlugin("plugin-a", []);
     const plugin2 = createMockPlugin("plugin-b", []);
 
-    registry.register(plugin1);
-    registry.register(plugin2);
+    registry.register(plugin1, testConfig);
+    registry.register(plugin2, testConfig);
 
     const all = registry.getAllPlugins();
     expect(all).toHaveLength(2);
@@ -95,10 +116,10 @@ describe("PluginRegistry", () => {
       },
     ]);
 
-    registry.register(pluginA);
-    registry.register(pluginB);
+    registry.register(pluginA, testConfig);
+    registry.register(pluginB, testConfig);
 
-    const projects = await registry.discoverAllProjects();
+    const projects = await runEffect(registry.discoverAllProjects());
     expect(projects).toHaveLength(1);
 
     const merged = projects[0];
@@ -133,9 +154,9 @@ describe("PluginRegistry", () => {
       },
     ]);
 
-    registry.register(plugin);
+    registry.register(plugin, testConfig);
 
-    const projects = await registry.discoverAllProjects();
+    const projects = await runEffect(registry.discoverAllProjects());
     expect(projects).toHaveLength(2);
     expect(projects.map((p) => p.resolvedPath)).toContain("/Users/foo/project-one");
     expect(projects.map((p) => p.resolvedPath)).toContain("/Users/foo/project-two");
@@ -171,9 +192,9 @@ describe("PluginRegistry", () => {
       },
     ]);
 
-    registry.register(plugin);
+    registry.register(plugin, testConfig);
 
-    const projects = await registry.discoverAllProjects();
+    const projects = await runEffect(registry.discoverAllProjects());
     expect(projects).toHaveLength(3);
     expect(projects[0]?.resolvedPath).toBe("/Users/foo/new-project");
     expect(projects[1]?.resolvedPath).toBe("/Users/foo/mid-project");
@@ -195,10 +216,10 @@ describe("PluginRegistry", () => {
       },
     ]);
 
-    registry.register(failingPlugin);
-    registry.register(workingPlugin);
+    registry.register(failingPlugin, testConfig);
+    registry.register(workingPlugin, testConfig);
 
-    const projects = await registry.discoverAllProjects();
+    const projects = await runEffect(registry.discoverAllProjects());
     expect(projects).toHaveLength(1);
     expect(projects[0]?.resolvedPath).toBe("/Users/foo/working");
   });
@@ -269,14 +290,14 @@ describe("PluginRegistry", () => {
       },
     );
 
-    registry.register(pluginA);
-    registry.register(pluginB);
+    registry.register(pluginA, testConfig);
+    registry.register(pluginB, testConfig);
 
-    const projects = await registry.discoverAllProjects();
+    const projects = await runEffect(registry.discoverAllProjects());
     expect(projects).toHaveLength(1);
 
     const project = projects[0] as MergedProject;
-    const sessions = await registry.listAllSessions(project);
+    const sessions = await runEffect(registry.listAllSessions(project));
     expect(sessions).toHaveLength(3);
 
     // Sorted by timestamp descending
@@ -306,8 +327,8 @@ describe("PluginRegistry", () => {
     });
     const failingPlugin = createFailingPlugin("failing-plugin");
 
-    registry.register(workingPlugin);
-    registry.register(failingPlugin);
+    registry.register(workingPlugin, testConfig);
+    registry.register(failingPlugin, testConfig);
 
     const mergedProject = {
       encodedPath: "-Users-foo-project",
@@ -322,7 +343,7 @@ describe("PluginRegistry", () => {
       ],
     };
 
-    const sessions = await registry.listAllSessions(mergedProject);
+    const sessions = await runEffect(registry.listAllSessions(mergedProject));
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.sessionId).toBe("working-plugin::session-ok");
   });
