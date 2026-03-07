@@ -3,10 +3,22 @@ import { mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { SessionSummary } from "@cookielab.io/klovi-plugin-core";
-import { setClaudeCodeDir } from "./config.ts";
+import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { classifySessionTypes, discoverClaudeProjects, listClaudeSessions } from "./discovery.ts";
 
 const testDir = join(tmpdir(), `klovi-claude-discovery-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+  Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
+);
+
+function run<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
+}
 
 async function writeSession(
   projectId: string,
@@ -23,7 +35,6 @@ async function writeSession(
 beforeEach(async () => {
   await rm(testDir, { recursive: true, force: true });
   await mkdir(testDir, { recursive: true });
-  setClaudeCodeDir(testDir);
 });
 
 afterEach(async () => {
@@ -32,12 +43,12 @@ afterEach(async () => {
 
 describe("claude-code discovery", () => {
   test("discoverClaudeProjects returns empty when projects dir is missing", async () => {
-    const projects = await discoverClaudeProjects();
+    const projects = await run(discoverClaudeProjects());
     expect(projects).toEqual([]);
   });
 
   test("listClaudeSessions returns empty when project dir is missing", async () => {
-    const sessions = await listClaudeSessions("missing-project");
+    const sessions = await run(listClaudeSessions("missing-project"));
     expect(sessions).toEqual([]);
   });
 
@@ -57,12 +68,12 @@ describe("claude-code discovery", () => {
       }),
     ]);
 
-    const projects = await discoverClaudeProjects();
+    const projects = await run(discoverClaudeProjects());
     expect(projects).toHaveLength(1);
     expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
     expect(projects[0]?.sessionCount).toBe(1);
 
-    const sessions = await listClaudeSessions("-Users-dev-project-a");
+    const sessions = await run(listClaudeSessions("-Users-dev-project-a"));
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.sessionId).toBe("session-1");
     expect(sessions[0]?.pluginId).toBe("claude-code");
@@ -105,7 +116,7 @@ describe("claude-code discovery", () => {
       new Date("2025-01-15T00:00:00.000Z"),
     );
 
-    const projects = await discoverClaudeProjects();
+    const projects = await run(discoverClaudeProjects());
     expect(projects).toHaveLength(1);
     expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-new");
     expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");
@@ -146,7 +157,7 @@ describe("claude-code discovery", () => {
       new Date("2025-01-15T00:00:00.000Z"),
     );
 
-    const projects = await discoverClaudeProjects();
+    const projects = await run(discoverClaudeProjects());
     expect(projects).toHaveLength(1);
     expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
     expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");

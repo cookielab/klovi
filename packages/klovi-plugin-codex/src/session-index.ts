@@ -1,6 +1,7 @@
-import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { getCodexCliDir } from "./config.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { FileSystem } from "@effect/platform";
+import { Effect } from "effect";
 import { readTextPrefix } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
@@ -113,107 +114,132 @@ function inferModelFromPrefix(prefixText: string): string | null {
   return model;
 }
 
-async function parseSessionMeta(filePath: string): Promise<CodexSessionMeta | null> {
-  const prefix = await readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES);
-  const firstNewline = prefix.indexOf("\n");
-  const firstLine = firstNewline === -1 ? prefix : prefix.slice(0, firstNewline);
-  const trimmedFirstLine = firstLine.trim();
-  if (!trimmedFirstLine) return null;
-  try {
-    const parsed: unknown = JSON.parse(trimmedFirstLine);
-    const f = Bun.file(filePath);
-    const fileMtimeEpoch = (await f.exists()) ? f.lastModified / 1000 : undefined;
-    const meta = normalizeSessionMeta(parsed, fileMtimeEpoch);
-    if (!meta) return null;
-    if (isKnownModel(meta.model)) return meta;
+function parseSessionMeta(filePath: string, fileMtimeEpoch: number | undefined) {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
+  return Effect.gen(function* () {
+    const prefix = yield* readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES).pipe(
+      Effect.catchAll(() => Effect.succeed("")),
+    );
+    if (!prefix) return null;
 
-    const inferred = inferModelFromPrefix(prefix);
-    if (isKnownModel(inferred)) return { ...meta, model: inferred };
-    if (isKnownModel(meta.provider_id)) return { ...meta, model: meta.provider_id };
-    return meta;
-  } catch {
-    // Malformed first line
-  }
-  return null;
-}
+    const firstNewline = prefix.indexOf("\n");
+    const firstLine = firstNewline === -1 ? prefix : prefix.slice(0, firstNewline);
+    const trimmedFirstLine = firstLine.trim();
+    if (!trimmedFirstLine) return null;
+    try {
+      const parsed: unknown = JSON.parse(trimmedFirstLine);
+      const meta = normalizeSessionMeta(parsed, fileMtimeEpoch);
+      if (!meta) return null;
+      if (isKnownModel(meta.model)) return meta;
 
-async function walkJsonlFiles(
-  dir: string,
-  visit: (filePath: string, fileName: string) => Promise<void>,
-): Promise<void> {
-  let entries: { name: string; isDirectory(): boolean }[];
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    return;
-  }
-
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      await walkJsonlFiles(fullPath, visit);
-      continue;
+      const inferred = inferModelFromPrefix(prefix);
+      if (isKnownModel(inferred)) return { ...meta, model: inferred };
+      if (isKnownModel(meta.provider_id)) return { ...meta, model: meta.provider_id };
+      return meta;
+    } catch {
+      // Malformed first line
     }
-    if (entry.name.endsWith(".jsonl")) {
-      await visit(fullPath, entry.name);
-    }
-  }
-}
-
-export async function scanCodexSessions(): Promise<SessionFileInfo[]> {
-  const sessionsDir = join(getCodexCliDir(), "sessions");
-  const sessions: SessionFileInfo[] = [];
-
-  await walkJsonlFiles(sessionsDir, async (filePath) => {
-    const meta = await parseSessionMeta(filePath);
-    if (!meta) return;
-
-    const f = Bun.file(filePath);
-    if (!(await f.exists())) return;
-
-    sessions.push({
-      filePath,
-      meta,
-      mtime: new Date(f.lastModified).toISOString(),
-    });
+    return null;
   });
-
-  return sessions;
 }
 
-async function walkForFile(
+function walkJsonlFiles(
+  dir: string,
+  visit: (filePath: string, fileName: string) => Effect.Effect<void, never, FileSystem.FileSystem>,
+): Effect.Effect<void, never, FileSystem.FileSystem> {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const names = yield* fs
+      .readDirectory(dir)
+      .pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
+
+    for (const name of names) {
+      const fullPath = join(dir, name);
+      const info = yield* fs.stat(fullPath).pipe(Effect.catchAll(() => Effect.succeed(null)));
+      if (!info) continue;
+
+      if (info.type === "Directory") {
+        yield* walkJsonlFiles(fullPath, visit);
+        continue;
+      }
+      if (name.endsWith(".jsonl")) {
+        yield* visit(fullPath, name);
+      }
+    }
+  });
+}
+
+export function scanCodexSessions() {
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    const fs = yield* FileSystem.FileSystem;
+    const sessionsDir = join(config.dataDir, "sessions");
+    const sessions: SessionFileInfo[] = [];
+
+    yield* walkJsonlFiles(sessionsDir, (filePath, _fileName) =>
+      Effect.gen(function* () {
+        const info = yield* fs.stat(filePath).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const fileMtimeEpoch =
+          info?.mtime._tag === "Some" ? info.mtime.value.getTime() / 1000 : undefined;
+
+        const meta = yield* parseSessionMeta(filePath, fileMtimeEpoch);
+        if (!meta) return;
+
+        if (info?.mtime._tag === "Some") {
+          sessions.push({
+            filePath,
+            meta,
+            mtime: info.mtime.value.toISOString(),
+          });
+        }
+      }),
+    );
+
+    return sessions;
+  });
+}
+
+function walkForFile(
   dir: string,
   match: (fileName: string) => boolean,
-): Promise<string | null> {
-  let entries: { name: string; isDirectory(): boolean }[];
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    return null;
-  }
+): Effect.Effect<string | null, never, FileSystem.FileSystem> {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const names = yield* fs
+      .readDirectory(dir)
+      .pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
 
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
-    if (!entry.isDirectory() && match(entry.name)) return fullPath;
-    if (entry.isDirectory()) {
-      const found = await walkForFile(fullPath, match);
-      if (found) return found;
+    for (const name of names) {
+      const fullPath = join(dir, name);
+      const info = yield* fs.stat(fullPath).pipe(Effect.catchAll(() => Effect.succeed(null)));
+      if (!info) continue;
+
+      if (info.type !== "Directory" && match(name)) return fullPath;
+      if (info.type === "Directory") {
+        const found = yield* walkForFile(fullPath, match);
+        if (found) return found;
+      }
     }
-  }
-  return null;
+    return null;
+  });
 }
 
-export async function findCodexSessionFileById(sessionId: string): Promise<string | null> {
-  const sessionsDir = join(getCodexCliDir(), "sessions");
-  const exactName = `${sessionId}.jsonl`;
-  const suffix = `-${sessionId}.jsonl`;
+export function findCodexSessionFileById(sessionId: string) {
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    const fs = yield* FileSystem.FileSystem;
+    const sessionsDir = join(config.dataDir, "sessions");
+    const exactName = `${sessionId}.jsonl`;
+    const suffix = `-${sessionId}.jsonl`;
 
-  const filePath = await walkForFile(
-    sessionsDir,
-    (name) => name === exactName || name.endsWith(suffix),
-  );
-  if (!filePath) return null;
+    const filePath = yield* walkForFile(
+      sessionsDir,
+      (name) => name === exactName || name.endsWith(suffix),
+    );
+    if (!filePath) return null;
 
-  const fileStat = await stat(filePath).catch(() => null);
-  return fileStat?.isFile() ? filePath : null;
+    const info = yield* fs.stat(filePath).pipe(Effect.catchAll(() => Effect.succeed(null)));
+    return info?.type === "File" ? filePath : null;
+  });
 }

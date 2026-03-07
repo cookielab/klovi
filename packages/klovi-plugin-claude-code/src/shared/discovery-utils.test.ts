@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { FileSystem } from "@effect/platform";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect } from "effect";
 import {
   decodeEncodedPath,
   getLatestMtime,
@@ -13,6 +16,12 @@ import {
 
 const testDir = join(tmpdir(), `klovi-claude-discovery-utils-test-${Date.now()}`);
 const originalPlatform = process.platform;
+
+const fsLayer = NodeFileSystem.layer;
+
+function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>) {
+  return Effect.runPromise(effect.pipe(Effect.provide(fsLayer)) as Effect.Effect<A, E, never>);
+}
 
 beforeEach(async () => {
   await rm(testDir, { recursive: true, force: true });
@@ -26,7 +35,7 @@ afterEach(async () => {
 
 describe("claude discovery utils", () => {
   test("readDirEntriesSafe returns [] for missing directory", async () => {
-    const entries = await readDirEntriesSafe(join(testDir, "missing"));
+    const entries = await runFs(readDirEntriesSafe(join(testDir, "missing")));
     expect(entries).toEqual([]);
   });
 
@@ -35,7 +44,7 @@ describe("claude discovery utils", () => {
     await Bun.write(join(testDir, "b.txt"), "x");
     await Bun.write(join(testDir, "c.jsonl"), "{}");
 
-    const files = await listFilesBySuffix(testDir, ".jsonl");
+    const files = await runFs(listFilesBySuffix(testDir, ".jsonl"));
     expect(files.sort()).toEqual(["a.jsonl", "c.jsonl"]);
   });
 
@@ -52,7 +61,7 @@ describe("claude discovery utils", () => {
       new Date("2025-01-15T00:00:00.000Z"),
     );
 
-    const latest = await getLatestMtime(testDir, ["missing.jsonl", "a.jsonl", "b.jsonl"]);
+    const latest = await runFs(getLatestMtime(testDir, ["missing.jsonl", "a.jsonl", "b.jsonl"]));
     expect(latest).toBe("2025-01-15T00:00:00.000Z");
   });
 
@@ -69,7 +78,7 @@ describe("claude discovery utils", () => {
       new Date("2025-01-15T00:00:00.000Z"),
     );
 
-    const files = await listFilesWithMtime(testDir, ".jsonl");
+    const files = await runFs(listFilesWithMtime(testDir, ".jsonl"));
     expect(files.map((f) => f.fileName)).toEqual(["b.jsonl", "a.jsonl"]);
   });
 
@@ -77,7 +86,7 @@ describe("claude discovery utils", () => {
     const filePath = join(testDir, "sample.txt");
     await Bun.write(filePath, "abcdef");
 
-    const prefix = await readTextPrefix(filePath, 3);
+    const prefix = await runFs(readTextPrefix(filePath, 3));
     expect(prefix).toBe("abc");
   });
 

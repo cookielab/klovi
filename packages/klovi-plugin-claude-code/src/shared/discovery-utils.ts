@@ -1,63 +1,107 @@
-import type { Dirent } from "node:fs";
-import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
+import { FileSystem } from "@effect/platform";
+import { Effect } from "effect";
 
 const WINDOWS_DRIVE_LETTER_REGEX = /^[A-Za-z]\//;
+
+export interface DirEntry {
+  name: string;
+  isDirectory: boolean;
+}
 
 export interface FileWithMtime {
   fileName: string;
   mtime: string;
 }
 
-export async function readDirEntriesSafe(dir: string): Promise<Dirent[]> {
-  try {
-    return await readdir(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
-
-export async function listFilesBySuffix(dir: string, suffix: string): Promise<string[]> {
-  try {
-    const glob = new Bun.Glob(`*${suffix}`);
-    const results: string[] = [];
-    for await (const file of glob.scan({ cwd: dir })) {
-      results.push(file);
+export function readDirEntriesSafe(dir: string) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const names = yield* fs
+      .readDirectory(dir)
+      .pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
+    const entries: DirEntry[] = [];
+    for (const name of names) {
+      const info = yield* fs
+        .stat(join(dir, name))
+        .pipe(Effect.catchAll(() => Effect.succeed(null)));
+      if (info) {
+        entries.push({ name, isDirectory: info.type === "Directory" });
+      }
     }
+    return entries;
+  });
+}
+
+export function listFilesBySuffix(dir: string, suffix: string) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const names = yield* fs
+      .readDirectory(dir)
+      .pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
+    return names.filter((name) => name.endsWith(suffix));
+  });
+}
+
+export function getLatestMtime(dir: string, files: readonly string[]) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    let lastActivity = "";
+    for (const file of files) {
+      const info = yield* fs
+        .stat(join(dir, file))
+        .pipe(Effect.catchAll(() => Effect.succeed(null)));
+      if (info?.mtime._tag === "Some") {
+        const mtime = info.mtime.value.toISOString();
+        if (mtime > lastActivity) lastActivity = mtime;
+      }
+    }
+    return lastActivity;
+  });
+}
+
+export function listFilesWithMtime(dir: string, suffix: string) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const names = yield* listFilesBySuffix(dir, suffix);
+    const results: FileWithMtime[] = [];
+
+    for (const fileName of names) {
+      const info = yield* fs
+        .stat(join(dir, fileName))
+        .pipe(Effect.catchAll(() => Effect.succeed(null)));
+      if (info?.mtime._tag === "Some") {
+        results.push({ fileName, mtime: info.mtime.value.toISOString() });
+      }
+    }
+
+    sortByIsoDesc(results, (item) => item.mtime);
     return results;
-  } catch {
-    return [];
-  }
+  });
 }
 
-export async function getLatestMtime(dir: string, files: string[]): Promise<string> {
-  let lastActivity = "";
-  for (const file of files) {
-    const f = Bun.file(join(dir, file));
-    if (!(await f.exists())) continue;
-    const mtime = new Date(f.lastModified).toISOString();
-    if (mtime > lastActivity) lastActivity = mtime;
-  }
-  return lastActivity;
+export function readTextPrefix(filePath: string, maxBytes: number) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const bytes = yield* fs.readFile(filePath);
+    const slice = bytes.subarray(0, maxBytes);
+    return new TextDecoder().decode(slice);
+  });
 }
 
-export async function listFilesWithMtime(dir: string, suffix: string): Promise<FileWithMtime[]> {
-  const files = await listFilesBySuffix(dir, suffix);
-  const results: FileWithMtime[] = [];
-
-  for (const fileName of files) {
-    const f = Bun.file(join(dir, fileName));
-    if (!(await f.exists())) continue;
-    results.push({ fileName, mtime: new Date(f.lastModified).toISOString() });
-  }
-
-  sortByIsoDesc(results, (item) => item.mtime);
-  return results;
+export function readFileText(filePath: string) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.readFileString(filePath);
+  });
 }
 
-export async function readTextPrefix(filePath: string, maxBytes: number): Promise<string> {
-  return await Bun.file(filePath).slice(0, maxBytes).text();
+export function fileExists(filePath: string) {
+  return Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.exists(filePath);
+  });
 }
 
 export function decodeEncodedPath(encoded: string): string {

@@ -1,7 +1,8 @@
 import type { PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
 import { type SessionFileInfo, scanCodexSessions } from "./session-index.ts";
-import { readTextPrefix } from "./shared/discovery-utils.ts";
+import { readFileText, readTextPrefix } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
 interface CodexEvent {
@@ -20,39 +21,41 @@ interface CodexEvent {
 
 const SESSION_TITLE_SCAN_BYTES = 256 * 1024;
 
-export async function discoverCodexProjects(): Promise<PluginProject[]> {
-  const sessions = await scanCodexSessions();
+export function discoverCodexProjects() {
+  return Effect.gen(function* () {
+    const sessions = yield* scanCodexSessions();
 
-  // Group by cwd
-  const byCwd = new Map<string, SessionFileInfo[]>();
-  for (const session of sessions) {
-    const existing = byCwd.get(session.meta.cwd);
-    if (existing) {
-      existing.push(session);
-    } else {
-      byCwd.set(session.meta.cwd, [session]);
-    }
-  }
-
-  const projects: PluginProject[] = [];
-  for (const [cwd, cwdSessions] of byCwd) {
-    let lastActivity = "";
-    for (const s of cwdSessions) {
-      if (s.mtime > lastActivity) lastActivity = s.mtime;
+    // Group by cwd
+    const byCwd = new Map<string, SessionFileInfo[]>();
+    for (const session of sessions) {
+      const existing = byCwd.get(session.meta.cwd);
+      if (existing) {
+        existing.push(session);
+      } else {
+        byCwd.set(session.meta.cwd, [session]);
+      }
     }
 
-    projects.push({
-      pluginId: "codex-cli",
-      nativeId: cwd,
-      resolvedPath: cwd,
-      displayName: cwd,
-      sessionCount: cwdSessions.length,
-      lastActivity,
-    });
-  }
+    const projects: PluginProject[] = [];
+    for (const [cwd, cwdSessions] of byCwd) {
+      let lastActivity = "";
+      for (const s of cwdSessions) {
+        if (s.mtime > lastActivity) lastActivity = s.mtime;
+      }
 
-  sortByIsoDesc(projects, (project) => project.lastActivity);
-  return projects;
+      projects.push({
+        pluginId: "codex-cli",
+        nativeId: cwd,
+        resolvedPath: cwd,
+        displayName: cwd,
+        sessionCount: cwdSessions.length,
+        lastActivity,
+      });
+    }
+
+    sortByIsoDesc(projects, (project) => project.lastActivity);
+    return projects;
+  });
 }
 
 function extractFirstUserMessage(text: string): string | null {
@@ -89,36 +92,42 @@ function extractFirstUserMessage(text: string): string | null {
   return message;
 }
 
-export async function listCodexSessions(nativeId: string): Promise<SessionSummary[]> {
-  const allSessions = await scanCodexSessions();
-  const matching = allSessions.filter((s) => s.meta.cwd === nativeId);
+export function listCodexSessions(nativeId: string) {
+  return Effect.gen(function* () {
+    const allSessions = yield* scanCodexSessions();
+    const matching = allSessions.filter((s) => s.meta.cwd === nativeId);
 
-  const sessions: SessionSummary[] = [];
-  for (const s of matching) {
-    let firstMessage = s.meta.name || "";
-    if (!firstMessage) {
-      const prefix = await readTextPrefix(s.filePath, SESSION_TITLE_SCAN_BYTES);
-      firstMessage = extractFirstUserMessage(prefix) || "";
+    const sessions: SessionSummary[] = [];
+    for (const s of matching) {
+      let firstMessage = s.meta.name || "";
       if (!firstMessage) {
-        const fullText = await Bun.file(s.filePath).text();
-        firstMessage = extractFirstUserMessage(fullText) || "";
+        const prefix = yield* readTextPrefix(s.filePath, SESSION_TITLE_SCAN_BYTES).pipe(
+          Effect.catchAll(() => Effect.succeed("")),
+        );
+        firstMessage = extractFirstUserMessage(prefix) || "";
+        if (!firstMessage) {
+          const fullText = yield* readFileText(s.filePath).pipe(
+            Effect.catchAll(() => Effect.succeed("")),
+          );
+          firstMessage = extractFirstUserMessage(fullText) || "";
+        }
+        firstMessage ||= "Codex session";
       }
-      firstMessage ||= "Codex session";
+
+      const timestamp = epochSecondsToIso(s.meta.timestamps.created);
+
+      sessions.push({
+        sessionId: s.meta.uuid,
+        timestamp,
+        slug: s.meta.uuid,
+        firstMessage,
+        model: s.meta.model || "unknown",
+        gitBranch: "",
+        pluginId: "codex-cli",
+      });
     }
 
-    const timestamp = epochSecondsToIso(s.meta.timestamps.created);
-
-    sessions.push({
-      sessionId: s.meta.uuid,
-      timestamp,
-      slug: s.meta.uuid,
-      firstMessage,
-      model: s.meta.model || "unknown",
-      gitBranch: "",
-      pluginId: "codex-cli",
-    });
-  }
-
-  sortByIsoDesc(sessions, (session) => session.timestamp);
-  return sessions;
+    sortByIsoDesc(sessions, (session) => session.timestamp);
+    return sessions;
+  });
 }

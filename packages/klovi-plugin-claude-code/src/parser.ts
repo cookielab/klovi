@@ -10,9 +10,11 @@ import type {
   Turn,
   UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
 import { parseCommandMessage } from "./command-message.ts";
-import { getProjectsDir } from "./config.ts";
 import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types.ts";
+import { readFileText } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
 interface ParsedSession {
@@ -20,78 +22,78 @@ interface ParsedSession {
   slug: string | undefined;
 }
 
-export async function loadClaudeSession(
-  nativeId: string,
-  sessionId: string,
-): Promise<ParsedSession> {
-  const { rawLines, parseErrors } = await readJsonlLines(
-    join(getProjectsDir(), nativeId, `${sessionId}.jsonl`),
-  );
+export function loadClaudeSession(nativeId: string, sessionId: string) {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    const filePath = join(config.dataDir, "projects", nativeId, `${sessionId}.jsonl`);
+    const { rawLines, parseErrors } = yield* readJsonlLines(filePath);
 
-  const subAgentMap = extractSubAgentMap(rawLines);
-  const slug = extractSlug(rawLines);
-  const turns = buildTurns(rawLines, parseErrors);
+    const subAgentMap = extractSubAgentMap(rawLines);
+    const slug = extractSlug(rawLines);
+    const turns = buildTurns(rawLines, parseErrors);
 
-  // Attach subAgentId to Task tool calls
-  for (const turn of turns) {
-    if (turn.kind !== "assistant") continue;
-    for (const block of turn.contentBlocks) {
-      if (block.type === "tool_call" && block.call.name === "Task") {
-        const agentId = subAgentMap.get(block.call.toolUseId);
-        if (agentId) {
-          block.call.subAgentId = agentId;
+    // Attach subAgentId to Task tool calls
+    for (const turn of turns) {
+      if (turn.kind !== "assistant") continue;
+      for (const block of turn.contentBlocks) {
+        if (block.type === "tool_call" && block.call.name === "Task") {
+          const agentId = subAgentMap.get(block.call.toolUseId);
+          if (agentId) {
+            block.call.subAgentId = agentId;
+          }
         }
       }
     }
-  }
 
-  return {
-    session: {
-      sessionId,
-      project: nativeId,
-      turns,
-      pluginId: "claude-code",
-    },
-    slug,
-  };
+    return {
+      session: {
+        sessionId,
+        project: nativeId,
+        turns,
+        pluginId: "claude-code",
+      },
+      slug,
+    } as ParsedSession;
+  });
 }
 
-export async function parseSubAgentSession(
-  sessionId: string,
-  encodedPath: string,
-  agentId: string,
-): Promise<Session> {
-  const filePath = join(
-    getProjectsDir(),
-    encodedPath,
-    sessionId,
-    "subagents",
-    `agent-${agentId}.jsonl`,
-  );
+export function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: string) {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    const filePath = join(
+      config.dataDir,
+      "projects",
+      encodedPath,
+      sessionId,
+      "subagents",
+      `agent-${agentId}.jsonl`,
+    );
 
-  let parsed: ParsedLines;
-  try {
-    parsed = await readJsonlLines(filePath);
-  } catch {
-    return { sessionId, project: encodedPath, turns: [], pluginId: "claude-code" };
-  }
+    const parsed = yield* readJsonlLines(filePath).pipe(
+      Effect.catchAll(() =>
+        Effect.succeed({ rawLines: [] as RawLine[], parseErrors: [] as ParseErrorTurn[] }),
+      ),
+    );
 
-  const subAgentMap = extractSubAgentMap(parsed.rawLines);
-  const turns = buildTurns(parsed.rawLines, parsed.parseErrors);
+    const subAgentMap = extractSubAgentMap(parsed.rawLines);
+    const turns = buildTurns(parsed.rawLines, parsed.parseErrors);
 
-  for (const turn of turns) {
-    if (turn.kind !== "assistant") continue;
-    for (const block of turn.contentBlocks) {
-      if (block.type === "tool_call" && block.call.name === "Task") {
-        const nestedAgentId = subAgentMap.get(block.call.toolUseId);
-        if (nestedAgentId) {
-          block.call.subAgentId = nestedAgentId;
+    for (const turn of turns) {
+      if (turn.kind !== "assistant") continue;
+      for (const block of turn.contentBlocks) {
+        if (block.type === "tool_call" && block.call.name === "Task") {
+          const nestedAgentId = subAgentMap.get(block.call.toolUseId);
+          if (nestedAgentId) {
+            block.call.subAgentId = nestedAgentId;
+          }
         }
       }
     }
-  }
 
-  return { sessionId, project: encodedPath, turns, pluginId: "claude-code" };
+    return { sessionId, project: encodedPath, turns, pluginId: "claude-code" } as Session;
+  });
 }
 
 const AGENT_ID_RE = /agentId:\s*(\w+)/;
@@ -183,33 +185,35 @@ interface ParsedLines {
   parseErrors: ParseErrorTurn[];
 }
 
-async function readJsonlLines(filePath: string): Promise<ParsedLines> {
-  const text = await Bun.file(filePath).text();
+function readJsonlLines(filePath: string) {
+  return Effect.gen(function* () {
+    const text = yield* readFileText(filePath);
 
-  const rawLines: RawLine[] = [];
-  const parseErrors: ParseErrorTurn[] = [];
+    const rawLines: RawLine[] = [];
+    const parseErrors: ParseErrorTurn[] = [];
 
-  iterateJsonl(
-    text,
-    ({ parsed }) => {
-      rawLines.push(parsed as RawLine);
-    },
-    {
-      onMalformed: (line, lineNumber, error) => {
-        parseErrors.push({
-          kind: "parse_error",
-          uuid: `parse-error-line-${lineNumber}`,
-          timestamp: rawLines[rawLines.length - 1]?.timestamp ?? "",
-          lineNumber,
-          rawLine: line.length > 500 ? `${line.slice(0, 500)}\u2026 (truncated)` : line,
-          errorType: "json_parse",
-          errorDetails: error instanceof Error ? error.message : undefined,
-        });
+    iterateJsonl(
+      text,
+      ({ parsed }) => {
+        rawLines.push(parsed as RawLine);
       },
-    },
-  );
+      {
+        onMalformed: (line, lineNumber, error) => {
+          parseErrors.push({
+            kind: "parse_error",
+            uuid: `parse-error-line-${lineNumber}`,
+            timestamp: rawLines[rawLines.length - 1]?.timestamp ?? "",
+            lineNumber,
+            rawLine: line.length > 500 ? `${line.slice(0, 500)}\u2026 (truncated)` : line,
+            errorType: "json_parse",
+            errorDetails: error instanceof Error ? error.message : undefined,
+          });
+        },
+      },
+    );
 
-  return { rawLines, parseErrors };
+    return { rawLines, parseErrors } as ParsedLines;
+  });
 }
 
 function isDisplayableLine(l: RawLine): boolean {

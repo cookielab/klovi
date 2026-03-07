@@ -1,18 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdir, rm, utimes } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  decodeEncodedPath,
-  getLatestMtime,
-  listFilesBySuffix,
-  listFilesWithMtime,
-  readDirEntriesSafe,
-  readTextPrefix,
-} from "./discovery-utils.ts";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect } from "effect";
+import { decodeEncodedPath, readDirEntriesSafe, readTextPrefix } from "./discovery-utils.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-discovery-utils-test-${Date.now()}`);
 const originalPlatform = process.platform;
+
+const testLayer = NodeFileSystem.layer;
 
 beforeEach(async () => {
   await rm(testDir, { recursive: true, force: true });
@@ -26,57 +23,19 @@ afterEach(async () => {
 
 describe("codex discovery utils", () => {
   test("readDirEntriesSafe returns [] for missing directory", async () => {
-    const entries = await readDirEntriesSafe(join(testDir, "missing"));
+    const entries = await Effect.runPromise(
+      readDirEntriesSafe(join(testDir, "missing")).pipe(Effect.provide(testLayer)),
+    );
     expect(entries).toEqual([]);
-  });
-
-  test("listFilesBySuffix filters matching files", async () => {
-    await Bun.write(join(testDir, "a.jsonl"), "{}");
-    await Bun.write(join(testDir, "b.txt"), "x");
-
-    const files = await listFilesBySuffix(testDir, ".jsonl");
-    expect(files).toEqual(["a.jsonl"]);
-  });
-
-  test("getLatestMtime returns newest mtime and ignores missing files", async () => {
-    const first = join(testDir, "a.jsonl");
-    const second = join(testDir, "b.jsonl");
-
-    await Bun.write(first, "{}");
-    await Bun.write(second, "{}");
-    await utimes(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
-    await utimes(
-      second,
-      new Date("2025-01-15T00:00:00.000Z"),
-      new Date("2025-01-15T00:00:00.000Z"),
-    );
-
-    const latest = await getLatestMtime(testDir, ["a.jsonl", "missing.jsonl", "b.jsonl"]);
-    expect(latest).toBe("2025-01-15T00:00:00.000Z");
-  });
-
-  test("listFilesWithMtime returns files sorted by descending mtime", async () => {
-    const first = join(testDir, "a.jsonl");
-    const second = join(testDir, "b.jsonl");
-
-    await Bun.write(first, "{}");
-    await Bun.write(second, "{}");
-    await utimes(first, new Date("2025-01-14T00:00:00.000Z"), new Date("2025-01-14T00:00:00.000Z"));
-    await utimes(
-      second,
-      new Date("2025-01-15T00:00:00.000Z"),
-      new Date("2025-01-15T00:00:00.000Z"),
-    );
-
-    const files = await listFilesWithMtime(testDir, ".jsonl");
-    expect(files.map((f) => f.fileName)).toEqual(["b.jsonl", "a.jsonl"]);
   });
 
   test("readTextPrefix reads only requested bytes", async () => {
     const filePath = join(testDir, "sample.txt");
     await Bun.write(filePath, "abcdef");
 
-    const prefix = await readTextPrefix(filePath, 4);
+    const prefix = await Effect.runPromise(
+      readTextPrefix(filePath, 4).pipe(Effect.provide(testLayer)),
+    );
     expect(prefix).toBe("abcd");
   });
 
