@@ -1,3 +1,7 @@
+import type { Effect } from "effect";
+import type { PluginError } from "./plugin-errors.ts";
+import type { PluginRequirements } from "./plugin-runtime.ts";
+
 export interface PluginProject<TPluginId extends string = string> {
   pluginId: TPluginId;
   nativeId: string;
@@ -54,19 +58,28 @@ export interface ToolPlugin<
   TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
   TSession extends RegistrySession = RegistrySession,
 > {
-  id: TPluginId;
-  displayName: string;
+  readonly id: TPluginId;
+  readonly displayName: string;
 
   getDefaultDataDir(): string | null;
-  isDataAvailable?(): Promise<boolean>;
-  discoverProjects(): Promise<PluginProject<TPluginId>[]>;
-  listSessions(nativeId: string): Promise<TSessionSummary[]>;
-  loadSession(nativeId: string, sessionId: string): Promise<TSession>;
+  readonly isDataAvailable: Effect.Effect<boolean, never, PluginRequirements>;
+  readonly discoverProjects: Effect.Effect<
+    PluginProject<TPluginId>[],
+    PluginError,
+    PluginRequirements
+  >;
+  listSessions(nativeId: string): Effect.Effect<TSessionSummary[], PluginError, PluginRequirements>;
+  loadSession(
+    nativeId: string,
+    sessionId: string,
+  ): Effect.Effect<TSession, PluginError, PluginRequirements>;
   loadSessionDetail?(
     nativeId: string,
     sessionId: string,
-  ): Promise<ToolPluginSessionDetail<TSession>>;
-  loadSubAgentSession?(params: ToolPluginSubAgentParams): Promise<TSession>;
+  ): Effect.Effect<ToolPluginSessionDetail<TSession>, PluginError, PluginRequirements>;
+  loadSubAgentSession?(
+    params: ToolPluginSubAgentParams,
+  ): Effect.Effect<TSession, PluginError, PluginRequirements>;
 
   getResumeCommand?(sessionId: string): string | null;
   getSessionBadges?(session: TSessionSummary): Badge[];

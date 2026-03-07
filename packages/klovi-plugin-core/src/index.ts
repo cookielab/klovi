@@ -12,9 +12,13 @@ export {
 } from "./ids.ts";
 
 export { epochMsToIso, epochSecondsToIso, maxIso, sortByIsoDesc } from "./iso-time.ts";
+export type { PluginConfigShape } from "./plugin-config.ts";
+export { PluginConfig } from "./plugin-config.ts";
+export { PluginError } from "./plugin-errors.ts";
 export type { SessionIdEncoder } from "./plugin-registry.ts";
 export { encodeResolvedPath, PluginRegistry } from "./plugin-registry.ts";
-
+export type { PluginRequirements, RegistryRequirements } from "./plugin-runtime.ts";
+export { makePluginConfigLayer } from "./plugin-runtime.ts";
 export type {
   Badge,
   MergedProject,
@@ -47,3 +51,5 @@ export type {
   Turn,
   UserTurn,
 } from "./session-types.ts";
+export type { SqliteClient, SqliteDb, SqliteQuery } from "./sqlite-service.ts";
+export { SqliteClientTag } from "./sqlite-service.ts";

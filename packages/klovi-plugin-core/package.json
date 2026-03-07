@@ -10,5 +10,12 @@
   "sideEffects": false,
   "files": [
     "src"
-  ]
+  ],
+  "dependencies": {
+    "effect": "*",
+    "@effect/platform": "*"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "*"
+  }
 }
