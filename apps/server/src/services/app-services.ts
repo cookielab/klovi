@@ -1,5 +1,6 @@
 import { rm } from "node:fs/promises";
 import type { GlobalSessionResult, SessionSummary } from "@cookielab.io/klovi-ui/types";
+import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
 import { sortByIsoDesc } from "./iso-time.ts";
 import type { PluginRegistry } from "./registry.ts";
@@ -49,15 +50,15 @@ export async function getStats(registry: PluginRegistry) {
 }
 
 export async function getProjects(registry: PluginRegistry) {
-  const projects = await registry.discoverAllProjects();
+  const projects = await runRegistryEffect(registry.discoverAllProjects());
   return { projects };
 }
 
 export async function getSessions(registry: PluginRegistry, params: { encodedPath: string }) {
-  const projects = await registry.discoverAllProjects();
+  const projects = await runRegistryEffect(registry.discoverAllProjects());
   const project = projects.find((p) => p.encodedPath === params.encodedPath);
   if (!project) return { sessions: [] as SessionSummary[] };
-  const sessions = await registry.listAllSessions(project);
+  const sessions = await runRegistryEffect(registry.listAllSessions(project));
   return { sessions };
 }
 
@@ -73,7 +74,7 @@ export async function getSession(
   const pluginId = parsed.pluginId;
   const rawSessionId = parsed.rawSessionId;
 
-  const projects = await registry.discoverAllProjects();
+  const projects = await runRegistryEffect(registry.discoverAllProjects());
   const project = projects.find((p) => p.encodedPath === params.project);
   if (!project) throw new Error("Project not found");
 
@@ -81,11 +82,14 @@ export async function getSession(
   if (!source) throw new Error("Plugin source not found");
 
   const plugin = registry.getPlugin(pluginId);
+  const pluginConfig = registry.getPluginConfig(pluginId);
+
   const sessionDetail = plugin.loadSessionDetail
-    ? await plugin.loadSessionDetail(source.nativeId, rawSessionId)
+    ? await runPluginEffect(plugin.loadSessionDetail(source.nativeId, rawSessionId), pluginConfig)
     : undefined;
   const session =
-    sessionDetail?.session ?? (await plugin.loadSession(source.nativeId, rawSessionId));
+    sessionDetail?.session ??
+    (await runPluginEffect(plugin.loadSession(source.nativeId, rawSessionId), pluginConfig));
   session.sessionId = encodeSessionId(pluginId, rawSessionId);
   session.pluginId = pluginId;
   session.planSessionId = sessionDetail?.planSessionId
@@ -111,11 +115,15 @@ export async function getSubAgent(
     throw new Error(`Sub-agent sessions are not supported by plugin: ${parsed.pluginId}`);
   }
 
-  const session = await plugin.loadSubAgentSession({
-    sessionId: parsed.rawSessionId,
-    project: params.project,
-    agentId: params.agentId,
-  });
+  const pluginConfig = registry.getPluginConfig(parsed.pluginId);
+  const session = await runPluginEffect(
+    plugin.loadSubAgentSession({
+      sessionId: parsed.rawSessionId,
+      project: params.project,
+      agentId: params.agentId,
+    }),
+    pluginConfig,
+  );
   return { session };
 }
 
@@ -125,11 +133,11 @@ function projectNameFromPath(fullPath: string): string {
 }
 
 export async function searchSessions(registry: PluginRegistry) {
-  const projects = await registry.discoverAllProjects();
+  const projects = await runRegistryEffect(registry.discoverAllProjects());
   const allSessions: GlobalSessionResult[] = [];
 
   for (const project of projects) {
-    const sessions = await registry.listAllSessions(project);
+    const sessions = await runRegistryEffect(registry.listAllSessions(project));
     const projectName = projectNameFromPath(project.name);
     for (const session of sessions) {
       allSessions.push({

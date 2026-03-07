@@ -15,7 +15,8 @@
       "!**/build",
       "!**/coverage",
       "!**/.claude",
-      "!bun.lock"
+      "!bun.lock",
+      "!scripts"
     ]
   },
   "formatter": {

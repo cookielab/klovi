@@ -1,8 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { PluginError } from "@cookielab.io/klovi-plugin-core";
 import type { Session, SessionSummary } from "@cookielab.io/klovi-ui/types";
+import { Effect } from "effect";
 import type { ToolPlugin } from "./plugin-types.ts";
 import { PluginRegistry } from "./registry.ts";
 import { scanStats } from "./stats.ts";
+
+const testConfig = { dataDir: "/test" };
 
 function isoDaysAgo(days: number): string {
   const d = new Date();
@@ -68,7 +72,8 @@ function createMockPlugin(
     id: "mock-plugin",
     displayName: "Mock",
     getDefaultDataDir: () => null,
-    discoverProjects: async () => [
+    isDataAvailable: Effect.succeed(true),
+    discoverProjects: Effect.succeed([
       {
         pluginId: "mock-plugin",
         nativeId: "project-1",
@@ -77,13 +82,29 @@ function createMockPlugin(
         sessionCount: list.length,
         lastActivity: list[0]?.timestamp ?? "",
       },
-    ],
-    listSessions: () => Promise.resolve(list),
+    ]),
+    listSessions: () => Effect.succeed(list),
     loadSession: (_nativeId, sessionId) => {
-      if (options?.failLoad) return Promise.reject(new Error("load failed"));
+      if (options?.failLoad) {
+        return Effect.fail(
+          new PluginError({
+            pluginId: "mock-plugin",
+            operation: "loadSession",
+            message: "load failed",
+          }),
+        );
+      }
       const session = sessionsById[sessionId];
-      if (!session) return Promise.reject(new Error("missing session"));
-      return Promise.resolve(session);
+      if (!session) {
+        return Effect.fail(
+          new PluginError({
+            pluginId: "mock-plugin",
+            operation: "loadSession",
+            message: "missing session",
+          }),
+        );
+      }
+      return Effect.succeed(session);
     },
   };
 }
@@ -114,7 +135,7 @@ describe("scanStats", () => {
       },
     ];
 
-    registry.register(createMockPlugin({ s1, s2 }, list));
+    registry.register(createMockPlugin({ s1, s2 }, list), testConfig);
 
     const stats = await scanStats(registry);
     expect(stats.projects).toBe(1);
@@ -145,7 +166,7 @@ describe("scanStats", () => {
       },
     ];
 
-    registry.register(createMockPlugin({}, list, { failLoad: true }));
+    registry.register(createMockPlugin({}, list, { failLoad: true }), testConfig);
 
     const stats = await scanStats(registry);
     expect(stats.projects).toBe(1);
@@ -176,6 +197,7 @@ describe("scanStats", () => {
         },
         list,
       ),
+      testConfig,
     );
 
     const first = await scanStats(registry);
@@ -189,6 +211,7 @@ describe("scanStats", () => {
         },
         list,
       ),
+      testConfig,
     );
     const second = await scanStats(registry);
     expect(second.inputTokens).toBe(999);

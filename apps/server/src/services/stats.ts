@@ -5,12 +5,17 @@ import type {
   TokenUsage,
   Turn,
 } from "@cookielab.io/klovi-ui/types";
+import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import type { PluginRegistry } from "./registry.ts";
 import { parseSessionId } from "./session-id.ts";
 
 interface SessionWithProject {
-  project: Awaited<ReturnType<PluginRegistry["discoverAllProjects"]>>[number];
+  project: Awaited<ReturnType<typeof runDiscoverProjects>>[number];
   session: SessionSummary;
+}
+
+function runDiscoverProjects(registry: PluginRegistry) {
+  return runRegistryEffect(registry.discoverAllProjects());
 }
 
 function emptyStats(projects = 0): DashboardStats {
@@ -78,12 +83,12 @@ async function collectSessionsWithProjects(
   registry: PluginRegistry,
   stats: DashboardStats,
 ): Promise<SessionWithProject[]> {
-  const projects = await registry.discoverAllProjects().catch(() => []);
+  const projects = await runRegistryEffect(registry.discoverAllProjects()).catch(() => []);
   stats.projects = projects.length;
 
   const sessionsWithProject: SessionWithProject[] = [];
   for (const project of projects) {
-    const sessions = await registry.listAllSessions(project).catch(() => []);
+    const sessions = await runRegistryEffect(registry.listAllSessions(project)).catch(() => []);
     stats.sessions += sessions.length;
     for (const session of sessions) {
       sessionsWithProject.push({ project, session });
@@ -113,8 +118,12 @@ async function loadSessionForStats(
   if (!source) return null;
 
   const plugin = registry.getPlugin(session.pluginId);
+  const pluginConfig = registry.getPluginConfig(session.pluginId);
   const { rawSessionId } = parseSessionId(session.sessionId);
-  const loaded = await plugin.loadSession(source.nativeId, rawSessionId).catch(() => null);
+  const loaded = await runPluginEffect(
+    plugin.loadSession(source.nativeId, rawSessionId),
+    pluginConfig,
+  ).catch(() => null);
   return loaded?.turns ?? null;
 }
 
