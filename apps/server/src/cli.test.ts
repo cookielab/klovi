@@ -17,7 +17,7 @@ describe("CLI smoke tests", () => {
 
   test("cli.ts has shebang line", async () => {
     const content = await Bun.file(cliPath).text();
-    expect(content.startsWith("#!/usr/bin/env bun")).toBe(true);
+    expect(content.startsWith("#!/usr/bin/env node")).toBe(true);
   });
 
   test("server.ts exports startKloviServer", async () => {
