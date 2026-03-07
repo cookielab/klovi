@@ -276,6 +276,7 @@ export function SettingsView({
 }: SettingsViewProps) {
   const client = useKloviClient();
   const hostBridge = useKloviHostBridge();
+  const capabilities = hostBridge.getCapabilities();
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [changed, setChanged] = useState(false);
@@ -286,19 +287,24 @@ export function SettingsView({
   const [updateSettings, setUpdateSettings] = useState<UpdateSettingsInfo | null>(null);
 
   useEffect(() => {
-    Promise.all([
+    const promises: [
+      Promise<{ plugins: PluginSettingInfo[] }>,
+      Promise<{ showSecurityWarning: boolean }>,
+      Promise<UpdateSettingsInfo | null>,
+    ] = [
       client.getPluginSettings(),
       client.getGeneralSettings(),
-      hostBridge.getUpdateSettings(),
-    ])
+      capabilities.updater ? hostBridge.getUpdateSettings() : Promise.resolve(null),
+    ];
+    Promise.all(promises)
       .then(([pluginData, generalData, updateData]) => {
         setPlugins(pluginData.plugins);
         setShowSecurityWarning(generalData.showSecurityWarning);
-        setUpdateSettings(updateData);
+        if (updateData) setUpdateSettings(updateData);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [client, hostBridge]);
+  }, [client, hostBridge, capabilities.updater]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -421,6 +427,7 @@ export function SettingsView({
                     onBrowse={handleBrowse}
                     onPathChange={handlePathChange}
                     onReset={handleReset}
+                    canBrowse={capabilities.browseDirectory}
                   />
                 ))}
               </div>
@@ -517,12 +524,14 @@ export function SettingsView({
                   </div>
                 </div>
 
-                <UpdatesTab
-                  loading={false}
-                  updateSettings={updateSettings}
-                  setUpdateSettings={setUpdateSettings}
-                  setChanged={setChanged}
-                />
+                {capabilities.updater && (
+                  <UpdatesTab
+                    loading={false}
+                    updateSettings={updateSettings}
+                    setUpdateSettings={setUpdateSettings}
+                    setChanged={setChanged}
+                  />
+                )}
 
                 <h4 className="settings-subsection-title">Reset</h4>
                 <div className="settings-control-row">

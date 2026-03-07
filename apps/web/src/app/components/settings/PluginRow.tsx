@@ -7,9 +7,17 @@ export interface PluginRowProps {
   onBrowse: (pluginId: string, currentDir: string) => void;
   onPathChange: (pluginId: string, dataDir: string) => void;
   onReset: (pluginId: string) => void;
+  canBrowse?: boolean;
 }
 
-export function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset }: PluginRowProps) {
+export function PluginRow({
+  plugin,
+  onToggle,
+  onBrowse,
+  onPathChange,
+  onReset,
+  canBrowse = true,
+}: PluginRowProps) {
   const customPath = plugin.isCustomDir ? plugin.dataDir : "";
   const [editingPath, setEditingPath] = useState(customPath);
 
@@ -57,14 +65,16 @@ export function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset }:
           onKeyDown={handlePathKeyDown}
           disabled={!plugin.enabled}
         />
-        <button
-          type="button"
-          className="btn btn-sm"
-          onClick={() => onBrowse(plugin.id, plugin.dataDir)}
-          disabled={!plugin.enabled}
-        >
-          Browse
-        </button>
+        {canBrowse && (
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => onBrowse(plugin.id, plugin.dataDir)}
+            disabled={!plugin.enabled}
+          >
+            Browse
+          </button>
+        )}
         {plugin.isCustomDir && (
           <button
             type="button"

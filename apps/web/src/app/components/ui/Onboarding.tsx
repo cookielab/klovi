@@ -12,6 +12,7 @@ interface OnboardingProps {
 export function Onboarding({ onComplete }: OnboardingProps) {
   const client = useKloviClient();
   const hostBridge = useKloviHostBridge();
+  const capabilities = hostBridge.getCapabilities();
   const [step, setStep] = useState<1 | 2>(1);
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +112,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onBrowse={handleBrowse}
                     onPathChange={handlePathChange}
                     onReset={handleReset}
+                    canBrowse={capabilities.browseDirectory}
                   />
                 ))}
               </div>

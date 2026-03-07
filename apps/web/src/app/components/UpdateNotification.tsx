@@ -37,6 +37,9 @@ export function UpdateNotification({
   manualCheckResult,
   onDismissManualCheck,
 }: UpdateNotificationProps) {
+  const hostBridge = useKloviHostBridge();
+  if (!hostBridge.getCapabilities().updater) return null;
+
   // Manual check result takes priority (temporary banner)
   if (manualCheckResult && manualCheckResult.status !== "ready") {
     return (
