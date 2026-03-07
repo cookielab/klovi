@@ -1,9 +1,8 @@
-import type { PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
+import type { PluginProject, SessionSummary, SqliteDb } from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso } from "@cookielab.io/klovi-plugin-core";
-import { openOpenCodeDb, type SqliteDb } from "./db.ts";
+import { Effect } from "effect";
+import { openOpenCodeDb } from "./db.ts";
 import { tryParseJson } from "./shared/json-utils.ts";
-
-export { getOpenCodeDbPath as getDbPath } from "./db.ts";
 
 // --- Schema introspection ---
 
@@ -88,26 +87,28 @@ interface SessionPreview {
 
 // --- Discovery ---
 
-export async function discoverOpenCodeProjects(): Promise<PluginProject[]> {
-  const db = await openOpenCodeDb();
-  if (!db) return [];
+export function discoverOpenCodeProjects() {
+  return Effect.gen(function* () {
+    const db = yield* openOpenCodeDb();
+    if (!db) return [] as PluginProject[];
 
-  try {
-    const schema = inspectSchema(db);
-    if (!schema.hasRequiredTables) return [];
+    try {
+      const schema = inspectSchema(db);
+      if (!schema.hasRequiredTables) return [] as PluginProject[];
 
-    // Try to discover projects from the project table first
-    if (schema.hasProjectTable) {
-      return discoverFromProjectTable(db, schema);
+      // Try to discover projects from the project table first
+      if (schema.hasProjectTable) {
+        return discoverFromProjectTable(db, schema);
+      }
+
+      // Fallback: discover from session directories
+      return discoverFromSessions(db, schema);
+    } catch {
+      return [] as PluginProject[];
+    } finally {
+      db.close();
     }
-
-    // Fallback: discover from session directories
-    return discoverFromSessions(db, schema);
-  } catch {
-    return [];
-  } finally {
-    db.close();
-  }
+  });
 }
 
 function discoverFromProjectTable(db: SqliteDb, schema: OpenCodeSchema): PluginProject[] {
@@ -206,20 +207,22 @@ function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
   };
 }
 
-export async function listOpenCodeSessions(nativeId: string): Promise<SessionSummary[]> {
-  const db = await openOpenCodeDb();
-  if (!db) return [];
+export function listOpenCodeSessions(nativeId: string) {
+  return Effect.gen(function* () {
+    const db = yield* openOpenCodeDb();
+    if (!db) return [] as SessionSummary[];
 
-  try {
-    const schema = inspectSchema(db);
-    if (!schema.hasRequiredTables) return [];
-    const sessionRows = querySessionRows(db, schema, nativeId);
-    return sessionRows.map((row) => sessionRowToSummary(db, row));
-  } catch {
-    return [];
-  } finally {
-    db.close();
-  }
+    try {
+      const schema = inspectSchema(db);
+      if (!schema.hasRequiredTables) return [] as SessionSummary[];
+      const sessionRows = querySessionRows(db, schema, nativeId);
+      return sessionRows.map((row) => sessionRowToSummary(db, row));
+    } catch {
+      return [] as SessionSummary[];
+    } finally {
+      db.close();
+    }
+  });
 }
 
 function getSessionPreview(db: SqliteDb, sessionId: string): SessionPreview {

@@ -4,10 +4,23 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AssistantTurn, UserTurn } from "@cookielab.io/klovi-plugin-core";
-import { setOpenCodeDir } from "./config.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { buildOpenCodeTurns, loadOpenCodeSession, type OpenCodeMessage } from "./parser.ts";
+import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
 
 const testDir = join(tmpdir(), `klovi-opencode-parser-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+  BunSqliteLayer,
+);
+
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
+}
 
 function createTestDb(): Database {
   const dbPath = join(testDir, "opencode.db");
@@ -110,7 +123,6 @@ function insertPart(
 
 beforeEach(async () => {
   await mkdir(testDir, { recursive: true });
-  setOpenCodeDir(testDir);
 });
 
 afterEach(async () => {
@@ -552,7 +564,7 @@ describe("loadOpenCodeSession", () => {
 
     db.close();
 
-    const session = await loadOpenCodeSession("proj-1", "sess-1");
+    const session = await runEffect(loadOpenCodeSession("proj-1", "sess-1"));
 
     expect(session.sessionId).toBe("sess-1");
     expect(session.pluginId).toBe("opencode");
@@ -582,7 +594,7 @@ describe("loadOpenCodeSession", () => {
     await rm(testDir, { recursive: true, force: true });
     await mkdir(testDir, { recursive: true });
 
-    const session = await loadOpenCodeSession("proj-1", "nonexistent-sess");
+    const session = await runEffect(loadOpenCodeSession("proj-1", "nonexistent-sess"));
 
     expect(session.sessionId).toBe("nonexistent-sess");
     expect(session.pluginId).toBe("opencode");
@@ -595,7 +607,7 @@ describe("loadOpenCodeSession", () => {
     insertSession(db, "sess-1", "proj-1", "/Users/dev/project");
     db.close();
 
-    const session = await loadOpenCodeSession("proj-1", "sess-1");
+    const session = await runEffect(loadOpenCodeSession("proj-1", "sess-1"));
 
     expect(session.turns).toEqual([]);
   });
@@ -630,7 +642,7 @@ describe("loadOpenCodeSession", () => {
 
     db.close();
 
-    const session = await loadOpenCodeSession("proj-1", "sess-1");
+    const session = await runEffect(loadOpenCodeSession("proj-1", "sess-1"));
 
     expect(session.turns).toHaveLength(1);
     const assistant = session.turns[0] as AssistantTurn;
@@ -673,7 +685,7 @@ describe("loadOpenCodeSession", () => {
 
     db.close();
 
-    const session = await loadOpenCodeSession("proj-1", "sess-1");
+    const session = await runEffect(loadOpenCodeSession("proj-1", "sess-1"));
 
     // Should skip the malformed message and still parse the good one
     expect(session.turns).toHaveLength(1);

@@ -2,13 +2,15 @@ import type {
   AssistantTurn,
   ContentBlock,
   Session,
+  SqliteDb,
   TokenUsage,
   ToolCallWithResult,
   Turn,
   UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso } from "@cookielab.io/klovi-plugin-core";
-import { openOpenCodeDb, type SqliteDb } from "./db.ts";
+import { Effect } from "effect";
+import { openOpenCodeDb } from "./db.ts";
 import { tryParseJson } from "./shared/json-utils.ts";
 
 // --- DB row types ---
@@ -392,19 +394,21 @@ function loadSessionFromDb(db: SqliteDb, nativeId: string, sessionId: string): S
   return { sessionId, project, turns, pluginId: "opencode" };
 }
 
-export async function loadOpenCodeSession(nativeId: string, sessionId: string): Promise<Session> {
-  const db = await openOpenCodeDb();
-  if (!db) {
-    return emptySession(nativeId, sessionId);
-  }
+export function loadOpenCodeSession(nativeId: string, sessionId: string) {
+  return Effect.gen(function* () {
+    const db = yield* openOpenCodeDb();
+    if (!db) {
+      return emptySession(nativeId, sessionId);
+    }
 
-  try {
-    return loadSessionFromDb(db, nativeId, sessionId);
-  } catch {
-    return emptySession(nativeId, sessionId);
-  } finally {
-    db.close();
-  }
+    try {
+      return loadSessionFromDb(db, nativeId, sessionId);
+    } catch {
+      return emptySession(nativeId, sessionId);
+    } finally {
+      db.close();
+    }
+  });
 }
 
 function emptySession(project: string, sessionId: string): Session {

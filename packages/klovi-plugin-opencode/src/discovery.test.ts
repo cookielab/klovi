@@ -3,10 +3,23 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setOpenCodeDir } from "./config.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery.ts";
+import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
 
 const testDir = join(tmpdir(), `klovi-opencode-discovery-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+  BunSqliteLayer,
+);
+
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
+}
 
 function createTestDb(): Database {
   const dbPath = join(testDir, "opencode.db");
@@ -127,7 +140,6 @@ function insertPart(
 
 beforeEach(async () => {
   await mkdir(testDir, { recursive: true });
-  setOpenCodeDir(testDir);
 });
 
 afterEach(async () => {
@@ -142,7 +154,7 @@ describe("discoverOpenCodeProjects", () => {
     insertSession(db, "sess-2", "proj-1", { directory: "/Users/dev/project-a" });
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
 
     expect(projects).toHaveLength(1);
     expect(projects[0]?.pluginId).toBe("opencode");
@@ -160,7 +172,7 @@ describe("discoverOpenCodeProjects", () => {
     insertSession(db, "sess-2", "proj-2", { directory: "/Users/dev/project-b" });
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
 
     expect(projects).toHaveLength(2);
     const paths = projects.map((p) => p.resolvedPath).sort();
@@ -172,7 +184,7 @@ describe("discoverOpenCodeProjects", () => {
     await rm(testDir, { recursive: true, force: true });
     await mkdir(testDir, { recursive: true });
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
     expect(projects).toEqual([]);
   });
 
@@ -182,7 +194,7 @@ describe("discoverOpenCodeProjects", () => {
     db.run("CREATE TABLE some_random_table (id TEXT PRIMARY KEY)");
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
     expect(projects).toEqual([]);
   });
 
@@ -194,7 +206,7 @@ describe("discoverOpenCodeProjects", () => {
     insertSession(db, "sess-1", "proj-1", { directory: "/Users/dev/project-a" });
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
 
     expect(projects).toHaveLength(1);
     expect(projects[0]?.nativeId).toBe("proj-1");
@@ -206,7 +218,7 @@ describe("discoverOpenCodeProjects", () => {
     insertSession(db, "sess-1", "proj-1", { directory: "/Users/dev/project-a" });
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
 
     expect(projects).toHaveLength(1);
     expect(projects[0]?.displayName).toBe("/Users/dev/project-a");
@@ -256,7 +268,7 @@ describe("discoverOpenCodeProjects", () => {
     );
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
 
     expect(projects).toHaveLength(2);
     expect(projects[0]?.nativeId).toBe("/Users/dev/legacy-b");
@@ -315,7 +327,7 @@ describe("discoverOpenCodeProjects", () => {
     );
     db.close();
 
-    const projects = await discoverOpenCodeProjects();
+    const projects = await runEffect(discoverOpenCodeProjects());
 
     expect(projects).toHaveLength(1);
     expect(projects[0]?.nativeId).toBe("/Users/dev/fallback");
@@ -353,7 +365,7 @@ describe("listOpenCodeSessions", () => {
     });
     db.close();
 
-    const sessions = await listOpenCodeSessions("proj-1");
+    const sessions = await runEffect(listOpenCodeSessions("proj-1"));
 
     expect(sessions).toHaveLength(2);
     // Most recent first
@@ -393,7 +405,7 @@ describe("listOpenCodeSessions", () => {
     });
     db.close();
 
-    const sessions = await listOpenCodeSessions("proj-1");
+    const sessions = await runEffect(listOpenCodeSessions("proj-1"));
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.firstMessage).toBe("Help me fix the authentication flow");
@@ -408,7 +420,7 @@ describe("listOpenCodeSessions", () => {
     });
     db.close();
 
-    const sessions = await listOpenCodeSessions("proj-1");
+    const sessions = await runEffect(listOpenCodeSessions("proj-1"));
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.firstMessage).toBe("OpenCode session");
@@ -418,7 +430,7 @@ describe("listOpenCodeSessions", () => {
     await rm(testDir, { recursive: true, force: true });
     await mkdir(testDir, { recursive: true });
 
-    const sessions = await listOpenCodeSessions("proj-1");
+    const sessions = await runEffect(listOpenCodeSessions("proj-1"));
     expect(sessions).toEqual([]);
   });
 
@@ -428,7 +440,7 @@ describe("listOpenCodeSessions", () => {
     insertSession(db, "sess-1", "proj-1", { directory: "/Users/dev/project-a" });
     db.close();
 
-    const sessions = await listOpenCodeSessions("nonexistent-project");
+    const sessions = await runEffect(listOpenCodeSessions("nonexistent-project"));
     expect(sessions).toEqual([]);
   });
 
@@ -447,7 +459,7 @@ describe("listOpenCodeSessions", () => {
     });
     db.close();
 
-    const sessions = await listOpenCodeSessions("proj-1");
+    const sessions = await runEffect(listOpenCodeSessions("proj-1"));
 
     expect(sessions[0]?.sessionId).toBe("sess-new");
     expect(sessions[1]?.sessionId).toBe("sess-old");
@@ -505,7 +517,7 @@ describe("listOpenCodeSessions", () => {
     );
     db.close();
 
-    const sessions = await listOpenCodeSessions("/Users/dev/legacy-app");
+    const sessions = await runEffect(listOpenCodeSessions("/Users/dev/legacy-app"));
 
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.sessionId).toBe("legacy-sess-1");
