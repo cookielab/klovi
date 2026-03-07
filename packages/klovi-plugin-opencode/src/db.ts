@@ -1,28 +1,23 @@
 import { join } from "node:path";
-import { getOpenCodeDir } from "./config.ts";
+import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
+import { FileSystem } from "@effect/platform";
+import { Effect } from "effect";
 
-export interface SqliteQuery<T = unknown> {
-  all(...params: unknown[]): T[];
-  get(...params: unknown[]): T | undefined;
+export function getOpenCodeDbPath() {
+  return Effect.gen(function* () {
+    const config = yield* PluginConfig;
+    return join(config.dataDir, "opencode.db");
+  });
 }
 
-export interface SqliteDb {
-  query<T = unknown>(sql: string): SqliteQuery<T>;
-  close(): void;
-}
+export function openOpenCodeDb() {
+  return Effect.gen(function* () {
+    const dbPath = yield* getOpenCodeDbPath();
+    const fs = yield* FileSystem.FileSystem;
+    const exists = yield* fs.exists(dbPath);
+    if (!exists) return null;
 
-export function getOpenCodeDbPath(): string {
-  return join(getOpenCodeDir(), "opencode.db");
-}
-
-export async function openOpenCodeDb(): Promise<SqliteDb | null> {
-  const dbPath = getOpenCodeDbPath();
-  if (!(await Bun.file(dbPath).exists())) return null;
-
-  try {
-    const sqlite = await import("bun:sqlite");
-    return new sqlite.Database(dbPath, { readonly: true }) as unknown as SqliteDb;
-  } catch {
-    return null;
-  }
+    const client = yield* SqliteClientTag;
+    return yield* client.open(dbPath, { readonly: true });
+  });
 }

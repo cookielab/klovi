@@ -3,9 +3,23 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getOpenCodeDir, openCodePlugin, setOpenCodeDir } from "./index.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
+import { openCodePlugin } from "./index.ts";
+import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
 
 const testDir = join(tmpdir(), `klovi-opencode-index-test-${Date.now()}`);
+
+const testLayer = Layer.mergeAll(
+  NodeFileSystem.layer,
+  Layer.succeed(PluginConfig, { dataDir: testDir }),
+  BunSqliteLayer,
+);
+
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
+}
 
 function createDbWithSingleSession(): void {
   const dbPath = join(testDir, "opencode.db");
@@ -124,49 +138,44 @@ function createDbWithSingleSession(): void {
 }
 
 describe("openCodePlugin", () => {
-  let originalDir: string;
-
   beforeEach(async () => {
-    originalDir = getOpenCodeDir();
     await rm(testDir, { recursive: true, force: true });
     await mkdir(testDir, { recursive: true });
-    setOpenCodeDir(testDir);
   });
 
   afterEach(async () => {
-    setOpenCodeDir(originalDir);
     await rm(testDir, { recursive: true, force: true });
   });
 
   test("exposes plugin identity and no resume command", () => {
     expect(openCodePlugin.id).toBe("opencode");
     expect(openCodePlugin.displayName).toBe("OpenCode");
-    expect(openCodePlugin.getDefaultDataDir()).toBe(testDir);
+    expect(openCodePlugin.getDefaultDataDir()).toBeNull();
     expect("getResumeCommand" in openCodePlugin).toBe(false);
   });
 
   test("discovers, lists, and loads sessions through plugin interface", async () => {
     createDbWithSingleSession();
 
-    const projects = await openCodePlugin.discoverProjects();
+    const projects = await runEffect(openCodePlugin.discoverProjects);
     expect(projects).toHaveLength(1);
     expect(projects[0]?.nativeId).toBe("project-1");
     expect(projects[0]?.resolvedPath).toBe("/Users/dev/opencode-project");
 
-    const sessions = await openCodePlugin.listSessions("project-1");
+    const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
     expect(sessions).toHaveLength(1);
     expect(sessions[0]?.pluginId).toBe("opencode");
     expect(sessions[0]?.firstMessage).toBe("Please help me debug");
 
-    const session = await openCodePlugin.loadSession("project-1", "session-1");
+    const session = await runEffect(openCodePlugin.loadSession("project-1", "session-1"));
     expect(session.pluginId).toBe("opencode");
     expect(session.project).toBe("/Users/dev/opencode-project");
     expect(session.turns).toHaveLength(2);
   });
 
   test("returns empty discovery/list results when db is missing", async () => {
-    const projects = await openCodePlugin.discoverProjects();
-    const sessions = await openCodePlugin.listSessions("project-1");
+    const projects = await runEffect(openCodePlugin.discoverProjects);
+    const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
 
     expect(projects).toEqual([]);
     expect(sessions).toEqual([]);
