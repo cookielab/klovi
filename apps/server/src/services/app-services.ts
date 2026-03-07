@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { access, rm } from "node:fs/promises";
 import type { GlobalSessionResult, SessionSummary } from "@cookielab.io/klovi-ui/types";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
@@ -186,12 +186,19 @@ export async function getGeneralSettings(
 }
 
 export async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch: boolean }> {
-  return { firstLaunch: !(await Bun.file(settingsPath).exists()) };
+  try {
+    await access(settingsPath);
+    return { firstLaunch: false };
+  } catch {
+    return { firstLaunch: true };
+  }
 }
 
 export async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
-  if (await Bun.file(settingsPath).exists()) {
+  try {
     await rm(settingsPath);
+  } catch {
+    // File may not exist — that's fine
   }
   return { ok: true };
 }

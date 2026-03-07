@@ -1,15 +1,17 @@
 #!/usr/bin/env bun
+import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { startKloviServer } from "./server.ts";
-import { setVersion } from "./services/app-services.ts";
 
-const pkg = await Bun.file(resolve(import.meta.dir, "../package.json")).json();
-setVersion(pkg.version ?? "0.0.0", pkg.commit ?? "");
+const pkgPath = resolve(import.meta.dir, "../package.json");
+const pkg = JSON.parse(await readFile(pkgPath, "utf-8")) as Record<string, string>;
+const version = pkg["version"] ?? "0.0.0";
+const commit = pkg["commit"] ?? "";
 
-const host = Bun.env["KLOVI_HOST"] ?? "127.0.0.1";
-const port = Number(Bun.env["KLOVI_PORT"] ?? "3131");
+const host = process.env["KLOVI_HOST"] ?? "127.0.0.1";
+const port = Number(process.env["KLOVI_PORT"] ?? "3131");
 const staticDir =
-  Bun.env["KLOVI_STATIC_DIR"] ??
+  process.env["KLOVI_STATIC_DIR"] ??
   resolve(import.meta.dir, "../node_modules/@cookielab.io/klovi-web/dist");
 
 const server = await startKloviServer({
@@ -17,6 +19,8 @@ const server = await startKloviServer({
   port,
   mode: "standalone",
   staticDir,
+  version,
+  commit,
 });
 
 // biome-ignore lint/suspicious/noConsole: CLI output

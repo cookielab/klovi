@@ -4,10 +4,26 @@ import type {
   RegistryRequirements,
 } from "@cookielab.io/klovi-plugin-core";
 import { makePluginConfigLayer } from "@cookielab.io/klovi-plugin-core";
-import { Effect, ManagedRuntime } from "effect";
+import {
+  Effect,
+  type Layer,
+  ManagedRuntime,
+  type ManagedRuntime as ManagedRuntimeType,
+} from "effect";
 import { BunPluginLayer } from "./platform-bun.ts";
 
-const pluginRuntime = ManagedRuntime.make(BunPluginLayer);
+let pluginRuntime: ManagedRuntimeType.ManagedRuntime<RegistryRequirements, never> =
+  ManagedRuntime.make(BunPluginLayer) as ManagedRuntimeType.ManagedRuntime<
+    RegistryRequirements,
+    never
+  >;
+
+export function setPluginLayer(layer: Layer.Layer<RegistryRequirements>): void {
+  pluginRuntime = ManagedRuntime.make(layer) as ManagedRuntimeType.ManagedRuntime<
+    RegistryRequirements,
+    never
+  >;
+}
 
 export function runPluginEffect<A, E>(
   effect: Effect.Effect<A, E, PluginRequirements>,
