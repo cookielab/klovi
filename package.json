@@ -8,8 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter @cookielab.io/klovi dev",
-    "build": "bun run --filter @cookielab.io/klovi build",
+    "dev": "bun run --filter @cookielab.io/klovi-desktop dev",
+    "build": "bun run --filter @cookielab.io/klovi-desktop build",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",

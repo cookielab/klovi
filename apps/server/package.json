@@ -1,9 +1,21 @@
 {
-  "name": "@cookielab.io/klovi-server",
+  "name": "@cookielab.io/klovi",
   "version": "0.0.0",
-  "private": true,
-  "description": "Klovi application server and services",
+  "description": "Klovi — browse and present AI coding session history",
   "type": "module",
+  "license": "MIT",
+  "author": "Cookielab s.r.o.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cookielab/klovi.git"
+  },
+  "homepage": "https://github.com/cookielab/klovi",
+  "bugs": {
+    "url": "https://github.com/cookielab/klovi/issues"
+  },
+  "bin": {
+    "klovi": "./src/cli.ts"
+  },
   "exports": {
     "./server": "./src/server.ts",
     "./services/app-services": "./src/services/app-services.ts",
@@ -16,6 +28,9 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "engines": {
+    "bun": ">=1.3"
   },
   "dependencies": {
     "@cookielab.io/klovi-web": "workspace:*",
