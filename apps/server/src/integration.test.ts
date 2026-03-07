@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { type KloviServer, startKloviServer } from "./server.ts";
-import { setVersion } from "./services/app-services.ts";
 
 /**
  * Integration test: real server + HTTP client round-trip.
@@ -11,8 +10,12 @@ describe("server + HTTP client integration", () => {
   let server: KloviServer;
 
   beforeAll(async () => {
-    setVersion("1.2.3", "abc123");
-    server = await startKloviServer({ host: "127.0.0.1", port: 0 });
+    server = await startKloviServer({
+      host: "127.0.0.1",
+      port: 0,
+      version: "1.2.3",
+      commit: "abc123",
+    });
   });
 
   afterAll(() => {

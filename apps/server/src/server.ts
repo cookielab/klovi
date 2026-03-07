@@ -1,8 +1,12 @@
 import { join } from "node:path";
-import { handleRPC, type RPCContext, RPCError } from "./rpc.ts";
-import { createRegistry } from "./services/auto-discover.ts";
-import type { PluginRegistry } from "./services/registry.ts";
-import { loadSettings } from "./services/settings.ts";
+import { HttpServer } from "@effect/platform";
+import { Effect, Fiber, Layer } from "effect";
+import { makeServeLayer } from "./effect/http-app.ts";
+import { makeBunServerLayer } from "./effect/platform-bun.ts";
+import { makeNodeServerLayer } from "./effect/platform-node.ts";
+import { setPluginLayer } from "./effect/plugin-runtime.ts";
+import { ServerConfig } from "./effect/server-config.ts";
+import { KloviServicesLive } from "./effect/server-services.ts";
 
 export interface StartKloviServerOptions {
   host?: string;
@@ -10,6 +14,10 @@ export interface StartKloviServerOptions {
   mode?: "standalone" | "embedded";
   staticDir?: string | undefined;
   openBrowser?: boolean;
+  version?: string;
+  commit?: string;
+  settingsPath?: string;
+  runtime?: "auto" | "bun" | "node";
 }
 
 export interface KloviServer {
@@ -17,8 +25,11 @@ export interface KloviServer {
   stop(): void;
 }
 
+export { ServerConfig, type ServerConfigShape } from "./effect/server-config.ts";
+export { KloviServicesLive, type KloviServicesShape } from "./effect/server-services.ts";
+
 function getDefaultSettingsPath(): string {
-  const home = Bun.env["HOME"] ?? "";
+  const home = process.env["HOME"] ?? "";
   if (process.platform === "darwin") {
     return join(
       home,
@@ -29,50 +40,13 @@ function getDefaultSettingsPath(): string {
       "settings.json",
     );
   }
-  const configHome = Bun.env["XDG_CONFIG_HOME"] ?? join(home, ".config");
+  const configHome = process.env["XDG_CONFIG_HOME"] ?? join(home, ".config");
   return join(configHome, "klovi", "settings.json");
 }
 
-async function handleRPCRequest(ctx: RPCContext, url: URL, req: Request): Promise<Response> {
-  const method = url.pathname.slice("/api/rpc/".length);
-  if (!method) {
-    return Response.json({ error: "Method name required" }, { status: 400 });
-  }
-
-  let params: Record<string, unknown> = {};
-  try {
-    const body = await req.text();
-    if (body) {
-      params = JSON.parse(body) as Record<string, unknown>;
-    }
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  try {
-    const result = await handleRPC(method, ctx, params);
-    return Response.json(result);
-  } catch (err) {
-    if (err instanceof RPCError) {
-      return Response.json({ error: err.message }, { status: err.status });
-    }
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return Response.json({ error: message }, { status: 500 });
-  }
-}
-
-async function serveStaticFile(staticDir: string, url: URL): Promise<Response | null> {
-  const filePath = url.pathname === "/" ? "/index.html" : url.pathname;
-  const file = Bun.file(join(staticDir, filePath));
-  if (await file.exists()) {
-    return new Response(file);
-  }
-  // SPA fallback
-  const indexFile = Bun.file(join(staticDir, "index.html"));
-  if (await indexFile.exists()) {
-    return new Response(indexFile);
-  }
-  return null;
+function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "node" {
+  if (requested !== "auto") return requested;
+  return typeof globalThis.Bun !== "undefined" ? "bun" : "node";
 }
 
 export async function startKloviServer(
@@ -80,38 +54,60 @@ export async function startKloviServer(
 ): Promise<KloviServer> {
   const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 0;
+  const settingsPath = options.settingsPath ?? getDefaultSettingsPath();
+  const version = options.version ?? "dev";
+  const commit = options.commit ?? "";
+  const rt = detectRuntime(options.runtime);
 
-  const settingsPath = getDefaultSettingsPath();
-  const settings = await loadSettings(settingsPath);
-  const registry: PluginRegistry = await createRegistry(settings);
+  // Configure plugin layer for the selected runtime
+  if (rt === "node") {
+    const { NodePluginLayer } = await import("./effect/platform-node.ts");
+    setPluginLayer(NodePluginLayer);
+  }
 
-  const ctx: RPCContext = { registry, settingsPath };
-
-  const server = Bun.serve({
-    hostname: host,
+  const configLayer = Layer.succeed(ServerConfig, {
+    host,
     port,
-    async fetch(req) {
-      const url = new URL(req.url);
-
-      if (req.method === "POST" && url.pathname.startsWith("/api/rpc/")) {
-        return handleRPCRequest(ctx, url, req);
-      }
-
-      if (options.staticDir && req.method === "GET") {
-        const staticResponse = await serveStaticFile(options.staticDir, url);
-        if (staticResponse) return staticResponse;
-      }
-
-      return Response.json({ error: "Not found" }, { status: 404 });
-    },
+    staticDir: options.staticDir,
+    settingsPath,
+    version,
+    commit,
   });
 
-  const serverUrl = `http://${host}:${server.port}`;
+  const servicesLayer = KloviServicesLive.pipe(Layer.provide(configLayer));
+
+  const platformLayer =
+    rt === "bun"
+      ? makeBunServerLayer({ hostname: host, port })
+      : makeNodeServerLayer({ host, port });
+
+  let resolveAddress!: (url: string) => void;
+  const addressPromise = new Promise<string>((resolve) => {
+    resolveAddress = resolve;
+  });
+
+  const addressCapture = Layer.effectDiscard(
+    HttpServer.addressWith((address) =>
+      Effect.sync(() => {
+        const addr = address as HttpServer.TcpAddress;
+        resolveAddress(`http://${addr.hostname}:${addr.port}`);
+      }),
+    ),
+  );
+
+  const fullLayer = Layer.merge(makeServeLayer(), addressCapture).pipe(
+    Layer.provide(servicesLayer),
+    Layer.provide(configLayer),
+    Layer.provide(platformLayer),
+  );
+
+  const fiber = Effect.runFork(Layer.launch(fullLayer));
+  const url = await addressPromise;
 
   return {
-    url: serverUrl,
+    url,
     stop() {
-      server.stop();
+      Effect.runFork(Fiber.interrupt(fiber));
     },
   };
 }

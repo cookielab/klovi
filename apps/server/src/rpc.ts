@@ -18,6 +18,7 @@ import type { PluginRegistry } from "./services/registry.ts";
 export interface RPCContext {
   registry: PluginRegistry;
   settingsPath: string;
+  version?: { version: string; commit: string };
 }
 
 type RPCHandler = (ctx: RPCContext, params: Record<string, unknown>) => Promise<unknown> | unknown;
@@ -25,7 +26,7 @@ type RPCHandler = (ctx: RPCContext, params: Record<string, unknown>) => Promise<
 const handlers: Record<string, RPCHandler> = {
   acceptRisks: () => ({ ok: true }),
   isFirstLaunch: (ctx) => isFirstLaunch(ctx.settingsPath),
-  getVersion: () => getVersion(),
+  getVersion: (ctx) => ctx.version ?? getVersion(),
   getStats: (ctx) => getStats(ctx.registry),
   getProjects: (ctx) => getProjects(ctx.registry),
   getSessions: (ctx, params) => getSessions(ctx.registry, params as { encodedPath: string }),
