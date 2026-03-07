@@ -1,12 +1,13 @@
 import { DashboardStats as UIDashboardStats } from "@cookielab.io/klovi-ui/sessions";
+import { useKloviClient } from "../../../lib/context.ts";
 import type { DashboardStats as Stats } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";
-import { getRPC } from "../../rpc.ts";
 
 export function PackageDashboardStats() {
+  const client = useKloviClient();
   const { data, loading, error, retry } = useRPC<{ stats: Stats }>(
-    () => getRPC().request.getStats({}),
-    [],
+    () => client.getStats(),
+    [client],
   );
 
   return (

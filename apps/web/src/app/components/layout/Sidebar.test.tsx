@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
-import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { Sidebar } from "./Sidebar.tsx";
 
 describe("Sidebar", () => {
@@ -11,6 +11,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>Children</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector("h1")?.textContent).toBe("Klovi");
   });
@@ -20,6 +21,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>My Child Content</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     expect(getByText("My Child Content")).toBeTruthy();
   });
@@ -30,6 +32,7 @@ describe("Sidebar", () => {
       <Sidebar onSearchClick={onSearchClick}>
         <div>Content</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".btn-sidebar-search")).not.toBeNull();
   });
@@ -39,6 +42,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>Content</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".btn-sidebar-search")).toBeNull();
   });
@@ -52,6 +56,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>Content</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     await findByText("1.2.3 (abc1234)");
   });
@@ -65,6 +70,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>Content</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     await findByText("1.2.3");
   });
@@ -74,6 +80,7 @@ describe("Sidebar", () => {
       <Sidebar>
         <div>Content</div>
       </Sidebar>,
+      { wrapper: MockProviders },
     );
     const footer = container.querySelector(".sidebar-footer");
     expect(footer).not.toBeNull();

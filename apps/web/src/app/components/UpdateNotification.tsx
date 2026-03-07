@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { useKloviHostBridge } from "../../lib/context.ts";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
-import { getRPC } from "../rpc.ts";
 import "./UpdateNotification.css";
 
 interface UpdateNotificationProps {
@@ -70,6 +70,7 @@ function ReadyBanner({
   latestVersion: string;
   onDismiss: () => void;
 }) {
+  const hostBridge = useKloviHostBridge();
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +78,7 @@ function ReadyBanner({
     setApplying(true);
     setError(null);
     try {
-      const result = await getRPC().request.applyUpdate({} as Record<string, never>);
+      const result = await hostBridge.applyUpdate();
       if (!result.ok) {
         setError(result.error ?? "Update failed");
         setApplying(false);

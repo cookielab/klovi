@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
-import { getRPC } from "../../rpc.ts";
 import { PluginRow } from "../settings/PluginRow.tsx";
 import "./Onboarding.css";
 import { SecurityNoticeContent } from "./SecurityWarning.tsx";
@@ -10,55 +10,69 @@ interface OnboardingProps {
 }
 
 export function Onboarding({ onComplete }: OnboardingProps) {
+  const client = useKloviClient();
+  const hostBridge = useKloviHostBridge();
   const [step, setStep] = useState<1 | 2>(1);
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getRPC()
-      .request.getPluginSettings({} as Record<string, never>)
+    client
+      .getPluginSettings()
       .then((data) => {
         setPlugins(data.plugins);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [client]);
 
-  const handleToggle = useCallback((pluginId: string, enabled: boolean) => {
-    getRPC()
-      .request.updatePluginSetting({ pluginId, enabled })
-      .then((data) => setPlugins(data.plugins))
-      .catch(() => {});
-  }, []);
+  const handleToggle = useCallback(
+    (pluginId: string, enabled: boolean) => {
+      client
+        .updatePluginSetting({ pluginId, enabled })
+        .then((data) => setPlugins(data.plugins))
+        .catch(() => {});
+    },
+    [client],
+  );
 
-  const handleBrowse = useCallback((pluginId: string, currentDir: string) => {
-    getRPC()
-      .request.browseDirectory({ startingFolder: currentDir })
-      .then((data) => {
-        if (data.path) {
-          return getRPC().request.updatePluginSetting({ pluginId, dataDir: data.path });
-        }
-        return null;
-      })
-      .then((data) => {
-        if (data) setPlugins(data.plugins);
-      })
-      .catch(() => {});
-  }, []);
+  const handleBrowse = useCallback(
+    (pluginId: string, currentDir: string) => {
+      hostBridge
+        .browseDirectory({ startingFolder: currentDir })
+        .then((data) => {
+          if (data.path) {
+            return client.updatePluginSetting({ pluginId, dataDir: data.path });
+          }
+          return null;
+        })
+        .then((data) => {
+          if (data) setPlugins(data.plugins);
+        })
+        .catch(() => {});
+    },
+    [client, hostBridge],
+  );
 
-  const handlePathChange = useCallback((pluginId: string, dataDir: string) => {
-    getRPC()
-      .request.updatePluginSetting({ pluginId, dataDir })
-      .then((data) => setPlugins(data.plugins))
-      .catch(() => {});
-  }, []);
+  const handlePathChange = useCallback(
+    (pluginId: string, dataDir: string) => {
+      client
+        .updatePluginSetting({ pluginId, dataDir })
+        .then((data) => setPlugins(data.plugins))
+        .catch(() => {});
+    },
+    [client],
+  );
 
-  const handleReset = useCallback((pluginId: string) => {
-    getRPC()
-      .request.updatePluginSetting({ pluginId, dataDir: null })
-      .then((data) => setPlugins(data.plugins))
-      .catch(() => {});
-  }, []);
+  const handleReset = useCallback(
+    (pluginId: string) => {
+      client
+        .updatePluginSetting({ pluginId, dataDir: null })
+        .then((data) => setPlugins(data.plugins))
+        .catch(() => {});
+    },
+    [client],
+  );
 
   return (
     <section className="onboarding" aria-labelledby="onboarding-heading">
@@ -74,9 +88,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             headingId="onboarding-heading"
             onAccept={() => setStep(2)}
             onDontShowAgain={() => {
-              getRPC()
-                .request.updateGeneralSettings({ showSecurityWarning: false })
-                .catch(() => {});
+              client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
             }}
           />
         )}

@@ -1,7 +1,7 @@
 import type React from "react";
 import faviconUrl from "../../../../favicon.svg";
+import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
 import { useRPC } from "../../hooks/useRpc.ts";
-import { getRPC } from "../../rpc.ts";
 
 interface VersionInfo {
   version: string;
@@ -14,7 +14,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ children, onSearchClick }: SidebarProps) {
-  const { data: versionInfo } = useRPC<VersionInfo>(() => getRPC().request.getVersion({}), []);
+  const client = useKloviClient();
+  const hostBridge = useKloviHostBridge();
+  const { data: versionInfo } = useRPC<VersionInfo>(() => client.getVersion(), [client]);
 
   return (
     <div className="sidebar">
@@ -45,7 +47,7 @@ export function Sidebar({ children, onSearchClick }: SidebarProps) {
           href="https://cookielab.io?utm_source=opensource&utm_medium=klovi"
           onClick={(e) => {
             e.preventDefault();
-            void getRPC().request.openExternal({
+            void hostBridge.openExternal({
               url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
             });
           }}

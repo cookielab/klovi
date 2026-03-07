@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import type { Session } from "../../../shared/types.ts";
-import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionPresentation } from "./SessionPresentation.tsx";
 
 const STEP_REGEX = /Step/;
@@ -38,6 +38,7 @@ describe("SessionPresentation", () => {
     });
     const { container } = render(
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".loading")).not.toBeNull();
   });
@@ -50,6 +51,7 @@ describe("SessionPresentation", () => {
 
     const { container, findByText } = render(
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+      { wrapper: MockProviders },
     );
     await findByText(STEP_REGEX);
     expect(container.textContent).toContain("← → step");
@@ -63,6 +65,7 @@ describe("SessionPresentation", () => {
 
     const { container, findByText } = render(
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+      { wrapper: MockProviders },
     );
     await findByText(STEP_REGEX);
     expect(container.textContent).toContain("Esc exit");
@@ -75,6 +78,7 @@ describe("SessionPresentation", () => {
 
     const { container } = render(
       <SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+      { wrapper: MockProviders },
     );
     await waitFor(() => {
       expect(container.querySelector(".loading")).toBeNull();

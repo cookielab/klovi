@@ -1,7 +1,7 @@
+import type { KloviClient } from "../lib/client.ts";
 import { parseSessionId } from "../shared/session-id.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { getFrontendPlugin } from "./plugin-registry.ts";
-import { getRPC } from "./rpc.ts";
 
 const HASH_PREFIX_REGEX = /^#\/?/;
 
@@ -47,27 +47,29 @@ export function viewToHash(view: ViewState): string {
   return "#/";
 }
 
-async function loadProject(encodedPath: string): Promise<Project | undefined> {
-  const data = await getRPC().request.getProjects({});
+async function loadProject(client: KloviClient, encodedPath: string): Promise<Project | undefined> {
+  const data = await client.getProjects();
   return data.projects.find((p) => p.encodedPath === encodedPath);
 }
 
 async function loadProjectSession(
+  client: KloviClient,
   project: Project,
   sessionId: string,
 ): Promise<SessionSummary | undefined> {
-  const data = await getRPC().request.getSessions({ encodedPath: project.encodedPath });
+  const data = await client.getSessions({ encodedPath: project.encodedPath });
   return data.sessions.find((s) => s.sessionId === sessionId);
 }
 
 export async function resolveProjectAndSession(
+  client: KloviClient,
   encodedPath: string,
   sessionId: string,
 ): Promise<{ project: Project; session: SessionSummary } | null> {
   try {
-    const project = await loadProject(encodedPath);
+    const project = await loadProject(client, encodedPath);
     if (!project) return null;
-    const session = await loadProjectSession(project, sessionId);
+    const session = await loadProjectSession(client, project, sessionId);
     if (!session) return null;
     return { project, session };
   } catch {
@@ -75,7 +77,7 @@ export async function resolveProjectAndSession(
   }
 }
 
-export async function restoreFromHash(): Promise<ViewState> {
+export async function restoreFromHash(client: KloviClient): Promise<ViewState> {
   const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
   if (!hash) return { kind: "home" };
   if (hash === "hidden") return { kind: "hidden" };
@@ -89,7 +91,7 @@ export async function restoreFromHash(): Promise<ViewState> {
 
   let project: Project | undefined;
   try {
-    project = await loadProject(encodedPath);
+    project = await loadProject(client, encodedPath);
   } catch {
     return { kind: "home" };
   }
@@ -101,7 +103,7 @@ export async function restoreFromHash(): Promise<ViewState> {
   }
 
   try {
-    const session = await loadProjectSession(project, sessionId);
+    const session = await loadProjectSession(client, project, sessionId);
     if (session) {
       return { kind: "session", project, session, presenting: false };
     }

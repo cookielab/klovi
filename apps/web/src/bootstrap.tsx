@@ -1,46 +1,14 @@
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { AppGate } from "./app/App.tsx";
+import type { KloviClient } from "./lib/client.ts";
+import { KloviClientContext, KloviHostBridgeContext } from "./lib/context.ts";
+import type { KloviHostBridge } from "./lib/host-bridge.ts";
 
-export type { RPCClient } from "./app/rpc.ts";
-export { getRPC, setRPCClient } from "./app/rpc.ts";
-
-export interface KloviHostCapabilities {
-  desktop: boolean;
-  browseDirectory: boolean;
-  updater: boolean;
-  menuActions: boolean;
-}
-
-export interface KloviClient {
-  acceptRisks(): Promise<void>;
-  isFirstLaunch(): Promise<boolean>;
-  getVersion(): Promise<{ version: string; commit: string }>;
-  getStats(): Promise<unknown>;
-  getProjects(): Promise<unknown>;
-  getSessions(projectPath: string): Promise<unknown>;
-  getSession(sessionId: string): Promise<unknown>;
-  getSubAgent(sessionId: string): Promise<unknown>;
-  searchSessions(query: string): Promise<unknown>;
-  getPluginSettings(): Promise<unknown>;
-  updatePluginSetting(id: string, settings: unknown): Promise<unknown>;
-  getGeneralSettings(): Promise<unknown>;
-  updateGeneralSettings(settings: unknown): Promise<unknown>;
-  resetSettings(): Promise<void>;
-}
-
-export interface KloviHostBridge {
-  getCapabilities(): KloviHostCapabilities;
-  browseDirectory(options: unknown): Promise<unknown>;
-  getUpdateSettings(): Promise<unknown>;
-  updateUpdateSettings(settings: unknown): Promise<unknown>;
-  checkForUpdate(): Promise<void>;
-  applyUpdate(): Promise<void>;
-  openExternal(url: string): Promise<void>;
-  onMenuAction(callback: (action: string) => void): () => void;
-  onUpdateStatus(callback: (status: unknown) => void): () => void;
-  onManualUpdateResult(callback: (result: unknown) => void): () => void;
-}
+export { browserHostBridge } from "./lib/browser-host-bridge.ts";
+export type { KloviClient } from "./lib/client.ts";
+export { useKloviClient, useKloviHostBridge } from "./lib/context.ts";
+export type { KloviHostBridge, KloviHostCapabilities } from "./lib/host-bridge.ts";
 
 export interface MountKloviAppConfig {
   container: HTMLElement;
@@ -51,5 +19,15 @@ export interface MountKloviAppConfig {
 
 export function mountKloviApp(config: MountKloviAppConfig): void {
   const root = createRoot(config.container);
-  root.render(createElement(AppGate));
+  root.render(
+    createElement(
+      KloviClientContext.Provider,
+      { value: config.client },
+      createElement(
+        KloviHostBridgeContext.Provider,
+        { value: config.hostBridge },
+        createElement(AppGate),
+      ),
+    ),
+  );
 }

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
-import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SettingsSidebar, type SettingsTab } from "./SettingsSidebar.tsx";
 import { SettingsView } from "./SettingsView.tsx";
 
@@ -47,7 +47,7 @@ describe("SettingsView", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByText } = render(<SettingsView {...defaultProps()} />);
+    const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
     await findByText("Show security warning on startup");
   });
 
@@ -63,7 +63,7 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.activeTab = "plugins";
-    const { findByText } = render(<SettingsView {...props} />);
+    const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     await findByText("Claude Code");
     await findByText("Codex CLI");
   });
@@ -80,7 +80,7 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.activeTab = "plugins";
-    const { findAllByRole } = render(<SettingsView {...props} />);
+    const { findAllByRole } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     const checkboxes = await findAllByRole("checkbox");
     expect(checkboxes).toHaveLength(2);
     expect((checkboxes[0] as HTMLInputElement).checked).toBe(true);
@@ -96,7 +96,9 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.activeTab = "plugins";
-    const { findByPlaceholderText } = render(<SettingsView {...props} />);
+    const { findByPlaceholderText } = render(<SettingsView {...props} />, {
+      wrapper: MockProviders,
+    });
     const input = await findByPlaceholderText("/Users/test/.claude");
     expect((input as HTMLInputElement).value).toBe("");
   });
@@ -116,7 +118,7 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.activeTab = "plugins";
-    const { findByDisplayValue } = render(<SettingsView {...props} />);
+    const { findByDisplayValue } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     await findByDisplayValue("/custom/path");
   });
 
@@ -129,7 +131,7 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.activeTab = "plugins";
-    const { findByText } = render(<SettingsView {...props} />);
+    const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     await findByText("Reset");
   });
 
@@ -139,7 +141,9 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.activeTab = "plugins";
-    const { findByText, queryByText } = render(<SettingsView {...props} />);
+    const { findByText, queryByText } = render(<SettingsView {...props} />, {
+      wrapper: MockProviders,
+    });
     await findByText("Claude Code");
     expect(queryByText("Reset")).toBeNull();
   });
@@ -149,7 +153,9 @@ describe("SettingsView", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
     });
-    const { findByLabelText } = render(<SettingsView {...defaultProps()} />);
+    const { findByLabelText } = render(<SettingsView {...defaultProps()} />, {
+      wrapper: MockProviders,
+    });
     const checkbox = await findByLabelText("Show security warning on startup");
     expect((checkbox as HTMLInputElement).checked).toBe(false);
   });
@@ -158,7 +164,7 @@ describe("SettingsView", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByText } = render(<SettingsView {...defaultProps()} />);
+    const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
     await findByText("Global");
     await findByText("Presentation");
   });
@@ -168,7 +174,7 @@ describe("SettingsView", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const props = defaultProps();
-    const { findAllByText } = render(<SettingsView {...props} />);
+    const { findAllByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     // Both global and presentation have these options
     const systemButtons = await findAllByText("System");
     expect(systemButtons.length).toBeGreaterThanOrEqual(2);
@@ -179,7 +185,7 @@ describe("SettingsView", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const props = defaultProps();
-    const { findAllByText } = render(<SettingsView {...props} />);
+    const { findAllByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     const [darkButton] = await findAllByText("Dark");
     // First Dark button is in Global section
     fireEvent.click(darkButton as HTMLElement);
@@ -191,7 +197,7 @@ describe("SettingsView", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const props = defaultProps();
-    const { findAllByText } = render(<SettingsView {...props} />);
+    const { findAllByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     const [plusButton] = await findAllByText("A+");
     const [minusButton] = await findAllByText("A-");
     fireEvent.click(plusButton as HTMLElement);
@@ -206,7 +212,9 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.presentationTheme.sameAsGlobal = true;
-    const { container, findByText } = render(<SettingsView {...props} />);
+    const { container, findByText } = render(<SettingsView {...props} />, {
+      wrapper: MockProviders,
+    });
     await findByText("Presentation");
     const selectors = container.querySelectorAll(".settings-theme-selector");
     // Second selector is presentation
@@ -219,7 +227,9 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.presentationTheme.sameAsGlobal = false;
-    const { container, findByText } = render(<SettingsView {...props} />);
+    const { container, findByText } = render(<SettingsView {...props} />, {
+      wrapper: MockProviders,
+    });
     await findByText("Presentation");
     const selectors = container.querySelectorAll(".settings-theme-selector");
     expect(selectors[1]?.classList.contains("disabled")).toBe(false);
@@ -231,7 +241,9 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.presentationFontSize.sameAsGlobal = true;
-    const { container, findByText } = render(<SettingsView {...props} />);
+    const { container, findByText } = render(<SettingsView {...props} />, {
+      wrapper: MockProviders,
+    });
     await findByText("Presentation");
     const controls = container.querySelectorAll(".settings-font-size-control");
     expect(controls[1]?.classList.contains("disabled")).toBe(true);
@@ -241,7 +253,9 @@ describe("SettingsView", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findAllByLabelText } = render(<SettingsView {...defaultProps()} />);
+    const { findAllByLabelText } = render(<SettingsView {...defaultProps()} />, {
+      wrapper: MockProviders,
+    });
     const sameLabels = await findAllByLabelText("Same as global");
     expect(sameLabels).toHaveLength(2);
   });
@@ -251,7 +265,7 @@ describe("SettingsView", () => {
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
     const props = defaultProps();
-    const { findAllByLabelText } = render(<SettingsView {...props} />);
+    const { findAllByLabelText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     const [themeLabel, fontSizeLabel] = await findAllByLabelText("Same as global");
     // First is theme, second is font size
     fireEvent.click(themeLabel as HTMLElement);
@@ -266,7 +280,7 @@ describe("SettingsView", () => {
     });
     const props = defaultProps();
     props.fontSize.size = 20;
-    const { findByText } = render(<SettingsView {...props} />);
+    const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
     await findByText("20");
   });
 
@@ -274,7 +288,7 @@ describe("SettingsView", () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
     });
-    const { findByRole } = render(<SettingsView {...defaultProps()} />);
+    const { findByRole } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
     const btn = await findByRole("button", { name: "Reset to defaults" });
     expect(btn).toBeDefined();
   });
@@ -282,10 +296,16 @@ describe("SettingsView", () => {
   test("General tab shows Updates section with channel selector", async () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
-      getUpdateSettings: () =>
-        Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: true }),
+      hostBridge: {
+        getUpdateSettings: () =>
+          Promise.resolve({
+            channel: "stable" as const,
+            checkIntervalHours: 6,
+            autoDownload: true,
+          }),
+      },
     });
-    const { findByText } = render(<SettingsView {...defaultProps()} />);
+    const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
     await findByText("Updates");
     await findByText("Update Channel");
   });
@@ -293,20 +313,30 @@ describe("SettingsView", () => {
   test("General tab shows current update channel selection", async () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
-      getUpdateSettings: () =>
-        Promise.resolve({ channel: "beta" as const, checkIntervalHours: 6, autoDownload: true }),
+      hostBridge: {
+        getUpdateSettings: () =>
+          Promise.resolve({ channel: "beta" as const, checkIntervalHours: 6, autoDownload: true }),
+      },
     });
-    const { findByDisplayValue } = render(<SettingsView {...defaultProps()} />);
+    const { findByDisplayValue } = render(<SettingsView {...defaultProps()} />, {
+      wrapper: MockProviders,
+    });
     await findByDisplayValue("Beta");
   });
 
   test("General tab shows Check now button", async () => {
     setupMockRPC({
       getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
-      getUpdateSettings: () =>
-        Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: true }),
+      hostBridge: {
+        getUpdateSettings: () =>
+          Promise.resolve({
+            channel: "stable" as const,
+            checkIntervalHours: 6,
+            autoDownload: true,
+          }),
+      },
     });
-    const { findByRole } = render(<SettingsView {...defaultProps()} />);
+    const { findByRole } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
     await findByRole("button", { name: "Check now" });
   });
 });
@@ -315,26 +345,35 @@ describe("SettingsSidebar", () => {
   afterEach(cleanup);
 
   test("renders General and Plugins buttons", () => {
-    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />);
+    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />, {
+      wrapper: MockProviders,
+    });
     expect(getByRole("button", { name: "General" })).toBeDefined();
     expect(getByRole("button", { name: "Plugins" })).toBeDefined();
   });
 
   test("marks General as active when activeTab is general", () => {
-    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />);
+    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />, {
+      wrapper: MockProviders,
+    });
     expect(getByRole("button", { name: "General" }).classList.contains("active")).toBe(true);
     expect(getByRole("button", { name: "Plugins" }).classList.contains("active")).toBe(false);
   });
 
   test("marks Plugins as active when activeTab is plugins", () => {
-    const { getByRole } = render(<SettingsSidebar activeTab="plugins" onTabChange={() => {}} />);
+    const { getByRole } = render(<SettingsSidebar activeTab="plugins" onTabChange={() => {}} />, {
+      wrapper: MockProviders,
+    });
     expect(getByRole("button", { name: "General" }).classList.contains("active")).toBe(false);
     expect(getByRole("button", { name: "Plugins" }).classList.contains("active")).toBe(true);
   });
 
   test("calls onTabChange when clicking a tab", () => {
     const onTabChange = mock();
-    const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={onTabChange} />);
+    const { getByRole } = render(
+      <SettingsSidebar activeTab="general" onTabChange={onTabChange} />,
+      { wrapper: MockProviders },
+    );
     fireEvent.click(getByRole("button", { name: "Plugins" }));
     expect(onTabChange).toHaveBeenCalledWith("plugins");
   });

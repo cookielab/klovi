@@ -1,7 +1,7 @@
 import { HiddenProjectList as UIHiddenProjectList } from "@cookielab.io/klovi-ui/sessions";
+import { useKloviClient } from "../../../lib/context.ts";
 import type { Project } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";
-import { getRPC } from "../../rpc.ts";
 
 interface PackageHiddenProjectListProps {
   hiddenIds: Set<string>;
@@ -14,9 +14,10 @@ export function PackageHiddenProjectList({
   onUnhide,
   onBack,
 }: PackageHiddenProjectListProps) {
+  const client = useKloviClient();
   const { data, loading, error, retry } = useRPC<{ projects: Project[] }>(
-    () => getRPC().request.getProjects({}),
-    [],
+    () => client.getProjects(),
+    [client],
   );
 
   return (

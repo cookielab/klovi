@@ -1,7 +1,7 @@
 import { PresentationShell as UIPresentationShell } from "@cookielab.io/klovi-ui/presentation";
+import { useKloviHostBridge } from "../../../lib/context.ts";
 import type { Turn } from "../../../shared/types.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";
-import { getRPC } from "../../rpc.ts";
 
 interface PackagePresentationShellProps {
   turns: Turn[];
@@ -12,10 +12,6 @@ interface PackagePresentationShellProps {
   isSubAgent?: boolean | undefined;
 }
 
-function handleLinkClick(url: string): void {
-  void getRPC().request.openExternal({ url });
-}
-
 export function PackagePresentationShell({
   turns,
   onExit,
@@ -24,6 +20,7 @@ export function PackagePresentationShell({
   pluginId,
   isSubAgent,
 }: PackagePresentationShellProps) {
+  const hostBridge = useKloviHostBridge();
   return (
     <UIPresentationShell
       turns={turns}
@@ -32,7 +29,7 @@ export function PackagePresentationShell({
       project={project}
       pluginId={pluginId}
       isSubAgent={isSubAgent}
-      onLinkClick={handleLinkClick}
+      onLinkClick={(url: string) => void hostBridge.openExternal({ url })}
       getFrontendPlugin={getFrontendPlugin}
     />
   );

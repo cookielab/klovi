@@ -7,7 +7,9 @@
   "exports": {
     "./bootstrap": "./src/bootstrap.tsx",
     "./app": "./src/app/App.tsx",
-    "./app/*": "./src/app/*"
+    "./app/*": "./src/app/*",
+    "./shared/*": "./src/shared/*",
+    "./lib/*": "./src/lib/*"
   },
   "scripts": {
     "dev": "bun build src/main.tsx --outdir dist --watch",

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
 import type {
   PluginSettingInfo,
   UpdateChannel,
@@ -6,7 +7,6 @@ import type {
   UpdateStatus,
 } from "../../../shared/rpc-types.ts";
 import type { ThemeSetting } from "../../hooks/useTheme.ts";
-import { getRPC } from "../../rpc.ts";
 import { PluginRow } from "./PluginRow.tsx";
 import type { SettingsTab } from "./SettingsSidebar.tsx";
 import "./SettingsView.css";
@@ -131,6 +131,7 @@ function UpdatesTab({
   setUpdateSettings: (s: UpdateSettingsInfo) => void;
   setChanged: (v: boolean) => void;
 }) {
+  const hostBridge = useKloviHostBridge();
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [checking, setChecking] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -142,7 +143,7 @@ function UpdatesTab({
     setApplying(true);
     setApplyError(null);
     try {
-      const result = await getRPC().request.applyUpdate({} as Record<string, never>);
+      const result = await hostBridge.applyUpdate();
       if (!result.ok) {
         setApplyError(result.error ?? "Update failed");
         setApplying(false);
@@ -169,8 +170,8 @@ function UpdatesTab({
                 onChange={(e) => {
                   const channel = e.target.value as UpdateChannel;
                   setUpdateSettings({ ...updateSettings, channel });
-                  getRPC()
-                    .request.updateUpdateSettings({ channel })
+                  hostBridge
+                    .updateUpdateSettings({ channel })
                     .then(() => setChanged(true))
                     .catch(() => {});
                 }}
@@ -189,8 +190,8 @@ function UpdatesTab({
                 onChange={(e) => {
                   const checkIntervalHours = Number(e.target.value);
                   setUpdateSettings({ ...updateSettings, checkIntervalHours });
-                  getRPC()
-                    .request.updateUpdateSettings({ checkIntervalHours })
+                  hostBridge
+                    .updateUpdateSettings({ checkIntervalHours })
                     .then(() => setChanged(true))
                     .catch(() => {});
                 }}
@@ -213,8 +214,8 @@ function UpdatesTab({
                     onChange={(e) => {
                       const autoDownload = e.target.checked;
                       setUpdateSettings({ ...updateSettings, autoDownload });
-                      getRPC()
-                        .request.updateUpdateSettings({ autoDownload })
+                      hostBridge
+                        .updateUpdateSettings({ autoDownload })
                         .then(() => setChanged(true))
                         .catch(() => {});
                     }}
@@ -237,8 +238,8 @@ function UpdatesTab({
                   onClick={() => {
                     setChecking(true);
                     setApplyError(null);
-                    getRPC()
-                      .request.checkForUpdate({} as Record<string, never>)
+                    hostBridge
+                      .checkForUpdate()
                       .then((result) => setUpdateStatus(result))
                       .catch(() => {})
                       .finally(() => setChecking(false));
@@ -273,6 +274,8 @@ export function SettingsView({
   presentationTheme,
   presentationFontSize,
 }: SettingsViewProps) {
+  const client = useKloviClient();
+  const hostBridge = useKloviHostBridge();
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [changed, setChanged] = useState(false);
@@ -284,9 +287,9 @@ export function SettingsView({
 
   useEffect(() => {
     Promise.all([
-      getRPC().request.getPluginSettings({} as Record<string, never>),
-      getRPC().request.getGeneralSettings({} as Record<string, never>),
-      getRPC().request.getUpdateSettings({} as Record<string, never>),
+      client.getPluginSettings(),
+      client.getGeneralSettings(),
+      hostBridge.getUpdateSettings(),
     ])
       .then(([pluginData, generalData, updateData]) => {
         setPlugins(pluginData.plugins);
@@ -295,7 +298,7 @@ export function SettingsView({
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [client, hostBridge]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -312,60 +315,72 @@ export function SettingsView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [changed, onNavigateHome]);
 
-  const handleToggle = useCallback((pluginId: string, enabled: boolean) => {
-    getRPC()
-      .request.updatePluginSetting({ pluginId, enabled })
-      .then((data) => {
-        setPlugins(data.plugins);
-        setChanged(true);
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleBrowse = useCallback((pluginId: string, currentDir: string) => {
-    getRPC()
-      .request.browseDirectory({ startingFolder: currentDir })
-      .then((data) => {
-        if (data.path) {
-          return getRPC().request.updatePluginSetting({ pluginId, dataDir: data.path });
-        }
-        return null;
-      })
-      .then((data) => {
-        if (data) {
+  const handleToggle = useCallback(
+    (pluginId: string, enabled: boolean) => {
+      client
+        .updatePluginSetting({ pluginId, enabled })
+        .then((data) => {
           setPlugins(data.plugins);
           setChanged(true);
-        }
-      })
-      .catch(() => {});
-  }, []);
+        })
+        .catch(() => {});
+    },
+    [client],
+  );
 
-  const handlePathChange = useCallback((pluginId: string, dataDir: string) => {
-    getRPC()
-      .request.updatePluginSetting({ pluginId, dataDir })
-      .then((data) => {
-        setPlugins(data.plugins);
-        setChanged(true);
-      })
-      .catch(() => {});
-  }, []);
+  const handleBrowse = useCallback(
+    (pluginId: string, currentDir: string) => {
+      hostBridge
+        .browseDirectory({ startingFolder: currentDir })
+        .then((data) => {
+          if (data.path) {
+            return client.updatePluginSetting({ pluginId, dataDir: data.path });
+          }
+          return null;
+        })
+        .then((data) => {
+          if (data) {
+            setPlugins(data.plugins);
+            setChanged(true);
+          }
+        })
+        .catch(() => {});
+    },
+    [client, hostBridge],
+  );
 
-  const handleReset = useCallback((pluginId: string) => {
-    getRPC()
-      .request.updatePluginSetting({ pluginId, dataDir: null })
-      .then((data) => {
-        setPlugins(data.plugins);
-        setChanged(true);
-      })
-      .catch(() => {});
-  }, []);
+  const handlePathChange = useCallback(
+    (pluginId: string, dataDir: string) => {
+      client
+        .updatePluginSetting({ pluginId, dataDir })
+        .then((data) => {
+          setPlugins(data.plugins);
+          setChanged(true);
+        })
+        .catch(() => {});
+    },
+    [client],
+  );
+
+  const handleReset = useCallback(
+    (pluginId: string) => {
+      client
+        .updatePluginSetting({ pluginId, dataDir: null })
+        .then((data) => {
+          setPlugins(data.plugins);
+          setChanged(true);
+        })
+        .catch(() => {});
+    },
+    [client],
+  );
 
   const handleResetToDefaults = useCallback(() => {
     if (resettingRef.current) return;
     resettingRef.current = true;
     setResetting(true);
-    getRPC()
-      .request.resetSettings({} as Record<string, never>)
+    client
+      .resetSettings()
       .then(() => {
         const keys = [
           "klovi-theme",
@@ -386,7 +401,7 @@ export function SettingsView({
         setResetting(false);
         setConfirmingReset(false);
       });
-  }, []);
+  }, [client]);
 
   return (
     <div className="settings-view">
@@ -429,8 +444,8 @@ export function SettingsView({
                         onChange={(e) => {
                           const value = e.target.checked;
                           setShowSecurityWarning(value);
-                          getRPC()
-                            .request.updateGeneralSettings({ showSecurityWarning: value })
+                          client
+                            .updateGeneralSettings({ showSecurityWarning: value })
                             .then(() => setChanged(true))
                             .catch(() => {});
                         }}

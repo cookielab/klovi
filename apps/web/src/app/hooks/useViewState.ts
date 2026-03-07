@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { useKloviClient } from "../../lib/context.ts";
 import type { Project, SessionSummary } from "../../shared/types.ts";
 import { restoreFromHash, type ViewState, viewToHash } from "../view-state.ts";
 
@@ -17,15 +18,16 @@ interface UseViewStateResult {
 }
 
 export function useViewState(): UseViewStateResult {
+  const client = useKloviClient();
   const [view, setView] = useState<ViewState>({ kind: "home" });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    void restoreFromHash().then((v) => {
+    void restoreFromHash(client).then((v) => {
       setView(v);
       setReady(true);
     });
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     if (!ready) return;
@@ -37,11 +39,11 @@ export function useViewState(): UseViewStateResult {
 
   useEffect(() => {
     const handler = () => {
-      void restoreFromHash().then(setView);
+      void restoreFromHash(client).then(setView);
     };
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
-  }, []);
+  }, [client]);
 
   const selectProject = useCallback((project: Project) => {
     setView({ kind: "project", project });

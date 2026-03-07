@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import type { Session } from "../../../shared/types.ts";
-import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SubAgentPresentation } from "./SubAgentPresentation.tsx";
 
 const STEP_REGEX = /Step/;
@@ -43,6 +43,7 @@ describe("SubAgentPresentation", () => {
         agentId="agent-1"
         onExit={() => {}}
       />,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".loading")).not.toBeNull();
     expect(container.textContent).toContain("Loading sub-agent conversation...");
@@ -61,6 +62,7 @@ describe("SubAgentPresentation", () => {
         agentId="agent-1"
         onExit={() => {}}
       />,
+      { wrapper: MockProviders },
     );
     await findByText(STEP_REGEX);
     expect(container.textContent).toContain("← → step");
@@ -79,6 +81,7 @@ describe("SubAgentPresentation", () => {
         agentId="agent-1"
         onExit={() => {}}
       />,
+      { wrapper: MockProviders },
     );
     await waitFor(() => {
       expect(container.querySelector(".loading")).toBeNull();
@@ -98,6 +101,7 @@ describe("SubAgentPresentation", () => {
         agentId="agent-1"
         onExit={() => {}}
       />,
+      { wrapper: MockProviders },
     );
     await waitFor(() => {
       expect(container.querySelector(".loading")).toBeNull();

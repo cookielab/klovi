@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
 import type { Session } from "../../../shared/types.ts";
-import { setupMockRPC } from "../../test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionView } from "./SessionView.tsx";
 
 const ERROR_PREFIX_REGEX = /Error:/;
@@ -37,7 +37,9 @@ describe("SessionView", () => {
     setupMockRPC({
       getSession: () => new Promise(() => {}),
     });
-    const { container } = render(<SessionView sessionId="session-1" project="test-project" />);
+    const { container } = render(<SessionView sessionId="session-1" project="test-project" />, {
+      wrapper: MockProviders,
+    });
     expect(container.querySelector(".loading")).not.toBeNull();
     expect(container.textContent).toContain("Loading session...");
   });
@@ -48,7 +50,9 @@ describe("SessionView", () => {
       getSession: () => Promise.resolve({ session }),
     });
 
-    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
+    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
+      wrapper: MockProviders,
+    });
     await findByText("Hello world");
   });
 
@@ -57,7 +61,9 @@ describe("SessionView", () => {
       getSession: () => Promise.reject(new Error("HTTP 404")),
     });
 
-    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
+    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
+      wrapper: MockProviders,
+    });
     await findByText(ERROR_PREFIX_REGEX);
   });
 
@@ -66,7 +72,9 @@ describe("SessionView", () => {
       getSession: () => Promise.reject(new Error("Network error")),
     });
 
-    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
+    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
+      wrapper: MockProviders,
+    });
     await findByText(NETWORK_ERROR_REGEX);
   });
 
@@ -76,7 +84,9 @@ describe("SessionView", () => {
       getSession: () => Promise.resolve({ session }),
     });
 
-    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />);
+    const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
+      wrapper: MockProviders,
+    });
     await findByText("Hello world");
     await findByText("User");
     await findByText("Assistant");

@@ -1,6 +1,7 @@
 import { ErrorBoundary } from "@cookielab.io/klovi-ui/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
+import { useKloviClient, useKloviHostBridge } from "../lib/context.ts";
 import type { GlobalSessionResult } from "../shared/types.ts";
 import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats.tsx";
 import { Header } from "./components/layout/Header.tsx";
@@ -26,11 +27,12 @@ import {
 } from "./hooks/useTheme.ts";
 import { useUpdateStatus } from "./hooks/useUpdateStatus.ts";
 import { useViewState } from "./hooks/useViewState.ts";
-import { getRPC } from "./rpc.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./view-state.ts";
 
 export function App() {
+  const client = useKloviClient();
+  const hostBridge = useKloviHostBridge();
   const themeHook = useTheme();
   const { cycle: cycleTheme } = themeHook;
   const fontSizeHook = useFontSize();
@@ -58,11 +60,11 @@ export function App() {
     useUpdateStatus();
 
   const fetchSearchSessions = useCallback(() => {
-    getRPC()
-      .request.searchSessions({} as Record<string, never>)
+    client
+      .searchSessions()
       .then((data) => setSearchSessions(data.sessions))
       .catch(() => {});
-  }, []);
+  }, [client]);
 
   const openSearch = useCallback(() => {
     setSearchOpen(true);
@@ -72,7 +74,7 @@ export function App() {
   const handleSearchSelect = useCallback(
     async (encodedPath: string, sessionId: string) => {
       setSearchOpen(false);
-      const resolved = await resolveProjectAndSession(encodedPath, sessionId);
+      const resolved = await resolveProjectAndSession(client, encodedPath, sessionId);
       if (resolved) {
         setView({
           kind: "session",
@@ -82,7 +84,7 @@ export function App() {
         });
       }
     },
-    [setView],
+    [client, setView],
   );
 
   // Cmd+K / Ctrl+K toggles search
@@ -145,30 +147,28 @@ export function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canPresent, togglePresentation, increase, decrease]);
 
-  // Listen for Electrobun menu actions dispatched as CustomEvents
+  // Listen for host bridge menu actions
   useEffect(() => {
-    const handleCycleTheme = () => cycleTheme();
-    const handleIncrease = () => increase();
-    const handleDecrease = () => decrease();
-    const handleTogglePresentation = () => {
-      if (canPresent) togglePresentation();
-    };
-    const handleOpenSettings = () => goSettings();
-
-    window.addEventListener("klovi:cycleTheme", handleCycleTheme);
-    window.addEventListener("klovi:increaseFontSize", handleIncrease);
-    window.addEventListener("klovi:decreaseFontSize", handleDecrease);
-    window.addEventListener("klovi:togglePresentation", handleTogglePresentation);
-    window.addEventListener("klovi:openSettings", handleOpenSettings);
-
-    return () => {
-      window.removeEventListener("klovi:cycleTheme", handleCycleTheme);
-      window.removeEventListener("klovi:increaseFontSize", handleIncrease);
-      window.removeEventListener("klovi:decreaseFontSize", handleDecrease);
-      window.removeEventListener("klovi:togglePresentation", handleTogglePresentation);
-      window.removeEventListener("klovi:openSettings", handleOpenSettings);
-    };
-  }, [cycleTheme, increase, decrease, canPresent, togglePresentation, goSettings]);
+    return hostBridge.onMenuAction((action) => {
+      switch (action) {
+        case "cycleTheme":
+          cycleTheme();
+          break;
+        case "increaseFontSize":
+          increase();
+          break;
+        case "decreaseFontSize":
+          decrease();
+          break;
+        case "togglePresentation":
+          if (canPresent) togglePresentation();
+          break;
+        case "openSettings":
+          goSettings();
+          break;
+      }
+    });
+  }, [hostBridge, cycleTheme, increase, decrease, canPresent, togglePresentation, goSettings]);
 
   const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
   const sidebarContent = getSidebarContent(view, hiddenIds, {
@@ -318,6 +318,7 @@ export function App() {
 
 export function AppGate() {
   useTheme();
+  const client = useKloviClient();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [screen, setScreen] = useState<"onboarding" | "security-warning" | "none">("onboarding");
@@ -326,32 +327,30 @@ export function AppGate() {
     setAccepted(false);
     setLoading(true);
     setScreen("onboarding");
-    getRPC()
-      .request.isFirstLaunch({} as Record<string, never>)
+    client
+      .isFirstLaunch()
       .then((data) => {
         if (data.firstLaunch) {
           setScreen("onboarding");
           return;
         }
-        return getRPC()
-          .request.getGeneralSettings({} as Record<string, never>)
-          .then((settings) => {
-            if (settings.showSecurityWarning) {
-              setScreen("security-warning");
-              return;
-            }
-            setScreen("none");
-            return getRPC()
-              .request.acceptRisks({} as Record<string, never>)
-              .then(() => setAccepted(true))
-              .catch(() => setAccepted(true));
-          });
+        return client.getGeneralSettings().then((settings) => {
+          if (settings.showSecurityWarning) {
+            setScreen("security-warning");
+            return;
+          }
+          setScreen("none");
+          return client
+            .acceptRisks()
+            .then(() => setAccepted(true))
+            .catch(() => setAccepted(true));
+        });
       })
       .catch(() => {
         setScreen("onboarding");
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     initialize();
@@ -367,24 +366,22 @@ export function AppGate() {
   }, [initialize]);
 
   const handleOnboardingComplete = useCallback(() => {
-    getRPC()
-      .request.acceptRisks({} as Record<string, never>)
+    client
+      .acceptRisks()
       .then(() => setAccepted(true))
       .catch(() => setAccepted(true));
-  }, []);
+  }, [client]);
 
   const handleSecurityAccept = useCallback(() => {
-    getRPC()
-      .request.acceptRisks({} as Record<string, never>)
+    client
+      .acceptRisks()
       .then(() => setAccepted(true))
       .catch(() => setAccepted(true));
-  }, []);
+  }, [client]);
 
   const handleDontShowAgain = useCallback(() => {
-    getRPC()
-      .request.updateGeneralSettings({ showSecurityWarning: false })
-      .catch(() => {});
-  }, []);
+    client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
+  }, [client]);
 
   if (loading) {
     return null;

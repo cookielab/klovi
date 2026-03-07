@@ -1,7 +1,7 @@
 import { SessionList as UISessionList } from "@cookielab.io/klovi-ui/sessions";
+import { useKloviClient } from "../../../lib/context.ts";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";
-import { getRPC } from "../../rpc.ts";
 import { pluginDisplayName } from "../../utils/plugin.ts";
 
 interface PackageSessionListProps {
@@ -17,9 +17,10 @@ export function PackageSessionList({
   onBack,
   selectedId,
 }: PackageSessionListProps) {
+  const client = useKloviClient();
   const { data, loading, error, retry } = useRPC<{ sessions: SessionSummary[] }>(
-    () => getRPC().request.getSessions({ encodedPath: project.encodedPath }),
-    [project.encodedPath],
+    () => client.getSessions({ encodedPath: project.encodedPath }),
+    [client, project.encodedPath],
   );
   const sessions = data?.sessions ?? [];
 
