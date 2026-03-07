@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
-import { setupMockRPC } from "../test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc.ts";
 import { UpdateNotification } from "./UpdateNotification.tsx";
 
 const VERSION_READY_PATTERN = /v2\.0\.0 is ready/;
@@ -23,7 +23,9 @@ describe("UpdateNotification", () => {
   afterEach(cleanup);
 
   test("renders nothing when status is up-to-date", () => {
-    const { container } = render(<UpdateNotification {...defaultProps()} />);
+    const { container } = render(<UpdateNotification {...defaultProps()} />, {
+      wrapper: MockProviders,
+    });
     expect(container.innerHTML).toBe("");
   });
 
@@ -32,7 +34,7 @@ describe("UpdateNotification", () => {
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
     props.dismissed = true;
-    const { container } = render(<UpdateNotification {...props} />);
+    const { container } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     expect(container.innerHTML).toBe("");
   });
 
@@ -40,7 +42,7 @@ describe("UpdateNotification", () => {
     setupMockRPC();
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByText } = render(<UpdateNotification {...props} />);
+    const { getByText } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     expect(getByText(VERSION_READY_PATTERN)).toBeDefined();
   });
 
@@ -48,7 +50,7 @@ describe("UpdateNotification", () => {
     setupMockRPC();
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByRole } = render(<UpdateNotification {...props} />);
+    const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     expect(getByRole("button", { name: "Restart to update" })).toBeDefined();
   });
 
@@ -56,27 +58,29 @@ describe("UpdateNotification", () => {
     setupMockRPC();
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByLabelText } = render(<UpdateNotification {...props} />);
+    const { getByLabelText } = render(<UpdateNotification {...props} />, {
+      wrapper: MockProviders,
+    });
     fireEvent.click(getByLabelText("Dismiss"));
     expect(props.onDismiss).toHaveBeenCalled();
   });
 
   test("calls applyUpdate RPC when Restart clicked", () => {
     const applyUpdate = mock(() => Promise.resolve({ ok: true }));
-    setupMockRPC({ applyUpdate });
+    setupMockRPC({ hostBridge: { applyUpdate } });
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByRole } = render(<UpdateNotification {...props} />);
+    const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     fireEvent.click(getByRole("button", { name: "Restart to update" }));
     expect(applyUpdate).toHaveBeenCalled();
   });
 
   test("shows Restarting text and disables button while applying", () => {
     const applyUpdate = mock(() => new Promise<{ ok: boolean }>(() => {})); // never resolves
-    setupMockRPC({ applyUpdate });
+    setupMockRPC({ hostBridge: { applyUpdate } });
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByRole } = render(<UpdateNotification {...props} />);
+    const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     fireEvent.click(getByRole("button", { name: "Restart to update" }));
     const button = getByRole("button", { name: "Restarting…" });
     expect(button).toBeDefined();
@@ -85,10 +89,12 @@ describe("UpdateNotification", () => {
 
   test("shows error when applyUpdate returns ok: false", async () => {
     const applyUpdate = mock(() => Promise.resolve({ ok: false, error: "Extract failed" }));
-    setupMockRPC({ applyUpdate });
+    setupMockRPC({ hostBridge: { applyUpdate } });
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByRole, getByText } = render(<UpdateNotification {...props} />);
+    const { getByRole, getByText } = render(<UpdateNotification {...props} />, {
+      wrapper: MockProviders,
+    });
     fireEvent.click(getByRole("button", { name: "Restart to update" }));
     await waitFor(() => {
       expect(getByText(EXTRACT_FAILED_PATTERN)).toBeDefined();
@@ -99,10 +105,12 @@ describe("UpdateNotification", () => {
 
   test("shows error when applyUpdate rejects", async () => {
     const applyUpdate = mock(() => Promise.reject(new Error("RPC error")));
-    setupMockRPC({ applyUpdate });
+    setupMockRPC({ hostBridge: { applyUpdate } });
     const props = defaultProps();
     props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
-    const { getByRole, getByText } = render(<UpdateNotification {...props} />);
+    const { getByRole, getByText } = render(<UpdateNotification {...props} />, {
+      wrapper: MockProviders,
+    });
     fireEvent.click(getByRole("button", { name: "Restart to update" }));
     await waitFor(() => {
       expect(getByText(UPDATE_FAILED_PATTERN)).toBeDefined();
@@ -112,7 +120,7 @@ describe("UpdateNotification", () => {
   test("shows up-to-date message for manual check result", () => {
     const props = defaultProps();
     props.manualCheckResult = { status: "up-to-date", currentVersion: "1.0.0" };
-    const { getByText } = render(<UpdateNotification {...props} />);
+    const { getByText } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     expect(getByText("You're up to date")).toBeDefined();
   });
 
@@ -123,14 +131,16 @@ describe("UpdateNotification", () => {
       currentVersion: "1.0.0",
       error: "Network timeout",
     };
-    const { getByText } = render(<UpdateNotification {...props} />);
+    const { getByText } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
     expect(getByText(NETWORK_TIMEOUT_PATTERN)).toBeDefined();
   });
 
   test("calls onDismissManualCheck when dismissing manual check result", () => {
     const props = defaultProps();
     props.manualCheckResult = { status: "up-to-date", currentVersion: "1.0.0" };
-    const { getByLabelText } = render(<UpdateNotification {...props} />);
+    const { getByLabelText } = render(<UpdateNotification {...props} />, {
+      wrapper: MockProviders,
+    });
     fireEvent.click(getByLabelText("Dismiss"));
     expect(props.onDismissManualCheck).toHaveBeenCalled();
   });
@@ -144,7 +154,9 @@ describe("UpdateNotification", () => {
       currentVersion: "1.0.0",
       latestVersion: "2.0.0",
     };
-    const { getByText, getByRole } = render(<UpdateNotification {...props} />);
+    const { getByText, getByRole } = render(<UpdateNotification {...props} />, {
+      wrapper: MockProviders,
+    });
     expect(getByText(VERSION_READY_PATTERN)).toBeDefined();
     expect(getByRole("button", { name: "Restart to update" })).toBeDefined();
   });

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
+import { MockProviders } from "../../test-helpers/mock-rpc.ts";
 import { Layout } from "./Layout.tsx";
 
 afterEach(cleanup);
@@ -10,6 +11,7 @@ describe("Layout", () => {
       <Layout sidebar={<div>Sidebar Content</div>}>
         <div>Main Content</div>
       </Layout>,
+      { wrapper: MockProviders },
     );
     expect(getByText("Sidebar Content")).toBeTruthy();
   });
@@ -19,6 +21,7 @@ describe("Layout", () => {
       <Layout sidebar={<div>Sidebar</div>}>
         <div>Main Content</div>
       </Layout>,
+      { wrapper: MockProviders },
     );
     expect(getByText("Main Content")).toBeTruthy();
   });
@@ -28,6 +31,7 @@ describe("Layout", () => {
       <Layout sidebar={<div>Sidebar</div>} hideSidebar>
         <div>Content</div>
       </Layout>,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".app-layout.sidebar-hidden")).not.toBeNull();
   });
@@ -37,6 +41,7 @@ describe("Layout", () => {
       <Layout sidebar={<div>Sidebar</div>}>
         <div>Content</div>
       </Layout>,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".sidebar-hidden")).toBeNull();
   });
@@ -46,6 +51,7 @@ describe("Layout", () => {
       <Layout sidebar={<div>Sidebar</div>}>
         <div>Content</div>
       </Layout>,
+      { wrapper: MockProviders },
     );
     expect(container.querySelector(".main-content")).not.toBeNull();
   });

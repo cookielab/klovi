@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { AppGate } from "./App.tsx";
-import { setupMockRPC } from "./test-helpers/mock-rpc.ts";
+import { MockProviders, setupMockRPC } from "./test-helpers/mock-rpc.ts";
 
 describe("AppGate", () => {
   afterEach(cleanup);
@@ -12,7 +12,7 @@ describe("AppGate", () => {
     setupMockRPC({
       isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
     });
-    const { findByText } = render(<AppGate />);
+    const { findByText } = render(<AppGate />, { wrapper: MockProviders });
     expect(await findByText("Session Data Notice")).toBeTruthy();
   });
 
@@ -22,7 +22,7 @@ describe("AppGate", () => {
       acceptRisks: () => Promise.resolve({ ok: true }),
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
-    const { findByRole, findByText } = render(<AppGate />);
+    const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
@@ -37,7 +37,7 @@ describe("AppGate", () => {
       updateGeneralSettings,
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
-    const { findByRole } = render(<AppGate />);
+    const { findByRole } = render(<AppGate />, { wrapper: MockProviders });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
@@ -52,7 +52,7 @@ describe("AppGate", () => {
       updateGeneralSettings,
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
-    const { findByRole, findByLabelText } = render(<AppGate />);
+    const { findByRole, findByLabelText } = render(<AppGate />, { wrapper: MockProviders });
     const checkbox = await findByLabelText("Don't show this again");
     fireEvent.click(checkbox);
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
@@ -67,7 +67,7 @@ describe("AppGate", () => {
       isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
     });
-    const { findByRole } = render(<AppGate />);
+    const { findByRole } = render(<AppGate />, { wrapper: MockProviders });
     expect(await findByRole("button", { name: "Accept & Continue" })).toBeTruthy();
   });
 
@@ -77,7 +77,7 @@ describe("AppGate", () => {
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
       acceptRisks: () => Promise.resolve({ ok: true }),
     });
-    const { findByRole, findByText } = render(<AppGate />);
+    const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
     const btn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(btn);
     await findByText("Welcome to Klovi");
@@ -91,7 +91,7 @@ describe("AppGate", () => {
       acceptRisks: () => Promise.resolve({ ok: true }),
       updateGeneralSettings,
     });
-    const { findByRole, findByLabelText } = render(<AppGate />);
+    const { findByRole, findByLabelText } = render(<AppGate />, { wrapper: MockProviders });
     const checkbox = await findByLabelText("Don't show this again");
     fireEvent.click(checkbox);
     const btn = await findByRole("button", { name: "Accept & Continue" });
@@ -108,7 +108,7 @@ describe("AppGate", () => {
       getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
       acceptRisks,
     });
-    const { findByText } = render(<AppGate />);
+    const { findByText } = render(<AppGate />, { wrapper: MockProviders });
     await findByText("Welcome to Klovi");
     expect(acceptRisks).toHaveBeenCalledTimes(1);
   });
@@ -119,7 +119,7 @@ describe("AppGate", () => {
     setupMockRPC({
       isFirstLaunch: () => Promise.reject(new Error("RPC failed")),
     });
-    const { findByText } = render(<AppGate />);
+    const { findByText } = render(<AppGate />, { wrapper: MockProviders });
     expect(await findByText("Session Data Notice")).toBeTruthy();
   });
 
@@ -128,7 +128,7 @@ describe("AppGate", () => {
       isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
       getGeneralSettings: () => Promise.reject(new Error("RPC failed")),
     });
-    const { findByText } = render(<AppGate />);
+    const { findByText } = render(<AppGate />, { wrapper: MockProviders });
     expect(await findByText("Session Data Notice")).toBeTruthy();
   });
 
@@ -138,7 +138,7 @@ describe("AppGate", () => {
       acceptRisks: () => Promise.reject(new Error("RPC failed")),
       getPluginSettings: () => Promise.resolve({ plugins: [] }),
     });
-    const { findByRole, findByText } = render(<AppGate />);
+    const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
     fireEvent.click(nextBtn);
     const startBtn = await findByRole("button", { name: "Get Started" });
