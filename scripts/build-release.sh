@@ -7,6 +7,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+APP_DIR="$PROJECT_DIR/apps/desktop"
+APP_PACKAGE_PATH="apps/desktop/package.json"
+APP_PACKAGE_JSON="$APP_DIR/package.json"
 
 # --- Validate version argument ---
 VERSION="${1:-}"
@@ -71,7 +74,7 @@ echo "  Certificate imported into temporary keychain"
 cleanup() {
   echo ""
   echo "Restoring package.json..."
-  git -C "$PROJECT_DIR" checkout package.json
+  git -C "$PROJECT_DIR" checkout "$APP_PACKAGE_PATH"
   echo "Removing temporary keychain..."
   security delete-keychain "$KEYCHAIN_FILE" 2>/dev/null || true
 }
@@ -81,11 +84,11 @@ trap cleanup EXIT
 COMMIT=$(git rev-parse --short HEAD)
 echo "Setting version to $VERSION and commit to $COMMIT in package.json..."
 cd "$PROJECT_DIR"
-VERSION="$VERSION" COMMIT="$COMMIT" bun -e "
-  const pkg = await Bun.file('package.json').json();
+VERSION="$VERSION" COMMIT="$COMMIT" APP_PACKAGE_JSON="$APP_PACKAGE_JSON" bun -e "
+  const pkg = await Bun.file(process.env.APP_PACKAGE_JSON).json();
   pkg.version = process.env.VERSION;
   pkg.commit = process.env.COMMIT;
-  await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+  await Bun.write(process.env.APP_PACKAGE_JSON, JSON.stringify(pkg, null, 2) + '\n');
 "
 
 # --- Build ---
@@ -94,34 +97,34 @@ echo "Building stable release..."
 bun run build -- --env=stable
 
 # --- Sign ---
-BUILD_DIR="build/stable-macos-arm64"
-APP_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
+BUILD_DIR="apps/desktop/build/stable-macos-arm64"
+APP_BUNDLE_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
 
-if [[ -z "$APP_DIR" ]]; then
+if [[ -z "$APP_BUNDLE_DIR" ]]; then
   echo "Error: No .app bundle found in $BUILD_DIR"
   exit 1
 fi
 
 echo ""
-echo "Signing $APP_DIR..."
+echo "Signing $APP_BUNDLE_DIR..."
 
 echo "  Signing dylibs and shared objects..."
-find "$APP_DIR" -type f \( -name "*.dylib" -o -name "*.so" \) -exec \
+find "$APP_BUNDLE_DIR" -type f \( -name "*.dylib" -o -name "*.so" \) -exec \
   codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
 echo "  Signing frameworks..."
-find "$APP_DIR" -type d -name "*.framework" -exec \
+find "$APP_BUNDLE_DIR" -type d -name "*.framework" -exec \
   codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
 echo "  Signing executables..."
-find "$APP_DIR/Contents/MacOS" -type f -perm +111 -exec \
+find "$APP_BUNDLE_DIR/Contents/MacOS" -type f -perm +111 -exec \
   codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
 echo "  Signing app bundle..."
-codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" "$APP_DIR"
+codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" "$APP_BUNDLE_DIR"
 
 echo "  Verifying signature..."
-codesign --verify --deep --strict "$APP_DIR"
+codesign --verify --deep --strict "$APP_BUNDLE_DIR"
 echo "  Signature OK"
 
 # --- Notarize ---
@@ -129,7 +132,7 @@ echo ""
 echo "Submitting for notarization (this may take a few minutes)..."
 NOTARIZE_ZIP=$(mktemp /tmp/notarize.XXXXXX.zip)
 
-ditto -c -k --keepParent "$APP_DIR" "$NOTARIZE_ZIP"
+ditto -c -k --keepParent "$APP_BUNDLE_DIR" "$NOTARIZE_ZIP"
 
 xcrun notarytool submit "$NOTARIZE_ZIP" \
   --apple-id "$APPLE_ID" \
@@ -140,18 +143,18 @@ xcrun notarytool submit "$NOTARIZE_ZIP" \
 rm "$NOTARIZE_ZIP"
 
 echo "Stapling notarization ticket..."
-xcrun stapler staple "$APP_DIR"
+xcrun stapler staple "$APP_BUNDLE_DIR"
 
 # --- Package ---
-ZIP_NAME="build/Klovi-${VERSION}-macos-arm64.zip"
+ZIP_NAME="apps/desktop/build/Klovi-${VERSION}-macos-arm64.zip"
 echo ""
 echo "Packaging $ZIP_NAME..."
-ditto -c -k --keepParent "$APP_DIR" "$ZIP_NAME"
+ditto -c -k --keepParent "$APP_BUNDLE_DIR" "$ZIP_NAME"
 
 # --- Summary ---
 ZIP_SIZE=$(du -h "$ZIP_NAME" | cut -f1)
 echo ""
 echo "=== Build complete ==="
-echo "  App:     $APP_DIR"
+echo "  App:     $APP_BUNDLE_DIR"
 echo "  ZIP:     $ZIP_NAME ($ZIP_SIZE)"
 echo "  Version: $VERSION"

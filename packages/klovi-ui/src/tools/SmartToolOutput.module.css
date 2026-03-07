@@ -39,14 +39,14 @@
   display: inline-block;
 }
 
-.toolResultImageBtn:hover .toolResultImage {
-  border-color: var(--accent);
-}
-
 .toolResultImage {
   max-height: 200px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
   object-fit: contain;
   transition: border-color 0.15s;
+}
+
+.toolResultImageBtn:hover .toolResultImage {
+  border-color: var(--accent);
 }

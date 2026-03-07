@@ -8,7 +8,15 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/node_modules", "!**/dist", "!**/coverage", "!**/.claude", "!bun.lock"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/coverage",
+      "!**/.claude",
+      "!bun.lock"
+    ]
   },
   "formatter": {
     "enabled": true,

@@ -15,7 +15,7 @@ preload = ["./test-setup.ts"]
 
 - Boots happy-dom (`GlobalWindow`)
 - Registers browser-like globals (`window`, `document`, `localStorage`, `history`, ...)
-- Calls `setupMockRPC()` from `src/frontend/test-helpers/mock-rpc.ts`
+- Calls `setupMockRPC()` from `apps/desktop/src/frontend/test-helpers/mock-rpc.ts`
 
 This means frontend tests can render immediately without repeating DOM/RPC bootstrap code.
 
@@ -23,7 +23,7 @@ This means frontend tests can render immediately without repeating DOM/RPC boots
 
 ```bash
 bun test                                  # Entire monorepo
-bun test src                              # Desktop app shell tests
+bun test apps/desktop/src                 # Desktop app shell tests
 bun test packages/klovi-plugin-core/src   # Core plugin package tests
 bun test packages/klovi-plugin-claude-code/src
 bun test packages/klovi-plugin-codex/src
@@ -35,17 +35,17 @@ bun test --watch
 
 ## Test Layout
 
-### App Shell Tests (`src/`)
+### App Shell Tests (`apps/desktop/src/`)
 
 | Area | Representative files |
 |---|---|
-| Main process RPC/settings | `src/bun/rpc-handlers.test.ts`, `src/bun/settings.test.ts`, `src/bun/settings-handlers.test.ts` |
-| Plugin registry wiring | `src/plugins/registry.test.ts`, `src/plugins/auto-discover.test.ts` |
-| Stats aggregation | `src/parser/stats.test.ts` |
-| Shared helpers | `src/shared/content-blocks.test.ts`, `src/shared/iso-time.test.ts` |
-| App flow/routing/plugin wiring | `src/frontend/AppGate.test.tsx`, `src/frontend/view-state.test.ts`, `src/frontend/plugin-registry.test.ts` |
-| Frontend wrappers/layout | `src/frontend/components/layout/*.test.tsx`, `src/frontend/components/session/*.test.tsx`, `src/frontend/components/settings/SettingsView.test.tsx`, `src/frontend/components/ui/*.test.tsx` |
-| Frontend hooks/utils | `src/frontend/hooks/*.test.ts*`, `src/frontend/utils/*.test.ts` |
+| Main process RPC/settings | `apps/desktop/src/bun/rpc-handlers.test.ts`, `apps/desktop/src/bun/settings.test.ts`, `apps/desktop/src/bun/settings-handlers.test.ts` |
+| Plugin registry wiring | `apps/desktop/src/plugins/registry.test.ts`, `apps/desktop/src/plugins/auto-discover.test.ts` |
+| Stats aggregation | `apps/desktop/src/parser/stats.test.ts` |
+| Shared helpers | `apps/desktop/src/shared/content-blocks.test.ts`, `apps/desktop/src/shared/iso-time.test.ts` |
+| App flow/routing/plugin wiring | `apps/desktop/src/frontend/AppGate.test.tsx`, `apps/desktop/src/frontend/view-state.test.ts`, `apps/desktop/src/frontend/plugin-registry.test.ts` |
+| Frontend wrappers/layout | `apps/desktop/src/frontend/components/layout/*.test.tsx`, `apps/desktop/src/frontend/components/session/*.test.tsx`, `apps/desktop/src/frontend/components/settings/SettingsView.test.tsx`, `apps/desktop/src/frontend/components/ui/*.test.tsx` |
+| Frontend hooks/utils | `apps/desktop/src/frontend/hooks/*.test.ts*`, `apps/desktop/src/frontend/utils/*.test.ts` |
 
 ### Workspace Package Tests (`packages/`)
 

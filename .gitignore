@@ -5,6 +5,8 @@ node_modules
 out
 dist
 build
+apps/*/dist
+apps/*/build
 artifacts
 *.tgz
 

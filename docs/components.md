@@ -4,7 +4,7 @@
 
 Klovi UI is split into two layers:
 
-1. **App shell (`src/frontend`)**
+1. **App shell (`apps/desktop/src/frontend`)**
 - Owns routing, RPC calls, onboarding/security flow, and settings
 - Wraps reusable package components with app-specific behavior
 
@@ -14,12 +14,12 @@ Klovi UI is split into two layers:
 
 This keeps desktop-app wiring in one place while making UI modules reusable and easier to test.
 
-## App Shell Components (`src/frontend/components`)
+## App Shell Components (`apps/desktop/src/frontend/components`)
 
 ### App and Gate
 
-- `AppGate` (`src/frontend/App.tsx`) handles first-launch onboarding and startup security warning
-- `App` (`src/frontend/App.tsx`) handles view rendering, search modal, menu event listeners, and presentation overrides
+- `AppGate` (`apps/desktop/src/frontend/App.tsx`) handles first-launch onboarding and startup security warning
+- `App` (`apps/desktop/src/frontend/App.tsx`) handles view rendering, search modal, menu event listeners, and presentation overrides
 
 ### Layout
 
@@ -124,7 +124,7 @@ Responsibilities:
 
 ## Frontend Plugin Integration
 
-`src/frontend/plugin-registry.ts` registers frontend plugins from plugin packages:
+`apps/desktop/src/frontend/plugin-registry.ts` registers frontend plugins from plugin packages:
 
 - `@cookielab.io/klovi-plugin-claude-code/frontend`
 - `@cookielab.io/klovi-plugin-codex/frontend`
@@ -138,7 +138,7 @@ Responsibilities:
 
 - Components: buttons, badges, collapsible, modal, layout primitives, form controls
 - Theme/font hooks
-- Global tokens/reset/fonts loaded in `src/views/main/index.ts` via:
+- Global tokens/reset/fonts loaded in `apps/desktop/src/views/main/index.ts` via:
 
 ```ts
 import "@cookielab.io/klovi-design-system/globals";

@@ -102,9 +102,10 @@ jobs:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
           bun -e "
-            const pkg = await Bun.file('package.json').json();
+            const packageJson = 'apps/desktop/package.json';
+            const pkg = await Bun.file(packageJson).json();
             pkg.version = process.env.VERSION;
-            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            await Bun.write(packageJson, JSON.stringify(pkg, null, 2) + '\n');
           "
 
       - name: Build Electrobun app
@@ -139,10 +140,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          BUILD_DIR="build/stable-macos-arm64"
+          BUILD_DIR="apps/desktop/build/stable-macos-arm64"
           if [ ! -d "$BUILD_DIR" ]; then
             echo "::error::Expected build output in $BUILD_DIR"
-            find build -maxdepth 2 -type d || true
+            find apps/desktop/build -maxdepth 2 -type d || true
             exit 1
           fi
 
@@ -243,10 +244,11 @@ jobs:
         run: |
           COMMIT=$(git rev-parse --short HEAD)
           bun -e "
-            const pkg = await Bun.file('package.json').json();
+            const packageJson = 'apps/desktop/package.json';
+            const pkg = await Bun.file(packageJson).json();
             pkg.version = process.env.VERSION;
             pkg.commit = '$COMMIT';
-            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            await Bun.write(packageJson, JSON.stringify(pkg, null, 2) + '\n');
           "
 
       - name: Build Electrobun app
@@ -259,12 +261,12 @@ jobs:
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         run: |
-          # Electrobun stable builds produce a self-extracting installer in artifacts/
-          INSTALLER="artifacts/stable-linux-${ELECTROBUN_ARCH}-Klovi-Setup.tar.gz"
+          # Electrobun stable builds produce a self-extracting installer in apps/desktop/artifacts/
+          INSTALLER="apps/desktop/artifacts/stable-linux-${ELECTROBUN_ARCH}-Klovi-Setup.tar.gz"
           if [ ! -f "$INSTALLER" ]; then
             echo "::error::Expected installer at $INSTALLER"
-            find artifacts -type f 2>/dev/null || echo "No artifacts directory found"
-            find build -maxdepth 2 -type f -name "*.tar.gz" 2>/dev/null || true
+            find apps/desktop/artifacts -type f 2>/dev/null || echo "No artifacts directory found"
+            find apps/desktop/build -maxdepth 2 -type f -name "*.tar.gz" 2>/dev/null || true
             exit 1
           fi
 
@@ -284,16 +286,16 @@ jobs:
           VERSION: ${{ needs.release.outputs.version }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
-          BUILD_DIR: build/stable-linux-${{ matrix.electrobun_arch }}
+          BUILD_DIR: apps/desktop/build/stable-linux-${{ matrix.electrobun_arch }}
           NFPM_ARCH: ${{ matrix.artifact_arch }}
         run: |
           if [ ! -d "$BUILD_DIR" ]; then
             echo "::error::Expected build output in $BUILD_DIR"
-            find build -maxdepth 2 -type d || true
+            find apps/desktop/build -maxdepth 2 -type d || true
             exit 1
           fi
 
-          envsubst < packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
+          envsubst < apps/desktop/packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
           nfpm package -p deb -f /tmp/nfpm.yaml
           nfpm package -p rpm -f /tmp/nfpm.yaml
           nfpm package -p archlinux -f /tmp/nfpm.yaml
@@ -342,10 +344,11 @@ jobs:
         run: |
           COMMIT=$(git rev-parse --short HEAD)
           bun -e "
-            const pkg = await Bun.file('package.json').json();
+            const packageJson = 'apps/desktop/package.json';
+            const pkg = await Bun.file(packageJson).json();
             pkg.version = process.env.VERSION;
             pkg.commit = '$COMMIT';
-            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            await Bun.write(packageJson, JSON.stringify(pkg, null, 2) + '\n');
           "
 
       - name: Build Electrobun app
@@ -359,15 +362,15 @@ jobs:
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         shell: pwsh
         run: |
-          # Electrobun stable builds produce a self-extracting installer zip in artifacts/
-          $installer = "artifacts/stable-win-$env:ELECTROBUN_ARCH-Klovi-Setup.zip"
+          # Electrobun stable builds produce a self-extracting installer zip in apps/desktop/artifacts/
+          $installer = "apps/desktop/artifacts/stable-win-$env:ELECTROBUN_ARCH-Klovi-Setup.zip"
           if (-not (Test-Path $installer)) {
             Write-Host "::error::Expected installer at $installer"
-            if (Test-Path artifacts) {
-              Get-ChildItem artifacts -File -Recurse | ForEach-Object { $_.FullName }
+            if (Test-Path apps/desktop/artifacts) {
+              Get-ChildItem apps/desktop/artifacts -File -Recurse | ForEach-Object { $_.FullName }
             }
-            if (Test-Path build) {
-              Get-ChildItem build -File -Recurse -Filter "*.zip" | ForEach-Object { $_.FullName }
+            if (Test-Path apps/desktop/build) {
+              Get-ChildItem apps/desktop/build -File -Recurse -Filter "*.zip" | ForEach-Object { $_.FullName }
             }
             exit 1
           }
