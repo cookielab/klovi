@@ -1,7 +1,9 @@
 import { join } from "node:path";
+import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
+import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
+import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
-import { createRegistry } from "../plugins/auto-discover.ts";
-import type { PluginRegistry } from "../plugins/registry.ts";
+import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
 import {
   getGeneralSettings,
@@ -16,12 +18,15 @@ import {
   isFirstLaunch,
   resetSettings,
   searchSessions,
+  setVersion,
   updateGeneralSettings,
   updatePluginSetting,
   updateUpdateSettings,
 } from "./rpc-handlers.ts";
-import { loadSettings } from "./settings.ts";
 import { UpdateManager } from "./updater.ts";
+
+// Initialize version from package.json
+setVersion(pkg.version ?? "0.0.0", pkg.commit ?? "");
 
 let registry: PluginRegistry | null = null;
 let updateManager: UpdateManager | null = null;

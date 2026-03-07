@@ -13,7 +13,7 @@ import {
   isBuiltinKloviPluginId,
   KLOVI_PLUGIN_PACKAGE_NAMES,
 } from "@cookielab.io/klovi-plugin-core";
-import type { Session, SessionSummary } from "./types.ts";
+import type { Session, SessionSummary } from "@cookielab.io/klovi-ui/types";
 
 export {
   BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES,

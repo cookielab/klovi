@@ -13,7 +13,7 @@ import {
   openCodePlugin,
   setOpenCodeDir,
 } from "@cookielab.io/klovi-plugin-opencode";
-import type { ToolPlugin } from "../shared/plugin-types.ts";
+import type { ToolPlugin } from "./plugin-types.ts";
 
 export interface BuiltinPluginDescriptor {
   plugin: ToolPlugin;

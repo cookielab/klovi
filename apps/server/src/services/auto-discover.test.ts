@@ -5,9 +5,9 @@ import { join } from "node:path";
 import { getClaudeCodeDir, setClaudeCodeDir } from "@cookielab.io/klovi-plugin-claude-code";
 import { getCodexCliDir, setCodexCliDir } from "@cookielab.io/klovi-plugin-codex";
 import { getOpenCodeDir, setOpenCodeDir } from "@cookielab.io/klovi-plugin-opencode";
-import type { PluginSettings } from "../bun/settings.ts";
-import { getDefaultSettings } from "../bun/settings.ts";
 import { createRegistry } from "./auto-discover.ts";
+import type { PluginSettings } from "./settings.ts";
+import { getDefaultSettings } from "./settings.ts";
 
 const testDir = join(tmpdir(), `klovi-registry-test-${Date.now()}`);
 
