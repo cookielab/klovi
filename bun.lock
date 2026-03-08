@@ -48,21 +48,6 @@
         "effect": "*",
       },
     },
-    "apps/server": {
-      "name": "@cookielab.io/klovi-server",
-      "version": "0.0.0",
-      "dependencies": {
-        "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
-        "@cookielab.io/klovi-plugin-codex": "workspace:*",
-        "@cookielab.io/klovi-plugin-core": "workspace:*",
-        "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-        "@cookielab.io/klovi-ui-components": "workspace:*",
-        "@effect/platform": "*",
-        "@effect/platform-bun": "*",
-        "@effect/platform-node": "*",
-        "effect": "*",
-      },
-    },
     "packages/design-system": {
       "name": "@cookielab.io/klovi-design-system",
       "version": "0.1.0",
@@ -124,6 +109,21 @@
       "dependencies": {
         "@cookielab.io/klovi-plugin-core": "workspace:*",
         "@effect/platform": "*",
+        "@effect/platform-node": "*",
+        "effect": "*",
+      },
+    },
+    "packages/server": {
+      "name": "@cookielab.io/klovi-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
+        "@cookielab.io/klovi-plugin-codex": "workspace:*",
+        "@cookielab.io/klovi-plugin-core": "workspace:*",
+        "@cookielab.io/klovi-plugin-opencode": "workspace:*",
+        "@cookielab.io/klovi-ui-components": "workspace:*",
+        "@effect/platform": "*",
+        "@effect/platform-bun": "*",
         "@effect/platform-node": "*",
         "effect": "*",
       },
@@ -236,7 +236,7 @@
 
     "@cookielab.io/klovi-plugin-opencode": ["@cookielab.io/klovi-plugin-opencode@workspace:packages/plugin-opencode"],
 
-    "@cookielab.io/klovi-server": ["@cookielab.io/klovi-server@workspace:apps/server"],
+    "@cookielab.io/klovi-server": ["@cookielab.io/klovi-server@workspace:packages/server"],
 
     "@cookielab.io/klovi-ui": ["@cookielab.io/klovi-ui@workspace:packages/ui"],
 
