@@ -28,9 +28,9 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
-    "@storybook/react": "^10.2.14",
-    "@storybook/react-vite": "^10.2.14",
+    "@storybook/react": "^10.2.16",
+    "@storybook/react-vite": "^10.2.16",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "storybook": "^10.2.14"
+    "storybook": "^10.2.16"
   }
 }
