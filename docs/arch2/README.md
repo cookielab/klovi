@@ -4,8 +4,8 @@
 
 This directory contains the implementation-ready documentation for the Klovi architecture split into four apps:
 
-- `apps/server` (`@cookielab.io/klovi-server`) — pure internal backend API
-- `apps/web` — shared application UI
+- `packages/server` (`@cookielab.io/klovi-server`) — pure internal backend API
+- `packages/ui` — shared application UI
 - `apps/package` (`@cookielab.io/klovi`) — published NPM package (CLI + HTTP composition)
 - `apps/desktop` — Electrobun desktop shell
 
@@ -44,9 +44,9 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 - [plans/21-create-apps-package.md](./plans/21-create-apps-package.md)
   Purpose: create `apps/package` as the published `@cookielab.io/klovi` NPM package that wires server + web together.
 - [plans/22-transfer-package-identity.md](./plans/22-transfer-package-identity.md)
-  Purpose: transfer the `@cookielab.io/klovi` name from `apps/server` to `apps/package`, rename server to `@cookielab.io/klovi-server`.
+  Purpose: transfer the `@cookielab.io/klovi` name from `packages/server` to `apps/package`, rename server to `@cookielab.io/klovi-server`.
 - [plans/23-strip-server-to-pure-backend.md](./plans/23-strip-server-to-pure-backend.md)
-  Purpose: remove static serving, CLI, and web dependency from `apps/server` to make it a pure internal backend.
+  Purpose: remove static serving, CLI, and web dependency from `packages/server` to make it a pure internal backend.
 
 ## Follow-up Remediation Plans
 
@@ -63,7 +63,7 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 - [plans/18-add-node-and-bun-plugin-runtime-coverage.md](./plans/18-add-node-and-bun-plugin-runtime-coverage.md)
   Purpose: add targeted dual-runtime coverage so the plugin migration is verified under Bun and Node.
 - [plans/19-migrate-server-to-effect-platform.md](./plans/19-migrate-server-to-effect-platform.md)
-  Purpose: move `apps/server` onto `@effect/platform` so the shared server can run on Bun and Node with thin runtime-specific adapters.
+  Purpose: move `packages/server` onto `@effect/platform` so the shared server can run on Bun and Node with thin runtime-specific adapters.
 
 ## Recommended Follow-up Order
 
@@ -128,7 +128,7 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 - [plans/26-clean-up-dead-contract-fields.md](./plans/26-clean-up-dead-contract-fields.md)
   Purpose: wire or remove inert `mode` in `startKloviServer()` and `initialUrl` in `mountKloviApp()`.
 - [plans/27-desktop-dependency-cleanup.md](./plans/27-desktop-dependency-cleanup.md)
-  Purpose: audit and reduce direct `packages/*` deps in `apps/desktop`, re-export through `apps/web`.
+  Purpose: audit and reduce direct `packages/*` deps in `apps/desktop`, re-export through `packages/ui`.
 - [plans/28-desktop-integration-verification.md](./plans/28-desktop-integration-verification.md)
   Purpose: verify desktop app works after restructuring, fix issues found.
 - [plans/29-npm-end-to-end-verification.md](./plans/29-npm-end-to-end-verification.md)
@@ -158,7 +158,7 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 
 When all tasks (01-12) are complete (achieved):
 
-- `apps/web` owns the shared application shell through `mountKloviApp(config)`
+- `packages/ui` owns the shared application shell through `mountKloviApp(config)`
 - `apps/desktop` remains the Electrobun wrapper and native host bridge
 - existing `packages/*` continue to provide plugin, design system, and reusable UI responsibilities
 - browser mode and desktop mode share the same core UI while desktop-only features are gated off in browser mode
@@ -166,9 +166,9 @@ When all tasks (01-12) are complete (achieved):
 After applying package restructuring plans (20-23):
 
 - `apps/package` is the published `@cookielab.io/klovi` package with the `klovi` CLI
-- `apps/server` is `@cookielab.io/klovi-server`, a pure internal backend with no static serving or web dependency
+- `packages/server` is `@cookielab.io/klovi-server`, a pure internal backend with no static serving or web dependency
 - `apps/package` owns HTTP composition (`/api/*` → server, `/*` → web assets)
-- `apps/desktop` depends on `apps/server` + `apps/web` directly
+- `apps/desktop` depends on `packages/server` + `packages/ui` directly
 - `bunx @cookielab.io/klovi@latest` starts a localhost-only browser variant by default
 
 After applying follow-up remediation plans:
@@ -178,7 +178,7 @@ After applying follow-up remediation plans:
 - built-in plugin registry rebuilds use fresh plugin instances rather than mutating shared singletons
 - Claude Code, Codex, and OpenCode plugin execution paths are structured to support both Bun and Node runtimes
 - the repository has explicit Bun-plus-Node coverage for the migrated plugin layer
-- `apps/server` runs through `@effect/platform` and is startable from Bun and Node without changing its public embedding contract
+- `packages/server` runs through `@effect/platform` and is startable from Bun and Node without changing its public embedding contract
 
 After applying finishing plans (13, 24-30):
 
@@ -186,6 +186,6 @@ After applying finishing plans (13, 24-30):
 - all packages have proper build pipelines producing JS from TypeScript source
 - the legacy `rpc.ts` dispatch table is removed; RPC dispatches directly through the Effect layer
 - all public contract fields are either wired or removed (no dead fields)
-- `apps/desktop` depends only on `apps/server` and `apps/web` (with documented exceptions)
+- `apps/desktop` depends only on `packages/server` and `packages/ui` (with documented exceptions)
 - desktop app builds, launches, and functions correctly after restructuring
 - VISION.md reflects the completed architecture

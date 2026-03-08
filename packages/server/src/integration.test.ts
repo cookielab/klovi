@@ -3,7 +3,7 @@ import { type KloviServer, startKloviServer } from "./server.ts";
 
 /**
  * Integration test: real server + HTTP client round-trip.
- * This tests the seam between apps/server and apps/web's createHttpClient.
+ * This tests the seam between packages/server and packages/ui's createHttpClient.
  */
 
 describe("server + HTTP client integration", () => {

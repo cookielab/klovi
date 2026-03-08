@@ -4,8 +4,8 @@
 
 Split Klovi into a three-app layout while preserving its existing package boundaries:
 
-- `apps/server` becomes the published CLI and browser-served application backend
-- `apps/web` becomes the source of truth for the shared application UI
+- `packages/server` becomes the published CLI and browser-served application backend
+- `packages/ui` becomes the source of truth for the shared application UI
 - `apps/desktop` remains the Electrobun desktop shell
 
 The user-facing reason for this initiative is to support both:
@@ -60,7 +60,7 @@ The current architecture has these key properties:
 
 ### Apps
 
-#### `apps/server`
+#### `packages/server`
 
 Responsibilities:
 
@@ -68,10 +68,10 @@ Responsibilities:
 - expose the `klovi` CLI
 - start the HTTP server
 - expose `POST /api/rpc/:method`
-- serve the built `apps/web` bundle
+- serve the built `packages/ui` bundle
 - export `startKloviServer(options)` for desktop embedding through `@cookielab.io/klovi/server`
 
-#### `apps/web`
+#### `packages/ui`
 
 Responsibilities:
 
@@ -88,7 +88,7 @@ Responsibilities:
 - own window creation, menu integration, updater behavior, and native dialogs
 - expose only desktop-native behavior over Electrobun RPC
 - embed the local server through `startKloviServer(options)`
-- mount the shared app from `apps/web`
+- mount the shared app from `packages/ui`
 
 ### Existing Package Roles That Must Stay Intact
 
@@ -131,23 +131,23 @@ No part of this initiative should collapse those responsibilities into app-local
 ### Browser Mode
 
 - The user runs `npx @cookielab.io/klovi@latest` or `bunx @cookielab.io/klovi@latest`.
-- `apps/server` starts on `127.0.0.1` by default.
+- `packages/server` starts on `127.0.0.1` by default.
 - The server exposes `POST /api/rpc/:method`.
-- The server serves the built `apps/web` bundle.
-- `apps/web/src/main.tsx` mounts the shared app with an HTTP-backed `KloviClient` and a browser `KloviHostBridge`.
+- The server serves the built `packages/ui` bundle.
+- `packages/ui/src/main.tsx` mounts the shared app with an HTTP-backed `KloviClient` and a browser `KloviHostBridge`.
 - Desktop-only capabilities are disabled by capability gating.
 
 ### Desktop Mode
 
 - Electrobun starts the desktop shell.
 - The desktop shell starts the embedded server through `startKloviServer(options)`.
-- The desktop shell mounts the shared app by importing `mountKloviApp(config)` from `apps/web`.
+- The desktop shell mounts the shared app by importing `mountKloviApp(config)` from `packages/ui`.
 - The shared app receives a transport-neutral `KloviClient` that points at the embedded server.
 - The shared app receives a desktop `KloviHostBridge` backed by Electrobun RPC.
 
 ### Shared UI Mount Contract
 
-The shared app entry must live in `apps/web` and be named:
+The shared app entry must live in `packages/ui` and be named:
 
 - `mountKloviApp(config)`
 
@@ -157,7 +157,7 @@ That function is the single source of truth for mounting the application shell i
 
 These names are locked for the initiative and should be used consistently in implementation and follow-up docs.
 
-### `mountKloviApp(config)` in `apps/web`
+### `mountKloviApp(config)` in `packages/ui`
 
 Purpose:
 
@@ -273,13 +273,13 @@ Minimum behavior:
 
 ## Migration Strategy
 
-1. Create `apps/web` and define `mountKloviApp(config)` as the canonical app entry.
-2. Move the shared app shell from desktop into `apps/web`.
+1. Create `packages/ui` and define `mountKloviApp(config)` as the canonical app entry.
+2. Move the shared app shell from desktop into `packages/ui`.
 3. Replace direct Electrobun frontend assumptions with `KloviClient` and `KloviHostBridge`.
-4. Move server-appropriate application logic from desktop into `apps/server`.
+4. Move server-appropriate application logic from desktop into `packages/server`.
 5. Expose that logic over `POST /api/rpc/:method`.
-6. Serve the built `apps/web` bundle from `apps/server`.
-7. Make `apps/server` the published `@cookielab.io/klovi` package.
+6. Serve the built `packages/ui` bundle from `packages/server`.
+7. Make `packages/server` the published `@cookielab.io/klovi` package.
 8. Reduce desktop RPC to native-only capabilities.
 9. Start the embedded server from Electrobun and point the shared app at it.
 10. Add browser capability gating for desktop-only features.
@@ -300,9 +300,9 @@ The task documents under `docs/arch2/plans/` follow this exact sequence.
 
 The initiative is complete only when all of the following are true:
 
-- `apps/server` exists and is the published `@cookielab.io/klovi` package.
-- `apps/web` exists and owns `mountKloviApp(config)`.
-- `apps/desktop` mounts the shared app from `apps/web` and remains Electrobun-based.
+- `packages/server` exists and is the published `@cookielab.io/klovi` package.
+- `packages/ui` exists and owns `mountKloviApp(config)`.
+- `apps/desktop` mounts the shared app from `packages/ui` and remains Electrobun-based.
 - `bunx @cookielab.io/klovi@latest` starts a localhost-only webserver by default.
 - Browser mode serves the same core UI as desktop mode.
 - Desktop still launches through Electrobun and renders the shared UI.
@@ -319,11 +319,11 @@ The initiative is complete only when all of the following are true:
 
 ### Publish and package rename risk
 
-The npm package name `@cookielab.io/klovi` currently belongs to the desktop package metadata. Reassigning that name to `apps/server` requires careful package metadata, build output, and release workflow changes.
+The npm package name `@cookielab.io/klovi` currently belongs to the desktop package metadata. Reassigning that name to `packages/server` requires careful package metadata, build output, and release workflow changes.
 
 ### Desktop and server parity risk
 
-Moving request handlers into `apps/server` creates a risk that desktop and browser mode diverge. The mitigation is to make both call the same `startKloviServer(options)` path and the same `KloviClient` method surface.
+Moving request handlers into `packages/server` creates a risk that desktop and browser mode diverge. The mitigation is to make both call the same `startKloviServer(options)` path and the same `KloviClient` method surface.
 
 ### UI capability divergence risk
 

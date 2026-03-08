@@ -3,7 +3,7 @@ import { createHttpClient, mountKloviApp } from "@cookielab.io/klovi-ui/bootstra
 import { Electroview } from "electrobun/view";
 import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types.ts";
 
-// Import design system globals (tokens, reset, fonts) via apps/web
+// Import design system globals (tokens, reset, fonts) via klovi-ui
 import "@cookielab.io/klovi-ui/styles";
 
 // Import app-specific styles
