@@ -1,0 +1,82 @@
+name: npm publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.2.3, 1.2.3-beta.1)"
+        required: true
+        type: string
+      dry-run:
+        description: "Dry run (pack only, do not publish)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      # Verification gates
+      - run: bun run check
+      - run: bun run typecheck
+      - run: bun test
+
+      # Build web assets and stage the npm artifact
+      - name: Stage npm artifact
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          bun run build:web
+          bun run --filter @cookielab.io/klovi build
+          bun apps/package/scripts/stage-npm.ts --version "$VERSION"
+
+      # Verify the staged artifact
+      - name: Verify staged artifact manifest
+        run: |
+          echo "=== Staged package.json ==="
+          cat apps/package/.stage/npm/package.json
+          echo ""
+          echo "=== Checking for workspace deps ==="
+          if grep -q 'workspace:' apps/package/.stage/npm/package.json; then
+            echo "ERROR: workspace:* dependencies found in staged manifest"
+            exit 1
+          fi
+          echo "No workspace dependencies found - OK"
+
+      # Run packed-artifact verification
+      - name: Verify packed artifact (Node + Bun)
+        run: bun run verify:packed-artifact
+
+      # Publish from staged directory only
+      - name: Publish to npm
+        if: inputs.dry-run == false
+        working-directory: apps/package/.stage/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+      - name: Dry-run pack
+        if: inputs.dry-run == true
+        working-directory: apps/package/.stage/npm
+        run: npm pack --dry-run
