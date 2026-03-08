@@ -2,13 +2,14 @@
 
 ## Purpose
 
-This directory contains the implementation-ready documentation for splitting Klovi into:
+This directory contains the implementation-ready documentation for the Klovi architecture split into four apps:
 
-- `apps/server` for the published CLI and browser-served application
-- `apps/web` for the shared application UI
-- `apps/desktop` for the Electrobun desktop shell
+- `apps/server` (`@cookielab.io/klovi-server`) — pure internal backend API
+- `apps/web` — shared application UI
+- `apps/package` (`@cookielab.io/klovi`) — published NPM package (CLI + HTTP composition)
+- `apps/desktop` — Electrobun desktop shell
 
-The documents here are written for AI implementers. They are intentionally specific about boundaries, file ownership, naming, sequencing, and verification.
+All plans (01-30) are complete. The documents here are written for AI implementers and serve as historical reference for the architecture decisions and execution sequence.
 
 ## Ground Rules
 
@@ -155,7 +156,7 @@ The documents here are written for AI implementers. They are intentionally speci
 
 ## Expected End State
 
-When all tasks (01-12) are complete:
+When all tasks (01-12) are complete (achieved):
 
 - `apps/web` owns the shared application shell through `mountKloviApp(config)`
 - `apps/desktop` remains the Electrobun wrapper and native host bridge
