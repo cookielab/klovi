@@ -5,4 +5,4 @@ import { Layer } from "effect";
 export const BunPluginLayer = Layer.merge(BunContext.layer, BunSqliteLayer);
 
 export const makeBunServerLayer = (options: { hostname: string; port: number }) =>
-  BunHttpServer.layer(options);
+  Layer.merge(BunHttpServer.layer(options), BunContext.layer);

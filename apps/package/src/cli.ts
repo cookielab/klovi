@@ -10,7 +10,7 @@ function resolveStaticDir(): string {
   // Source dev mode: __dir = src/ → ../packages/ui/dist (resolved via workspace)
   const builtPath = resolve(__dir, "web");
   if (existsSync(builtPath)) return builtPath;
-  return resolve(__dir, "../../packages/ui/dist");
+  return resolve(__dir, "../../../packages/ui/dist");
 }
 
 // Both src/ and dist/ are direct children of apps/package/
