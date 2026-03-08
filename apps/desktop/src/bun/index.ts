@@ -54,7 +54,6 @@ function getUpdateManager(): UpdateManager {
 const server = await startKloviServer({
   host: "127.0.0.1",
   port: 0,
-  mode: "embedded",
 });
 serverUrl = server.url;
 
