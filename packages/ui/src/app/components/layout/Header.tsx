@@ -4,6 +4,7 @@ interface HeaderProps {
   title: string;
   breadcrumb?: string | undefined;
   copyCommand?: string | undefined;
+  onBack?: (() => void) | undefined;
   backHref?: string | undefined;
   sessionType?: "plan" | "implementation" | undefined;
   presentationActive: boolean;
@@ -15,6 +16,7 @@ export function Header({
   title,
   breadcrumb,
   copyCommand,
+  onBack,
   backHref,
   sessionType,
   presentationActive,
@@ -39,7 +41,12 @@ export function Header({
   return (
     <div className="header">
       <div className="header-title">
-        {backHref && (
+        {onBack && (
+          <button type="button" className="back-btn" onClick={onBack}>
+            &larr; Back
+          </button>
+        )}
+        {!onBack && backHref && (
           <a className="back-btn" href={backHref}>
             &larr; Back to session
           </a>
