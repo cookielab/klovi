@@ -4,7 +4,7 @@ import { Badge } from "./Badge/Badge.tsx";
 import { Button } from "./Button/Button.tsx";
 import { Collapsible } from "./Collapsible/Collapsible.tsx";
 import { Input, SegmentedControl, Select, Toggle } from "./FormControls/index.ts";
-import { AppLayout, ContentHeader, Sidebar } from "./Layout/index.ts";
+import { AppLayout, ContentHeader, Sidebar, SidebarButton } from "./Layout/index.ts";
 import { Modal } from "./Modal/Modal.tsx";
 
 const DETAILS_BUTTON_NAME = /details/i;
@@ -178,6 +178,22 @@ describe("design-system components", () => {
     expect(getByText("Left")).toBeTruthy();
     expect(getByText("Right")).toBeTruthy();
     expect(getByText("Main content")).toBeTruthy();
+  });
+
+  test("SidebarButton renders as a button and forwards props", () => {
+    const onClick = mock(() => {});
+    const { getByRole } = render(
+      <SidebarButton onClick={onClick} title="Search">
+        Search
+      </SidebarButton>,
+    );
+
+    const button = getByRole("button", { name: "Search" }) as HTMLButtonElement;
+    expect(button.type).toBe("button");
+    expect(button.title).toBe("Search");
+
+    fireEvent.click(button);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   test("Badge renders content for multiple variants", () => {

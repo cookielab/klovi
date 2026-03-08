@@ -32,6 +32,33 @@
   flex-shrink: 0;
 }
 
+.sidebarButton {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.sidebarButton:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.sidebarButton:first-of-type {
+  margin-left: auto;
+}
+
 .sidebarContent {
   flex: 1;
   overflow-y: auto;
