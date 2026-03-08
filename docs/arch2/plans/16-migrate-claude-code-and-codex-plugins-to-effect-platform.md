@@ -32,20 +32,20 @@ They also currently depend on Bun-specific or process-global APIs such as `Bun.f
 
 ## Files/directories to create or change
 
-- `packages/klovi-plugin-claude-code/package.json`
-- `packages/klovi-plugin-claude-code/src/index.ts`
-- `packages/klovi-plugin-claude-code/src/config.ts`
-- `packages/klovi-plugin-claude-code/src/discovery.ts`
-- `packages/klovi-plugin-claude-code/src/parser.ts`
-- `packages/klovi-plugin-claude-code/src/shared/**/*.ts`
-- `packages/klovi-plugin-claude-code/src/**/*.test.ts`
-- `packages/klovi-plugin-codex/package.json`
-- `packages/klovi-plugin-codex/src/index.ts`
-- `packages/klovi-plugin-codex/src/config.ts`
-- `packages/klovi-plugin-codex/src/discovery.ts`
-- `packages/klovi-plugin-codex/src/session-index.ts`
-- `packages/klovi-plugin-codex/src/shared/**/*.ts`
-- `packages/klovi-plugin-codex/src/**/*.test.ts`
+- `packages/plugin-claude-code/package.json`
+- `packages/plugin-claude-code/src/index.ts`
+- `packages/plugin-claude-code/src/config.ts`
+- `packages/plugin-claude-code/src/discovery.ts`
+- `packages/plugin-claude-code/src/parser.ts`
+- `packages/plugin-claude-code/src/shared/**/*.ts`
+- `packages/plugin-claude-code/src/**/*.test.ts`
+- `packages/plugin-codex/package.json`
+- `packages/plugin-codex/src/index.ts`
+- `packages/plugin-codex/src/config.ts`
+- `packages/plugin-codex/src/discovery.ts`
+- `packages/plugin-codex/src/session-index.ts`
+- `packages/plugin-codex/src/shared/**/*.ts`
+- `packages/plugin-codex/src/**/*.test.ts`
 
 ## Implementation steps
 

@@ -8,7 +8,7 @@ Klovi UI is split into two layers:
 - Owns routing, RPC calls, onboarding/security flow, and settings
 - Wraps reusable package components with app-specific behavior
 
-2. **Reusable UI package (`packages/klovi-ui-components`)**
+2. **Reusable UI package (`packages/ui-components`)**
 - Owns message/session/presentation/search/tool rendering components
 - Exported as `@cookielab.io/klovi-ui-components/*`
 
@@ -53,7 +53,7 @@ These bind `@cookielab.io/klovi-ui-components` components to Klovi RPC and app-s
 | `message/PackageSubAgentView.tsx` | `SubAgentView` | Fetches sub-agent session and renders package component |
 | `search/PackageSearchModal.tsx` | `SearchModal` | Converts selected result to app route params |
 
-## Reusable UI Package (`packages/klovi-ui-components`)
+## Reusable UI Package (`packages/ui-components`)
 
 ### Messages (`@cookielab.io/klovi-ui-components/messages`)
 

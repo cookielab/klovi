@@ -33,25 +33,25 @@ Use `@effect/platform` as the default abstraction layer for filesystem, path, an
 ## Files/directories to create or change
 
 - `package.json`
-- `packages/klovi-plugin-core/package.json`
-- `packages/klovi-plugin-claude-code/package.json`
-- `packages/klovi-plugin-codex/package.json`
-- `packages/klovi-plugin-opencode/package.json`
-- `packages/klovi-plugin-core/src/index.ts`
-- `packages/klovi-plugin-core/src/plugin-types.ts`
-- `packages/klovi-plugin-core/src/plugin-registry.ts`
-- `packages/klovi-plugin-core/src/**/*.test.ts`
+- `packages/plugin-core/package.json`
+- `packages/plugin-claude-code/package.json`
+- `packages/plugin-codex/package.json`
+- `packages/plugin-opencode/package.json`
+- `packages/plugin-core/src/index.ts`
+- `packages/plugin-core/src/plugin-types.ts`
+- `packages/plugin-core/src/plugin-registry.ts`
+- `packages/plugin-core/src/**/*.test.ts`
 - new core helpers such as:
-  - `packages/klovi-plugin-core/src/plugin-config.ts`
-  - `packages/klovi-plugin-core/src/plugin-errors.ts`
-  - `packages/klovi-plugin-core/src/plugin-runtime.ts`
+  - `packages/plugin-core/src/plugin-config.ts`
+  - `packages/plugin-core/src/plugin-errors.ts`
+  - `packages/plugin-core/src/plugin-runtime.ts`
 
 ## Implementation steps
 
 1. Add `effect` and `@effect/platform` to the packages that participate in plugin execution.
    Runtime-specific packages such as `@effect/platform-node` or `@effect/platform-bun` should be added only where a concrete runtime entrypoint needs them.
 
-2. Replace the `ToolPlugin` contract in `packages/klovi-plugin-core/src/plugin-types.ts` so plugin operations return `Effect.Effect<...>` instead of raw `Promise`s.
+2. Replace the `ToolPlugin` contract in `packages/plugin-core/src/plugin-types.ts` so plugin operations return `Effect.Effect<...>` instead of raw `Promise`s.
    The contract should make runtime needs explicit, for example:
    - configuration access
    - filesystem/path access

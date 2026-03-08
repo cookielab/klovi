@@ -34,10 +34,10 @@ This task adds the smallest useful verification matrix for the migrated plugin l
   - `scripts/plugin-runtime-smoke.ts`
   - `scripts/plugin-runtime-node-smoke.mjs`
 - any focused fixture tests under:
-  - `packages/klovi-plugin-core/src/**/*.test.ts`
-  - `packages/klovi-plugin-claude-code/src/**/*.test.ts`
-  - `packages/klovi-plugin-codex/src/**/*.test.ts`
-  - `packages/klovi-plugin-opencode/src/**/*.test.ts`
+  - `packages/plugin-core/src/**/*.test.ts`
+  - `packages/plugin-claude-code/src/**/*.test.ts`
+  - `packages/plugin-codex/src/**/*.test.ts`
+  - `packages/plugin-opencode/src/**/*.test.ts`
 
 ## Implementation steps
 

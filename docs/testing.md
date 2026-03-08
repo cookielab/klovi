@@ -24,12 +24,12 @@ This means frontend tests can render immediately without repeating DOM/RPC boots
 ```bash
 bun test                                  # Entire monorepo
 bun test apps/desktop/src                 # Desktop app shell tests
-bun test packages/klovi-plugin-core/src   # Core plugin package tests
-bun test packages/klovi-plugin-claude-code/src
-bun test packages/klovi-plugin-codex/src
-bun test packages/klovi-plugin-opencode/src
-bun test packages/klovi-ui-components/src
-bun test packages/klovi-design-system/src
+bun test packages/plugin-core/src   # Core plugin package tests
+bun test packages/plugin-claude-code/src
+bun test packages/plugin-codex/src
+bun test packages/plugin-opencode/src
+bun test packages/ui-components/src
+bun test packages/design-system/src
 bun test --watch
 ```
 
@@ -73,12 +73,12 @@ entire suite.
 
 | Package | Representative files |
 |---|---|
-| `@cookielab.io/klovi-plugin-core` | `packages/klovi-plugin-core/src/plugin-registry.test.ts`, `ids.test.ts`, `session-id.test.ts`, `iso-time.test.ts` |
-| `@cookielab.io/klovi-plugin-claude-code` | `packages/klovi-plugin-claude-code/src/discovery.test.ts`, `parser.test.ts`, `subagent.test.ts`, `command-message.test.ts`, `shared/*.test.ts` |
-| `@cookielab.io/klovi-plugin-codex` | `packages/klovi-plugin-codex/src/discovery.test.ts`, `parser.test.ts`, `session-index.test.ts`, `extractors.test.ts`, `shared/*.test.ts` |
-| `@cookielab.io/klovi-plugin-opencode` | `packages/klovi-plugin-opencode/src/discovery.test.ts`, `parser.test.ts`, `db.test.ts`, `shared/json-utils.test.ts` |
-| `@cookielab.io/klovi-ui-components` | `packages/klovi-ui-components/src/presentation/*.test.ts*`, `search/SearchModal.test.tsx`, `sessions/ProjectList.test.tsx`, `tools/ToolCallDefaults.test.ts`, `utilities/*.test.ts`, `types/index.test.ts` |
-| `@cookielab.io/klovi-design-system` | `packages/klovi-design-system/src/components/components.test.tsx`, `hooks/useTheme.test.ts` |
+| `@cookielab.io/klovi-plugin-core` | `packages/plugin-core/src/plugin-registry.test.ts`, `ids.test.ts`, `session-id.test.ts`, `iso-time.test.ts` |
+| `@cookielab.io/klovi-plugin-claude-code` | `packages/plugin-claude-code/src/discovery.test.ts`, `parser.test.ts`, `subagent.test.ts`, `command-message.test.ts`, `shared/*.test.ts` |
+| `@cookielab.io/klovi-plugin-codex` | `packages/plugin-codex/src/discovery.test.ts`, `parser.test.ts`, `session-index.test.ts`, `extractors.test.ts`, `shared/*.test.ts` |
+| `@cookielab.io/klovi-plugin-opencode` | `packages/plugin-opencode/src/discovery.test.ts`, `parser.test.ts`, `db.test.ts`, `shared/json-utils.test.ts` |
+| `@cookielab.io/klovi-ui-components` | `packages/ui-components/src/presentation/*.test.ts*`, `search/SearchModal.test.tsx`, `sessions/ProjectList.test.tsx`, `tools/ToolCallDefaults.test.ts`, `utilities/*.test.ts`, `types/index.test.ts` |
+| `@cookielab.io/klovi-design-system` | `packages/design-system/src/components/components.test.tsx`, `hooks/useTheme.test.ts` |
 
 ## Common Patterns
 

@@ -92,33 +92,33 @@ Responsibilities:
 
 ### Existing Package Roles That Must Stay Intact
 
-#### `packages/klovi-plugin-core`
+#### `packages/plugin-core`
 
 - plugin contracts
 - plugin registry primitives
 - canonical plugin-facing helpers
 
-#### `packages/klovi-plugin-claude-code`
+#### `packages/plugin-claude-code`
 
 - Claude Code discovery and parsing
 - Claude Code frontend plugin integration
 
-#### `packages/klovi-plugin-codex`
+#### `packages/plugin-codex`
 
 - Codex discovery and parsing
 - Codex frontend plugin integration
 
-#### `packages/klovi-plugin-opencode`
+#### `packages/plugin-opencode`
 
 - OpenCode discovery and parsing
 - OpenCode frontend plugin integration
 
-#### `packages/klovi-ui-components`
+#### `packages/ui-components`
 
 - reusable feature UI
 - message/session/presentation/search/tool rendering
 
-#### `packages/klovi-design-system`
+#### `packages/design-system`
 
 - design tokens
 - UI primitives

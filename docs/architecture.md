@@ -168,7 +168,7 @@ The frontend is intentionally split into two layers:
 - Electrobun integration (`openExternal`, menu events)
 - App-specific flows (onboarding, security warning, settings)
 
-2. **Reusable UI layer (`packages/klovi-ui-components`)**
+2. **Reusable UI layer (`packages/ui-components`)**
 - Messages (`@cookielab.io/klovi-ui-components/messages`)
 - Session/project widgets (`@cookielab.io/klovi-ui-components/sessions`)
 - Presentation shell (`@cookielab.io/klovi-ui-components/presentation`)

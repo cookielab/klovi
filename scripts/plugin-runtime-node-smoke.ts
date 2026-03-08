@@ -12,14 +12,14 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { claudeCodePlugin } from "@cookielab.io/klovi-plugin-claude-code";
-import { codexCliPlugin } from "@cookielab.io/klovi-plugin-codex";
+import { claudeCodePlugin } from "../packages/plugin-claude-code/src/index.ts";
+import { codexCliPlugin } from "../packages/plugin-codex/src/index.ts";
 import {
   type PluginConfigShape,
   PluginRegistry,
   makePluginConfigLayer,
-} from "@cookielab.io/klovi-plugin-core";
-import { openCodePlugin } from "@cookielab.io/klovi-plugin-opencode";
+} from "../packages/plugin-core/src/index.ts";
+import { openCodePlugin } from "../packages/plugin-opencode/src/index.ts";
 import { NodePluginLayer } from "../apps/server/src/effect/platform-node.ts";
 import { Effect, ManagedRuntime } from "effect";
 
