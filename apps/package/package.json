@@ -1,0 +1,33 @@
+{
+  "name": "@cookielab.io/klovi-package",
+  "version": "0.0.0",
+  "description": "Klovi — browse and present AI coding session history",
+  "type": "module",
+  "license": "MIT",
+  "author": "Cookielab s.r.o.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cookielab/klovi.git"
+  },
+  "homepage": "https://github.com/cookielab/klovi",
+  "bugs": {
+    "url": "https://github.com/cookielab/klovi/issues"
+  },
+  "bin": {
+    "klovi": "./src/cli.ts"
+  },
+  "exports": {
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cookielab.io/klovi": "workspace:*",
+    "@cookielab.io/klovi-web": "workspace:*",
+    "effect": "*",
+    "@effect/platform": "*",
+    "@effect/platform-bun": "*",
+    "@effect/platform-node": "*"
+  }
+}

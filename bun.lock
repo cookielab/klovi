@@ -39,6 +39,21 @@
         "@testing-library/react": "^16.3.2",
       },
     },
+    "apps/package": {
+      "name": "@cookielab.io/klovi-package",
+      "version": "0.0.0",
+      "bin": {
+        "klovi": "./src/cli.ts",
+      },
+      "dependencies": {
+        "@cookielab.io/klovi": "workspace:*",
+        "@cookielab.io/klovi-web": "workspace:*",
+        "@effect/platform": "*",
+        "@effect/platform-bun": "*",
+        "@effect/platform-node": "*",
+        "effect": "*",
+      },
+    },
     "apps/server": {
       "name": "@cookielab.io/klovi",
       "version": "0.0.0",
@@ -125,6 +140,9 @@
       "dependencies": {
         "@effect/platform": "*",
         "effect": "*",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "*",
       },
     },
     "packages/klovi-plugin-opencode": {
@@ -219,6 +237,8 @@
     "@cookielab.io/klovi-design-system": ["@cookielab.io/klovi-design-system@workspace:packages/klovi-design-system"],
 
     "@cookielab.io/klovi-desktop": ["@cookielab.io/klovi-desktop@workspace:apps/desktop"],
+
+    "@cookielab.io/klovi-package": ["@cookielab.io/klovi-package@workspace:apps/package"],
 
     "@cookielab.io/klovi-plugin-claude-code": ["@cookielab.io/klovi-plugin-claude-code@workspace:packages/klovi-plugin-claude-code"],
 
