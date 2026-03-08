@@ -28,13 +28,13 @@ describe("Sidebar", () => {
 
   test("renders search button when onSearchClick provided", () => {
     const onSearchClick = mock(() => {});
-    const { container } = render(
+    const { getByTitle } = render(
       <Sidebar onSearchClick={onSearchClick}>
         <div>Content</div>
       </Sidebar>,
       { wrapper: MockProviders },
     );
-    expect(container.querySelector(".btn-sidebar-search")).not.toBeNull();
+    expect(getByTitle("Search sessions (Cmd+K)")).toBeTruthy();
   });
 
   test("does not render search button when onSearchClick not provided", () => {
@@ -44,7 +44,7 @@ describe("Sidebar", () => {
       </Sidebar>,
       { wrapper: MockProviders },
     );
-    expect(container.querySelector(".btn-sidebar-search")).toBeNull();
+    expect(container.querySelector("[title='Search sessions (Cmd+K)']")).toBeNull();
   });
 
   test("renders version info after fetch", async () => {
@@ -73,6 +73,27 @@ describe("Sidebar", () => {
       { wrapper: MockProviders },
     );
     await findByText("1.2.3");
+  });
+
+  test("renders settings button when onSettingsClick provided", () => {
+    const onSettingsClick = mock(() => {});
+    const { getByTitle } = render(
+      <Sidebar onSettingsClick={onSettingsClick}>
+        <div>Content</div>
+      </Sidebar>,
+      { wrapper: MockProviders },
+    );
+    expect(getByTitle("Settings (Cmd+,)")).toBeTruthy();
+  });
+
+  test("does not render settings button when onSettingsClick not provided", () => {
+    const { container } = render(
+      <Sidebar>
+        <div>Content</div>
+      </Sidebar>,
+      { wrapper: MockProviders },
+    );
+    expect(container.querySelector("[title='Settings (Cmd+,)']")).toBeNull();
   });
 
   test("renders footer with cookielab link", () => {

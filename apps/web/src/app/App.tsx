@@ -227,7 +227,12 @@ export function App() {
           onClose={() => setSearchOpen(false)}
         />
       )}
-      <Layout sidebar={sidebarContent} hideSidebar={isPresenting} onSearchClick={openSearch}>
+      <Layout
+        sidebar={sidebarContent}
+        hideSidebar={isPresenting}
+        onSearchClick={openSearch}
+        onSettingsClick={goSettings}
+      >
         <Header
           title={headerTitle}
           breadcrumb={breadcrumb}

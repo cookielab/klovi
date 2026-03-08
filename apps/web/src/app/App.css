@@ -213,29 +213,6 @@
   color: var(--impl-color);
 }
 
-.btn-sidebar-search {
-  margin-left: auto;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
-  font-family: inherit;
-}
-
-.btn-sidebar-search:hover {
-  color: var(--text-primary);
-  border-color: var(--text-muted);
-}
-
 [data-tooltip] {
   position: relative;
   cursor: default;

@@ -11,6 +11,7 @@ export { Toggle } from "./components/FormControls/Toggle.tsx";
 export { AppLayout } from "./components/Layout/AppLayout.tsx";
 export { ContentHeader } from "./components/Layout/ContentHeader.tsx";
 export { Sidebar } from "./components/Layout/Sidebar.tsx";
+export { SidebarButton } from "./components/Layout/SidebarButton.tsx";
 export { Modal } from "./components/Modal/Modal.tsx";
 // Components
 export { ThemeProvider } from "./components/ThemeProvider/ThemeProvider.tsx";
