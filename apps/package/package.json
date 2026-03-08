@@ -14,13 +14,21 @@
     "url": "https://github.com/cookielab/klovi/issues"
   },
   "bin": {
-    "klovi": "./src/cli.ts"
+    "klovi": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "exports": {
     "./server": "./src/server.ts"
   },
   "scripts": {
     "dev": "bun run --watch src/cli.ts",
+    "build": "bun run build:cli && bun run build:web-assets && chmod +x dist/cli.js",
+    "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --banner '#!/usr/bin/env node' --external effect --external @effect/platform --external @effect/platform-bun --external @effect/platform-node",
+    "build:web-assets": "cp -r ../web/dist dist/web",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
