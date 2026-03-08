@@ -1,4 +1,4 @@
-import { makeRpcRouter } from "@cookielab.io/klovi/effect/http-app";
+import { makeRpcRouter } from "@cookielab.io/klovi-server/effect/http-app";
 import { HttpServer } from "@effect/platform";
 import { Effect } from "effect";
 import { makeStaticHandler } from "./static-handler.ts";

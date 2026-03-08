@@ -26,7 +26,7 @@
     "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
     "@cookielab.io/klovi-plugin-codex": "workspace:*",
     "@cookielab.io/klovi-plugin-core": "workspace:*",
-    "@cookielab.io/klovi": "workspace:*",
+    "@cookielab.io/klovi-server": "workspace:*",
     "@cookielab.io/klovi-plugin-opencode": "workspace:*",
     "@cookielab.io/klovi-design-system": "workspace:*",
     "@cookielab.io/klovi-ui": "workspace:*",

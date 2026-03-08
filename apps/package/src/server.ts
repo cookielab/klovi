@@ -1,11 +1,11 @@
 import { execFile } from "node:child_process";
 import { join } from "node:path";
-import { makeRpcRouter } from "@cookielab.io/klovi/effect/http-app";
-import { makeBunServerLayer } from "@cookielab.io/klovi/effect/platform-bun";
-import { makeNodeServerLayer } from "@cookielab.io/klovi/effect/platform-node";
-import { setPluginLayer } from "@cookielab.io/klovi/effect/plugin-runtime";
-import { ServerConfig } from "@cookielab.io/klovi/effect/server-config";
-import { KloviServicesLive } from "@cookielab.io/klovi/effect/server-services";
+import { makeRpcRouter } from "@cookielab.io/klovi-server/effect/http-app";
+import { makeBunServerLayer } from "@cookielab.io/klovi-server/effect/platform-bun";
+import { makeNodeServerLayer } from "@cookielab.io/klovi-server/effect/platform-node";
+import { setPluginLayer } from "@cookielab.io/klovi-server/effect/plugin-runtime";
+import { ServerConfig } from "@cookielab.io/klovi-server/effect/server-config";
+import { KloviServicesLive } from "@cookielab.io/klovi-server/effect/server-services";
 import { HttpServer } from "@effect/platform";
 import { BunContext } from "@effect/platform-bun";
 import { NodeContext } from "@effect/platform-node";
@@ -67,7 +67,7 @@ export async function startKloviPackageServer(
   const rt = detectRuntime(options.runtime);
 
   if (rt === "node") {
-    const { NodePluginLayer } = await import("@cookielab.io/klovi/effect/platform-node");
+    const { NodePluginLayer } = await import("@cookielab.io/klovi-server/effect/platform-node");
     setPluginLayer(NodePluginLayer);
   }
 
