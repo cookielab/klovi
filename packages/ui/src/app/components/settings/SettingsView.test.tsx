@@ -377,4 +377,23 @@ describe("SettingsSidebar", () => {
     fireEvent.click(getByRole("button", { name: "Plugins" }));
     expect(onTabChange).toHaveBeenCalledWith("plugins");
   });
+
+  test("renders back button when onBack provided", () => {
+    const onBack = mock();
+    const { getByRole } = render(
+      <SettingsSidebar activeTab="general" onTabChange={() => {}} onBack={onBack} />,
+      { wrapper: MockProviders },
+    );
+    expect(getByRole("button", { name: "Back" })).toBeDefined();
+  });
+
+  test("calls onBack when back button clicked", () => {
+    const onBack = mock();
+    const { getByRole } = render(
+      <SettingsSidebar activeTab="general" onTabChange={() => {}} onBack={onBack} />,
+      { wrapper: MockProviders },
+    );
+    fireEvent.click(getByRole("button", { name: "Back" }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
 });
