@@ -179,30 +179,31 @@ Source: `packages/server/src/effect/platform-bun.ts`, `packages/server/src/effec
 
 ## Current State
 
-The core Arch2 source architecture is implemented, but single-package npm publish remediation is still open.
+The core Arch2 source architecture is implemented. The single-package npm publish path is fully wired and verified.
 
 - `packages/server` (`@cookielab.io/klovi-server`) exists as a pure internal backend with Effect-based services, dual runtime adapters (Bun + Node via `@effect/platform`), and `startKloviServer()`. It has no static file serving or CLI responsibilities in source.
 - `packages/ui` exists as the shared React application with `mountKloviApp()`, `KloviClient`, `KloviHostBridge`, and capability gating.
-- `apps/package` exists as the composition layer for the browser-served variant and as the intended npm package source for `@cookielab.io/klovi`.
+- `apps/package` exists as the composition layer for the browser-served variant and as the npm package source for `@cookielab.io/klovi`.
 - `apps/desktop` exists as the Electrobun shell with native host bridge and embedded server startup.
 - RPC dispatches directly through the Effect layer to `KloviServices` (no legacy `rpc.ts` dispatch table).
 - Plugin registry refreshes correctly after settings changes without requiring restart.
 - All plugins (Claude Code, Codex, OpenCode) run under both Bun and Node runtimes.
-- Desktop build and release flows exist separately from npm distribution.
+- Desktop build and release flows exist. The release workflow triggers npm publishing automatically with the same version.
+- `@cookielab.io/klovi` is a self-contained staged npm artifact that bundles internal workspace dependencies.
+- The staged artifact has a sanitized manifest (no `workspace:*` dependencies, no internal package references).
+- Packed-artifact end-to-end verification proves `npx @cookielab.io/klovi` and `bunx @cookielab.io/klovi` under both Node and Bun.
+- `@cookielab.io/klovi/server` exposes `startKloviServer(options)` as the canonical public programmatic export.
+- The npm publish workflow runs verification gates before publishing and only publishes from the staged artifact directory.
+- Version and commit metadata are stamped into the staged artifact and surfaced at runtime.
+- Publishing from `apps/package` source is blocked by a guardrail; only `apps/package/.stage/npm` is valid for publishing.
 
-### Not yet complete
+## Completed Work
 
-- `@cookielab.io/klovi` is not yet documented or verified as a self-contained staged npm artifact that bundles internal workspace dependencies.
-- The publish path does not yet have a finalized sanitized manifest generation flow for npm consumers.
-- Packed-artifact end-to-end verification for `npx @cookielab.io/klovi` and `bunx @cookielab.io/klovi` is not yet established as the source of truth.
-- The release workflow does not yet define the single-package npm publish path described by this vision.
-
-## Remaining Work
-
-- [plans/31-make-apps-package-self-contained-for-npm.md](./plans/31-make-apps-package-self-contained-for-npm.md)
-- [plans/32-generate-a-sanitized-publish-artifact.md](./plans/32-generate-a-sanitized-publish-artifact.md)
-- [plans/33-verify-packed-artifact-under-node-and-bun.md](./plans/33-verify-packed-artifact-under-node-and-bun.md)
-- [plans/34-restore-single-package-npm-publish-workflow.md](./plans/34-restore-single-package-npm-publish-workflow.md)
+- Plans 01-12: Core Arch2 source architecture
+- Plans 13-19: Follow-up remediation (plugin Effect migration, dual-runtime support)
+- Plans 20-23: Package restructuring (separate `apps/package` from `packages/server`)
+- Plans 31-34: Publish remediation (self-contained artifact, sanitized manifest, packed-artifact verification, npm publish workflow)
+- Plans 35-38: Follow-up alignment (public server export, artifact metadata, release-to-publish wiring, documentation)
 
 ## Constraints
 

@@ -1,16 +1,10 @@
 import { execFile } from "node:child_process";
-import { join } from "node:path";
-import { makeRpcRouter } from "@cookielab.io/klovi-server/effect/http-app";
-import { makeBunServerLayer } from "@cookielab.io/klovi-server/effect/platform-bun";
-import { makeNodeServerLayer } from "@cookielab.io/klovi-server/effect/platform-node";
-import { setPluginLayer } from "@cookielab.io/klovi-server/effect/plugin-runtime";
-import { ServerConfig } from "@cookielab.io/klovi-server/effect/server-config";
-import { KloviServicesLive } from "@cookielab.io/klovi-server/effect/server-services";
-import { HttpServer } from "@effect/platform";
-import { BunContext } from "@effect/platform-bun";
-import { NodeContext } from "@effect/platform-node";
-import { Cause, Effect, Fiber, Layer } from "effect";
+import { bootstrapServer } from "@cookielab.io/klovi-server/effect/bootstrap";
 import { makePackageServeLayer } from "./http-app.ts";
+
+export type { KloviServer, StartKloviServerOptions } from "@cookielab.io/klovi-server/server";
+// Re-export startKloviServer as the canonical public npm contract
+export { startKloviServer } from "@cookielab.io/klovi-server/server";
 
 export interface StartKloviPackageServerOptions {
   host?: string;
@@ -28,16 +22,6 @@ export interface KloviPackageServer {
   stop(): void;
 }
 
-function getDefaultSettingsPath(): string {
-  const home = process.env["HOME"] ?? process.env["USERPROFILE"] ?? "";
-  return join(home, ".klovi", "settings.json");
-}
-
-function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "node" {
-  if (requested !== "auto") return requested;
-  return typeof globalThis.Bun !== "undefined" ? "bun" : "node";
-}
-
 function openInBrowser(url: string): void {
   const cmd =
     process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
@@ -45,84 +29,20 @@ function openInBrowser(url: string): void {
   execFile(cmd, args, () => {});
 }
 
+/**
+ * Internal package composition server that adds static file serving and
+ * browser launch on top of the core Klovi server. Not part of the public
+ * npm contract — use `startKloviServer` from `@cookielab.io/klovi/server`.
+ */
 export async function startKloviPackageServer(
   options: StartKloviPackageServerOptions = {},
 ): Promise<KloviPackageServer> {
-  const host = options.host ?? "127.0.0.1";
-  const port = options.port ?? 0;
-  const settingsPath = options.settingsPath ?? getDefaultSettingsPath();
-  const version = options.version ?? "dev";
-  const commit = options.commit ?? "";
-  const rt = detectRuntime(options.runtime);
-
-  if (rt === "node") {
-    const { NodePluginLayer } = await import("@cookielab.io/klovi-server/effect/platform-node");
-    setPluginLayer(NodePluginLayer);
-  }
-
-  const configLayer = Layer.succeed(ServerConfig, {
-    host,
-    port,
-    settingsPath,
-    version,
-    commit,
-  });
-
-  const servicesLayer = KloviServicesLive.pipe(Layer.provide(configLayer));
-
-  const httpLayer =
-    rt === "bun"
-      ? makeBunServerLayer({ hostname: host, port })
-      : makeNodeServerLayer({ host, port });
-
-  const contextLayer = rt === "bun" ? BunContext.layer : NodeContext.layer;
-
-  let resolveAddress!: (url: string) => void;
-  let rejectAddress!: (err: unknown) => void;
-  const addressPromise = new Promise<string>((resolve, reject) => {
-    resolveAddress = resolve;
-    rejectAddress = reject;
-  });
-
-  const addressCapture = Layer.effectDiscard(
-    HttpServer.addressWith((address) =>
-      Effect.sync(() => {
-        const addr = address as HttpServer.TcpAddress;
-        resolveAddress(`http://${addr.hostname}:${addr.port}`);
-      }),
-    ),
-  );
-
-  const serveLayer = options.staticDir
-    ? makePackageServeLayer(options.staticDir)
-    : makeRpcRouter().pipe(HttpServer.serve());
-
-  const fullLayer = Layer.merge(serveLayer, addressCapture).pipe(
-    Layer.provide(servicesLayer),
-    Layer.provide(configLayer),
-    Layer.provide(contextLayer),
-    Layer.provide(httpLayer),
-  );
-
-  const fiber = Effect.runFork(Layer.launch(fullLayer));
-
-  // Surface fiber failures instead of hanging silently
-  Effect.runFork(
-    Fiber.join(fiber).pipe(
-      Effect.catchAllCause((cause) => Effect.sync(() => rejectAddress(Cause.squash(cause)))),
-    ),
-  );
-
-  const url = await addressPromise;
+  const makeServe = () => makePackageServeLayer(options.staticDir);
+  const result = await bootstrapServer(options, makeServe);
 
   if (options.openBrowser) {
-    openInBrowser(url);
+    openInBrowser(result.url);
   }
 
-  return {
-    url,
-    stop() {
-      Effect.runFork(Fiber.interrupt(fiber));
-    },
-  };
+  return result;
 }

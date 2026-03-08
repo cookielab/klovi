@@ -16,12 +16,33 @@ Klovi auto-discovers sessions from Claude Code (`~/.claude/projects/`), Codex CL
 
 ## Quick Start
 
+### Desktop App
+
 Download the latest release for your platform from the [Releases page](https://github.com/cookielab/klovi/releases).
 
 Or install via [Homebrew](https://brew.sh):
 
 ```bash
 brew install --cask cookielab/tap/klovi
+```
+
+### npm Package (Browser UI)
+
+Run Klovi in your browser without installing the desktop app:
+
+```bash
+# Node.js
+npx @cookielab.io/klovi
+
+# Bun
+bunx @cookielab.io/klovi
+```
+
+Starts a local server on `http://127.0.0.1:3583` and opens your browser. For programmatic use:
+
+```ts
+import { startKloviServer } from "@cookielab.io/klovi/server";
+const server = await startKloviServer({ port: 3583 });
 ```
 
 ### Development

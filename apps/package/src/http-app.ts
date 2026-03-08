@@ -1,4 +1,4 @@
-import { makeRpcRouter } from "@cookielab.io/klovi-server/effect/http-app";
+import { makeHttpApp, makeRpcRouter } from "@cookielab.io/klovi-server/effect/http-app";
 import { HttpServer } from "@effect/platform";
 import { Effect } from "effect";
 import { makeStaticHandler } from "./static-handler.ts";
@@ -8,5 +8,9 @@ export const makePackageHttpApp = (staticDir: string) => {
   return router.pipe(Effect.catchTag("RouteNotFound", () => makeStaticHandler(staticDir)));
 };
 
-export const makePackageServeLayer = (staticDir: string) =>
-  makePackageHttpApp(staticDir).pipe(HttpServer.serve());
+export const makePackageServeLayer = (staticDir: string | undefined) => {
+  if (!staticDir) {
+    return makeHttpApp().pipe(HttpServer.serve());
+  }
+  return makePackageHttpApp(staticDir).pipe(HttpServer.serve());
+};
