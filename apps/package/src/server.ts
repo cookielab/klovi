@@ -7,6 +7,8 @@ import { setPluginLayer } from "@cookielab.io/klovi/effect/plugin-runtime";
 import { ServerConfig } from "@cookielab.io/klovi/effect/server-config";
 import { KloviServicesLive } from "@cookielab.io/klovi/effect/server-services";
 import { HttpServer } from "@effect/platform";
+import { BunContext } from "@effect/platform-bun";
+import { NodeContext } from "@effect/platform-node";
 import { Effect, Fiber, Layer } from "effect";
 import { makePackageServeLayer } from "./http-app.ts";
 
@@ -80,10 +82,12 @@ export async function startKloviPackageServer(
 
   const servicesLayer = KloviServicesLive.pipe(Layer.provide(configLayer));
 
-  const platformLayer =
+  const httpLayer =
     rt === "bun"
       ? makeBunServerLayer({ hostname: host, port })
       : makeNodeServerLayer({ host, port });
+
+  const contextLayer = rt === "bun" ? BunContext.layer : NodeContext.layer;
 
   let resolveAddress!: (url: string) => void;
   const addressPromise = new Promise<string>((resolve) => {
@@ -106,7 +110,8 @@ export async function startKloviPackageServer(
   const fullLayer = Layer.merge(serveLayer, addressCapture).pipe(
     Layer.provide(servicesLayer),
     Layer.provide(configLayer),
-    Layer.provide(platformLayer),
+    Layer.provide(contextLayer),
+    Layer.provide(httpLayer),
   );
 
   const fiber = Effect.runFork(Layer.launch(fullLayer));
