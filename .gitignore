@@ -9,6 +9,7 @@ apps/*/dist
 apps/*/build
 artifacts
 *.tgz
+.stage
 
 # code coverage
 coverage
