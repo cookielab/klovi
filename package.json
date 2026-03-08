@@ -14,6 +14,8 @@
     "build": "bun run --filter @cookielab.io/klovi-desktop build",
     "build:web": "bun run --filter @cookielab.io/klovi-ui build",
     "build:package": "bun run build:web && bun run --filter @cookielab.io/klovi build",
+    "stage:npm": "bun run build:web && bun run --filter @cookielab.io/klovi stage:npm",
+    "verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
     "test": "bun test",
     "test:node-smoke": "npx tsx scripts/plugin-runtime-node-smoke.ts",
     "typecheck": "tsc --noEmit",
