@@ -64,7 +64,7 @@ describe("startKloviServer", () => {
     expect(res.status).toBe(400);
   });
 
-  test("GET / returns 404 when no staticDir", async () => {
+  test("GET / returns 404", async () => {
     const res = await fetch(server.url);
     expect(res.status).toBe(404);
   });
