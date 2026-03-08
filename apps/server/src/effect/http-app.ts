@@ -71,12 +71,14 @@ const emptyMethodHandler = Effect.succeed(
   HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: 400 }),
 );
 
-export const makeHttpApp = () => {
-  const router = HttpRouter.empty.pipe(
+export const makeRpcRouter = () =>
+  HttpRouter.empty.pipe(
     HttpRouter.post("/api/rpc/", emptyMethodHandler),
     HttpRouter.post("/api/rpc/:method", rpcHandler),
   );
 
+export const makeHttpApp = () => {
+  const router = makeRpcRouter();
   return router.pipe(Effect.catchTag("RouteNotFound", () => staticHandler));
 };
 
