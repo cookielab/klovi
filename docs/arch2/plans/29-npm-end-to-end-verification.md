@@ -16,8 +16,8 @@
 
 1. `bun run build` at workspace root succeeds (web → server → package)
 2. `apps/package/dist/cli.js` exists with correct shebang
-3. `apps/server/dist/` contains compiled JS
-4. `apps/web/dist/` contains built HTML/JS/CSS assets
+3. `packages/server/dist/` contains compiled JS
+4. `packages/ui/dist/` contains built HTML/JS/CSS assets
 
 ### Node runtime (`npx` simulation)
 

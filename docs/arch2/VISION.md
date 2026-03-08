@@ -4,19 +4,19 @@
 
 Klovi is a tool for browsing and presenting AI coding session history. It supports two distribution modes that share the same core UI and backend logic:
 
-- **Desktop App** — native installer per platform (macOS arm64 `.dmg`, Windows x64 `.exe`, Linux amd64+arm64 `.AppImage`). Bundles everything it needs. Uses Electrobun as the native shell, `apps/web` for the UI, and `apps/server` for the backend. Supports native-only features: directory browsing, auto-updates, menu actions.
+- **Desktop App** — native installer per platform (macOS arm64 `.dmg`, Windows x64 `.exe`, Linux amd64+arm64 `.AppImage`). Bundles everything it needs. Uses Electrobun as the native shell, `packages/ui` for the UI, and `packages/server` for the backend. Supports native-only features: directory browsing, auto-updates, menu actions.
 - **NPM Package** — `npx @cookielab.io/klovi` or `bunx @cookielab.io/klovi`. A single published package that starts the backend, serves the web UI, and opens the user's browser. Works under both Node and Bun runtimes.
 
 ## Repository Layout
 
 ```
 apps/
-  server/      internal — backend API, Effect-based, dual runtime (Bun + Node)
-  web/         internal — shared React UI, mountKloviApp(), bridge contracts
-  package/     published — @cookielab.io/klovi, wires server + web, CLI entrypoint
-  desktop/     standalone — Electrobun shell, wires server + web with native capabilities
+  package/     published — @cookielab.io/klovi, wires server + ui, CLI entrypoint
+  desktop/     standalone — Electrobun shell, wires server + ui with native capabilities
 
 packages/
+  server/                     internal backend API, Effect-based, dual runtime (Bun + Node)
+  ui/                         shared React UI, mountKloviApp(), bridge contracts
   klovi-plugin-core/          plugin contracts and registry primitives
   klovi-plugin-claude-code/   Claude Code discovery, parsing, frontend integration
   klovi-plugin-codex/         Codex discovery, parsing, frontend integration
@@ -27,10 +27,10 @@ packages/
 
 ### Dependency Rules
 
-- `apps/server` depends on `packages/*` only. It has no dependency on `apps/web`.
-- `apps/web` depends on `packages/*` only. It has no dependency on `apps/server`.
-- `apps/package` depends on `apps/server` and `apps/web`. It owns the HTTP composition layer.
-- `apps/desktop` depends on `apps/server` and `apps/web`. It owns the Electrobun composition layer.
+- `packages/server` depends on `packages/*` only. It has no dependency on `packages/ui`.
+- `packages/ui` depends on `packages/*` only. It has no dependency on `packages/server`.
+- `apps/package` depends on `packages/server` and `packages/ui`. It owns the HTTP composition layer.
+- `apps/desktop` depends on `packages/server` and `packages/ui`. It owns the Electrobun composition layer.
 - No package under `packages/` depends on anything under `apps/`.
 
 ## Runtime Architecture
@@ -42,15 +42,15 @@ User runs: npx @cookielab.io/klovi (Node) or bunx @cookielab.io/klovi (Bun)
 
 apps/package CLI
   |
-  +-- starts apps/server via startKloviServer()
+  +-- starts packages/server via startKloviServer()
   |
   +-- composes HTTP routing:
-  |     /api/*  --> apps/server API handlers
-  |     /*      --> apps/web built assets (SPA fallback to index.html)
+  |     /api/*  --> packages/server API handlers
+  |     /*      --> packages/ui built assets (SPA fallback to index.html)
   |
   +-- opens browser to http://127.0.0.1:<port>
   |
-  Browser loads apps/web
+  Browser loads packages/ui
     |
     +-- mountKloviApp() with:
           client:     HTTP-backed KloviClient (POST /api/rpc/:method)
@@ -64,9 +64,9 @@ User launches Klovi.app / klovi.exe / Klovi.AppImage
 
 Electrobun (apps/desktop)
   |
-  +-- starts apps/server via startKloviServer() in embedded mode
+  +-- starts packages/server via startKloviServer() in embedded mode
   |
-  +-- loads apps/web in Electrobun webview
+  +-- loads packages/ui in Electrobun webview
   |
   +-- mountKloviApp() with:
         client:     HTTP-backed KloviClient (POST /api/rpc/:method against local server)
@@ -85,14 +85,14 @@ Electrobun (apps/desktop)
 **`apps/desktop`** owns:
 - Electrobun window creation, menu integration, updater lifecycle
 - Native host bridge implementation (directory browse, updates, menu actions, open external)
-- Electrobun webview loading of `apps/web`
+- Electrobun webview loading of `packages/ui`
 - Embedded server startup
 
-Neither `apps/server` nor `apps/web` knows how it is being composed or served.
+Neither `packages/server` nor `packages/ui` knows how it is being composed or served.
 
 ## Key Contracts
 
-### `mountKloviApp(config)` — apps/web
+### `mountKloviApp(config)` — packages/ui
 
 Single entry point for mounting the shared React application. Both distribution modes call this with runtime-specific wiring.
 
@@ -101,29 +101,29 @@ Config shape:
 - `client: KloviClient` — server-backed operations
 - `hostBridge: KloviHostBridge` — native capabilities (real or stub)
 
-Source: `apps/web/src/bootstrap.tsx`
+Source: `packages/ui/src/bootstrap.tsx`
 
-### `KloviClient` — apps/web
+### `KloviClient` — packages/ui
 
 Transport-neutral interface for all server-backed data operations: projects, sessions, stats, search, plugin settings, general settings, version info.
 
 The browser and desktop implementations both use HTTP (`POST /api/rpc/:method`) to talk to the server started by their respective distribution app.
 
-Source: `apps/web/src/lib/client.ts`
+Source: `packages/ui/src/lib/client.ts`
 
-### `KloviHostBridge` — apps/web
+### `KloviHostBridge` — packages/ui
 
 Interface for desktop-native capabilities. The browser implementation stubs out unsupported operations. The desktop implementation delegates to Electrobun RPC.
 
-Source: `apps/web/src/lib/host-bridge.ts`
+Source: `packages/ui/src/lib/host-bridge.ts`
 
-### `KloviHostCapabilities` — apps/web
+### `KloviHostCapabilities` — packages/ui
 
 Feature flags checked by the shared UI to gate desktop-only features (`desktop`, `browseDirectory`, `updater`, `menuActions`). The UI branches on these flags instead of checking runtime globals.
 
-Source: `apps/web/src/lib/host-bridge.ts`
+Source: `packages/ui/src/lib/host-bridge.ts`
 
-### `startKloviServer(options)` — apps/server
+### `startKloviServer(options)` — packages/server
 
 Starts the backend API server. Returns `{ url, stop() }`. Both distribution apps call this to start the server.
 
@@ -131,13 +131,13 @@ Key options:
 - `host`, `port` — binding address
 - `version` — version string passed to the server
 
-Source: `apps/server/src/server.ts`
+Source: `packages/server/src/server.ts`
 
-### `POST /api/rpc/:method` — apps/server
+### `POST /api/rpc/:method` — packages/server
 
 HTTP transport for server-backed operations. JSON request/response. One route per method. No desktop-native functionality is exposed here. Requests dispatch directly through the Effect layer to `KloviServices` — there is no intermediate `rpc.ts` dispatch table.
 
-The HTTP routing that maps `/api/*` to these handlers lives in the distribution app (`apps/package` or `apps/desktop`), not in `apps/server` itself.
+The HTTP routing that maps `/api/*` to these handlers lives in the distribution app (`apps/package` or `apps/desktop`), not in `packages/server` itself.
 
 ## Dual Runtime Support
 
@@ -148,14 +148,14 @@ The server runs on both Bun and Node through `@effect/platform`:
 - Node adapter: `@effect/platform-node` — used when invoked via `npx`.
 - Runtime is auto-detected (`typeof globalThis.Bun !== "undefined"`) or explicitly selected.
 
-Source: `apps/server/src/effect/platform-bun.ts`, `apps/server/src/effect/platform-node.ts`
+Source: `packages/server/src/effect/platform-bun.ts`, `packages/server/src/effect/platform-node.ts`
 
 ## Current State
 
 All plans (01-30) are complete. The four-app architecture is fully implemented:
 
-- `apps/server` (`@cookielab.io/klovi-server`) — pure internal backend with Effect-based services, dual runtime adapters (Bun + Node via `@effect/platform`), and `startKloviServer()`. No static file serving, no CLI, no web dependency.
-- `apps/web` — shared React UI with `mountKloviApp()`, `KloviClient`, `KloviHostBridge`, and capability gating.
+- `packages/server` (`@cookielab.io/klovi-server`) — pure internal backend with Effect-based services, dual runtime adapters (Bun + Node via `@effect/platform`), and `startKloviServer()`. No static file serving, no CLI, no web dependency.
+- `packages/ui` — shared React UI with `mountKloviApp()`, `KloviClient`, `KloviHostBridge`, and capability gating.
 - `apps/package` (`@cookielab.io/klovi`) — published NPM package with CLI entrypoint, HTTP composition (`/api/*` to server, `/*` to web assets with SPA fallback), and browser launch.
 - `apps/desktop` — Electrobun shell with native host bridge and embedded server startup.
 - All six `packages/*` are in place and functional.
