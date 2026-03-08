@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./bootstrap": "./src/bootstrap.tsx",
+    "./styles": "./src/styles.ts",
     "./app": "./src/app/App.tsx",
     "./app/*": "./src/app/*",
     "./shared/*": "./src/shared/*",
