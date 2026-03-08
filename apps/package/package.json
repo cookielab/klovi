@@ -22,12 +22,12 @@
     "README.md"
   ],
   "exports": {
-    "./server": "./src/server.ts"
+    "./server": "./dist/server.js"
   },
   "scripts": {
     "dev": "bun run --watch src/cli.ts",
-    "build": "bun run build:cli && bun run build:web-assets && chmod +x dist/cli.js",
-    "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --banner '#!/usr/bin/env node' --external effect --external @effect/platform --external @effect/platform-bun --external @effect/platform-node",
+    "build": "bun run build:entrypoints && bun run build:web-assets && chmod +x dist/cli.js",
+    "build:entrypoints": "bun build src/cli.ts src/server.ts --outdir dist --target node --format esm --external effect --external @effect/platform --external @effect/platform-bun --external @effect/platform-node && sed -i '' '1i\\\n#!/usr/bin/env node' dist/cli.js",
     "build:web-assets": "cp -r ../web/dist dist/web",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
