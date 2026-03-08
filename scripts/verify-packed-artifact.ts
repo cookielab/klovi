@@ -134,9 +134,9 @@ async function testServerImport(runtime: string, installDir: string): Promise<vo
   writeFileSync(
     testFile,
     `
-import { startKloviPackageServer } from "@cookielab.io/klovi/server";
-if (typeof startKloviPackageServer !== "function") {
-  console.error("startKloviPackageServer is not a function");
+import { startKloviServer } from "@cookielab.io/klovi/server";
+if (typeof startKloviServer !== "function") {
+  console.error("startKloviServer is not a function");
   process.exit(1);
 }
 console.log("import-ok");
@@ -352,6 +352,14 @@ async function main() {
     fail("No internal package refs", `Found: ${internalDeps.join(", ")}`);
   } else {
     ok("No internal workspace package references");
+  }
+
+  // Check version/commit metadata if present
+  if (stagedPkg.version && stagedPkg.version !== "0.0.0") {
+    ok(`Staged version: ${stagedPkg.version}`);
+  }
+  if (stagedPkg.commit) {
+    ok(`Staged commit: ${stagedPkg.commit}`);
   }
 
   // 2. Pack the artifact

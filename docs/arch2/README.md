@@ -9,7 +9,7 @@ This directory contains the implementation-ready documentation for the Klovi arc
 - `apps/package` (`@cookielab.io/klovi`) — npm distribution entrypoint (CLI + HTTP composition)
 - `apps/desktop` — Electrobun desktop shell
 
-Core Arch2 source architecture is implemented. The remaining open work is the single-package npm publish remediation for `@cookielab.io/klovi`.
+Core Arch2 source architecture is implemented. The single-package npm publish path is fully wired and verified. Plans 31-38 completed the publish remediation and follow-up alignment.
 
 Plans `01-30` remain in this directory as the historical record of the original Arch2 execution sequence and follow-up remediation. They are not the final source of truth for the remaining npm publish work.
 
@@ -140,7 +140,7 @@ These plans remain useful historical context, but they should not be treated as 
 - [plans/30-update-vision-document.md](./plans/30-update-vision-document.md)
   Purpose: prior attempt to declare the architecture complete before the single-package npm publish path was fully specified.
 
-## Remaining Publish Remediation Plans
+## Completed Publish Remediation Plans
 
 - [plans/31-make-apps-package-self-contained-for-npm.md](./plans/31-make-apps-package-self-contained-for-npm.md)
   Purpose: make `apps/package` the sole publishable npm artifact by bundling internal workspace runtime code and including web assets.
@@ -151,46 +151,18 @@ These plans remain useful historical context, but they should not be treated as 
 - [plans/34-restore-single-package-npm-publish-workflow.md](./plans/34-restore-single-package-npm-publish-workflow.md)
   Purpose: restore npm publishing for `@cookielab.io/klovi` only.
 
-### Remaining Publish Remediation Order
+## Completed Follow-up Alignment Plans
 
-1. [31-make-apps-package-self-contained-for-npm.md](./plans/31-make-apps-package-self-contained-for-npm.md)
-2. [32-generate-a-sanitized-publish-artifact.md](./plans/32-generate-a-sanitized-publish-artifact.md)
-3. [33-verify-packed-artifact-under-node-and-bun.md](./plans/33-verify-packed-artifact-under-node-and-bun.md)
-4. [34-restore-single-package-npm-publish-workflow.md](./plans/34-restore-single-package-npm-publish-workflow.md)
-
-### Remaining Publish Remediation Dependency Graph
-
-- Task 31 has no prerequisites.
-- Task 32 depends on Task 31.
-- Task 33 depends on Tasks 31 and 32.
-- Task 34 depends on Tasks 32 and 33.
-
-## Follow-up Alignment Plans
-
-These follow-up plans refine the public npm contract, staging metadata, release wiring, and documentation after the core publish remediation plans:
+These follow-up plans refined the public npm contract, staging metadata, release wiring, and documentation after the core publish remediation plans:
 
 - [plans/35-align-public-server-export-with-vision.md](./plans/35-align-public-server-export-with-vision.md)
-  Purpose: align `@cookielab.io/klovi/server` with the documented `startKloviServer(options)` contract and remove duplicated server bootstrap logic.
+  Purpose: aligned `@cookielab.io/klovi/server` with the documented `startKloviServer(options)` contract and removed duplicated server bootstrap logic.
 - [plans/36-finish-package-artifact-metadata-and-publish-guardrails.md](./plans/36-finish-package-artifact-metadata-and-publish-guardrails.md)
-  Purpose: finish staged artifact version/commit metadata flow and block accidental publishing from `apps/package` source.
+  Purpose: finished staged artifact version/commit metadata flow and blocked accidental publishing from `apps/package` source.
 - [plans/37-wire-release-flow-to-single-package-npm-publish.md](./plans/37-wire-release-flow-to-single-package-npm-publish.md)
-  Purpose: connect the release flow to the dedicated npm publish workflow without manual version re-entry.
+  Purpose: connected the release flow to the dedicated npm publish workflow without manual version re-entry.
 - [plans/38-document-npm-package-contract-and-refresh-arch2-status.md](./plans/38-document-npm-package-contract-and-refresh-arch2-status.md)
-  Purpose: add npm-facing package docs and refresh Arch2 status documents after the contract/publish alignment work lands.
-
-### Follow-up Alignment Order
-
-1. [35-align-public-server-export-with-vision.md](./plans/35-align-public-server-export-with-vision.md)
-2. [36-finish-package-artifact-metadata-and-publish-guardrails.md](./plans/36-finish-package-artifact-metadata-and-publish-guardrails.md)
-3. [37-wire-release-flow-to-single-package-npm-publish.md](./plans/37-wire-release-flow-to-single-package-npm-publish.md)
-4. [38-document-npm-package-contract-and-refresh-arch2-status.md](./plans/38-document-npm-package-contract-and-refresh-arch2-status.md)
-
-### Follow-up Alignment Dependency Graph
-
-- Task 35 has no prerequisites.
-- Task 36 depends on Task 35.
-- Task 37 depends on Tasks 35 and 36.
-- Task 38 depends on Tasks 35, 36, and 37.
+  Purpose: added npm-facing package docs and refreshed Arch2 status documents after the contract/publish alignment work landed.
 
 ## Expected End State
 

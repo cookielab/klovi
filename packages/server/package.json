@@ -15,6 +15,7 @@
   },
   "exports": {
     "./server": "./src/server.ts",
+    "./effect/bootstrap": "./src/effect/bootstrap.ts",
     "./effect/server-config": "./src/effect/server-config.ts",
     "./effect/server-services": "./src/effect/server-services.ts",
     "./effect/http-app": "./src/effect/http-app.ts",

@@ -74,6 +74,8 @@ const srcPkg = JSON.parse(readFileSync(resolve(packageDir, "package.json"), "utf
 // Build sanitized package.json
 const version = cliArgs.version ?? srcPkg.version ?? "0.0.0";
 
+const commit = cliArgs.commit ?? "";
+
 const stagedPkg: Record<string, unknown> = {
   name: "@cookielab.io/klovi",
   version,
@@ -89,6 +91,11 @@ const stagedPkg: Record<string, unknown> = {
   files: ["dist", "package.json", "README.md", "LICENSE.md"],
   engines: srcPkg.engines ?? { node: ">=18" },
 };
+
+// Stamp commit metadata into the staged manifest so the runtime can read it
+if (commit) {
+  stagedPkg["commit"] = commit;
+}
 
 // Copy optional metadata fields if present in source
 for (const field of ["author", "repository", "homepage", "bugs", "keywords"]) {
@@ -154,6 +161,8 @@ if (hasWorkspaceImports) {
 console.log("Staged npm artifact at:", stageDir);
 // biome-ignore lint/suspicious/noConsole: CLI script output
 console.log("  package.json version:", version);
+// biome-ignore lint/suspicious/noConsole: CLI script output
+console.log("  package.json commit:", commit || "(none)");
 // biome-ignore lint/suspicious/noConsole: CLI script output
 console.log("  dist/cli.js:", existsSync(resolve(stageDir, "dist/cli.js")) ? "OK" : "MISSING");
 // biome-ignore lint/suspicious/noConsole: CLI script output

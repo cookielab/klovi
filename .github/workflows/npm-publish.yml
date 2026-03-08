@@ -7,11 +7,36 @@ on:
         description: "Version to publish (e.g. 1.2.3, 1.2.3-beta.1)"
         required: true
         type: string
+      commit:
+        description: "Commit hash to stamp (defaults to HEAD)"
+        required: false
+        type: string
+        default: ""
       dry-run:
         description: "Dry run (pack only, do not publish)"
         required: false
         type: boolean
         default: false
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to publish"
+        required: true
+        type: string
+      commit:
+        description: "Commit hash to stamp"
+        required: false
+        type: string
+        default: ""
+      dry-run:
+        description: "Dry run (pack only, do not publish)"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      NPM_TOKEN:
+        description: "npm authentication token"
+        required: true
 
 jobs:
   publish:
@@ -46,10 +71,11 @@ jobs:
       - name: Stage npm artifact
         env:
           VERSION: ${{ inputs.version }}
+          COMMIT: ${{ inputs.commit }}
         run: |
           bun run build:web
           bun run --filter @cookielab.io/klovi build
-          bun apps/package/scripts/stage-npm.ts --version "$VERSION"
+          bun apps/package/scripts/stage-npm.ts --version "$VERSION" --commit "${COMMIT:-$(git rev-parse --short HEAD)}"
 
       # Verify the staged artifact
       - name: Verify staged artifact manifest
@@ -68,7 +94,10 @@ jobs:
       - name: Verify packed artifact (Node + Bun)
         run: bun run verify:packed-artifact
 
-      # Publish from staged directory only
+      # Publish from staged directory only.
+      # Authentication: uses secret-based NPM_TOKEN. To adopt npm trusted publishing
+      # (provenance-based OIDC), replace NODE_AUTH_TOKEN with the npm provenance flag
+      # and configure the npm package for trusted publishing in the npm registry.
       - name: Publish to npm
         if: inputs.dry-run == false
         working-directory: apps/package/.stage/npm

@@ -10,12 +10,17 @@ describe("CLI smoke tests", () => {
     expect(await file.exists()).toBe(true);
   });
 
-  test("cli.ts imports server module", async () => {
+  test("cli.ts imports startKloviPackageServer for internal composition", async () => {
     const content = await Bun.file(cliPath).text();
     expect(content).toContain("startKloviPackageServer");
   });
 
-  test("server.ts exports startKloviPackageServer", async () => {
+  test("server.ts exports startKloviServer as public contract", async () => {
+    const serverModule = await import(serverPath);
+    expect(typeof serverModule.startKloviServer).toBe("function");
+  });
+
+  test("server.ts exports startKloviPackageServer for internal use", async () => {
     const serverModule = await import(serverPath);
     expect(typeof serverModule.startKloviPackageServer).toBe("function");
   });
