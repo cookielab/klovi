@@ -6,7 +6,7 @@ import { sortByIsoDesc } from "./iso-time.ts";
 import type { PluginRegistry } from "./registry.ts";
 import { encodeSessionId, parseSessionId } from "./session-id.ts";
 import type { UpdateChannel } from "./settings.ts";
-import { loadSettings, saveSettings } from "./settings.ts";
+import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
 import { scanStats } from "./stats.ts";
 
 export interface VersionInfo {
@@ -192,6 +192,14 @@ export async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch
   } catch {
     return { firstLaunch: true };
   }
+}
+
+export async function completeOnboarding(settingsPath: string): Promise<{ ok: boolean }> {
+  const { firstLaunch } = await isFirstLaunch(settingsPath);
+  if (firstLaunch) {
+    await saveSettings(settingsPath, getDefaultSettings());
+  }
+  return { ok: true };
 }
 
 export async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {

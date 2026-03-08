@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import {
+  completeOnboarding,
   getGeneralSettings,
   getPluginSettings,
   getProjects,
@@ -112,6 +113,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 
       // Data methods (KloviClient)
       acceptRisks: async () => {
+        await completeOnboarding(settingsPath);
         await ensureRegistry();
         return { ok: true };
       },
