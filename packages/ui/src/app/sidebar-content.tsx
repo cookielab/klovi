@@ -13,6 +13,7 @@ interface SidebarActions {
   hide: (id: string) => void;
   settingsTab: SettingsTab;
   setSettingsTab: (tab: SettingsTab) => void;
+  closeSettings: () => void;
 }
 
 export function getSidebarContent(
@@ -21,7 +22,13 @@ export function getSidebarContent(
   actions: SidebarActions,
 ): React.ReactNode {
   if (view.kind === "settings") {
-    return <SettingsSidebar activeTab={actions.settingsTab} onTabChange={actions.setSettingsTab} />;
+    return (
+      <SettingsSidebar
+        activeTab={actions.settingsTab}
+        onTabChange={actions.setSettingsTab}
+        onBack={actions.closeSettings}
+      />
+    );
   }
 
   if (view.kind === "home" || view.kind === "hidden") {

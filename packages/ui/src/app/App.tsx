@@ -17,6 +17,11 @@ import { SettingsView } from "./components/settings/SettingsView.tsx";
 import { UpdateNotification } from "./components/UpdateNotification.tsx";
 import { Onboarding } from "./components/ui/Onboarding.tsx";
 import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
+import {
+  useGlobalShortcuts,
+  useSearchShortcut,
+  useSettingsShortcut,
+} from "./hooks/useGlobalShortcuts.ts";
 import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
 import {
   resolveTheme,
@@ -51,6 +56,7 @@ export function App() {
     goSettings,
     canPresent,
     togglePresentation,
+    closeSettings,
   } = useViewState();
 
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
@@ -88,64 +94,13 @@ export function App() {
   );
 
   // Cmd+K / Ctrl+K toggles search
-  useEffect(() => {
-    function handleCmdK(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen((prev) => {
-          if (!prev) fetchSearchSessions();
-          return !prev;
-        });
-      }
-    }
-    window.addEventListener("keydown", handleCmdK);
-    return () => window.removeEventListener("keydown", handleCmdK);
-  }, [fetchSearchSessions]);
+  useSearchShortcut({ fetchSearchSessions, setSearchOpen });
 
-  // Cmd+, opens settings
-  useEffect(() => {
-    function handleCmdComma(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
-        e.preventDefault();
-        if (view.kind === "settings") {
-          history.back();
-        } else {
-          goSettings();
-        }
-      }
-    }
-    window.addEventListener("keydown", handleCmdComma);
-    return () => window.removeEventListener("keydown", handleCmdComma);
-  }, [view.kind, goSettings]);
+  // Cmd+, toggles settings
+  useSettingsShortcut({ isSettings: view.kind === "settings", closeSettings, goSettings });
 
   // Global keyboard shortcuts: p = toggle presentation, +/- = font size
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-      switch (e.key) {
-        case "p":
-          if (canPresent) {
-            e.preventDefault();
-            togglePresentation();
-          }
-          break;
-        case "+":
-        case "=":
-          e.preventDefault();
-          increase();
-          break;
-        case "-":
-          e.preventDefault();
-          decrease();
-          break;
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canPresent, togglePresentation, increase, decrease]);
+  useGlobalShortcuts({ canPresent, togglePresentation, increase, decrease });
 
   // Listen for host bridge menu actions
   useEffect(() => {
@@ -171,6 +126,8 @@ export function App() {
   }, [hostBridge, cycleTheme, increase, decrease, canPresent, togglePresentation, goSettings]);
 
   const { title: headerTitle, breadcrumb } = getHeaderInfo(view);
+  const headerOnBackMap: Partial<Record<string, () => void>> = { settings: closeSettings };
+  const headerOnBack = headerOnBackMap[view.kind];
   const sidebarContent = getSidebarContent(view, hiddenIds, {
     selectProject,
     selectSession,
@@ -179,6 +136,7 @@ export function App() {
     hide,
     settingsTab,
     setSettingsTab,
+    closeSettings,
   });
 
   const isPresenting =
@@ -236,6 +194,7 @@ export function App() {
         <Header
           title={headerTitle}
           breadcrumb={breadcrumb}
+          onBack={headerOnBack}
           copyCommand={
             view.kind === "session"
               ? getResumeCommand(view.session.pluginId, view.session.sessionId)
@@ -273,7 +232,7 @@ export function App() {
           {view.kind === "settings" && (
             <SettingsView
               activeTab={settingsTab}
-              onNavigateHome={goHome}
+              onNavigateHome={closeSettings}
               theme={themeHook}
               fontSize={fontSizeHook}
               presentationTheme={presentationThemeHook}
