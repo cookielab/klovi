@@ -1,10 +1,25 @@
 import { join } from "node:path";
-import { startKloviServer } from "@cookielab.io/klovi-server/server";
 import {
+  getGeneralSettings,
+  getPluginSettings,
+  getProjects,
+  getSession,
+  getSessions,
+  getStats,
+  getSubAgent,
   getUpdateSettings,
+  getVersion,
+  isFirstLaunch,
+  resetSettings,
+  searchSessions,
   setVersion,
+  updateGeneralSettings,
+  updatePluginSetting,
   updateUpdateSettings,
 } from "@cookielab.io/klovi-server/services/app-services";
+import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
+import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
+import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
@@ -14,11 +29,28 @@ import { UpdateManager } from "./updater.ts";
 setVersion(pkg.version ?? "0.0.0", pkg.commit ?? "");
 
 let updateManager: UpdateManager | null = null;
-let serverUrl = "";
 
 function getSettingsPath(): string {
   const home = Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "";
   return join(home, ".klovi", "settings.json");
+}
+
+const settingsPath = getSettingsPath();
+
+// Registry lifecycle: created on acceptRisks, refreshed after settings changes
+let registry: PluginRegistry | null = null;
+
+async function ensureRegistry(): Promise<PluginRegistry> {
+  if (!registry) {
+    const settings = await loadSettings(settingsPath);
+    registry = await createRegistry(settings);
+  }
+  return registry;
+}
+
+async function refreshRegistry(): Promise<void> {
+  const settings = await loadSettings(settingsPath);
+  registry = await createRegistry(settings);
 }
 
 function getUpdateManager(): UpdateManager {
@@ -35,15 +67,6 @@ function getUpdateManager(): UpdateManager {
   return updateManager;
 }
 
-// Start embedded server
-const settingsPath = getSettingsPath();
-const server = await startKloviServer({
-  host: "127.0.0.1",
-  port: 0,
-  settingsPath,
-});
-serverUrl = server.url;
-
 // Start update checking
 const mgr = getUpdateManager();
 mgr.setStatusCallback((status) => {
@@ -52,11 +75,11 @@ mgr.setStatusCallback((status) => {
 await mgr.cleanup();
 await mgr.startSchedule();
 
-// Desktop RPC: only native host bridge methods
+// Desktop RPC: native host bridge + data methods
 const rpc = BrowserView.defineRPC<KloviRPC>({
   handlers: {
     requests: {
-      getServerUrl: () => ({ url: serverUrl }),
+      // Native host bridge methods
       browseDirectory: async (params) => {
         const paths = await Utils.openFileDialog({
           startingFolder: params.startingFolder ?? "~/",
@@ -85,6 +108,51 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
       openExternal: (params) => {
         Utils.openExternal(params.url);
         return { ok: true };
+      },
+
+      // Data methods (KloviClient)
+      acceptRisks: async () => {
+        await ensureRegistry();
+        return { ok: true };
+      },
+      isFirstLaunch: () => isFirstLaunch(settingsPath),
+      getVersion: () => getVersion(),
+      getStats: async () => {
+        const reg = await ensureRegistry();
+        return getStats(reg);
+      },
+      getProjects: async () => {
+        const reg = await ensureRegistry();
+        return getProjects(reg);
+      },
+      getSessions: async (params) => {
+        const reg = await ensureRegistry();
+        return getSessions(reg, params);
+      },
+      getSession: async (params) => {
+        const reg = await ensureRegistry();
+        return getSession(reg, params);
+      },
+      getSubAgent: async (params) => {
+        const reg = await ensureRegistry();
+        return getSubAgent(reg, params);
+      },
+      searchSessions: async () => {
+        const reg = await ensureRegistry();
+        return searchSessions(reg);
+      },
+      getPluginSettings: () => getPluginSettings(settingsPath),
+      updatePluginSetting: async (params) => {
+        const result = await updatePluginSetting(settingsPath, params);
+        await refreshRegistry();
+        return result;
+      },
+      getGeneralSettings: () => getGeneralSettings(settingsPath),
+      updateGeneralSettings: (params) => updateGeneralSettings(settingsPath, params),
+      resetSettings: async () => {
+        const result = await resetSettings(settingsPath);
+        await refreshRegistry();
+        return result;
       },
     },
     messages: {},
@@ -165,5 +233,4 @@ Electrobun.events.on("application-menu-clicked", (e) => {
 
 Electrobun.events.on("before-quit", () => {
   updateManager?.stopSchedule();
-  server.stop();
 });

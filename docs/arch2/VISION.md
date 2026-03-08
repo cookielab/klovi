@@ -67,12 +67,12 @@ User launches Klovi.app / klovi.exe / Klovi.AppImage
 
 Electrobun (apps/desktop)
   |
-  +-- starts packages/server via startKloviServer() in embedded mode
+  +-- imports packages/server service functions directly (no HTTP server)
   |
   +-- loads packages/ui in Electrobun webview
   |
   +-- mountKloviApp() with:
-        client:     HTTP-backed KloviClient (POST /api/rpc/:method against local server)
+        client:     Electrobun-RPC-backed KloviClient (IPC via Electrobun typed RPC)
         hostBridge: Electrobun-backed KloviHostBridge (full native capabilities)
 ```
 
@@ -91,7 +91,7 @@ Electrobun (apps/desktop)
 - Electrobun window creation, menu integration, updater lifecycle
 - Native host bridge implementation (directory browse, updates, menu actions, open external)
 - Electrobun webview loading of `packages/ui`
-- Embedded server startup
+- Direct invocation of server service functions (no embedded HTTP server)
 - Desktop-specific release artifacts
 
 Neither `packages/server` nor `packages/ui` knows how it is being composed or served.
@@ -132,7 +132,7 @@ Source: `packages/ui/src/bootstrap.tsx`
 
 Transport-neutral interface for all server-backed data operations: projects, sessions, stats, search, plugin settings, general settings, version info.
 
-The browser and desktop implementations both use HTTP (`POST /api/rpc/:method`) to talk to the server started by their respective distribution app.
+The browser implementation uses HTTP (`POST /api/rpc/:method`) to talk to the server. The desktop implementation uses Electrobun typed RPC to call server service functions directly in the main process (no HTTP server).
 
 Source: `packages/ui/src/lib/client.ts`
 
