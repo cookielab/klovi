@@ -6,10 +6,12 @@ This directory contains the implementation-ready documentation for the Klovi arc
 
 - `packages/server` (`@cookielab.io/klovi-server`) — pure internal backend API
 - `packages/ui` — shared application UI
-- `apps/package` (`@cookielab.io/klovi`) — published NPM package (CLI + HTTP composition)
+- `apps/package` (`@cookielab.io/klovi`) — npm distribution entrypoint (CLI + HTTP composition)
 - `apps/desktop` — Electrobun desktop shell
 
-All plans (01-30) are complete. The documents here are written for AI implementers and serve as historical reference for the architecture decisions and execution sequence.
+Core Arch2 source architecture is implemented. The remaining open work is the single-package npm publish remediation for `@cookielab.io/klovi`.
+
+Plans `01-30` remain in this directory as the historical record of the original Arch2 execution sequence and follow-up remediation. They are not the final source of truth for the remaining npm publish work.
 
 ## Ground Rules
 
@@ -42,7 +44,7 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 - [plans/20-extract-rpc-router-from-http-app.md](./plans/20-extract-rpc-router-from-http-app.md)
   Purpose: split `makeHttpApp()` so the RPC router is independently importable by `apps/package`.
 - [plans/21-create-apps-package.md](./plans/21-create-apps-package.md)
-  Purpose: create `apps/package` as the published `@cookielab.io/klovi` NPM package that wires server + web together.
+  Purpose: create `apps/package` as the `@cookielab.io/klovi` npm distribution entrypoint that wires server + web together.
 - [plans/22-transfer-package-identity.md](./plans/22-transfer-package-identity.md)
   Purpose: transfer the `@cookielab.io/klovi` name from `packages/server` to `apps/package`, rename server to `@cookielab.io/klovi-server`.
 - [plans/23-strip-server-to-pure-backend.md](./plans/23-strip-server-to-pure-backend.md)
@@ -119,10 +121,12 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 - Task 22 depends on Task 21.
 - Task 23 depends on Task 22.
 
-## Finishing Plans
+## Historical Finishing Plans
+
+These plans remain useful historical context, but they should not be treated as the final source of truth for the remaining npm publish work:
 
 - [plans/24-build-and-publish-pipeline.md](./plans/24-build-and-publish-pipeline.md)
-  Purpose: compile server + package to JS, set up proper exports/bin, prepublish scripts for npm distribution.
+  Purpose: first attempt to compile server + package to JS and set up npm-oriented build output.
 - [plans/25-consolidate-rpc-dispatch-into-effect-layer.md](./plans/25-consolidate-rpc-dispatch-into-effect-layer.md)
   Purpose: remove legacy `rpc.ts` dispatch table, dispatch directly from Effect layer to `KloviServices`.
 - [plans/26-clean-up-dead-contract-fields.md](./plans/26-clean-up-dead-contract-fields.md)
@@ -132,27 +136,34 @@ All plans (01-30) are complete. The documents here are written for AI implemente
 - [plans/28-desktop-integration-verification.md](./plans/28-desktop-integration-verification.md)
   Purpose: verify desktop app works after restructuring, fix issues found.
 - [plans/29-npm-end-to-end-verification.md](./plans/29-npm-end-to-end-verification.md)
-  Purpose: verify `npx` and `bunx` flows work end-to-end, fix issues found.
+  Purpose: prior attempt to verify `npx` and `bunx` flows from workspace builds rather than the final staged publish artifact.
 - [plans/30-update-vision-document.md](./plans/30-update-vision-document.md)
-  Purpose: update VISION.md to reflect completed state.
+  Purpose: prior attempt to declare the architecture complete before the single-package npm publish path was fully specified.
 
-### Finishing Plans Execution Order
+## Remaining Publish Remediation Plans
 
-1. Plans 13, 24, 25, 26, 27 can run in parallel (no inter-dependencies)
-2. [28-desktop-integration-verification.md](./plans/28-desktop-integration-verification.md) — depends on 13, 24, 25, 26, 27
-3. [29-npm-end-to-end-verification.md](./plans/29-npm-end-to-end-verification.md) — depends on 13, 24, 25, 26
-4. [30-update-vision-document.md](./plans/30-update-vision-document.md) — depends on 28, 29
+- [plans/31-make-apps-package-self-contained-for-npm.md](./plans/31-make-apps-package-self-contained-for-npm.md)
+  Purpose: make `apps/package` the sole publishable npm artifact by bundling internal workspace runtime code and including web assets.
+- [plans/32-generate-a-sanitized-publish-artifact.md](./plans/32-generate-a-sanitized-publish-artifact.md)
+  Purpose: define the staged publish directory and sanitized npm manifest generation flow.
+- [plans/33-verify-packed-artifact-under-node-and-bun.md](./plans/33-verify-packed-artifact-under-node-and-bun.md)
+  Purpose: verify the real packed artifact under Node and Bun instead of only the workspace build.
+- [plans/34-restore-single-package-npm-publish-workflow.md](./plans/34-restore-single-package-npm-publish-workflow.md)
+  Purpose: restore npm publishing for `@cookielab.io/klovi` only.
 
-### Finishing Plans Dependency Graph
+### Remaining Publish Remediation Order
 
-- Task 13 has no prerequisites (already written, not executed).
-- Task 24 has no prerequisites.
-- Task 25 has no prerequisites.
-- Task 26 has no prerequisites.
-- Task 27 has no prerequisites.
-- Task 28 depends on Tasks 13, 24, 25, 26, 27.
-- Task 29 depends on Tasks 13, 24, 25, 26.
-- Task 30 depends on Tasks 28, 29.
+1. [31-make-apps-package-self-contained-for-npm.md](./plans/31-make-apps-package-self-contained-for-npm.md)
+2. [32-generate-a-sanitized-publish-artifact.md](./plans/32-generate-a-sanitized-publish-artifact.md)
+3. [33-verify-packed-artifact-under-node-and-bun.md](./plans/33-verify-packed-artifact-under-node-and-bun.md)
+4. [34-restore-single-package-npm-publish-workflow.md](./plans/34-restore-single-package-npm-publish-workflow.md)
+
+### Remaining Publish Remediation Dependency Graph
+
+- Task 31 has no prerequisites.
+- Task 32 depends on Task 31.
+- Task 33 depends on Tasks 31 and 32.
+- Task 34 depends on Tasks 32 and 33.
 
 ## Expected End State
 
@@ -165,13 +176,12 @@ When all tasks (01-12) are complete (achieved):
 
 After applying package restructuring plans (20-23):
 
-- `apps/package` is the published `@cookielab.io/klovi` package with the `klovi` CLI
+- `apps/package` is the `@cookielab.io/klovi` npm entrypoint with the `klovi` CLI
 - `packages/server` is `@cookielab.io/klovi-server`, a pure internal backend with no static serving or web dependency
 - `apps/package` owns HTTP composition (`/api/*` → server, `/*` → web assets)
 - `apps/desktop` depends on `packages/server` + `packages/ui` directly
-- `bunx @cookielab.io/klovi@latest` starts a localhost-only browser variant by default
 
-After applying follow-up remediation plans:
+After applying follow-up remediation plans (13-19):
 
 - plugin enable/disable and data-dir changes take effect immediately in server/browser mode without requiring restart
 - the plugin layer can express runtime dependencies through Effect instead of Bun globals
@@ -180,12 +190,11 @@ After applying follow-up remediation plans:
 - the repository has explicit Bun-plus-Node coverage for the migrated plugin layer
 - `packages/server` runs through `@effect/platform` and is startable from Bun and Node without changing its public embedding contract
 
-After applying finishing plans (13, 24-30):
+After applying the remaining publish remediation plans (31-34):
 
-- `npx @cookielab.io/klovi` and `bunx @cookielab.io/klovi` both work end-to-end
-- all packages have proper build pipelines producing JS from TypeScript source
-- the legacy `rpc.ts` dispatch table is removed; RPC dispatches directly through the Effect layer
-- all public contract fields are either wired or removed (no dead fields)
-- `apps/desktop` depends only on `packages/server` and `packages/ui` (with documented exceptions)
-- desktop app builds, launches, and functions correctly after restructuring
-- VISION.md reflects the completed architecture
+- only `@cookielab.io/klovi` is published to npm
+- internal workspace packages are bundled into the staged publish artifact rather than published separately
+- the staged artifact contains a sanitized npm manifest with no `workspace:*` dependencies
+- packed-artifact verification proves `npx @cookielab.io/klovi` and `bunx @cookielab.io/klovi`
+- `@cookielab.io/klovi/server` remains a working public programmatic export
+- release automation publishes the same staged tarball that was verified in CI
