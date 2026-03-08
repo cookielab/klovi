@@ -1,4 +1,5 @@
 import { SidebarButton } from "@cookielab.io/klovi-design-system";
+import { formatShortcut } from "@cookielab.io/klovi-ui-components/utilities";
 import type React from "react";
 import faviconUrl from "../../../../favicon.svg";
 import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
@@ -32,12 +33,18 @@ export function Sidebar({ children, onSearchClick, onSettingsClick }: SidebarPro
           </span>
         )}
         {onSearchClick && (
-          <SidebarButton onClick={onSearchClick} title="Search sessions (Cmd+K)">
+          <SidebarButton
+            onClick={onSearchClick}
+            title={`Search sessions (${formatShortcut("Mod", "K")})`}
+          >
             Search
           </SidebarButton>
         )}
         {onSettingsClick && (
-          <SidebarButton onClick={onSettingsClick} title="Settings (Cmd+,)">
+          <SidebarButton
+            onClick={onSettingsClick}
+            title={`Settings (${formatShortcut("Mod", ",")})`}
+          >
             <svg
               width="14"
               height="14"

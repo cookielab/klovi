@@ -10,3 +10,4 @@ export {
   shortModel,
 } from "./formatters.ts";
 export { ImageLightbox } from "./ImageLightbox.tsx";
+export { formatShortcut } from "./shortcut.ts";
