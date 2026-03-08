@@ -1,10 +1,10 @@
 import { join } from "node:path";
-import { startKloviServer } from "@cookielab.io/klovi/server";
+import { startKloviServer } from "@cookielab.io/klovi-server/server";
 import {
   getUpdateSettings,
   setVersion,
   updateUpdateSettings,
-} from "@cookielab.io/klovi/services/app-services";
+} from "@cookielab.io/klovi-server/services/app-services";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";

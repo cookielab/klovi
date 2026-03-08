@@ -25,12 +25,6 @@ describe("CLI smoke tests", () => {
     expect(typeof serverModule.startKloviServer).toBe("function");
   });
 
-  test("package.json bin points to cli.ts", async () => {
-    const pkgPath = resolve(import.meta.dir, "../package.json");
-    const pkg = await Bun.file(pkgPath).json();
-    expect(pkg.bin?.klovi).toBe("./src/cli.ts");
-  });
-
   test("package.json exports server entry", async () => {
     const pkgPath = resolve(import.meta.dir, "../package.json");
     const pkg = await Bun.file(pkgPath).json();

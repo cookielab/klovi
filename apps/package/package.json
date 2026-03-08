@@ -1,5 +1,5 @@
 {
-  "name": "@cookielab.io/klovi-package",
+  "name": "@cookielab.io/klovi",
   "version": "0.0.0",
   "description": "Klovi — browse and present AI coding session history",
   "type": "module",
@@ -20,10 +20,11 @@
     "./server": "./src/server.ts"
   },
   "scripts": {
+    "dev": "bun run --watch src/cli.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@cookielab.io/klovi": "workspace:*",
+    "@cookielab.io/klovi-server": "workspace:*",
     "@cookielab.io/klovi-web": "workspace:*",
     "effect": "*",
     "@effect/platform": "*",
