@@ -9,7 +9,7 @@ import { KloviServicesLive } from "@cookielab.io/klovi-server/effect/server-serv
 import { HttpServer } from "@effect/platform";
 import { BunContext } from "@effect/platform-bun";
 import { NodeContext } from "@effect/platform-node";
-import { Effect, Fiber, Layer } from "effect";
+import { Cause, Effect, Fiber, Layer } from "effect";
 import { makePackageServeLayer } from "./http-app.ts";
 
 export interface StartKloviPackageServerOptions {
@@ -89,8 +89,10 @@ export async function startKloviPackageServer(
   const contextLayer = rt === "bun" ? BunContext.layer : NodeContext.layer;
 
   let resolveAddress!: (url: string) => void;
-  const addressPromise = new Promise<string>((resolve) => {
+  let rejectAddress!: (err: unknown) => void;
+  const addressPromise = new Promise<string>((resolve, reject) => {
     resolveAddress = resolve;
+    rejectAddress = reject;
   });
 
   const addressCapture = Layer.effectDiscard(
@@ -114,6 +116,14 @@ export async function startKloviPackageServer(
   );
 
   const fiber = Effect.runFork(Layer.launch(fullLayer));
+
+  // Surface fiber failures instead of hanging silently
+  Effect.runFork(
+    Fiber.join(fiber).pipe(
+      Effect.catchAllCause((cause) => Effect.sync(() => rejectAddress(Cause.squash(cause)))),
+    ),
+  );
+
   const url = await addressPromise;
 
   if (options.openBrowser) {
