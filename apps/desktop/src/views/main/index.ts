@@ -1,5 +1,9 @@
-import type { KloviHostBridge, KloviHostCapabilities } from "@cookielab.io/klovi-ui/bootstrap";
-import { createHttpClient, mountKloviApp } from "@cookielab.io/klovi-ui/bootstrap";
+import type {
+  KloviClient,
+  KloviHostBridge,
+  KloviHostCapabilities,
+} from "@cookielab.io/klovi-ui/bootstrap";
+import { mountKloviApp } from "@cookielab.io/klovi-ui/bootstrap";
 import { Electroview } from "electrobun/view";
 import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types.ts";
 
@@ -53,9 +57,24 @@ const rpc = Electroview.defineRPC<KloviRPC>({
 // Electroview constructor initializes WebSocket transport and wires up the RPC
 new Electroview({ rpc });
 
-// Get the embedded server URL and create an HTTP-backed client
-const { url: serverUrl } = await rpc.request.getServerUrl({} as Record<string, never>);
-const desktopClient = createHttpClient(serverUrl);
+// RPC-backed KloviClient: each method delegates to the main process via Electrobun RPC
+const empty = {} as Record<string, never>;
+const desktopClient: KloviClient = {
+  acceptRisks: () => rpc.request.acceptRisks(empty),
+  isFirstLaunch: () => rpc.request.isFirstLaunch(empty),
+  getVersion: () => rpc.request.getVersion(empty),
+  getStats: () => rpc.request.getStats(empty),
+  getProjects: () => rpc.request.getProjects(empty),
+  getSessions: (params) => rpc.request.getSessions(params),
+  getSession: (params) => rpc.request.getSession(params),
+  getSubAgent: (params) => rpc.request.getSubAgent(params),
+  searchSessions: () => rpc.request.searchSessions(empty),
+  getPluginSettings: () => rpc.request.getPluginSettings(empty),
+  updatePluginSetting: (params) => rpc.request.updatePluginSetting(params),
+  getGeneralSettings: () => rpc.request.getGeneralSettings(empty),
+  updateGeneralSettings: (params) => rpc.request.updateGeneralSettings(params),
+  resetSettings: () => rpc.request.resetSettings(empty),
+};
 
 const desktopCapabilities: KloviHostCapabilities = {
   desktop: true,
@@ -68,10 +87,10 @@ const desktopCapabilities: KloviHostCapabilities = {
 const desktopHostBridge: KloviHostBridge = {
   getCapabilities: () => desktopCapabilities,
   browseDirectory: (params) => rpc.request.browseDirectory(params),
-  getUpdateSettings: () => rpc.request.getUpdateSettings({} as Record<string, never>),
+  getUpdateSettings: () => rpc.request.getUpdateSettings(empty),
   updateUpdateSettings: (params) => rpc.request.updateUpdateSettings(params),
-  checkForUpdate: () => rpc.request.checkForUpdate({} as Record<string, never>),
-  applyUpdate: () => rpc.request.applyUpdate({} as Record<string, never>),
+  checkForUpdate: () => rpc.request.checkForUpdate(empty),
+  applyUpdate: () => rpc.request.applyUpdate(empty),
   openExternal: (params) => rpc.request.openExternal(params),
   onMenuAction: (callback) => {
     menuActionListeners.add(callback);
