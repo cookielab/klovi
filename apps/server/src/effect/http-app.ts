@@ -13,7 +13,7 @@ type RPCMethodName = {
 const NON_RPC_KEYS: ReadonlySet<string> = new Set(["registry", "settingsPath"]);
 
 function isRPCMethod(method: string, services: KloviServicesShape): method is RPCMethodName {
-  return method in services && !NON_RPC_KEYS.has(method);
+  return Object.hasOwn(services, method) && !NON_RPC_KEYS.has(method);
 }
 
 const rpcHandler = Effect.gen(function* () {
