@@ -20,7 +20,7 @@ import {
   makePluginConfigLayer,
 } from "../packages/plugin-core/src/index.ts";
 import { openCodePlugin } from "../packages/plugin-opencode/src/index.ts";
-import { NodePluginLayer } from "../apps/server/src/effect/platform-node.ts";
+import { NodePluginLayer } from "../packages/server/src/effect/platform-node.ts";
 import { Effect, ManagedRuntime } from "effect";
 
 const runtime = ManagedRuntime.make(NodePluginLayer);
