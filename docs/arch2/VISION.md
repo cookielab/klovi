@@ -100,7 +100,6 @@ Config shape:
 - `container: HTMLElement` — DOM element to render into
 - `client: KloviClient` — server-backed operations
 - `hostBridge: KloviHostBridge` — native capabilities (real or stub)
-- `initialUrl?: string` — optional initial route
 
 Source: `apps/web/src/bootstrap.tsx`
 
@@ -130,15 +129,13 @@ Starts the backend API server. Returns `{ url, stop() }`. Both distribution apps
 
 Key options:
 - `host`, `port` — binding address
-- `mode` — `"standalone"` or `"embedded"`
-- `runtime` — `"auto" | "bun" | "node"` (auto-detected by default)
-- `openBrowser` — whether to launch browser (used by `apps/package`, not desktop)
+- `version` — version string passed to the server
 
 Source: `apps/server/src/server.ts`
 
 ### `POST /api/rpc/:method` — apps/server
 
-HTTP transport for server-backed operations. JSON request/response. One route per method. No desktop-native functionality is exposed here.
+HTTP transport for server-backed operations. JSON request/response. One route per method. No desktop-native functionality is exposed here. Requests dispatch directly through the Effect layer to `KloviServices` — there is no intermediate `rpc.ts` dispatch table.
 
 The HTTP routing that maps `/api/*` to these handlers lives in the distribution app (`apps/package` or `apps/desktop`), not in `apps/server` itself.
 
@@ -155,22 +152,19 @@ Source: `apps/server/src/effect/platform-bun.ts`, `apps/server/src/effect/platfo
 
 ## Current State
 
-The three-app split is already in place:
+All plans (01-30) are complete. The four-app architecture is fully implemented:
 
-- `apps/server` exists with Effect-based services, dual runtime adapters, CLI, and `startKloviServer()`. Currently holds the `@cookielab.io/klovi` package name and includes static file serving + HTTP routing that should move to `apps/package`.
-- `apps/web` exists with `mountKloviApp()`, `KloviClient`, `KloviHostBridge`, capability gating, and the full shared React UI.
-- `apps/desktop` exists with Electrobun shell, native host bridge, and embedded server startup.
+- `apps/server` (`@cookielab.io/klovi-server`) — pure internal backend with Effect-based services, dual runtime adapters (Bun + Node via `@effect/platform`), and `startKloviServer()`. No static file serving, no CLI, no web dependency.
+- `apps/web` — shared React UI with `mountKloviApp()`, `KloviClient`, `KloviHostBridge`, and capability gating.
+- `apps/package` (`@cookielab.io/klovi`) — published NPM package with CLI entrypoint, HTTP composition (`/api/*` to server, `/*` to web assets with SPA fallback), and browser launch.
+- `apps/desktop` — Electrobun shell with native host bridge and embedded server startup.
 - All six `packages/*` are in place and functional.
-
-### Remaining Work
-
-- Create `apps/package` as the published `@cookielab.io/klovi` package.
-- Move HTTP routing composition (`/api/*` + static serving + SPA fallback) from `apps/server` into `apps/package`.
-- Move the `@cookielab.io/klovi` package name and CLI entrypoint from `apps/server` to `apps/package`.
-- Make `apps/server` a pure internal backend package with no static file serving and no dependency on `apps/web`.
-- Complete the Effect platform migration so all server modules are runtime-neutral (plans 13-19 in `docs/arch2/plans/`).
-- Verify desktop embedding still works after the server package is restructured.
-- Verify `npx @cookielab.io/klovi` and `bunx @cookielab.io/klovi` both work end-to-end.
+- RPC dispatches directly through the Effect layer to `KloviServices` (no legacy `rpc.ts` dispatch table).
+- Plugin registry refreshes correctly after settings changes without requiring restart.
+- All plugins (Claude Code, Codex, OpenCode) run under both Bun and Node runtimes.
+- Build pipelines produce JS from TypeScript source for all published packages.
+- Both `npx @cookielab.io/klovi` and `bunx @cookielab.io/klovi` work end-to-end.
+- Desktop app builds, launches, and functions correctly.
 
 ## Constraints
 
