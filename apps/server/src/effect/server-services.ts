@@ -32,6 +32,7 @@ import { loadSettings } from "../services/settings.ts";
 import { ServerConfig } from "./server-config.ts";
 
 export interface KloviServicesShape {
+  readonly acceptRisks: () => { ok: boolean };
   readonly getVersion: () => VersionInfo;
   readonly getStats: () => Promise<{ stats: DashboardStats }>;
   readonly getProjects: () => Promise<{ projects: MergedProject[] }>;
@@ -85,6 +86,7 @@ export const KloviServicesLive = Layer.effect(
     const registry: PluginRegistry = yield* Effect.promise(() => createRegistry(settings));
 
     return {
+      acceptRisks: () => ({ ok: true }),
       getVersion: () => ({ version, commit: config.commit }),
       getStats: () => getStats(registry),
       getProjects: () => getProjects(registry),

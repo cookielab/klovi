@@ -1,24 +1,60 @@
-import { describe, expect, test } from "bun:test";
-import { handleRPC, type RPCContext, RPCError } from "./rpc.ts";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { RPCError } from "./rpc-error.ts";
+import { type KloviServer, startKloviServer } from "./server.ts";
 
-const mockCtx: RPCContext = {
-  registry: {} as RPCContext["registry"],
-  settingsPath: "/tmp/test-settings.json",
-};
+describe("RPC dispatch", () => {
+  let server: KloviServer;
 
-describe("handleRPC", () => {
-  test("returns result for known method", async () => {
-    const result = await handleRPC("getVersion", mockCtx, {});
-    expect(result).toHaveProperty("version");
-    expect(result).toHaveProperty("commit");
+  beforeAll(async () => {
+    server = await startKloviServer({
+      host: "127.0.0.1",
+      port: 0,
+      version: "1.0.0",
+      commit: "test",
+    });
   });
 
-  test("throws RPCError for unknown method", () => {
-    expect(() => handleRPC("nonexistent", mockCtx, {})).toThrow(RPCError);
+  afterAll(() => {
+    server?.stop();
+  });
+
+  test("returns result for known method", async () => {
+    const res = await fetch(`${server.url}/api/rpc/getVersion`, {
+      method: "POST",
+      body: "{}",
+    });
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as { version: string; commit: string };
+    expect(data).toHaveProperty("version");
+    expect(data).toHaveProperty("commit");
+  });
+
+  test("returns 404 for unknown method", async () => {
+    const res = await fetch(`${server.url}/api/rpc/nonexistent`, {
+      method: "POST",
+      body: "{}",
+    });
+    expect(res.status).toBe(404);
+    const data = (await res.json()) as { error: string };
+    expect(data.error).toContain("Unknown method");
   });
 
   test("acceptRisks returns ok", async () => {
-    const result = await handleRPC("acceptRisks", mockCtx, {});
-    expect(result).toEqual({ ok: true });
+    const res = await fetch(`${server.url}/api/rpc/acceptRisks`, {
+      method: "POST",
+      body: "{}",
+    });
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as { ok: boolean };
+    expect(data).toEqual({ ok: true });
+  });
+});
+
+describe("RPCError", () => {
+  test("has status and message", () => {
+    const err = new RPCError(404, "Not found");
+    expect(err.status).toBe(404);
+    expect(err.message).toBe("Not found");
+    expect(err).toBeInstanceOf(Error);
   });
 });
