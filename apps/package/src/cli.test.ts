@@ -29,6 +29,6 @@ describe("CLI smoke tests", () => {
   test("package.json exports server entry", async () => {
     const pkgPath = resolve(import.meta.dir, "../package.json");
     const pkg = await Bun.file(pkgPath).json();
-    expect(pkg.exports?.["./server"]).toBe("./src/server.ts");
+    expect(pkg.exports?.["./server"]).toBe("./dist/server.js");
   });
 });
