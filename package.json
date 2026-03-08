@@ -8,12 +8,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter @cookielab.io/klovi-desktop dev",
     "dev:desktop": "bun run --filter @cookielab.io/klovi-desktop dev",
-    "dev:web": "bun run --filter @cookielab.io/klovi-web dev",
-    "dev:bun": "bun run --filter @cookielab.io/klovi-web dev & bun run --filter @cookielab.io/klovi dev & wait",
-    "dev:node": "bun run --filter @cookielab.io/klovi-web dev & npx tsx apps/package/src/cli.ts & wait",
-    "dev:server": "bun run --filter @cookielab.io/klovi-server start",
+    "dev:bun": "bun run --filter @cookielab.io/klovi dev",
+    "dev:node": "npx tsx apps/package/src/cli.ts",
     "build": "bun run --filter @cookielab.io/klovi-desktop build",
     "build:web": "bun run --filter @cookielab.io/klovi-web build",
     "build:package": "bun run build:web && bun run --filter @cookielab.io/klovi build",
