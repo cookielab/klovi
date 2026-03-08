@@ -165,6 +165,33 @@ These plans remain useful historical context, but they should not be treated as 
 - Task 33 depends on Tasks 31 and 32.
 - Task 34 depends on Tasks 32 and 33.
 
+## Follow-up Alignment Plans
+
+These follow-up plans refine the public npm contract, staging metadata, release wiring, and documentation after the core publish remediation plans:
+
+- [plans/35-align-public-server-export-with-vision.md](./plans/35-align-public-server-export-with-vision.md)
+  Purpose: align `@cookielab.io/klovi/server` with the documented `startKloviServer(options)` contract and remove duplicated server bootstrap logic.
+- [plans/36-finish-package-artifact-metadata-and-publish-guardrails.md](./plans/36-finish-package-artifact-metadata-and-publish-guardrails.md)
+  Purpose: finish staged artifact version/commit metadata flow and block accidental publishing from `apps/package` source.
+- [plans/37-wire-release-flow-to-single-package-npm-publish.md](./plans/37-wire-release-flow-to-single-package-npm-publish.md)
+  Purpose: connect the release flow to the dedicated npm publish workflow without manual version re-entry.
+- [plans/38-document-npm-package-contract-and-refresh-arch2-status.md](./plans/38-document-npm-package-contract-and-refresh-arch2-status.md)
+  Purpose: add npm-facing package docs and refresh Arch2 status documents after the contract/publish alignment work lands.
+
+### Follow-up Alignment Order
+
+1. [35-align-public-server-export-with-vision.md](./plans/35-align-public-server-export-with-vision.md)
+2. [36-finish-package-artifact-metadata-and-publish-guardrails.md](./plans/36-finish-package-artifact-metadata-and-publish-guardrails.md)
+3. [37-wire-release-flow-to-single-package-npm-publish.md](./plans/37-wire-release-flow-to-single-package-npm-publish.md)
+4. [38-document-npm-package-contract-and-refresh-arch2-status.md](./plans/38-document-npm-package-contract-and-refresh-arch2-status.md)
+
+### Follow-up Alignment Dependency Graph
+
+- Task 35 has no prerequisites.
+- Task 36 depends on Task 35.
+- Task 37 depends on Tasks 35 and 36.
+- Task 38 depends on Tasks 35, 36, and 37.
+
 ## Expected End State
 
 When all tasks (01-12) are complete (achieved):
