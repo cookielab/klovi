@@ -11,7 +11,6 @@ import { KloviServicesLive } from "./effect/server-services.ts";
 export interface StartKloviServerOptions {
   host?: string;
   port?: number;
-  mode?: "standalone" | "embedded";
   version?: string;
   commit?: string;
   settingsPath?: string;

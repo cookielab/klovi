@@ -15,7 +15,6 @@ export interface MountKloviAppConfig {
   container: HTMLElement;
   client: KloviClient;
   hostBridge: KloviHostBridge;
-  initialUrl?: string | undefined;
 }
 
 export function mountKloviApp(config: MountKloviAppConfig): void {
