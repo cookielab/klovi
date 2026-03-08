@@ -21,7 +21,7 @@ packages/
   klovi-plugin-claude-code/   Claude Code discovery, parsing, frontend integration
   klovi-plugin-codex/         Codex discovery, parsing, frontend integration
   klovi-plugin-opencode/      OpenCode discovery, parsing, frontend integration
-  klovi-ui/                   reusable feature UI (message, session, search, tool rendering)
+  klovi-ui-components/        reusable feature UI (message, session, search, tool rendering)
   klovi-design-system/        design tokens, UI primitives, global styles, theme hooks
 ```
 

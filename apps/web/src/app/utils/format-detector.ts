@@ -1,1 +1,1 @@
-export { detectOutputFormat } from "@cookielab.io/klovi-ui/utilities";
+export { detectOutputFormat } from "@cookielab.io/klovi-ui-components/utilities";

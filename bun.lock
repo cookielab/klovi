@@ -56,7 +56,7 @@
         "@cookielab.io/klovi-plugin-codex": "workspace:*",
         "@cookielab.io/klovi-plugin-core": "workspace:*",
         "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-        "@cookielab.io/klovi-ui": "workspace:*",
+        "@cookielab.io/klovi-ui-components": "workspace:*",
         "@effect/platform": "*",
         "@effect/platform-bun": "*",
         "@effect/platform-node": "*",
@@ -72,7 +72,7 @@
         "@cookielab.io/klovi-plugin-codex": "workspace:*",
         "@cookielab.io/klovi-plugin-core": "workspace:*",
         "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-        "@cookielab.io/klovi-ui": "workspace:*",
+        "@cookielab.io/klovi-ui-components": "workspace:*",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
       },
@@ -145,8 +145,8 @@
         "effect": "*",
       },
     },
-    "packages/klovi-ui": {
-      "name": "@cookielab.io/klovi-ui",
+    "packages/klovi-ui-components": {
+      "name": "@cookielab.io/klovi-ui-components",
       "version": "0.1.0",
       "dependencies": {
         "react-markdown": "^10.1.0",
@@ -238,7 +238,7 @@
 
     "@cookielab.io/klovi-server": ["@cookielab.io/klovi-server@workspace:apps/server"],
 
-    "@cookielab.io/klovi-ui": ["@cookielab.io/klovi-ui@workspace:packages/klovi-ui"],
+    "@cookielab.io/klovi-ui-components": ["@cookielab.io/klovi-ui-components@workspace:packages/klovi-ui-components"],
 
     "@cookielab.io/klovi-web": ["@cookielab.io/klovi-web@workspace:apps/web"],
 

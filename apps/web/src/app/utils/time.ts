@@ -3,4 +3,4 @@ export {
   formatRelativeTime,
   formatTime,
   formatTimestamp,
-} from "@cookielab.io/klovi-ui/utilities";
+} from "@cookielab.io/klovi-ui-components/utilities";

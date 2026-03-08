@@ -1,4 +1,4 @@
-import { PresentationShell as UIPresentationShell } from "@cookielab.io/klovi-ui/presentation";
+import { PresentationShell as UIPresentationShell } from "@cookielab.io/klovi-ui-components/presentation";
 import { useKloviHostBridge } from "../../../lib/context.ts";
 import type { Turn } from "../../../shared/types.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";

@@ -1,4 +1,4 @@
-import { SearchModal as UISearchModal } from "@cookielab.io/klovi-ui/search";
+import { SearchModal as UISearchModal } from "@cookielab.io/klovi-ui-components/search";
 import type { GlobalSessionResult } from "../../../shared/types.ts";
 
 interface PackageSearchModalProps {

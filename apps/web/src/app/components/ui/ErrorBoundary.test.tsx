@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { ErrorBoundary } from "@cookielab.io/klovi-ui/utilities";
+import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 
 function ThrowingComponent({ message }: { message: string }): never {

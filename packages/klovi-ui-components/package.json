@@ -1,5 +1,5 @@
 {
-  "name": "@cookielab.io/klovi-ui",
+  "name": "@cookielab.io/klovi-ui-components",
   "version": "0.1.0",
   "description": "Klovi-specific UI components organized by domain",
   "type": "module",

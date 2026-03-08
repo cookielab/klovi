@@ -1,4 +1,4 @@
-import { SessionList as UISessionList } from "@cookielab.io/klovi-ui/sessions";
+import { SessionList as UISessionList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";

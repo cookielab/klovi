@@ -1,4 +1,4 @@
-import { ProjectList as UIProjectList } from "@cookielab.io/klovi-ui/sessions";
+import { ProjectList as UIProjectList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useState } from "react";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { Project } from "../../../shared/types.ts";

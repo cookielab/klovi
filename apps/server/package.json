@@ -39,7 +39,7 @@
     "@cookielab.io/klovi-plugin-codex": "workspace:*",
     "@cookielab.io/klovi-plugin-core": "workspace:*",
     "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-    "@cookielab.io/klovi-ui": "workspace:*",
+    "@cookielab.io/klovi-ui-components": "workspace:*",
     "effect": "*",
     "@effect/platform": "*",
     "@effect/platform-bun": "*",

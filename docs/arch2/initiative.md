@@ -113,7 +113,7 @@ Responsibilities:
 - OpenCode discovery and parsing
 - OpenCode frontend plugin integration
 
-#### `packages/klovi-ui`
+#### `packages/klovi-ui-components`
 
 - reusable feature UI
 - message/session/presentation/search/tool rendering

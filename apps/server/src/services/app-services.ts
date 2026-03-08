@@ -1,5 +1,5 @@
 import { access, rm } from "node:fs/promises";
-import type { GlobalSessionResult, SessionSummary } from "@cookielab.io/klovi-ui/types";
+import type { GlobalSessionResult, SessionSummary } from "@cookielab.io/klovi-ui-components/types";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
 import { sortByIsoDesc } from "./iso-time.ts";

@@ -4,7 +4,7 @@
 
 **Goal:** Audit and reduce `apps/desktop`'s direct dependencies on `packages/*`, re-exporting through `apps/web` where possible, so the desktop dependency graph aligns with VISION.md's intent.
 
-**Architecture:** VISION.md says `apps/desktop` depends on `apps/server` and `apps/web`. Currently `apps/desktop/package.json` also lists direct deps on `klovi-design-system`, `klovi-ui`, `klovi-plugin-core`, and all three plugin packages. The webview entry (`src/views/main/index.ts`) directly imports `@cookielab.io/klovi-design-system/globals`. These should flow through `apps/web` where possible.
+**Architecture:** VISION.md says `apps/desktop` depends on `apps/server` and `apps/web`. Currently `apps/desktop/package.json` also lists direct deps on `klovi-design-system`, `klovi-ui-components`, `klovi-plugin-core`, and all three plugin packages. The webview entry (`src/views/main/index.ts`) directly imports `@cookielab.io/klovi-design-system/globals`. These should flow through `apps/web` where possible.
 
 **Tech Stack:** TypeScript, Electrobun
 
