@@ -23,13 +23,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@cookielab.io/klovi-plugin-claude-code": "workspace:*",
-    "@cookielab.io/klovi-plugin-codex": "workspace:*",
-    "@cookielab.io/klovi-plugin-core": "workspace:*",
     "@cookielab.io/klovi-server": "workspace:*",
-    "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-    "@cookielab.io/klovi-design-system": "workspace:*",
-    "@cookielab.io/klovi-ui": "workspace:*",
     "@cookielab.io/klovi-web": "workspace:*",
     "electrobun": "^1.14.4",
     "react": "^19.2.4",
