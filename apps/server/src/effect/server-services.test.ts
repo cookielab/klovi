@@ -72,30 +72,76 @@ describe("KloviServicesLive registry refresh", () => {
     });
   });
 
-  test("resetSettings refreshes registry", async () => {
+  test("resetSettings refreshes registry and restores default plugin availability", async () => {
     await mkdir(testDir, { recursive: true });
     const settings = getDefaultSettings();
-    // Disable claude-code in saved settings
-    const claudePlugin = settings.plugins["claude-code"];
-    if (claudePlugin) claudePlugin.enabled = false;
+    // Disable ALL plugins in saved settings
+    for (const pluginId of Object.keys(settings.plugins)) {
+      const plugin = settings.plugins[pluginId];
+      if (plugin) plugin.enabled = false;
+    }
     await saveSettings(settingsPath, settings);
 
     await runWithServices(async (services) => {
-      // Initially claude-code is disabled
-      let registry = services.getRegistry();
-      const claudeRegistered = registry.getAllPlugins().find((p) => p.id === "claude-code");
-      expect(claudeRegistered).toBeUndefined();
+      // Initially all plugins are disabled
+      const registryBefore = services.getRegistry();
+      expect(registryBefore.getAllPlugins()).toHaveLength(0);
 
       // Reset settings — goes back to defaults (all enabled)
       await services.resetSettings();
 
-      // After reset, registry is rebuilt from defaults
-      registry = services.getRegistry();
-      // The default settings enable all plugins, so the registry is rebuilt
-      // (whether claude-code appears depends on data availability, but
-      // the point is that the registry object itself is a fresh instance)
-      // We verify the registry was rebuilt by checking it's different from before
-      expect(registry).toBeDefined();
+      // After reset, plugin settings should reflect defaults (all enabled)
+      const { plugins } = await services.getPluginSettings();
+      for (const plugin of plugins) {
+        expect(plugin.enabled).toBe(true);
+      }
+
+      // The registry should be a new instance rebuilt from defaults
+      const registryAfter = services.getRegistry();
+      expect(registryAfter).not.toBe(registryBefore);
+    });
+  });
+
+  test("updatePluginSetting with dataDir change affects subsequent registry-backed reads", async () => {
+    await mkdir(testDir, { recursive: true });
+    await saveSettings(settingsPath, getDefaultSettings());
+
+    await runWithServices(async (services) => {
+      const customDataDir = join(testDir, "custom-claude-data");
+
+      // Update claude-code's dataDir to a custom path
+      await services.updatePluginSetting({
+        pluginId: "claude-code",
+        dataDir: customDataDir,
+      });
+
+      // The registry should have been rebuilt. Since the custom dataDir
+      // does not contain valid data, claude-code should NOT be registered.
+      const registry = services.getRegistry();
+      const claudeRegistered = registry.getAllPlugins().find((p) => p.id === "claude-code");
+      expect(claudeRegistered).toBeUndefined();
+
+      // Verify the settings were persisted with the new dataDir
+      const { plugins } = await services.getPluginSettings();
+      const claudeSettings = plugins.find((p) => p.id === "claude-code");
+      expect(claudeSettings).toBeDefined();
+      expect(claudeSettings?.dataDir).toBe(customDataDir);
+    });
+  });
+
+  test("failed updatePluginSetting does not report success", async () => {
+    await mkdir(testDir, { recursive: true });
+    await saveSettings(settingsPath, getDefaultSettings());
+
+    await runWithServices(async (services) => {
+      // Updating an unknown plugin should throw — the error must propagate,
+      // not be silently swallowed as a successful no-op
+      await expect(
+        services.updatePluginSetting({
+          pluginId: "nonexistent-plugin",
+          enabled: false,
+        }),
+      ).rejects.toThrow("Unknown plugin: nonexistent-plugin");
     });
   });
 
