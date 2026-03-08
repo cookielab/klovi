@@ -17,23 +17,8 @@ let updateManager: UpdateManager | null = null;
 let serverUrl = "";
 
 function getSettingsPath(): string {
-  try {
-    return join(Utils.paths.userData, "settings.json");
-  } catch {
-    const home = Bun.env["HOME"] ?? "";
-    if (process.platform === "darwin") {
-      return join(
-        home,
-        "Library",
-        "Application Support",
-        "io.cookielab.klovi",
-        "stable",
-        "settings.json",
-      );
-    }
-    const configHome = Bun.env["XDG_CONFIG_HOME"] ?? join(home, ".config");
-    return join(configHome, "klovi", "settings.json");
-  }
+  const home = Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "";
+  return join(home, ".klovi", "settings.json");
 }
 
 function getUpdateManager(): UpdateManager {
@@ -43,7 +28,7 @@ function getUpdateManager(): UpdateManager {
       platform:
         process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux",
       arch: process.arch === "arm64" ? "arm64" : "x64",
-      settingsPath: getSettingsPath(),
+      settingsPath,
       appDataDir: Utils.paths.userData,
     });
   }
@@ -51,9 +36,11 @@ function getUpdateManager(): UpdateManager {
 }
 
 // Start embedded server
+const settingsPath = getSettingsPath();
 const server = await startKloviServer({
   host: "127.0.0.1",
   port: 0,
+  settingsPath,
 });
 serverUrl = server.url;
 
@@ -80,9 +67,9 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         const selected = paths[0];
         return { path: selected && selected !== "" ? selected : null };
       },
-      getUpdateSettings: () => getUpdateSettings(getSettingsPath()),
+      getUpdateSettings: () => getUpdateSettings(settingsPath),
       updateUpdateSettings: async (params) => {
-        const result = await updateUpdateSettings(getSettingsPath(), params);
+        const result = await updateUpdateSettings(settingsPath, params);
         await mgr.restartSchedule();
         return result;
       },
