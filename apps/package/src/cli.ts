@@ -10,7 +10,7 @@ function resolveStaticDir(): string {
   const builtPath = resolve(__dir, "web");
   if (existsSync(builtPath)) return builtPath;
   // When running from source: fall back to workspace node_modules
-  return resolve(__dir, "../node_modules/@cookielab.io/klovi-web/dist");
+  return resolve(__dir, "../node_modules/@cookielab.io/klovi-ui/dist");
 }
 
 // Both src/ and dist/ are direct children of apps/package/

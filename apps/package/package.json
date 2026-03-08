@@ -29,13 +29,13 @@
     "build": "rm -rf dist && bun run build:entrypoints && bun run build:shebang && bun run build:web-assets && chmod +x dist/cli.js",
     "build:entrypoints": "bun build src/cli.ts src/server.ts --outdir dist --target node --format esm --external effect --external @effect/platform --external @effect/platform-bun --external @effect/platform-node",
     "build:shebang": "printf '#!/usr/bin/env node\\n' | cat - dist/cli.js > dist/cli.tmp && mv dist/cli.tmp dist/cli.js",
-    "build:web-assets": "rm -rf dist/web && cp -r ../web/dist dist/web",
+    "build:web-assets": "rm -rf dist/web && cp -r ../../packages/ui/dist dist/web",
     "prepublishOnly": "bun run build",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@cookielab.io/klovi-server": "workspace:*",
-    "@cookielab.io/klovi-web": "workspace:*",
+    "@cookielab.io/klovi-ui": "workspace:*",
     "effect": "*",
     "@effect/platform": "*",
     "@effect/platform-bun": "*",
