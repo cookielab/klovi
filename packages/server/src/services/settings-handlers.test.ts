@@ -3,6 +3,7 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  completeOnboarding,
   getGeneralSettings,
   getPluginSettings,
   isFirstLaunch,
@@ -145,5 +146,27 @@ describe("settings RPC handlers", () => {
   test("resetSettings is idempotent when file does not exist", async () => {
     const result = await resetSettings(settingsPath);
     expect(result.ok).toBe(true);
+  });
+
+  test("completeOnboarding creates settings.json when missing", async () => {
+    const result = await completeOnboarding(settingsPath);
+    expect(result.ok).toBe(true);
+    expect((await isFirstLaunch(settingsPath)).firstLaunch).toBe(false);
+    const loaded = await loadSettings(settingsPath);
+    expect(loaded.version).toBe(1);
+    expect(loaded.plugins["claude-code"]?.enabled).toBe(true);
+  });
+
+  test("completeOnboarding does not overwrite existing settings", async () => {
+    await mkdir(testDir, { recursive: true });
+    const settings = getDefaultSettings();
+    settings.plugins["claude-code"] = { enabled: false, dataDir: "/custom" };
+    await saveSettings(settingsPath, settings);
+
+    await completeOnboarding(settingsPath);
+
+    const loaded = await loadSettings(settingsPath);
+    expect(loaded.plugins["claude-code"]?.enabled).toBe(false);
+    expect(loaded.plugins["claude-code"]?.dataDir).toBe("/custom");
   });
 });
