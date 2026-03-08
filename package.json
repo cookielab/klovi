@@ -12,7 +12,7 @@
     "dev:bun": "bun run --filter @cookielab.io/klovi dev",
     "dev:node": "npx tsx apps/package/src/cli.ts",
     "build": "bun run --filter @cookielab.io/klovi-desktop build",
-    "build:web": "bun run --filter @cookielab.io/klovi-web build",
+    "build:web": "bun run --filter @cookielab.io/klovi-ui build",
     "build:package": "bun run build:web && bun run --filter @cookielab.io/klovi build",
     "test": "bun test",
     "test:node-smoke": "npx tsx scripts/plugin-runtime-node-smoke.ts",

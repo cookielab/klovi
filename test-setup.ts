@@ -1,5 +1,5 @@
 import { GlobalWindow } from "happy-dom";
-import { setupMockRPC } from "./apps/web/src/app/test-helpers/mock-rpc.ts";
+import { setupMockRPC } from "./packages/ui/src/app/test-helpers/mock-rpc.ts";
 
 const window = new GlobalWindow();
 

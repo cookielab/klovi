@@ -1,13 +1,13 @@
-import type { KloviHostBridge, KloviHostCapabilities } from "@cookielab.io/klovi-web/bootstrap";
-import { createHttpClient, mountKloviApp } from "@cookielab.io/klovi-web/bootstrap";
+import type { KloviHostBridge, KloviHostCapabilities } from "@cookielab.io/klovi-ui/bootstrap";
+import { createHttpClient, mountKloviApp } from "@cookielab.io/klovi-ui/bootstrap";
 import { Electroview } from "electrobun/view";
 import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types.ts";
 
 // Import design system globals (tokens, reset, fonts) via apps/web
-import "@cookielab.io/klovi-web/styles";
+import "@cookielab.io/klovi-ui/styles";
 
 // Import app-specific styles
-import "@cookielab.io/klovi-web/app/App.css";
+import "@cookielab.io/klovi-ui/app/App.css";
 
 type MenuAction =
   | "cycleTheme"
