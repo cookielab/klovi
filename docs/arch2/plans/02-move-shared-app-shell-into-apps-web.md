@@ -32,8 +32,8 @@ Klovi's current React shell lives under `apps/desktop/src/frontend`. That preven
 1. Move the app shell code from `apps/desktop/src/frontend` into `apps/web/src/app`.
 2. Preserve current structure where practical so test and component names remain recognizable.
 3. Update imports so the shared app shell still uses:
-   - `packages/klovi-ui-components`
-   - `packages/klovi-design-system`
+   - `packages/ui-components`
+   - `packages/design-system`
    - existing plugin frontend packages
 4. Make `apps/web/src/bootstrap.tsx` mount the moved `AppGate` or equivalent shared root.
 5. Update `apps/desktop/src/views/main/index.ts` so it imports and mounts the shared app from `apps/web`.

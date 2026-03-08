@@ -27,17 +27,17 @@ This task isolates SQLite behind an Effect service and keeps all OpenCode discov
 
 ## Files/directories to create or change
 
-- `packages/klovi-plugin-opencode/package.json`
-- `packages/klovi-plugin-opencode/src/index.ts`
-- `packages/klovi-plugin-opencode/src/config.ts`
-- `packages/klovi-plugin-opencode/src/db.ts`
-- `packages/klovi-plugin-opencode/src/discovery.ts`
-- `packages/klovi-plugin-opencode/src/parser.ts`
-- `packages/klovi-plugin-opencode/src/**/*.test.ts`
+- `packages/plugin-opencode/package.json`
+- `packages/plugin-opencode/src/index.ts`
+- `packages/plugin-opencode/src/config.ts`
+- `packages/plugin-opencode/src/db.ts`
+- `packages/plugin-opencode/src/discovery.ts`
+- `packages/plugin-opencode/src/parser.ts`
+- `packages/plugin-opencode/src/**/*.test.ts`
 - new adapter files such as:
-  - `packages/klovi-plugin-opencode/src/sqlite-service.ts`
-  - `packages/klovi-plugin-opencode/src/runtime/bun-sqlite.ts`
-  - `packages/klovi-plugin-opencode/src/runtime/node-sqlite.ts`
+  - `packages/plugin-opencode/src/sqlite-service.ts`
+  - `packages/plugin-opencode/src/runtime/bun-sqlite.ts`
+  - `packages/plugin-opencode/src/runtime/node-sqlite.ts`
 
 ## Implementation steps
 
