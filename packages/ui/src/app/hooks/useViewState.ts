@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useKloviClient } from "../../lib/context.ts";
 import type { Project, SessionSummary } from "../../shared/types.ts";
 import { restoreFromHash, type ViewState, viewToHash } from "../view-state.ts";
@@ -13,6 +13,7 @@ interface UseViewStateResult {
   goHome: () => void;
   goHidden: () => void;
   goSettings: () => void;
+  closeSettings: () => void;
   canPresent: boolean;
   togglePresentation: () => void;
 }
@@ -21,6 +22,7 @@ export function useViewState(): UseViewStateResult {
   const client = useKloviClient();
   const [view, setView] = useState<ViewState>({ kind: "home" });
   const [ready, setReady] = useState(false);
+  const previousView = useRef<ViewState>({ kind: "home" });
 
   useEffect(() => {
     void restoreFromHash(client).then((v) => {
@@ -65,7 +67,18 @@ export function useViewState(): UseViewStateResult {
 
   const goHome = useCallback(() => setView({ kind: "home" }), []);
   const goHidden = useCallback(() => setView({ kind: "hidden" }), []);
-  const goSettings = useCallback(() => setView({ kind: "settings" }), []);
+  const goSettings = useCallback(() => {
+    setView((current) => {
+      if (current.kind === "settings") {
+        return previousView.current;
+      }
+      previousView.current = current;
+      return { kind: "settings" };
+    });
+  }, []);
+  const closeSettings = useCallback(() => {
+    setView(previousView.current);
+  }, []);
   const canPresent = view.kind === "session" || view.kind === "subagent";
 
   const togglePresentation = useCallback(() => {
@@ -86,6 +99,7 @@ export function useViewState(): UseViewStateResult {
     goHome,
     goHidden,
     goSettings,
+    closeSettings,
     canPresent,
     togglePresentation,
   };
