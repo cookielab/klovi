@@ -34,7 +34,7 @@ describe("Sidebar", () => {
       </Sidebar>,
       { wrapper: MockProviders },
     );
-    expect(getByTitle("Search sessions (Cmd+K)")).toBeTruthy();
+    expect(getByTitle("Search sessions (Ctrl+K)")).toBeTruthy();
   });
 
   test("does not render search button when onSearchClick not provided", () => {
@@ -44,7 +44,7 @@ describe("Sidebar", () => {
       </Sidebar>,
       { wrapper: MockProviders },
     );
-    expect(container.querySelector("[title='Search sessions (Cmd+K)']")).toBeNull();
+    expect(container.querySelector("[title='Search sessions (Ctrl+K)']")).toBeNull();
   });
 
   test("renders version info after fetch", async () => {
@@ -83,7 +83,7 @@ describe("Sidebar", () => {
       </Sidebar>,
       { wrapper: MockProviders },
     );
-    expect(getByTitle("Settings (Cmd+,)")).toBeTruthy();
+    expect(getByTitle("Settings (Ctrl+,)")).toBeTruthy();
   });
 
   test("does not render settings button when onSettingsClick not provided", () => {
@@ -93,7 +93,7 @@ describe("Sidebar", () => {
       </Sidebar>,
       { wrapper: MockProviders },
     );
-    expect(container.querySelector("[title='Settings (Cmd+,)']")).toBeNull();
+    expect(container.querySelector("[title='Settings (Ctrl+,)']")).toBeNull();
   });
 
   test("renders footer with cookielab link", () => {
