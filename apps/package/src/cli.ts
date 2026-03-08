@@ -6,11 +6,11 @@ import { startKloviPackageServer } from "./server.ts";
 const __dir = import.meta.dirname;
 
 function resolveStaticDir(): string {
-  // When running from built dist: __dir = dist/ → dist/web
+  // Built artifact: __dir = dist/ → dist/web
+  // Source dev mode: __dir = src/ → ../packages/ui/dist (resolved via workspace)
   const builtPath = resolve(__dir, "web");
   if (existsSync(builtPath)) return builtPath;
-  // When running from source: fall back to workspace node_modules
-  return resolve(__dir, "../node_modules/@cookielab.io/klovi-ui/dist");
+  return resolve(__dir, "../../packages/ui/dist");
 }
 
 // Both src/ and dist/ are direct children of apps/package/
