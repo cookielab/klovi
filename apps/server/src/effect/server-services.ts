@@ -67,7 +67,7 @@ export interface KloviServicesShape {
     checkIntervalHours?: number;
     autoDownload?: boolean;
   }) => Promise<UpdateSettingsInfo>;
-  readonly registry: PluginRegistry;
+  readonly getRegistry: () => PluginRegistry;
   readonly settingsPath: string;
 }
 
@@ -83,7 +83,12 @@ export const KloviServicesLive = Layer.effect(
     const { settingsPath } = config;
     const version = config.version === "0.0.0" ? "dev" : config.version;
     const settings = yield* Effect.promise(() => loadSettings(settingsPath));
-    const registry: PluginRegistry = yield* Effect.promise(() => createRegistry(settings));
+    let registry: PluginRegistry = yield* Effect.promise(() => createRegistry(settings));
+
+    async function refreshRegistry(): Promise<void> {
+      const freshSettings = await loadSettings(settingsPath);
+      registry = await createRegistry(freshSettings);
+    }
 
     return {
       acceptRisks: () => ({ ok: true }),
@@ -95,14 +100,22 @@ export const KloviServicesLive = Layer.effect(
       getSubAgent: (params) => getSubAgent(registry, params),
       searchSessions: () => searchSessions(registry),
       getPluginSettings: () => getPluginSettings(settingsPath),
-      updatePluginSetting: (params) => updatePluginSetting(settingsPath, params),
+      updatePluginSetting: async (params) => {
+        const result = await updatePluginSetting(settingsPath, params);
+        await refreshRegistry();
+        return result;
+      },
       getGeneralSettings: () => getGeneralSettings(settingsPath),
       updateGeneralSettings: (params) => updateGeneralSettings(settingsPath, params),
       isFirstLaunch: () => isFirstLaunch(settingsPath),
-      resetSettings: () => resetSettings(settingsPath),
+      resetSettings: async () => {
+        const result = await resetSettings(settingsPath);
+        await refreshRegistry();
+        return result;
+      },
       getUpdateSettings: () => getUpdateSettings(settingsPath),
       updateUpdateSettings: (params) => updateUpdateSettings(settingsPath, params),
-      registry,
+      getRegistry: () => registry,
       settingsPath,
     };
   }),

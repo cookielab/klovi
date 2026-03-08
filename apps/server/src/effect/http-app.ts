@@ -14,7 +14,7 @@ type RPCMethodName = {
  * Fields on KloviServicesShape that are NOT callable RPC methods.
  * IMPORTANT: If you add a non-callable field to KloviServicesShape, add it here too.
  */
-const NON_RPC_KEYS: ReadonlySet<string> = new Set(["registry", "settingsPath"]);
+const NON_RPC_KEYS: ReadonlySet<string> = new Set(["getRegistry", "settingsPath"]);
 
 function isRPCMethod(method: string, services: KloviServicesShape): method is RPCMethodName {
   return Object.hasOwn(services, method) && !NON_RPC_KEYS.has(method);
