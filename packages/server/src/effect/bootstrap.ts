@@ -2,7 +2,6 @@ import { join } from "node:path";
 import { HttpServer } from "@effect/platform";
 import { Cause, Effect, Fiber, Layer } from "effect";
 import { makeBunServerLayer } from "./platform-bun.ts";
-import { makeNodeServerLayer } from "./platform-node.ts";
 import { setPluginLayer } from "./plugin-runtime.ts";
 import { ServerConfig } from "./server-config.ts";
 import { KloviServicesLive } from "./server-services.ts";
@@ -54,10 +53,15 @@ export async function bootstrapServer(
   const commit = options.commit ?? "";
   const rt = detectRuntime(options.runtime);
 
-  // Configure plugin layer for the selected runtime
+  // Configure plugin layer and platform layer for the selected runtime
+  // biome-ignore lint/suspicious/noExplicitAny: platform layers have different type signatures
+  let platformLayer: Layer.Layer<any, any, any>;
   if (rt === "node") {
-    const { NodePluginLayer } = await import("./platform-node.ts");
+    const { NodePluginLayer, makeNodeServerLayer } = await import("./platform-node.ts");
     setPluginLayer(NodePluginLayer);
+    platformLayer = makeNodeServerLayer({ host, port });
+  } else {
+    platformLayer = makeBunServerLayer({ hostname: host, port });
   }
 
   const configLayer = Layer.succeed(ServerConfig, {
@@ -69,11 +73,6 @@ export async function bootstrapServer(
   });
 
   const servicesLayer = KloviServicesLive.pipe(Layer.provide(configLayer));
-
-  const platformLayer =
-    rt === "bun"
-      ? makeBunServerLayer({ hostname: host, port })
-      : makeNodeServerLayer({ host, port });
 
   let resolveAddress!: (url: string) => void;
   let rejectAddress!: (err: unknown) => void;
@@ -96,7 +95,7 @@ export async function bootstrapServer(
     Layer.merge(serveLayer, addressCapture) as Layer.Layer<never, never, never>
   ).pipe(Layer.provide(servicesLayer), Layer.provide(configLayer), Layer.provide(platformLayer));
 
-  const fiber = Effect.runFork(Layer.launch(fullLayer));
+  const fiber = Effect.runFork(Layer.launch(fullLayer as Layer.Layer<never, never, never>));
 
   // Surface fiber failures instead of hanging silently
   Effect.runFork(
