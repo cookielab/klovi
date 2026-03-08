@@ -74,7 +74,6 @@ export async function startKloviPackageServer(
   const configLayer = Layer.succeed(ServerConfig, {
     host,
     port,
-    staticDir: options.staticDir,
     settingsPath,
     version,
     commit,

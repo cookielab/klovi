@@ -1,7 +1,6 @@
 import { HttpRouter, HttpServer, HttpServerRequest, HttpServerResponse } from "@effect/platform";
 import { Effect } from "effect";
 import { handleRPC, RPCError } from "../rpc.ts";
-import { ServerConfig } from "./server-config.ts";
 import { KloviServices } from "./server-services.ts";
 
 const rpcHandler = Effect.gen(function* () {
@@ -49,24 +48,6 @@ const rpcHandler = Effect.gen(function* () {
   }),
 );
 
-const staticHandler = Effect.gen(function* () {
-  const config = yield* ServerConfig;
-  if (!config.staticDir) {
-    return HttpServerResponse.unsafeJson({ error: "Not found" }, { status: 404 });
-  }
-  const req = yield* HttpServerRequest.HttpServerRequest;
-  const url = new URL(req.url);
-  const filePath = url.pathname === "/" ? "/index.html" : url.pathname;
-  const staticDir = config.staticDir;
-
-  return yield* HttpServerResponse.file(`${staticDir}${filePath}`).pipe(
-    Effect.orElse(() => HttpServerResponse.file(`${staticDir}/index.html`)),
-    Effect.orElse(() =>
-      Effect.succeed(HttpServerResponse.unsafeJson({ error: "Not found" }, { status: 404 })),
-    ),
-  );
-});
-
 const emptyMethodHandler = Effect.succeed(
   HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: 400 }),
 );
@@ -77,9 +58,11 @@ export const makeRpcRouter = () =>
     HttpRouter.post("/api/rpc/:method", rpcHandler),
   );
 
-export const makeHttpApp = () => {
-  const router = makeRpcRouter();
-  return router.pipe(Effect.catchTag("RouteNotFound", () => staticHandler));
-};
+const notFoundHandler = Effect.succeed(
+  HttpServerResponse.unsafeJson({ error: "Not found" }, { status: 404 }),
+);
+
+export const makeHttpApp = () =>
+  makeRpcRouter().pipe(Effect.catchTag("RouteNotFound", () => notFoundHandler));
 
 export const makeServeLayer = () => makeHttpApp().pipe(HttpServer.serve());

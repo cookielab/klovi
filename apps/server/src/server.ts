@@ -1,4 +1,3 @@
-import { execFile } from "node:child_process";
 import { join } from "node:path";
 import { HttpServer } from "@effect/platform";
 import { Effect, Fiber, Layer } from "effect";
@@ -13,8 +12,6 @@ export interface StartKloviServerOptions {
   host?: string;
   port?: number;
   mode?: "standalone" | "embedded";
-  staticDir?: string | undefined;
-  openBrowser?: boolean;
   version?: string;
   commit?: string;
   settingsPath?: string;
@@ -50,13 +47,6 @@ function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "no
   return typeof globalThis.Bun !== "undefined" ? "bun" : "node";
 }
 
-function openInBrowser(url: string): void {
-  const cmd =
-    process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
-  const args = process.platform === "win32" ? ["/c", "start", url] : [url];
-  execFile(cmd, args, () => {});
-}
-
 export async function startKloviServer(
   options: StartKloviServerOptions = {},
 ): Promise<KloviServer> {
@@ -76,7 +66,6 @@ export async function startKloviServer(
   const configLayer = Layer.succeed(ServerConfig, {
     host,
     port,
-    staticDir: options.staticDir,
     settingsPath,
     version,
     commit,
@@ -111,10 +100,6 @@ export async function startKloviServer(
 
   const fiber = Effect.runFork(Layer.launch(fullLayer));
   const url = await addressPromise;
-
-  if (options.openBrowser) {
-    openInBrowser(url);
-  }
 
   return {
     url,
