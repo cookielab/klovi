@@ -279,7 +279,7 @@ export function SettingsView({
   const capabilities = hostBridge.getCapabilities();
   const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [changed, setChanged] = useState(false);
+  const [_changed, setChanged] = useState(false);
   const [showSecurityWarning, setShowSecurityWarning] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -310,16 +310,12 @@ export function SettingsView({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
-        if (changed) {
-          onNavigateHome();
-        } else {
-          history.back();
-        }
+        onNavigateHome();
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [changed, onNavigateHome]);
+  }, [onNavigateHome]);
 
   const handleToggle = useCallback(
     (pluginId: string, enabled: boolean) => {
