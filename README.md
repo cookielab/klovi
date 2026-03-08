@@ -42,7 +42,7 @@ Klovi is a Bun workspace monorepo with these key workspaces:
 - `@cookielab.io/klovi-plugin-claude-code` - Claude Code discovery/parsing
 - `@cookielab.io/klovi-plugin-codex` - Codex discovery/parsing
 - `@cookielab.io/klovi-plugin-opencode` - OpenCode discovery/parsing
-- `@cookielab.io/klovi-ui` - reusable UI feature components
+- `@cookielab.io/klovi-ui-components` - reusable UI feature components
 - `@cookielab.io/klovi-design-system` - design tokens and UI primitives
 
 ## Features
@@ -111,7 +111,7 @@ Klovi is a Bun workspace monorepo with these key workspaces:
 - [Bun](https://bun.sh) - runtime, bundler, test runner
 - React 19 + TypeScript (strict mode)
 - Bun workspaces monorepo (`apps/*` + `packages/*`)
-- `@cookielab.io/klovi-ui` for feature UI modules
+- `@cookielab.io/klovi-ui-components` for feature UI modules
 - `@cookielab.io/klovi-design-system` for primitives/tokens/globals
 - react-markdown + remark-gfm
 - react-syntax-highlighter (Prism themes: oneDark/oneLight)

@@ -28,7 +28,7 @@ bun test packages/klovi-plugin-core/src   # Core plugin package tests
 bun test packages/klovi-plugin-claude-code/src
 bun test packages/klovi-plugin-codex/src
 bun test packages/klovi-plugin-opencode/src
-bun test packages/klovi-ui/src
+bun test packages/klovi-ui-components/src
 bun test packages/klovi-design-system/src
 bun test --watch
 ```
@@ -77,7 +77,7 @@ entire suite.
 | `@cookielab.io/klovi-plugin-claude-code` | `packages/klovi-plugin-claude-code/src/discovery.test.ts`, `parser.test.ts`, `subagent.test.ts`, `command-message.test.ts`, `shared/*.test.ts` |
 | `@cookielab.io/klovi-plugin-codex` | `packages/klovi-plugin-codex/src/discovery.test.ts`, `parser.test.ts`, `session-index.test.ts`, `extractors.test.ts`, `shared/*.test.ts` |
 | `@cookielab.io/klovi-plugin-opencode` | `packages/klovi-plugin-opencode/src/discovery.test.ts`, `parser.test.ts`, `db.test.ts`, `shared/json-utils.test.ts` |
-| `@cookielab.io/klovi-ui` | `packages/klovi-ui/src/presentation/*.test.ts*`, `search/SearchModal.test.tsx`, `sessions/ProjectList.test.tsx`, `tools/ToolCallDefaults.test.ts`, `utilities/*.test.ts`, `types/index.test.ts` |
+| `@cookielab.io/klovi-ui-components` | `packages/klovi-ui-components/src/presentation/*.test.ts*`, `search/SearchModal.test.tsx`, `sessions/ProjectList.test.tsx`, `tools/ToolCallDefaults.test.ts`, `utilities/*.test.ts`, `types/index.test.ts` |
 | `@cookielab.io/klovi-design-system` | `packages/klovi-design-system/src/components/components.test.tsx`, `hooks/useTheme.test.ts` |
 
 ## Common Patterns
@@ -115,7 +115,7 @@ OpenCode tests build temporary SQLite DB fixtures matching expected tables (`ses
 
 ### 4. Package component tests
 
-`@cookielab.io/klovi-ui` and `@cookielab.io/klovi-design-system` tests validate reusable component behavior independent of app-shell wrappers.
+`@cookielab.io/klovi-ui-components` and `@cookielab.io/klovi-design-system` tests validate reusable component behavior independent of app-shell wrappers.
 
 ## Writing New Tests
 

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
 import { PluginError, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
-import type { SessionSummary } from "@cookielab.io/klovi-ui/types";
+import type { SessionSummary } from "@cookielab.io/klovi-ui-components/types";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import type { MergedProject, PluginProject, ToolPlugin } from "./plugin-types.ts";

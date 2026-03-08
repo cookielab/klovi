@@ -1,4 +1,4 @@
-import { HiddenProjectList as UIHiddenProjectList } from "@cookielab.io/klovi-ui/sessions";
+import { HiddenProjectList as UIHiddenProjectList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { Project } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";

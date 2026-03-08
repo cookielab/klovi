@@ -23,7 +23,7 @@
     "@cookielab.io/klovi-plugin-codex": "workspace:*",
     "@cookielab.io/klovi-plugin-core": "workspace:*",
     "@cookielab.io/klovi-plugin-opencode": "workspace:*",
-    "@cookielab.io/klovi-ui": "workspace:*",
+    "@cookielab.io/klovi-ui-components": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

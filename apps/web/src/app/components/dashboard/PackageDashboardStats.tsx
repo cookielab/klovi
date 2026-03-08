@@ -1,4 +1,4 @@
-import { DashboardStats as UIDashboardStats } from "@cookielab.io/klovi-ui/sessions";
+import { DashboardStats as UIDashboardStats } from "@cookielab.io/klovi-ui-components/sessions";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { DashboardStats as Stats } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";

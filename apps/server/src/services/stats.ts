@@ -4,7 +4,7 @@ import type {
   SessionSummary,
   TokenUsage,
   Turn,
-} from "@cookielab.io/klovi-ui/types";
+} from "@cookielab.io/klovi-ui-components/types";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import type { PluginRegistry } from "./registry.ts";
 import { parseSessionId } from "./session-id.ts";

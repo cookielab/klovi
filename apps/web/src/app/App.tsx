@@ -1,4 +1,4 @@
-import { ErrorBoundary } from "@cookielab.io/klovi-ui/utilities";
+import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
 import { useKloviClient, useKloviHostBridge } from "../lib/context.ts";

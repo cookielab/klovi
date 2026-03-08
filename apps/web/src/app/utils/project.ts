@@ -1,1 +1,1 @@
-export { projectDisplayName } from "@cookielab.io/klovi-ui/sessions";
+export { projectDisplayName } from "@cookielab.io/klovi-ui-components/sessions";

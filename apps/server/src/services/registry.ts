@@ -3,7 +3,7 @@ import {
   type SessionIdEncoder as CoreSessionIdEncoder,
   encodeResolvedPath,
 } from "@cookielab.io/klovi-plugin-core";
-import type { Session, SessionSummary } from "@cookielab.io/klovi-ui/types";
+import type { Session, SessionSummary } from "@cookielab.io/klovi-ui-components/types";
 
 export { encodeResolvedPath };
 

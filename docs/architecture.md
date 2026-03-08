@@ -8,7 +8,7 @@ The repository is a Bun workspace monorepo:
 
 - Plugin logic is split into workspace packages (`@cookielab.io/klovi-plugin-*`)
 - Shared UI primitives live in `@cookielab.io/klovi-design-system`
-- Reusable feature UI lives in `@cookielab.io/klovi-ui`
+- Reusable feature UI lives in `@cookielab.io/klovi-ui-components`
 - The desktop app shell (routing, settings/onboarding flow, Electrobun main process) lives in `apps/desktop/src/`
 
 There is no HTTP server.
@@ -59,7 +59,7 @@ Klovi/
 │   ├── klovi-plugin-codex/           # Codex discovery + parsing + frontend plugin
 │   ├── klovi-plugin-opencode/        # OpenCode discovery + parsing + frontend plugin
 │   ├── klovi-design-system/          # Design tokens + UI primitives + global styles
-│   └── klovi-ui/                     # Reusable Klovi feature components
+│   └── klovi-ui-components/          # Reusable Klovi feature components
 ```
 
 ## Runtime Architecture
@@ -155,7 +155,7 @@ RPC handlers (`apps/desktop/src/bun/rpc-handlers.ts`)
 React wrappers in `apps/desktop/src/frontend/components/*`
         │
         ▼
-Reusable UI in @cookielab.io/klovi-ui
+Reusable UI in @cookielab.io/klovi-ui-components
 ```
 
 ## Frontend Composition
@@ -168,13 +168,13 @@ The frontend is intentionally split into two layers:
 - Electrobun integration (`openExternal`, menu events)
 - App-specific flows (onboarding, security warning, settings)
 
-2. **Reusable UI layer (`packages/klovi-ui`)**
-- Messages (`@cookielab.io/klovi-ui/messages`)
-- Session/project widgets (`@cookielab.io/klovi-ui/sessions`)
-- Presentation shell (`@cookielab.io/klovi-ui/presentation`)
-- Search modal (`@cookielab.io/klovi-ui/search`)
-- Tool rendering (`@cookielab.io/klovi-ui/tools`)
-- Utilities (`@cookielab.io/klovi-ui/utilities`)
+2. **Reusable UI layer (`packages/klovi-ui-components`)**
+- Messages (`@cookielab.io/klovi-ui-components/messages`)
+- Session/project widgets (`@cookielab.io/klovi-ui-components/sessions`)
+- Presentation shell (`@cookielab.io/klovi-ui-components/presentation`)
+- Search modal (`@cookielab.io/klovi-ui-components/search`)
+- Tool rendering (`@cookielab.io/klovi-ui-components/tools`)
+- Utilities (`@cookielab.io/klovi-ui-components/utilities`)
 
 The app layer uses `Package*` wrapper components to bind shared UI components to Klovi RPC and app-specific handlers.
 
@@ -218,7 +218,7 @@ Hash routes are resolved in `apps/desktop/src/frontend/view-state.ts`:
 - `@cookielab.io/klovi-plugin-codex/frontend`
 - `@cookielab.io/klovi-plugin-opencode/frontend`
 
-These provide plugin-specific summary extractors, input formatters, and resume command behavior consumed by `@cookielab.io/klovi-ui` components.
+These provide plugin-specific summary extractors, input formatters, and resume command behavior consumed by `@cookielab.io/klovi-ui-components` components.
 
 ## Settings Model
 
@@ -238,7 +238,7 @@ Settings endpoints are handled in `apps/desktop/src/bun/rpc-handlers.ts`:
 
 ## Type Boundaries
 
-- `apps/desktop/src/shared/types.ts` re-exports canonical app data shapes from `@cookielab.io/klovi-ui/types`
+- `apps/desktop/src/shared/types.ts` re-exports canonical app data shapes from `@cookielab.io/klovi-ui-components/types`
 - `apps/desktop/src/shared/rpc-types.ts` defines the full typed RPC schema
 - `apps/desktop/src/shared/session-id.ts` handles `pluginId::rawSessionId` encoding/decoding
 

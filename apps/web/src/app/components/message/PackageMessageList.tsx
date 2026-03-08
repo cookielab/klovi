@@ -1,5 +1,5 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
-import { MessageList as UIMessageList } from "@cookielab.io/klovi-ui/messages";
+import { MessageList as UIMessageList } from "@cookielab.io/klovi-ui-components/messages";
 import { useKloviHostBridge } from "../../../lib/context.ts";
 import type { Turn } from "../../../shared/types.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";

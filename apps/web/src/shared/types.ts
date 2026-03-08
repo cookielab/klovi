@@ -16,4 +16,4 @@ export type {
   ToolResultImage,
   Turn,
   UserTurn,
-} from "@cookielab.io/klovi-ui/types";
+} from "@cookielab.io/klovi-ui-components/types";

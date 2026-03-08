@@ -1,4 +1,4 @@
-import { SubAgentView as UISubAgentView } from "@cookielab.io/klovi-ui/messages";
+import { SubAgentView as UISubAgentView } from "@cookielab.io/klovi-ui-components/messages";
 import { useKloviHostBridge } from "../../../lib/context.ts";
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";

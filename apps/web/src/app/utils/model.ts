@@ -1,1 +1,1 @@
-export { isClaudeModel, shortModel } from "@cookielab.io/klovi-ui/utilities";
+export { isClaudeModel, shortModel } from "@cookielab.io/klovi-ui-components/utilities";

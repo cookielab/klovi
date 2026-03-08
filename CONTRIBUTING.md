@@ -39,7 +39,7 @@ bun run check:fix
 
 - **Linting & Formatting:** Enforced by [Biome](https://biomejs.dev/). No manual style decisions needed — just run `bun run check:fix`.
 - **TypeScript:** Strict mode with `noUncheckedIndexedAccess`. Use `!` non-null assertions for array index access when the index is known to be valid.
-- **CSS:** Plain CSS (custom properties + CSS modules). No CSS framework. App shell styles live in `src/frontend/`; reusable package styles live in `packages/klovi-ui/` and `packages/klovi-design-system/`.
+- **CSS:** Plain CSS (custom properties + CSS modules). No CSS framework. App shell styles live in `src/frontend/`; reusable package styles live in `packages/klovi-ui-components/` and `packages/klovi-design-system/`.
 - **Testing:** Use `bun:test` with `@testing-library/react` and `happy-dom`. See `docs/testing.md` for patterns.
 
 ## Commit Messages

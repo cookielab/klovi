@@ -8,9 +8,9 @@ Klovi UI is split into two layers:
 - Owns routing, RPC calls, onboarding/security flow, and settings
 - Wraps reusable package components with app-specific behavior
 
-2. **Reusable UI package (`packages/klovi-ui`)**
+2. **Reusable UI package (`packages/klovi-ui-components`)**
 - Owns message/session/presentation/search/tool rendering components
-- Exported as `@cookielab.io/klovi-ui/*`
+- Exported as `@cookielab.io/klovi-ui-components/*`
 
 This keeps desktop-app wiring in one place while making UI modules reusable and easier to test.
 
@@ -37,11 +37,11 @@ This keeps desktop-app wiring in one place while making UI modules reusable and 
 
 ### Package Wrapper Components
 
-These bind `@cookielab.io/klovi-ui` components to Klovi RPC and app-specific handlers.
+These bind `@cookielab.io/klovi-ui-components` components to Klovi RPC and app-specific handlers.
 
 | Wrapper | Uses | Responsibility |
 |---|---|---|
-| `dashboard/PackageDashboardStats.tsx` | `@cookielab.io/klovi-ui/sessions` `DashboardStats` | Fetches `getStats` and passes loading/error/retry state |
+| `dashboard/PackageDashboardStats.tsx` | `@cookielab.io/klovi-ui-components/sessions` `DashboardStats` | Fetches `getStats` and passes loading/error/retry state |
 | `project/PackageProjectList.tsx` | `ProjectList` | Fetches projects, controls filter + hide/show state wiring |
 | `project/PackageSessionList.tsx` | `SessionList` | Fetches sessions and maps `pluginId` to display name |
 | `project/PackageHiddenProjectList.tsx` | `HiddenProjectList` | Fetches projects and filters hidden entries |
@@ -53,9 +53,9 @@ These bind `@cookielab.io/klovi-ui` components to Klovi RPC and app-specific han
 | `message/PackageSubAgentView.tsx` | `SubAgentView` | Fetches sub-agent session and renders package component |
 | `search/PackageSearchModal.tsx` | `SearchModal` | Converts selected result to app route params |
 
-## Reusable UI Package (`packages/klovi-ui`)
+## Reusable UI Package (`packages/klovi-ui-components`)
 
-### Messages (`@cookielab.io/klovi-ui/messages`)
+### Messages (`@cookielab.io/klovi-ui-components/messages`)
 
 - `MessageList`
 - `UserMessage`
@@ -71,7 +71,7 @@ Responsibilities:
 - Render content blocks chronologically
 - Support plugin-specific formatting via injected frontend plugin handlers
 
-### Tools (`@cookielab.io/klovi-ui/tools`)
+### Tools (`@cookielab.io/klovi-ui-components/tools`)
 
 - `ToolCall`
 - `SmartToolOutput`
@@ -84,7 +84,7 @@ Responsibilities:
 - Smart summaries and plugin-specific input formatting
 - Text/diff/image tool output rendering
 
-### Sessions (`@cookielab.io/klovi-ui/sessions`)
+### Sessions (`@cookielab.io/klovi-ui-components/sessions`)
 
 - `DashboardStats`
 - `ProjectList`
@@ -97,7 +97,7 @@ Responsibilities:
 - Dashboard metrics cards
 - List filtering and selection UX
 
-### Presentation (`@cookielab.io/klovi-ui/presentation`)
+### Presentation (`@cookielab.io/klovi-ui-components/presentation`)
 
 - `PresentationShell`
 - `usePresentationMode`
@@ -107,7 +107,7 @@ Responsibilities:
 - Step-by-step reveal model for turns/content blocks
 - Keyboard controls and fullscreen toggling
 
-### Search (`@cookielab.io/klovi-ui/search`)
+### Search (`@cookielab.io/klovi-ui-components/search`)
 
 - `SearchModal`
 
@@ -115,7 +115,7 @@ Responsibilities:
 - Query/filter against provided session list
 - Keyboard navigation and selection
 
-### Utilities (`@cookielab.io/klovi-ui/utilities`)
+### Utilities (`@cookielab.io/klovi-ui-components/utilities`)
 
 - `ErrorBoundary`
 - `FetchError`
@@ -130,7 +130,7 @@ Responsibilities:
 - `@cookielab.io/klovi-plugin-codex/frontend`
 - `@cookielab.io/klovi-plugin-opencode/frontend`
 
-`PackageMessageList` and `PackagePresentationShell` pass `getFrontendPlugin` into `@cookielab.io/klovi-ui` so tool summaries/input formatters and resume command behavior can be plugin-specific.
+`PackageMessageList` and `PackagePresentationShell` pass `getFrontendPlugin` into `@cookielab.io/klovi-ui-components` so tool summaries/input formatters and resume command behavior can be plugin-specific.
 
 ## Design System
 
