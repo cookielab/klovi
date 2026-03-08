@@ -354,3 +354,18 @@
   opacity: 0.6;
   cursor: default;
 }
+
+.settings-nav-back {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.settings-nav-back:hover {
+  color: var(--text-primary);
+}
