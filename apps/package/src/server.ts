@@ -29,19 +29,8 @@ export interface KloviPackageServer {
 }
 
 function getDefaultSettingsPath(): string {
-  const home = process.env["HOME"] ?? "";
-  if (process.platform === "darwin") {
-    return join(
-      home,
-      "Library",
-      "Application Support",
-      "io.cookielab.klovi",
-      "stable",
-      "settings.json",
-    );
-  }
-  const configHome = process.env["XDG_CONFIG_HOME"] ?? join(home, ".config");
-  return join(configHome, "klovi", "settings.json");
+  const home = process.env["HOME"] ?? process.env["USERPROFILE"] ?? "";
+  return join(home, ".klovi", "settings.json");
 }
 
 function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "node" {
