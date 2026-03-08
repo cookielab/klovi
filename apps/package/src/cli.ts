@@ -1,9 +1,19 @@
-#!/usr/bin/env node
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { startKloviPackageServer } from "./server.ts";
 
 const __dir = import.meta.dirname;
+
+function resolveStaticDir(): string {
+  // When running from built dist: __dir = dist/ → dist/web
+  const builtPath = resolve(__dir, "web");
+  if (existsSync(builtPath)) return builtPath;
+  // When running from source: fall back to workspace node_modules
+  return resolve(__dir, "../node_modules/@cookielab.io/klovi-web/dist");
+}
+
+// Both src/ and dist/ are direct children of apps/package/
 const pkgPath = resolve(__dir, "../package.json");
 const pkg = JSON.parse(await readFile(pkgPath, "utf-8")) as Record<string, string>;
 const version = pkg["version"] ?? "0.0.0";
@@ -11,8 +21,7 @@ const commit = pkg["commit"] ?? "";
 
 const host = process.env["KLOVI_HOST"] ?? "127.0.0.1";
 const port = Number(process.env["KLOVI_PORT"] ?? "3131");
-const staticDir =
-  process.env["KLOVI_STATIC_DIR"] ?? resolve(__dir, "../node_modules/@cookielab.io/klovi-web/dist");
+const staticDir = process.env["KLOVI_STATIC_DIR"] ?? resolveStaticDir();
 
 const openBrowser = !process.argv.includes("--no-browser");
 

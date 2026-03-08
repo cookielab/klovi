@@ -10,9 +10,9 @@ describe("CLI smoke tests", () => {
     expect(await file.exists()).toBe(true);
   });
 
-  test("cli.ts has shebang line", async () => {
+  test("cli.ts imports server module", async () => {
     const content = await Bun.file(cliPath).text();
-    expect(content.startsWith("#!/usr/bin/env node")).toBe(true);
+    expect(content).toContain("startKloviPackageServer");
   });
 
   test("server.ts exports startKloviPackageServer", async () => {
@@ -23,7 +23,7 @@ describe("CLI smoke tests", () => {
   test("package.json bin points to cli.ts", async () => {
     const pkgPath = resolve(import.meta.dir, "../package.json");
     const pkg = await Bun.file(pkgPath).json();
-    expect(pkg.bin?.klovi).toBe("./src/cli.ts");
+    expect(pkg.bin?.klovi).toBe("./dist/cli.js");
   });
 
   test("package.json exports server entry", async () => {
