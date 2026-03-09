@@ -23,6 +23,11 @@ on:
         description: "Version to publish"
         required: true
         type: string
+      allow-publish:
+        description: "Internal switch for the production publish path"
+        required: false
+        type: boolean
+        default: false
       commit:
         description: "Commit hash to stamp"
         required: false
@@ -45,7 +50,7 @@ jobs:
       # Production trusted publishing is initiated by release.yml via workflow_call.
       # Manual dispatch here is for dry-run/debug only unless npm is reconfigured.
       - name: Guard manual publish path
-        if: github.event_name == 'workflow_dispatch' && inputs.dry-run == false
+        if: inputs.dry-run == false && inputs.allow-publish != true
         run: |
           echo "::error::Manual workflow_dispatch publish is disabled."
           echo "::error::Run the Release workflow (.github/workflows/release.yml) for production trusted publishing, or rerun this workflow with dry-run enabled."
