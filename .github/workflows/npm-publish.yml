@@ -98,7 +98,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           TAG_FLAG=""
-          if echo "$VERSION" | grep -qE '-(beta|rc|alpha)\.'; then
+          if echo "$VERSION" | grep -q -- '-'; then
             TAG_FLAG="--tag beta"
           fi
           npm publish --access public $TAG_FLAG
