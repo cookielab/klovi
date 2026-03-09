@@ -85,6 +85,9 @@ jobs:
 
   npm:
     needs: release
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/npm-publish.yml
     with:
       version: ${{ needs.release.outputs.version }}
