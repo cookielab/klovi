@@ -91,16 +91,10 @@ jobs:
       - name: Verify packed artifact (Node + Bun)
         run: bun run verify:packed-artifact
 
-      # Publish from staged directory only.
-      # Authentication: uses secret-based NPM_TOKEN. To adopt npm trusted publishing
-      # (provenance-based OIDC), replace NODE_AUTH_TOKEN with the npm provenance flag
-      # and configure the npm package for trusted publishing in the npm registry.
       - name: Publish to npm
         if: inputs.dry-run == false
         working-directory: apps/package/.stage/npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
 
       - name: Dry-run pack
         if: inputs.dry-run == true
