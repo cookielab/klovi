@@ -3,8 +3,14 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { Badge } from "./Badge/Badge.tsx";
 import { Button } from "./Button/Button.tsx";
 import { Collapsible } from "./Collapsible/Collapsible.tsx";
-import { Input, SegmentedControl, Select, Toggle } from "./FormControls/index.ts";
-import { AppLayout, ContentHeader, Sidebar, SidebarButton } from "./Layout/index.ts";
+import { Input } from "./FormControls/Input.tsx";
+import { SegmentedControl } from "./FormControls/SegmentedControl.tsx";
+import { Select } from "./FormControls/Select.tsx";
+import { Toggle } from "./FormControls/Toggle.tsx";
+import { AppLayout } from "./Layout/AppLayout.tsx";
+import { ContentHeader } from "./Layout/ContentHeader.tsx";
+import { Sidebar } from "./Layout/Sidebar.tsx";
+import { SidebarButton } from "./Layout/SidebarButton.tsx";
 import { Modal } from "./Modal/Modal.tsx";
 
 const DETAILS_BUTTON_NAME = /details/i;

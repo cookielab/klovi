@@ -4,14 +4,9 @@ import { Effect } from "effect";
 
 const WINDOWS_DRIVE_LETTER_REGEX = /^[A-Za-z]\//;
 
-export interface DirEntry {
+interface DirEntry {
   name: string;
   isDirectory: boolean;
-}
-
-export interface FileWithMtime {
-  fileName: string;
-  mtime: string;
 }
 
 export function readDirEntriesSafe(dir: string) {
@@ -53,13 +48,6 @@ export function fileExists(filePath: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     return yield* fs.exists(filePath);
-  });
-}
-
-export function fileStat(filePath: string) {
-  return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    return yield* fs.stat(filePath);
   });
 }
 

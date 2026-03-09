@@ -19,8 +19,8 @@ export interface GitHubAsset {
   browser_download_url: string;
 }
 
-export type Platform = "macos" | "linux" | "win";
-export type Arch = "arm64" | "x64";
+type Platform = "macos" | "linux" | "win";
+type Arch = "arm64" | "x64";
 
 type StatusCallback = (status: UpdateStatus) => void;
 
@@ -77,7 +77,7 @@ export function getZstdBinaryPath(platform: Platform, executablePath = process.e
   return join(dirname(executablePath), platform === "win" ? "zig-zstd.exe" : "zig-zstd");
 }
 
-export async function fetchReleases(): Promise<GitHubRelease[]> {
+async function fetchReleases(): Promise<GitHubRelease[]> {
   const response = await fetch(GITHUB_API_URL, {
     headers: { Accept: "application/vnd.github+json" },
   });

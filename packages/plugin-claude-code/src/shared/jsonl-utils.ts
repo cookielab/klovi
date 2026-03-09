@@ -1,11 +1,11 @@
-export interface JsonlLineContext {
+interface JsonlLineContext {
   parsed: unknown;
   line: string;
   lineIndex: number;
   lineNumber: number;
 }
 
-export interface JsonlIterateOptions {
+interface JsonlIterateOptions {
   startAt?: number;
   maxLines?: number;
   onMalformed?: (line: string, lineNumber: number, error: unknown) => void;

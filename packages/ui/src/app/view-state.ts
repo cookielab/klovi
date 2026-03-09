@@ -1,5 +1,5 @@
+import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import type { KloviClient } from "../lib/client.ts";
-import { parseSessionId } from "../shared/session-id.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { getFrontendPlugin } from "./plugin-registry.ts";
 

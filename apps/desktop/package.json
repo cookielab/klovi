@@ -26,8 +26,5 @@
     "@cookielab.io/klovi-server": "workspace:*",
     "@cookielab.io/klovi-ui": "workspace:*",
     "electrobun": "^1.14.4"
-  },
-  "devDependencies": {
-    "@testing-library/react": "^16.3.2"
   }
 }

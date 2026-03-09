@@ -5,12 +5,12 @@ import { Effect } from "effect";
 
 const WINDOWS_DRIVE_LETTER_REGEX = /^[A-Za-z]\//;
 
-export interface DirEntry {
+interface DirEntry {
   name: string;
   isDirectory: boolean;
 }
 
-export interface FileWithMtime {
+interface FileWithMtime {
   fileName: string;
   mtime: string;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { encodeSessionId } from "../shared/session-id.ts";
+import { encodeSessionId } from "@cookielab.io/klovi-plugin-core";
 import { getResumeCommand } from "./view-state.ts";
 
 describe("getResumeCommand", () => {

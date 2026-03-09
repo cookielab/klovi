@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3583;
 
-export interface KloviCliConfig {
+interface KloviCliConfig {
   host: string;
   port: number;
   staticDir: string;

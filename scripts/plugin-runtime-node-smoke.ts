@@ -4,7 +4,7 @@
  * Proves that all plugin packages can be imported and exercised under Node
  * with @effect/platform-node providers. Run via:
  *
- *   npx tsx scripts/plugin-runtime-node-smoke.ts
+ *   tsx scripts/plugin-runtime-node-smoke.ts
  *
  * Exits 0 on success, 1 on any failure.
  */

@@ -150,7 +150,7 @@ Source: `packages/ui/src/lib/host-bridge.ts`
 
 ### `startKloviServer(options)` — packages/server, re-exported publicly via `@cookielab.io/klovi/server`
 
-Starts the backend API server. Returns `{ url, stop() }`. Both distribution apps call this to start the server, and the npm package preserves it as a public embedding contract.
+Starts the backend API server for browser/npm mode and for external programmatic embedding. Returns `{ url, stop() }`. Desktop mode does not call this API; it invokes `packages/server` service functions directly through Electrobun RPC with no HTTP server.
 
 Key options:
 - `host`, `port` — binding address

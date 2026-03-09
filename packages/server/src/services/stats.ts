@@ -1,3 +1,4 @@
+import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import type {
   DashboardStats,
   ModelTokenUsage,
@@ -7,7 +8,6 @@ import type {
 } from "@cookielab.io/klovi-ui-components/types";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import type { PluginRegistry } from "./registry.ts";
-import { parseSessionId } from "./session-id.ts";
 
 interface SessionWithProject {
   project: Awaited<ReturnType<typeof runDiscoverProjects>>[number];
