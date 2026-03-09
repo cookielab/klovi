@@ -197,14 +197,6 @@ The core Arch2 source architecture is implemented. The single-package npm publis
 - Version and commit metadata are stamped into the staged artifact and surfaced at runtime.
 - Publishing from `apps/package` source is blocked by a guardrail; only `apps/package/.stage/npm` is valid for publishing.
 
-## Completed Work
-
-- Plans 01-12: Core Arch2 source architecture
-- Plans 13-19: Follow-up remediation (plugin Effect migration, dual-runtime support)
-- Plans 20-23: Package restructuring (separate `apps/package` from `packages/server`)
-- Plans 31-34: Publish remediation (self-contained artifact, sanitized manifest, packed-artifact verification, npm publish workflow)
-- Plans 35-38: Follow-up alignment (public server export, artifact metadata, release-to-publish wiring, documentation)
-
 ## Constraints
 
 - No caching of any kind (no in-memory, file-based, HTTP, memoization, or TTL caches).
