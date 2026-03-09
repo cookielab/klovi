@@ -30,6 +30,7 @@ jobs:
     outputs:
       version: ${{ steps.release_meta.outputs.version }}
       build_env: ${{ steps.release_meta.outputs.build_env }}
+      electrobun_env: ${{ steps.release_meta.outputs.electrobun_env }}
       commit: ${{ steps.release_meta.outputs.commit }}
     steps:
       - name: Validate version format
@@ -52,14 +53,18 @@ jobs:
         run: |
           if echo "$VERSION" | grep -q -- '-beta\.'; then
             BUILD_ENV="beta"
+            ELECTROBUN_ENV="canary"
           elif echo "$VERSION" | grep -q -- '-rc\.'; then
             BUILD_ENV="candidate"
+            ELECTROBUN_ENV="canary"
           else
             BUILD_ENV="stable"
+            ELECTROBUN_ENV="stable"
           fi
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "build_env=$BUILD_ENV" >> "$GITHUB_OUTPUT"
+          echo "electrobun_env=$ELECTROBUN_ENV" >> "$GITHUB_OUTPUT"
           echo "commit=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
   verify:
@@ -120,8 +125,8 @@ jobs:
 
       - name: Build Electrobun app
         env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-        run: bun run build -- --env="$BUILD_ENV"
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
+        run: bun run build -- --env="$ELECTROBUN_ENV"
 
       - name: Import code signing certificate
         env:
@@ -148,12 +153,12 @@ jobs:
 
       - name: Sign and notarize macOS app
         env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
+          BUILD_DIR="apps/desktop/build/${ELECTROBUN_ENV}-macos-arm64"
           if [ ! -d "$BUILD_DIR" ]; then
             echo "::error::Expected build output in $BUILD_DIR"
             find apps/desktop/build -maxdepth 2 -type d || true
@@ -204,8 +209,10 @@ jobs:
         env:
           VERSION: ${{ needs.release-meta.outputs.version }}
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
         run: |
           PREFIX="${BUILD_ENV}-macos-arm64"
+          SOURCE_PREFIX="${ELECTROBUN_ENV}-macos-arm64"
           USER_DMG="Klovi-${VERSION}-macos-arm64.dmg"
           STAGING_DIR=$(mktemp -d /tmp/klovi-dmg.XXXXXX)
           cp -R "$APP_DIR" "$STAGING_DIR/"
@@ -223,6 +230,27 @@ jobs:
           tar -cf "$TARBALL_PATH" -C "$(dirname "$APP_DIR")" "$(basename "$APP_DIR")"
           "$ZSTD_PATH" compress -i "$TARBALL_PATH" -o "apps/desktop/artifacts/${PREFIX}-Klovi.app.tar.zst" --threads max --no-timing
           rm -f "$TARBALL_PATH"
+
+          SOURCE_UPDATE_JSON="apps/desktop/artifacts/${SOURCE_PREFIX}-update.json"
+          TARGET_UPDATE_JSON="apps/desktop/artifacts/${PREFIX}-update.json"
+          if [ ! -f "$SOURCE_UPDATE_JSON" ]; then
+            echo "::error::Expected updater metadata at $SOURCE_UPDATE_JSON"
+            find apps/desktop/artifacts -maxdepth 1 -type f -print || true
+            exit 1
+          fi
+          if [ "$SOURCE_UPDATE_JSON" != "$TARGET_UPDATE_JSON" ]; then
+            cp "$SOURCE_UPDATE_JSON" "$TARGET_UPDATE_JSON"
+          fi
+
+          for source_patch in apps/desktop/artifacts/${SOURCE_PREFIX}-*.patch; do
+            [ -e "$source_patch" ] || continue
+            source_name=$(basename "$source_patch")
+            suffix="${source_name#${SOURCE_PREFIX}-}"
+            target_patch="apps/desktop/artifacts/${PREFIX}-${suffix}"
+            if [ "$source_patch" != "$target_patch" ]; then
+              cp "$source_patch" "$target_patch"
+            fi
+          done
 
           echo "USER_DMG=$USER_DMG" >> "$GITHUB_ENV"
 
@@ -302,21 +330,25 @@ jobs:
 
       - name: Build Electrobun app
         env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-        run: bun run build -- --env="$BUILD_ENV"
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
+        run: bun run build -- --env="$ELECTROBUN_ENV"
 
       - name: Upload Linux user-facing and updater assets
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         run: |
-          PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
-          INSTALLER=$(find "apps/desktop/build/${PREFIX}" -maxdepth 1 -type f -name '*Setup*.tar.gz' | head -1)
+          SOURCE_PREFIX="${ELECTROBUN_ENV}-linux-${ELECTROBUN_ARCH}"
+          TARGET_PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
+          SOURCE_BUILD_DIR="apps/desktop/build/${SOURCE_PREFIX}"
+
+          INSTALLER=$(find "$SOURCE_BUILD_DIR" -maxdepth 1 -type f -name '*Setup*.tar.gz' | head -1)
           if [ -z "$INSTALLER" ]; then
-            echo "::error::Expected installer in apps/desktop/build/${PREFIX}"
+            echo "::error::Expected installer in $SOURCE_BUILD_DIR"
             find apps/desktop/build -maxdepth 2 -type f -name '*.tar.gz' 2>/dev/null || true
             exit 1
           fi
@@ -325,22 +357,40 @@ jobs:
           cp "$INSTALLER" "$USER_ASSET"
           gh release upload "$VERSION" "$USER_ASSET" --clobber
 
-          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
+          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${SOURCE_PREFIX}-*.tar.zst" ! -name "${SOURCE_PREFIX}-*Setup*.tar.zst" | head -1)
           if [ -z "$FULL_BUNDLE" ]; then
-            echo "::error::Expected updater bundle for ${PREFIX}"
-            find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*" 2>/dev/null || true
+            echo "::error::Expected updater bundle for ${SOURCE_PREFIX}"
+            find apps/desktop/artifacts -maxdepth 1 -type f -name "${SOURCE_PREFIX}-*" 2>/dev/null || true
             exit 1
           fi
 
-          NORMALIZED_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
+          NORMALIZED_BUNDLE="apps/desktop/artifacts/${TARGET_PREFIX}-Klovi.tar.zst"
           if [ "$FULL_BUNDLE" != "$NORMALIZED_BUNDLE" ]; then
             cp "$FULL_BUNDLE" "$NORMALIZED_BUNDLE"
           fi
           gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
 
-          for file in apps/desktop/artifacts/${PREFIX}-*.patch "apps/desktop/artifacts/${PREFIX}-update.json"; do
-            [ -e "$file" ] || continue
-            gh release upload "$VERSION" "$file" --clobber
+          SOURCE_UPDATE_JSON="apps/desktop/artifacts/${SOURCE_PREFIX}-update.json"
+          TARGET_UPDATE_JSON="apps/desktop/artifacts/${TARGET_PREFIX}-update.json"
+          if [ ! -f "$SOURCE_UPDATE_JSON" ]; then
+            echo "::error::Expected updater metadata at $SOURCE_UPDATE_JSON"
+            find apps/desktop/artifacts -maxdepth 1 -type f -print || true
+            exit 1
+          fi
+          if [ "$SOURCE_UPDATE_JSON" != "$TARGET_UPDATE_JSON" ]; then
+            cp "$SOURCE_UPDATE_JSON" "$TARGET_UPDATE_JSON"
+          fi
+          gh release upload "$VERSION" "$TARGET_UPDATE_JSON" --clobber
+
+          for source_patch in apps/desktop/artifacts/${SOURCE_PREFIX}-*.patch; do
+            [ -e "$source_patch" ] || continue
+            source_name=$(basename "$source_patch")
+            suffix="${source_name#${SOURCE_PREFIX}-}"
+            target_patch="apps/desktop/artifacts/${TARGET_PREFIX}-${suffix}"
+            if [ "$source_patch" != "$target_patch" ]; then
+              cp "$source_patch" "$target_patch"
+            fi
+            gh release upload "$VERSION" "$target_patch" --clobber
           done
 
       - name: Install nfpm
@@ -357,7 +407,7 @@ jobs:
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
-          BUILD_DIR: build/${{ needs.release-meta.outputs.build_env }}-linux-${{ matrix.electrobun_arch }}
+          BUILD_DIR: build/${{ needs.release-meta.outputs.electrobun_env }}-linux-${{ matrix.electrobun_arch }}
           NFPM_ARCH: ${{ matrix.artifact_arch }}
         run: |
           if [ ! -d "$BUILD_DIR" ]; then
@@ -417,8 +467,8 @@ jobs:
 
       - name: Build Electrobun app
         env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-        run: bun run build -- --env="$BUILD_ENV"
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
+        run: bun run build -- --env="$ELECTROBUN_ENV"
 
       - name: Upload Windows user-facing and updater assets
         shell: bash
@@ -426,9 +476,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+          ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
         run: |
-          PREFIX="${BUILD_ENV}-win-x64"
-          BUILD_DIR="apps/desktop/build/${PREFIX}"
+          SOURCE_PREFIX="${ELECTROBUN_ENV}-win-x64"
+          TARGET_PREFIX="${BUILD_ENV}-win-x64"
+          BUILD_DIR="apps/desktop/build/${SOURCE_PREFIX}"
 
           INSTALLER=$(find "$BUILD_DIR" -maxdepth 1 -type f -name '*Setup*.exe' | head -1)
           if [ -z "$INSTALLER" ]; then
@@ -441,22 +493,40 @@ jobs:
           cp "$INSTALLER" "$USER_ASSET"
           gh release upload "$VERSION" "$USER_ASSET" --clobber
 
-          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
+          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${SOURCE_PREFIX}-*.tar.zst" ! -name "${SOURCE_PREFIX}-*Setup*.tar.zst" | head -1)
           if [ -z "$FULL_BUNDLE" ]; then
-            echo "::error::Expected updater bundle for ${PREFIX}"
-            find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*" 2>/dev/null || true
+            echo "::error::Expected updater bundle for ${SOURCE_PREFIX}"
+            find apps/desktop/artifacts -maxdepth 1 -type f -name "${SOURCE_PREFIX}-*" 2>/dev/null || true
             exit 1
           fi
 
-          NORMALIZED_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
+          NORMALIZED_BUNDLE="apps/desktop/artifacts/${TARGET_PREFIX}-Klovi.tar.zst"
           if [ "$FULL_BUNDLE" != "$NORMALIZED_BUNDLE" ]; then
             cp "$FULL_BUNDLE" "$NORMALIZED_BUNDLE"
           fi
           gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
 
-          for file in apps/desktop/artifacts/${PREFIX}-*.patch "apps/desktop/artifacts/${PREFIX}-update.json"; do
-            [ -e "$file" ] || continue
-            gh release upload "$VERSION" "$file" --clobber
+          SOURCE_UPDATE_JSON="apps/desktop/artifacts/${SOURCE_PREFIX}-update.json"
+          TARGET_UPDATE_JSON="apps/desktop/artifacts/${TARGET_PREFIX}-update.json"
+          if [ ! -f "$SOURCE_UPDATE_JSON" ]; then
+            echo "::error::Expected updater metadata at $SOURCE_UPDATE_JSON"
+            find apps/desktop/artifacts -maxdepth 1 -type f -print || true
+            exit 1
+          fi
+          if [ "$SOURCE_UPDATE_JSON" != "$TARGET_UPDATE_JSON" ]; then
+            cp "$SOURCE_UPDATE_JSON" "$TARGET_UPDATE_JSON"
+          fi
+          gh release upload "$VERSION" "$TARGET_UPDATE_JSON" --clobber
+
+          for source_patch in apps/desktop/artifacts/${SOURCE_PREFIX}-*.patch; do
+            [ -e "$source_patch" ] || continue
+            source_name=$(basename "$source_patch")
+            suffix="${source_name#${SOURCE_PREFIX}-}"
+            target_patch="apps/desktop/artifacts/${TARGET_PREFIX}-${suffix}"
+            if [ "$source_patch" != "$target_patch" ]; then
+              cp "$source_patch" "$target_patch"
+            fi
+            gh release upload "$VERSION" "$target_patch" --clobber
           done
 
   update-cask:
