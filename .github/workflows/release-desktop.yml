@@ -124,6 +124,7 @@ jobs:
           "
 
       - name: Build Electrobun app
+        shell: bash
         env:
           ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
         run: bun run build -- --env="$ELECTROBUN_ENV"
@@ -467,9 +468,10 @@ jobs:
           "
 
       - name: Build Electrobun app
+        shell: bash
         env:
           ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
-        run: bun run build -- --env=$env:ELECTROBUN_ENV
+        run: bun run build -- --env="$ELECTROBUN_ENV"
 
       - name: Upload Windows user-facing and updater assets
         shell: bash
