@@ -17,6 +17,12 @@ import {
   UpdateManager,
 } from "./updater.ts";
 
+type MutableUpdateManagerForTest = {
+  download(): Promise<void>;
+  getStatus(): UpdateStatus;
+  latestRelease: GitHubRelease | null;
+};
+
 describe("semver.order", () => {
   test("returns positive when a > b", () => {
     expect(semver.order("2.0.0", "1.0.0")).toBeGreaterThan(0);
@@ -302,7 +308,7 @@ describe("UpdateManager", () => {
       arch: "arm64",
       settingsPath: join(testDir, "settings.json"),
       appDataDir: testDir,
-    }) as any;
+    }) as unknown as MutableUpdateManagerForTest;
 
     mgr.latestRelease = {
       ...makeRelease("2.0.0", false),
