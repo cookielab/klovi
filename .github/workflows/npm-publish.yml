@@ -1,22 +1,22 @@
-name: Release - NPM Package
+name: Release - NPM Publish (Reusable + Debug)
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (e.g. 1.2.3, 1.2.3-beta.1)"
+        description: "Version to verify or pack (e.g. 1.2.3, 1.2.3-beta.1)"
         required: true
         type: string
       commit:
-        description: "Commit hash to stamp (defaults to HEAD)"
+        description: "Commit hash to stamp for verification (defaults to HEAD)"
         required: false
         type: string
         default: ""
       dry-run:
-        description: "Dry run (pack only, do not publish)"
+        description: "Debug mode: pack only, do not publish"
         required: false
         type: boolean
-        default: false
+        default: true
   workflow_call:
     inputs:
       version:
@@ -32,7 +32,7 @@ on:
         description: "Dry run (pack only, do not publish)"
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   publish:
@@ -42,6 +42,15 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # Production trusted publishing is initiated by release.yml via workflow_call.
+      # Manual dispatch here is for dry-run/debug only unless npm is reconfigured.
+      - name: Guard manual publish path
+        if: github.event_name == 'workflow_dispatch' && inputs.dry-run == false
+        run: |
+          echo "::error::Manual workflow_dispatch publish is disabled."
+          echo "::error::Run the Release workflow (.github/workflows/release.yml) for production trusted publishing, or rerun this workflow with dry-run enabled."
+          exit 1
+
       - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
@@ -64,7 +73,7 @@ jobs:
       - run: bun run typecheck
       - run: bun test
 
-      # Build web assets and stage the npm artifact
+      # Build web assets and stage the npm artifact for publish or debug verification.
       - name: Stage npm artifact
         env:
           VERSION: ${{ inputs.version }}
@@ -74,7 +83,7 @@ jobs:
           bun run --filter @cookielab.io/klovi build
           bun apps/package/scripts/stage-npm.ts --version "$VERSION" --commit "${COMMIT:-$(git rev-parse --short HEAD)}"
 
-      # Verify the staged artifact
+      # Verify the staged artifact manifest before any pack or publish step.
       - name: Verify staged artifact manifest
         run: |
           echo "=== Staged package.json ==="
@@ -87,7 +96,7 @@ jobs:
           fi
           echo "No workspace dependencies found - OK"
 
-      # Run packed-artifact verification
+      # Verify the packed artifact under both Node and Bun.
       - name: Verify packed artifact (Node + Bun)
         run: bun run verify:packed-artifact
 

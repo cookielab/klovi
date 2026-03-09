@@ -88,6 +88,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    # Trusted publishing validates the caller workflow for workflow_call jobs.
+    # Keep npm bound to release.yml as the production publish entrypoint.
     uses: ./.github/workflows/npm-publish.yml
     with:
       version: ${{ needs.release.outputs.version }}
+      dry-run: false
