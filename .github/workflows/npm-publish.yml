@@ -35,8 +35,8 @@ on:
         default: false
     secrets:
       NPM_TOKEN:
-        description: "npm authentication token"
-        required: true
+        description: "npm authentication token (falls back to environment secret)"
+        required: false
 
 jobs:
   publish:
