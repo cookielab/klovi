@@ -1,6 +1,11 @@
 import { access, rm } from "node:fs/promises";
-import { encodeSessionId, parseSessionId, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
-import type { GlobalSessionResult, SessionSummary } from "@cookielab.io/klovi-ui-components/types";
+import {
+  encodeSessionId,
+  type GlobalSessionResult,
+  parseSessionId,
+  type SessionSummary,
+  sortByIsoDesc,
+} from "@cookielab.io/klovi-plugin-core";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
 import type { PluginRegistry } from "./registry.ts";

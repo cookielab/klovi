@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import type { Session, SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { PluginError } from "@cookielab.io/klovi-plugin-core";
-import type { Session, SessionSummary } from "@cookielab.io/klovi-ui-components/types";
 import { Effect } from "effect";
 import type { ToolPlugin } from "./plugin-types.ts";
 import { PluginRegistry } from "./registry.ts";

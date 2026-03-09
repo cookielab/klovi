@@ -1,11 +1,11 @@
-import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import type {
   DashboardStats,
   ModelTokenUsage,
   SessionSummary,
   TokenUsage,
   Turn,
-} from "@cookielab.io/klovi-ui-components/types";
+} from "@cookielab.io/klovi-plugin-core";
+import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import type { PluginRegistry } from "./registry.ts";
 

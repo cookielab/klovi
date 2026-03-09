@@ -2,8 +2,9 @@ import {
   PluginRegistry as CorePluginRegistryImpl,
   type SessionIdEncoder as CoreSessionIdEncoder,
   encodeResolvedPath,
+  type Session,
+  type SessionSummary,
 } from "@cookielab.io/klovi-plugin-core";
-import type { Session, SessionSummary } from "@cookielab.io/klovi-ui-components/types";
 
 export { encodeResolvedPath };
 

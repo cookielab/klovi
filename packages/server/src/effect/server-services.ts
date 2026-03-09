@@ -3,7 +3,7 @@ import type {
   GlobalSessionResult,
   Session,
   SessionSummary,
-} from "@cookielab.io/klovi-ui-components/types";
+} from "@cookielab.io/klovi-plugin-core";
 import { Context, Effect, Layer } from "effect";
 import {
   completeOnboarding,
