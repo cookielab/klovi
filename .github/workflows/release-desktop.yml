@@ -124,7 +124,6 @@ jobs:
           "
 
       - name: Build Electrobun app
-        shell: bash
         env:
           ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
         run: bun run build -- --env="$ELECTROBUN_ENV"
@@ -222,7 +221,7 @@ jobs:
           rm -rf "$STAGING_DIR"
 
           TARBALL_PATH="${BUILD_DIR}/Klovi.app.tar"
-          ZSTD_PATH="apps/desktop/node_modules/electrobun/dist-macos-arm64/zig-zstd"
+          ZSTD_PATH="${APP_DIR}/Contents/MacOS/zig-zstd"
           if [ ! -x "$ZSTD_PATH" ]; then
             echo "::error::Expected zig-zstd at $ZSTD_PATH"
             exit 1
@@ -347,10 +346,10 @@ jobs:
           TARGET_PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
           SOURCE_BUILD_DIR="apps/desktop/build/${SOURCE_PREFIX}"
 
-          INSTALLER=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${SOURCE_PREFIX}-*Setup*.tar.gz" | head -1)
+          INSTALLER=$(find "$SOURCE_BUILD_DIR" -maxdepth 1 -type f -name '*Setup*.tar.gz' | head -1)
           if [ -z "$INSTALLER" ]; then
-            echo "::error::Expected installer artifact for ${SOURCE_PREFIX}"
-            find apps/desktop/artifacts -maxdepth 1 -type f -name "${SOURCE_PREFIX}-*" 2>/dev/null || true
+            echo "::error::Expected installer in $SOURCE_BUILD_DIR"
+            find apps/desktop/build -maxdepth 2 -type f -name '*.tar.gz' 2>/dev/null || true
             exit 1
           fi
 
