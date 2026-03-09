@@ -26,13 +26,10 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)\.[0-9]+)?$ ]]; then
 fi
 
 BUILD_ENV="stable"
-ELECTROBUN_ENV="stable"
 if [[ "$VERSION" == *-beta.* ]]; then
   BUILD_ENV="beta"
-  ELECTROBUN_ENV="canary"
 elif [[ "$VERSION" == *-rc.* ]]; then
   BUILD_ENV="candidate"
-  ELECTROBUN_ENV="canary"
 fi
 
 # --- Load signing credentials ---
@@ -215,10 +212,10 @@ VERSION="$VERSION" COMMIT="$COMMIT" APP_PACKAGE_JSON="$APP_PACKAGE_JSON" bun -e 
 # --- Build ---
 echo ""
 echo "Building $BUILD_ENV release..."
-bun run build -- --env="$ELECTROBUN_ENV"
+bun run build -- --env="$BUILD_ENV"
 
 # --- Sign ---
-BUILD_DIR="apps/desktop/build/${ELECTROBUN_ENV}-macos-arm64"
+BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
 APP_BUNDLE_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
 
 if [[ -z "$APP_BUNDLE_DIR" ]]; then
@@ -283,5 +280,4 @@ echo "=== Build complete ==="
 echo "  App:     $APP_BUNDLE_DIR"
 echo "  DMG:     $DMG_NAME ($DMG_SIZE)"
 echo "  Env:     $BUILD_ENV"
-echo "  Build:   $ELECTROBUN_ENV"
 echo "  Version: $VERSION"
