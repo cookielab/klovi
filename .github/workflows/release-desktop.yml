@@ -330,6 +330,7 @@ jobs:
           "
 
       - name: Build Electrobun app
+        shell: bash
         env:
           ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
         run: bun run build -- --env="$ELECTROBUN_ENV"
@@ -467,6 +468,7 @@ jobs:
           "
 
       - name: Build Electrobun app
+        shell: bash
         env:
           ELECTROBUN_ENV: ${{ needs.release-meta.outputs.electrobun_env }}
         run: bun run build -- --env="$ELECTROBUN_ENV"
