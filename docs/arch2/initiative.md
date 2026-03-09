@@ -1,5 +1,9 @@
 # Arch2 Initiative
 
+> Historical note: this document captures the original Arch2 starting state and
+> target before implementation landed. It is preserved as archival context only.
+> For the current architecture, use `docs/arch2/VISION.md` and the source tree.
+
 ## Goal
 
 Split Klovi into a three-app layout while preserving its existing package boundaries:

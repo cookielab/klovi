@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { resolve } from "node:path";
+import { resolveCliConfig } from "./cli-config.ts";
 
 describe("CLI smoke tests", () => {
   const cliPath = resolve(import.meta.dir, "cli.ts");
@@ -13,6 +14,11 @@ describe("CLI smoke tests", () => {
   test("cli.ts imports startKloviPackageServer for internal composition", async () => {
     const content = await Bun.file(cliPath).text();
     expect(content).toContain("startKloviPackageServer");
+  });
+
+  test("cli.ts uses resolveCliConfig for environment-backed runtime config", async () => {
+    const content = await Bun.file(cliPath).text();
+    expect(content).toContain("resolveCliConfig");
   });
 
   test("server.ts exports startKloviServer as public contract", async () => {
@@ -35,5 +41,12 @@ describe("CLI smoke tests", () => {
     const pkgPath = resolve(import.meta.dir, "../package.json");
     const pkg = await Bun.file(pkgPath).json();
     expect(pkg.exports?.["./server"]).toBe("./dist/server.js");
+  });
+
+  test("resolveCliConfig supports KLOVI_SETTINGS_PATH", () => {
+    const config = resolveCliConfig(resolve(import.meta.dir, "src-under-test"), ["bun", "cli.ts"], {
+      KLOVI_SETTINGS_PATH: "/tmp/klovi-settings.json",
+    });
+    expect(config.settingsPath).toBe("/tmp/klovi-settings.json");
   });
 });

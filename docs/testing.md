@@ -1,126 +1,150 @@
 # Testing
 
-## Setup
+## Test Setup
 
-Klovi uses `bun test` as the single test runner across the monorepo.
+Klovi uses `bun test` as the primary test runner across the workspace.
 
-`bunfig.toml` preloads `test-setup.ts`:
+`bunfig.toml` preloads [test-setup.ts](/Users/vrtak-cz/Workspace/Cookielab/Klovi/test-setup.ts),
+which:
 
-```toml
-[test]
-preload = ["./test-setup.ts"]
-```
+- creates a `happy-dom` window
+- registers browser-like globals (`window`, `document`, `localStorage`, `history`, ...)
+- calls `setupMockRPC()` from
+  `packages/ui/src/app/test-helpers/mock-rpc.ts`
 
-`test-setup.ts`:
+That means React/UI tests can render without repeating DOM and mock-transport
+setup in every file.
 
-- Boots happy-dom (`GlobalWindow`)
-- Registers browser-like globals (`window`, `document`, `localStorage`, `history`, ...)
-- Calls `setupMockRPC()` from `apps/desktop/src/frontend/test-helpers/mock-rpc.ts`
-
-This means frontend tests can render immediately without repeating DOM/RPC bootstrap code.
-
-## Running Tests
+## Commands
 
 ```bash
-bun test                                  # Entire monorepo
-bun test apps/desktop/src                 # Desktop app shell tests
-bun test packages/plugin-core/src   # Core plugin package tests
+bun run check
+bun run typecheck
+bun test
+bun run test:node-smoke
+bun run stage:npm
+bun run verify:packed-artifact
+```
+
+Useful targeted runs:
+
+```bash
+bun test apps/package/src
+bun test apps/desktop/src
+bun test packages/server/src
+bun test packages/ui/src
+bun test packages/plugin-core/src
 bun test packages/plugin-claude-code/src
 bun test packages/plugin-codex/src
 bun test packages/plugin-opencode/src
-bun test packages/ui-components/src
-bun test packages/design-system/src
-bun test --watch
 ```
-
-## Dual-Runtime Coverage
-
-Bun is the default development and test runtime. The plugin layer also supports
-Node.js via `@effect/platform-node` providers. CI runs a dedicated Node smoke
-test to catch accidental Bun-only coupling in plugin code.
-
-```bash
-bun run test:node-smoke   # Node plugin runtime smoke (uses npx tsx)
-```
-
-The smoke test (`scripts/plugin-runtime-node-smoke.ts`) verifies:
-
-- All plugin packages import cleanly under Node
-- A `PluginRegistry` can be built with `NodePluginLayer`
-- File-backed plugins (Claude Code) can discover, list, and load sessions
-- The OpenCode SQLite adapter initializes without errors
-
-To add new runtime smoke coverage, add assertions to
-`scripts/plugin-runtime-node-smoke.ts`. Keep the full test suite in `bun test`;
-the Node smoke path is a targeted compatibility check, not a mirror of the
-entire suite.
 
 ## Test Layout
 
-### App Shell Tests (`apps/desktop/src/`)
+### `apps/package`
 
-| Area | Representative files |
-|---|---|
-| Main process RPC/settings | `apps/desktop/src/bun/rpc-handlers.test.ts`, `apps/desktop/src/bun/settings.test.ts`, `apps/desktop/src/bun/settings-handlers.test.ts` |
-| Plugin registry wiring | `apps/desktop/src/plugins/registry.test.ts`, `apps/desktop/src/plugins/auto-discover.test.ts` |
-| Stats aggregation | `apps/desktop/src/parser/stats.test.ts` |
-| Shared helpers | `apps/desktop/src/shared/content-blocks.test.ts`, `apps/desktop/src/shared/iso-time.test.ts` |
-| App flow/routing/plugin wiring | `apps/desktop/src/frontend/AppGate.test.tsx`, `apps/desktop/src/frontend/view-state.test.ts`, `apps/desktop/src/frontend/plugin-registry.test.ts` |
-| Frontend wrappers/layout | `apps/desktop/src/frontend/components/layout/*.test.tsx`, `apps/desktop/src/frontend/components/session/*.test.tsx`, `apps/desktop/src/frontend/components/settings/SettingsView.test.tsx`, `apps/desktop/src/frontend/components/ui/*.test.tsx` |
-| Frontend hooks/utils | `apps/desktop/src/frontend/hooks/*.test.ts*`, `apps/desktop/src/frontend/utils/*.test.ts` |
+- `src/cli.test.ts`
+- `src/cli-config.test.ts`
+- `src/server.test.ts`
+- `src/integration.test.ts`
+- `src/http-app.test.ts`
+- `src/static-handler.test.ts`
 
-### Workspace Package Tests (`packages/`)
+These validate CLI wiring, package-only HTTP composition, and the browser/npm
+distribution entrypoint.
 
-| Package | Representative files |
-|---|---|
-| `@cookielab.io/klovi-plugin-core` | `packages/plugin-core/src/plugin-registry.test.ts`, `ids.test.ts`, `session-id.test.ts`, `iso-time.test.ts` |
-| `@cookielab.io/klovi-plugin-claude-code` | `packages/plugin-claude-code/src/discovery.test.ts`, `parser.test.ts`, `subagent.test.ts`, `command-message.test.ts`, `shared/*.test.ts` |
-| `@cookielab.io/klovi-plugin-codex` | `packages/plugin-codex/src/discovery.test.ts`, `parser.test.ts`, `session-index.test.ts`, `extractors.test.ts`, `shared/*.test.ts` |
-| `@cookielab.io/klovi-plugin-opencode` | `packages/plugin-opencode/src/discovery.test.ts`, `parser.test.ts`, `db.test.ts`, `shared/json-utils.test.ts` |
-| `@cookielab.io/klovi-ui-components` | `packages/ui-components/src/presentation/*.test.ts*`, `search/SearchModal.test.tsx`, `sessions/ProjectList.test.tsx`, `tools/ToolCallDefaults.test.ts`, `utilities/*.test.ts`, `types/index.test.ts` |
-| `@cookielab.io/klovi-design-system` | `packages/design-system/src/components/components.test.tsx`, `hooks/useTheme.test.ts` |
+### `apps/desktop`
+
+- `src/bun/updater.test.ts`
+
+Desktop-specific tests are currently concentrated around updater behavior and
+desktop packaging/runtime wiring.
+
+### `packages/server`
+
+- `src/server.test.ts`
+- `src/integration.test.ts`
+- `src/rpc.test.ts`
+- `src/effect/server-services.test.ts`
+- `src/services/*.test.ts`
+
+These cover HTTP routing, Effect service composition, settings handlers, plugin
+registry refresh, and backend behavior.
+
+### `packages/ui`
+
+- `src/lib/*.test.ts`
+- `src/app/*.test.tsx`
+- `src/app/components/**/*.test.tsx`
+- `src/app/hooks/**/*.test.ts`
+
+These cover the shared app shell, onboarding, settings, layout, host capability
+gating, and view-state behavior.
+
+### Plugin packages
+
+- `packages/plugin-core/src/*.test.ts`
+- `packages/plugin-claude-code/src/*.test.ts`
+- `packages/plugin-codex/src/*.test.ts`
+- `packages/plugin-opencode/src/*.test.ts`
+
+These cover plugin contracts, discovery, parsing, and runtime portability.
+
+### Reusable UI packages
+
+- `packages/ui-components/src/**/*.test.ts*`
+- `packages/design-system/src/**/*.test.ts*`
+
+These validate reusable rendering, presentation helpers, formatting utilities,
+and design-system hooks/components independently of the app shell.
+
+## Node Runtime Smoke Coverage
+
+`bun run test:node-smoke` executes `scripts/plugin-runtime-node-smoke.ts` to
+validate the plugin layer under Node.
+
+It verifies that:
+
+- plugin packages import cleanly under Node
+- a registry can be built with the Node runtime
+- file-backed plugin flows still work
+- the OpenCode plugin handles missing SQLite data correctly
+
+This is a focused compatibility check, not a duplicate of the full Bun test
+suite.
+
+## Packed Artifact Verification
+
+`bun run verify:packed-artifact` exercises the staged npm artifact end-to-end:
+
+1. pack `apps/package/.stage/npm`
+2. install it into a clean temp directory
+3. run the installed CLI under Node
+4. run the installed CLI under Bun
+5. verify the public `@cookielab.io/klovi/server` import
+
+The verifier now uses an isolated `KLOVI_SETTINGS_PATH` so it does not depend on
+the developer's real local Klovi settings.
 
 ## Common Patterns
 
-### 1. Mock RPC in frontend tests
+### Mocking the transport layer
 
-`setupMockRPC()` provides default no-op handlers for all RPC methods. Tests override only what they need.
+`setupMockRPC()` in `packages/ui/src/app/test-helpers/mock-rpc.ts` provides
+default no-op implementations for `KloviClient` and `KloviHostBridge`. Tests
+override only the methods they care about.
 
-```ts
-import { setupMockRPC } from "../test-helpers/mock-rpc.ts";
+### Temp fixtures for discovery/parser tests
 
-setupMockRPC({
-  getProjects: () => Promise.resolve({ projects: [] }),
-});
-```
+Plugin tests typically create temp directories or temp SQLite data and point the
+plugin configuration at those fixtures. Keep the fixtures local to the test and
+clean them up in `afterEach`.
 
-### 2. Temp directories for discovery tests
+### Prefer colocated tests
 
-Plugin discovery tests usually create temporary directory trees and fixture JSONL files, then point plugin config to the temp location.
+New tests should live next to the module they cover:
 
-```ts
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
-import { setCodexCliDir } from "./config.ts";
+- `*.test.ts`
+- `*.test.tsx`
 
-const root = join(tmpdir(), "klovi-test");
-await mkdir(join(root, "sessions", "openai", "2025-01-15"), { recursive: true });
-await Bun.write(join(root, "sessions", "openai", "2025-01-15", "abc.jsonl"), "{...}\n{...}");
-setCodexCliDir(root);
-```
-
-### 3. Temp SQLite for OpenCode tests
-
-OpenCode tests build temporary SQLite DB fixtures matching expected tables (`session`, `message`, `part`) before executing discovery/parser logic.
-
-### 4. Package component tests
-
-`@cookielab.io/klovi-ui-components` and `@cookielab.io/klovi-design-system` tests validate reusable component behavior independent of app-shell wrappers.
-
-## Writing New Tests
-
-1. Place test files near the module (`*.test.ts` / `*.test.tsx`).
-2. Use `bun:test` (`describe`, `test`, `expect`, lifecycle hooks).
-3. For React tests, use `@testing-library/react`.
-4. For app-shell frontend tests, prefer overriding RPC via `setupMockRPC()`.
-5. For plugin discovery/parser tests, use temp fixtures and clean them up in `afterEach`.
+Use `bun:test` and `@testing-library/react` where applicable.

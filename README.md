@@ -3,22 +3,23 @@
 [![CI](https://github.com/cookielab/klovi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookielab/klovi/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
-A native desktop app for browsing and presenting AI coding session history. Supports Claude Code, Codex (CLI & app), and OpenCode. Built for showing AI coding workflows at meetups and conferences.
+Klovi lets you browse, search, and present AI coding session history from
+Claude Code, Codex, and OpenCode. It ships in two distribution modes that share
+the same core UI and backend logic:
+
+- Desktop app: native Electrobun shell with updater, menus, and directory picker
+- npm package: `npx @cookielab.io/klovi` or `bunx @cookielab.io/klovi`, serving
+  the shared UI in your browser on `127.0.0.1`
 
 ![Klovi homepage screenshot](docs/screenshot-homepage.png)
 ![Klovi homepage screenshot](docs/screenshot-session.png)
 
-## Why Klovi?
-
-AI coding tools like Claude Code, Codex (CLI & app), and OpenCode store conversation history locally, but there's no unified way to browse, search, or present them. Klovi fills that gap: launch the app and get a native desktop UI to explore your full session history across all tools, review what AI assistants did across projects, and step through conversations in a presentation mode perfect for demos and talks.
-
-Klovi auto-discovers sessions from Claude Code (`~/.claude/projects/`), Codex CLI & app (`~/.codex/sessions/`), and OpenCode (`~/.local/share/opencode/opencode.db`), then renders conversations with markdown, syntax highlighting, collapsible tool calls, and a step-through presentation mode. Projects from different tools that share the same working directory are merged automatically.
-
 ## Quick Start
 
-### Desktop App
+### Desktop app
 
-Download the latest release for your platform from the [Releases page](https://github.com/cookielab/klovi/releases).
+Download the latest release for your platform from the
+[Releases page](https://github.com/cookielab/klovi/releases).
 
 Or install via [Homebrew](https://brew.sh):
 
@@ -26,9 +27,7 @@ Or install via [Homebrew](https://brew.sh):
 brew install --cask cookielab/tap/klovi
 ```
 
-### npm Package (Browser UI)
-
-Run Klovi in your browser without installing the desktop app:
+### Browser-served npm package
 
 ```bash
 # Node.js
@@ -38,128 +37,94 @@ npx @cookielab.io/klovi
 bunx @cookielab.io/klovi
 ```
 
-Starts a local server on `http://127.0.0.1:3583` and opens your browser. For programmatic use:
+That starts a localhost-only server and opens your browser. For programmatic
+embedding:
 
 ```ts
 import { startKloviServer } from "@cookielab.io/klovi/server";
-const server = await startKloviServer({ port: 3583 });
+
+const server = await startKloviServer({ host: "127.0.0.1", port: 3583 });
 ```
 
-### Development
+Advanced CLI overrides:
+
+- `KLOVI_HOST`
+- `KLOVI_PORT`
+- `KLOVI_STATIC_DIR`
+- `KLOVI_SETTINGS_PATH`
+
+## Development
 
 ```bash
 bun install
-bun run dev
 ```
 
-The root scripts are workspace wrappers. The desktop app itself lives in `apps/desktop`.
+Use the root workspace scripts that match the runtime you want to exercise:
 
-### Monorepo Packages
+- `bun run dev:desktop` starts the Electrobun desktop app
+- `bun run dev:bun` starts the browser/npm variant through Bun
+- `bun run dev:node` starts the browser/npm variant through Node/tsx
 
-Klovi is a Bun workspace monorepo with these key workspaces:
+## Workspace Layout
 
-- `apps/desktop` - native desktop app shell, Electrobun config, assets, and packaging
-- `@cookielab.io/klovi-plugin-core` - shared plugin contracts + registry
-- `@cookielab.io/klovi-plugin-claude-code` - Claude Code discovery/parsing
-- `@cookielab.io/klovi-plugin-codex` - Codex discovery/parsing
-- `@cookielab.io/klovi-plugin-opencode` - OpenCode discovery/parsing
-- `@cookielab.io/klovi-ui-components` - reusable UI feature components
-- `@cookielab.io/klovi-design-system` - design tokens and UI primitives
+### Apps
+
+- `apps/package` - npm/browser distribution source for `@cookielab.io/klovi`
+- `apps/desktop` - Electrobun desktop shell and release packaging
+
+### Packages
+
+- `packages/server` - internal backend API, Effect-based, dual runtime
+- `packages/ui` - shared React app shell and transport-neutral UI bootstrap
+- `packages/plugin-core` - plugin contracts and registry primitives
+- `packages/plugin-claude-code` - Claude Code discovery, parsing, frontend integration
+- `packages/plugin-codex` - Codex discovery, parsing, frontend integration
+- `packages/plugin-opencode` - OpenCode discovery, parsing, frontend integration
+- `packages/ui-components` - reusable Klovi-specific UI feature components
+- `packages/design-system` - design tokens, primitives, and global styles
 
 ## Features
 
-**Multi-Tool Support**
-- Claude Code, Codex (CLI & app), and OpenCode sessions in one unified viewer
-- Plugin-based architecture — auto-discovers tools from their default data directories
-- Projects from different tools sharing the same working directory are merged
-- Tool name badge shown on each session in the sidebar
-
-**Session Browsing**
-- Auto-discovers all projects across registered tools
-- Dashboard statistics: project/session/tool counts, token usage breakdown, model distribution
-- Filterable project list with session counts and last activity
-- Hide/unhide projects to declutter the list
-- First-launch onboarding for plugin setup and security acknowledgement
-- Settings screen for plugin enable/disable and custom data directories
-- Sessions show first message, model, git branch, and timestamp
-- Plan/implementation session detection with colored badges and cross-session navigation links
-- Full conversation rendering with user/assistant/system messages
-- Sub-agent browsing: navigate into Task tool sub-agent sessions
-- Copy resume command from session header (tool-specific: `claude --resume <id>`, `codex resume <id>`)
-
-**Message Rendering**
-- Markdown with GFM support (tables, strikethrough, task lists)
-- Syntax-highlighted code blocks (language-aware, Prism)
-- Collapsible tool calls with smart summaries (file paths for Read/Write/Edit, commands for Bash, patterns for Grep/Glob)
-- Collapsible thinking/reasoning blocks
-- Token usage display (input/output/cache tokens per assistant message)
-- Timestamps on messages (relative time format)
-- Tool result images rendered as clickable thumbnails with fullscreen lightbox
-- File references (`@filepath.ext`) highlighted as green badges
-- Image attachments displayed as media-type badges
-- Slash commands shown in a dedicated command row
-
-**Presentation Mode**
-- Step-through navigation: each conversation turn is a step, assistant turns have sub-steps (each text block is a step, consecutive non-text blocks like thinking and tool calls are grouped together)
-- Keyboard controls: Arrow keys / Space to advance, Escape to exit, F for fullscreen
-- Progress bar with step counter at the bottom
-- Sidebar hidden, content full-width with larger font
-- Fade-in animation for each revealed step
-
-**Theme & Display**
-- System/light/dark theme support (configurable in Settings and via View menu action)
-- System theme auto-detection
-- Font size control (Settings controls, keyboard `+`/`-`, and View menu actions) for projector readability
-- Native application menu with keyboard shortcuts
+- Unified browsing for Claude Code, Codex, and OpenCode sessions
+- Project merging across tools that share the same working directory
+- Search across discovered sessions
+- Session presentation mode for demos and talks
+- Desktop-native capabilities in the Electrobun app
+- Browser-served mode through a single npm package
+- Plugin-specific tool summaries, input formatting, and resume commands
 
 ## Scripts
 
 | Script | Description |
 |---|---|
-| `bun run dev` | Start development mode with hot reload |
-| `bun run build` | Build native desktop binary for production |
-| `bun test` | Run all tests |
-| `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) |
-| `bun run lint` | Lint with Biome |
-| `bun run format` | Format with Biome |
-| `bun run check` | Biome check (lint + format, no write) |
-| `bun run check:fix` | Biome check + auto-fix |
-| `bun run storybook` | Run design system Storybook |
-
-## Tech Stack
-
-- [Electrobun](https://electrobun.dev) - native desktop framework for Bun
-- [Bun](https://bun.sh) - runtime, bundler, test runner
-- React 19 + TypeScript (strict mode)
-- Bun workspaces monorepo (`apps/*` + `packages/*`)
-- `@cookielab.io/klovi-ui-components` for feature UI modules
-- `@cookielab.io/klovi-design-system` for primitives/tokens/globals
-- react-markdown + remark-gfm
-- react-syntax-highlighter (Prism themes: oneDark/oneLight)
-- CSS custom properties + CSS modules (no CSS framework)
-- Biome for linting and formatting
-- happy-dom + @testing-library/react for tests
+| `bun run dev:desktop` | Start the Electrobun desktop app in development |
+| `bun run dev:bun` | Start the npm/browser variant with Bun |
+| `bun run dev:node` | Start the npm/browser variant with Node/tsx |
+| `bun run build` | Build the desktop app |
+| `bun run build:web` | Build the shared UI bundle |
+| `bun run build:package` | Build the npm/browser package source artifact |
+| `bun run stage:npm` | Stage the sanitized npm publish artifact |
+| `bun run verify:packed-artifact` | Verify the staged npm artifact under Node and Bun |
+| `bun test` | Run the full Bun test suite |
+| `bun run test:node-smoke` | Run the Node plugin runtime smoke test |
+| `bun run typecheck` | Run TypeScript type checking |
+| `bun run check` | Run Biome lint/format checks |
 
 ## Documentation
 
-See [docs/](docs/) for detailed documentation:
-
-- [Architecture](docs/architecture.md) - project structure, data flow, component hierarchy
-- [JSONL Format](docs/jsonl-format.md) - session file format specification
-- [Components](docs/components.md) - frontend component guide and patterns
-- [Testing](docs/testing.md) - test setup, patterns, and conventions
-- [Content Types](CONTENT_TYPES.md) - catalog of all JSONL content types and rendering status
+- [docs/architecture.md](docs/architecture.md) - runtime/package architecture
+- [docs/components.md](docs/components.md) - UI layers and wrapper composition
+- [docs/testing.md](docs/testing.md) - test setup and verification workflow
+- [docs/arch2/VISION.md](docs/arch2/VISION.md) - canonical Arch2 target state
+- [CONTENT_TYPES.md](CONTENT_TYPES.md) - JSONL content type catalog
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
-Please note that this project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Built With
-
-This project was built with love using [Claude Code](https://claude.ai/claude-code).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and workflow details.
 
 ## Trademark Notice
 
-"Claude" and "Claude Code" are trademarks of Anthropic, PBC. "OpenAI", "ChatGPT", and "Codex" are trademarks of OpenAI, Inc. "OpenCode" is a trademark of its respective owner. This project is not affiliated with, endorsed by, or sponsored by Anthropic, OpenAI, or any other AI tool vendor. All trademarks and registered trademarks are the property of their respective owners.
+"Claude" and "Claude Code" are trademarks of Anthropic, PBC. "OpenAI",
+"ChatGPT", and "Codex" are trademarks of OpenAI, Inc. "OpenCode" is a trademark
+of its respective owner. This project is not affiliated with, endorsed by, or
+sponsored by Anthropic, OpenAI, or any other AI tool vendor.

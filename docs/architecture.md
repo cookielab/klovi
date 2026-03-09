@@ -2,254 +2,184 @@
 
 ## Overview
 
-Klovi is a native desktop app built with [Electrobun](https://electrobun.dev). It runs as a Bun main process plus a React webview, and uses typed RPC for all communication between them.
+Klovi has two distribution modes that share the same backend and UI packages:
 
-The repository is a Bun workspace monorepo:
+- `apps/desktop` for the native Electrobun app
+- `apps/package` for the browser-served npm package
 
-- Plugin logic is split into workspace packages (`@cookielab.io/klovi-plugin-*`)
-- Shared UI primitives live in `@cookielab.io/klovi-design-system`
-- Reusable feature UI lives in `@cookielab.io/klovi-ui-components`
-- The desktop app shell (routing, settings/onboarding flow, Electrobun main process) lives in `apps/desktop/src/`
+The shared source-of-truth packages are:
 
-There is no HTTP server.
+- `packages/server` for backend services and HTTP server startup
+- `packages/ui` for the shared React app shell and transport-neutral contracts
+- `packages/plugin-*`, `packages/ui-components`, and `packages/design-system`
+  for plugins and reusable UI
 
 ## Workspace Structure
 
 ```text
 Klovi/
-├── package.json
-├── bunfig.toml
-├── biome.json
-├── docs/
 ├── apps/
-│   └── desktop/
-│       ├── package.json
-│       ├── electrobun.config.ts
-│       ├── packaging/
-│       ├── src/
-│       │   ├── bun/
-│       │   │   ├── index.ts          # Electrobun app entry + menu + RPC handlers
-│       │   │   ├── rpc-handlers.ts   # Main-process request handlers
-│       │   │   └── settings.ts       # Settings load/save/defaults
-│       │   ├── views/main/
-│       │   │   ├── index.html
-│       │   │   └── index.ts          # Electroview RPC + React mount
-│       │   ├── frontend/
-│       │   │   ├── App.tsx           # App + AppGate (onboarding/security gate)
-│       │   │   ├── view-state.ts     # Hash route parsing + navigation helpers
-│       │   │   ├── rpc.ts            # Frontend RPC client contract
-│       │   │   ├── plugin-registry.ts
-│       │   │   ├── components/
-│       │   │   ├── hooks/
-│       │   │   └── utils/
-│       │   ├── plugins/
-│       │   │   ├── catalog.ts        # Built-in plugin descriptor list + default dirs
-│       │   │   ├── auto-discover.ts  # Creates registry based on availability + settings
-│       │   │   └── registry.ts       # Typed wrapper over core PluginRegistry
-│       │   ├── parser/
-│       │   │   └── stats.ts          # Cross-project stats scan (messages/tokens/models)
-│       │   └── shared/
-│       │       ├── rpc-types.ts      # Typed Klovi RPC schema
-│       │       ├── types.ts          # Shared app types
-│       │       ├── session-id.ts     # Session ID codec
-│       │       └── plugin-types.ts   # Shared ToolPlugin aliases
+│   ├── desktop/
+│   │   ├── src/bun/index.ts
+│   │   ├── src/shared/rpc-types.ts
+│   │   └── src/views/main/index.ts
+│   └── package/
+│       ├── src/cli.ts
+│       ├── src/server.ts
+│       ├── src/http-app.ts
+│       └── scripts/stage-npm.ts
 ├── packages/
-│   ├── klovi-plugin-core/            # Shared plugin contracts + PluginRegistry
-│   ├── klovi-plugin-claude-code/     # Claude Code discovery + parsing + frontend plugin
-│   ├── klovi-plugin-codex/           # Codex discovery + parsing + frontend plugin
-│   ├── klovi-plugin-opencode/        # OpenCode discovery + parsing + frontend plugin
-│   ├── klovi-design-system/          # Design tokens + UI primitives + global styles
-│   └── klovi-ui-components/          # Reusable Klovi feature components
+│   ├── server/
+│   │   ├── src/server.ts
+│   │   ├── src/effect/
+│   │   └── src/services/
+│   ├── ui/
+│   │   ├── src/bootstrap.tsx
+│   │   ├── src/main.tsx
+│   │   ├── src/app/
+│   │   └── src/lib/
+│   ├── plugin-core/
+│   ├── plugin-claude-code/
+│   ├── plugin-codex/
+│   ├── plugin-opencode/
+│   ├── ui-components/
+│   └── design-system/
+└── scripts/
+    └── verify-packed-artifact.ts
 ```
 
-## Runtime Architecture
+## Runtime Composition
 
-### Main Process (Bun)
+### Browser/npm mode
 
-`apps/desktop/src/bun/index.ts`:
+`apps/package` owns the distribution-specific wiring:
 
-1. Defines typed RPC with `BrowserView.defineRPC<KloviRPC>()`
-2. Creates a `BrowserWindow` for `views://main/index.html`
-3. Configures native `ApplicationMenu`
-4. Forwards menu actions to webview RPC messages
+- `src/cli.ts` resolves CLI config and starts the package server
+- `src/server.ts` re-exports `startKloviServer` publicly and keeps
+  `startKloviPackageServer` internal for package composition
+- `src/http-app.ts` composes the RPC router from `packages/server` with static
+  asset serving from `packages/ui/dist`
+- `scripts/stage-npm.ts` produces the sanitized staged artifact in
+  `apps/package/.stage/npm`
 
-Registry lifecycle:
+At runtime:
 
-- The plugin registry is created lazily only after `acceptRisks` is called
-- Until then, data-reading endpoints are gated
+1. The user runs `npx @cookielab.io/klovi` or `bunx @cookielab.io/klovi`
+2. `startKloviPackageServer(...)` starts the backend and serves the UI bundle
+3. The browser loads `packages/ui` assets and talks to `/api/rpc/:method`
 
-### Webview (React)
+### Desktop mode
 
-`apps/desktop/src/views/main/index.ts`:
+`apps/desktop` owns the native shell:
 
-1. Creates Electroview RPC client
-2. Registers message handlers (`cycleTheme`, `togglePresentation`, `openSettings`, ...)
-3. Calls `setRPCClient(...)` for frontend code
-4. Mounts `AppGate`
+- `src/bun/index.ts` starts the Electrobun app, menu, updater, and main-process
+  RPC handlers
+- `src/views/main/index.ts` mounts the shared UI from `@cookielab.io/klovi-ui`
+- `src/shared/rpc-types.ts` defines the typed Electrobun RPC schema
 
-`AppGate` (`apps/desktop/src/frontend/App.tsx`) handles first-launch UX:
+At runtime:
 
-- `isFirstLaunch` decides onboarding vs regular flow
-- `getGeneralSettings` decides whether to show startup security warning
-- `acceptRisks` unlocks the registry and then renders the main app
+1. Electrobun starts the desktop shell
+2. The main process calls `packages/server` services directly
+3. The webview mounts `mountKloviApp(...)` from `packages/ui`
+4. The shared UI talks to the main process through Electrobun RPC instead of HTTP
 
-## RPC Contract
+## Shared Contracts
 
-Defined in [`apps/desktop/src/shared/rpc-types.ts`](../apps/desktop/src/shared/rpc-types.ts).
+### `mountKloviApp(config)` in `packages/ui`
 
-### Bun Requests
+`packages/ui/src/bootstrap.tsx` exposes the single mount entrypoint for both
+distribution modes.
 
-- `acceptRisks`
-- `isFirstLaunch`
-- `getVersion`
-- `getStats`
-- `getProjects`
-- `getSessions`
-- `getSession`
-- `getSubAgent`
-- `searchSessions`
-- `getPluginSettings`
-- `updatePluginSetting`
-- `getGeneralSettings`
-- `updateGeneralSettings`
-- `resetSettings`
-- `openExternal`
-- `browseDirectory`
+Config:
 
-### Main → Webview Messages
+- `container: HTMLElement`
+- `client: KloviClient`
+- `hostBridge: KloviHostBridge`
 
-- `cycleTheme`
-- `increaseFontSize`
-- `decreaseFontSize`
-- `togglePresentation`
-- `openSettings`
+### `KloviClient`
 
-## Data Flow
+Defined in `packages/ui/src/lib/client.ts`.
 
-```text
-Tool data on disk
-  ~/.claude/projects/**/*.jsonl
-  ~/.codex/sessions/**/*.jsonl
-  ~/.local/share/opencode/opencode.db
-        │
-        ▼
-Plugin packages (@cookielab.io/klovi-plugin-*)
-  - discover projects
-  - list sessions
-  - load sessions/sub-agents
-  - provide frontend plugin formatters/summaries
-        │
-        ▼
-Core registry (@cookielab.io/klovi-plugin-core)
-  PluginRegistry merges projects by resolved path
-  Session IDs are encoded as pluginId::rawSessionId
-        │
-        ▼
-App registry wrapper (`apps/desktop/src/plugins/registry.ts`)
-Auto-discovery + settings integration (`apps/desktop/src/plugins/auto-discover.ts`)
-        │
-        ▼
-RPC handlers (`apps/desktop/src/bun/rpc-handlers.ts`)
-        │
-        ▼
-React wrappers in `apps/desktop/src/frontend/components/*`
-        │
-        ▼
-Reusable UI in @cookielab.io/klovi-ui-components
+This is the transport-neutral interface for server-backed operations:
+
+- onboarding and version info
+- projects, sessions, and search
+- plugin/general settings
+
+Browser mode implements it over HTTP. Desktop mode implements it over Electrobun
+RPC.
+
+### `KloviHostBridge`
+
+Defined in `packages/ui/src/lib/host-bridge.ts`.
+
+This carries desktop-native capabilities such as:
+
+- directory browsing
+- updater lifecycle
+- menu actions
+- open external links
+
+Browser mode uses the stubbed `browserHostBridge`. Desktop mode wires the real
+Electrobun-backed implementation.
+
+### `startKloviServer(options)`
+
+Defined in `packages/server/src/server.ts` and re-exported publicly by
+`@cookielab.io/klovi/server`.
+
+This starts the backend API server and returns:
+
+```ts
+type KloviServer = {
+  url: string;
+  stop(): void;
+};
 ```
 
-## Frontend Composition
+`apps/package` uses it as the public programmatic API. Internally it builds on
+shared bootstrap logic in `packages/server/src/effect/bootstrap.ts`.
 
-The frontend is intentionally split into two layers:
+## Backend and Plugin Flow
 
-1. **App shell layer (`apps/desktop/src/frontend`)**
-- Routing/state (`useViewState`, hash navigation)
-- RPC data fetching (`useRpc`, `useSessionData`)
-- Electrobun integration (`openExternal`, menu events)
-- App-specific flows (onboarding, security warning, settings)
+`packages/server` is the internal backend boundary. It owns:
 
-2. **Reusable UI layer (`packages/ui-components`)**
-- Messages (`@cookielab.io/klovi-ui-components/messages`)
-- Session/project widgets (`@cookielab.io/klovi-ui-components/sessions`)
-- Presentation shell (`@cookielab.io/klovi-ui-components/presentation`)
-- Search modal (`@cookielab.io/klovi-ui-components/search`)
-- Tool rendering (`@cookielab.io/klovi-ui-components/tools`)
-- Utilities (`@cookielab.io/klovi-ui-components/utilities`)
+- Effect-based server bootstrap and runtime selection
+- HTTP RPC routing in `src/effect/http-app.ts`
+- service composition in `src/effect/server-services.ts`
+- registry creation and settings-backed refresh in `src/services/**`
 
-The app layer uses `Package*` wrapper components to bind shared UI components to Klovi RPC and app-specific handlers.
+Plugins remain separate packages:
 
-## Routing
+- `packages/plugin-claude-code`
+- `packages/plugin-codex`
+- `packages/plugin-opencode`
 
-Hash routes are resolved in `apps/desktop/src/frontend/view-state.ts`:
+`packages/plugin-core` provides the registry and canonical plugin contracts.
 
-- `#/` → home
-- `#/hidden` → hidden projects
-- `#/settings` → settings
-- `#/:encodedPath` → project sessions list
-- `#/:encodedPath/:sessionId` → session view/presentation
-- `#/:encodedPath/:sessionId/subagent/:agentId` → sub-agent view/presentation
+## UI Layering
 
-## Plugin System
+UI is split into two layers:
 
-### Core
+- `packages/ui` owns routing, onboarding, settings flow, host-bridge integration,
+  shared app state, and wrapper components
+- `packages/ui-components` owns reusable rendering for messages, sessions,
+  presentation mode, search, tools, and utility components
 
-`@cookielab.io/klovi-plugin-core` provides:
+`packages/design-system` provides the global styles, tokens, and reusable
+primitives consumed by `packages/ui` and `packages/ui-components`.
 
-- `ToolPlugin` interface
-- `PluginRegistry` implementation
-- Built-in plugin IDs (`claude-code`, `codex-cli`, `opencode`)
-- Session ID and path encoding helpers
+## Verification Workflow
 
-### Built-in plugin catalog
+The baseline verification set for the implemented architecture is:
 
-`apps/desktop/src/plugins/catalog.ts` declares built-in plugins and default data directories.
+- `bun run check`
+- `bun run typecheck`
+- `bun test`
+- `bun run test:node-smoke`
+- `bun run stage:npm`
+- `bun run verify:packed-artifact`
 
-`apps/desktop/src/plugins/auto-discover.ts`:
-
-- Applies settings overrides for plugin directories
-- Skips disabled plugins
-- Registers only plugins with available data (`getDefaultDataDir` / `isDataAvailable`)
-
-### Frontend plugin registry
-
-`apps/desktop/src/frontend/plugin-registry.ts` registers package-provided frontend plugins:
-
-- `@cookielab.io/klovi-plugin-claude-code/frontend`
-- `@cookielab.io/klovi-plugin-codex/frontend`
-- `@cookielab.io/klovi-plugin-opencode/frontend`
-
-These provide plugin-specific summary extractors, input formatters, and resume command behavior consumed by `@cookielab.io/klovi-ui-components` components.
-
-## Settings Model
-
-Settings are stored in a local JSON file via `apps/desktop/src/bun/settings.ts`.
-
-Schema highlights:
-
-- Per-plugin settings: `enabled`, `dataDir`
-- General settings: `showSecurityWarning`
-- Versioned settings structure (`version: 1`)
-
-Settings endpoints are handled in `apps/desktop/src/bun/rpc-handlers.ts`:
-
-- `getPluginSettings`, `updatePluginSetting`
-- `getGeneralSettings`, `updateGeneralSettings`
-- `resetSettings`, `isFirstLaunch`
-
-## Type Boundaries
-
-- `apps/desktop/src/shared/types.ts` re-exports canonical app data shapes from `@cookielab.io/klovi-ui-components/types`
-- `apps/desktop/src/shared/rpc-types.ts` defines the full typed RPC schema
-- `apps/desktop/src/shared/session-id.ts` handles `pluginId::rawSessionId` encoding/decoding
-
-This keeps plugin packages, app shell, and reusable UI aligned on the same contracts.
-
-## Build and Dev
-
-- `bun run dev` → root wrapper to `apps/desktop`
-- `bun run build` → root wrapper to `apps/desktop`
-
-Electrobun bundles both:
-
-- Bun main process (`apps/desktop/src/bun/index.ts`)
-- Webview entry (`apps/desktop/src/views/main/index.ts`)
+The packed-artifact verifier proves that the staged npm package installs and
+runs correctly under both Node and Bun.

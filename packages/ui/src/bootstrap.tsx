@@ -10,6 +10,13 @@ export type { KloviClient } from "./lib/client.ts";
 export { useKloviClient, useKloviHostBridge } from "./lib/context.ts";
 export type { KloviHostBridge, KloviHostCapabilities } from "./lib/host-bridge.ts";
 export { createHttpClient } from "./lib/http-client.ts";
+export type {
+  DashboardStats,
+  GlobalSessionResult,
+  Project,
+  Session,
+  SessionSummary,
+} from "./shared/types.ts";
 
 export interface MountKloviAppConfig {
   container: HTMLElement;

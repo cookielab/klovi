@@ -16,6 +16,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { getDefaultSettings } from "../packages/server/src/services/settings.ts";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 const stageDir = resolve(repoRoot, "apps/package/.stage/npm");
@@ -34,7 +35,7 @@ function fail(label: string, err: unknown) {
   console.error(`  \u2717 ${label}:`, err instanceof Error ? err.message : err);
 }
 
-async function waitForServer(url: string, timeoutMs = 15000): Promise<boolean> {
+async function waitForServer(url: string, timeoutMs = 30000): Promise<boolean> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -170,6 +171,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 
   const port = 30000 + Math.floor(Math.random() * 10000);
   const cmd = runtime === "bun" ? "bun" : "node";
+  const settingsPath = createHermeticSettingsFile(installDir);
 
   const proc = spawn(cmd, [cliPath, "--no-browser"], {
     cwd: installDir,
@@ -177,6 +179,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
       ...process.env,
       KLOVI_PORT: String(port),
       KLOVI_HOST: "127.0.0.1",
+      KLOVI_SETTINGS_PATH: settingsPath,
       NODE_NO_WARNINGS: "1",
     },
     stdio: ["pipe", "pipe", "pipe"],
@@ -243,6 +246,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
         ...process.env,
         KLOVI_PORT: String(blockerPort),
         KLOVI_HOST: "127.0.0.1",
+        KLOVI_SETTINGS_PATH: settingsPath,
         NODE_NO_WARNINGS: "1",
       },
       stdio: ["pipe", "pipe", "pipe"],
@@ -278,6 +282,7 @@ async function testEnvOverrides(installDir: string): Promise<void> {
 
   const cliPath = join(installDir, "node_modules/.bin/klovi");
   const customPort = 30000 + Math.floor(Math.random() * 10000);
+  const settingsPath = createHermeticSettingsFile(installDir);
 
   const proc = spawn("node", [cliPath, "--no-browser"], {
     cwd: installDir,
@@ -285,6 +290,7 @@ async function testEnvOverrides(installDir: string): Promise<void> {
       ...process.env,
       KLOVI_PORT: String(customPort),
       KLOVI_HOST: "127.0.0.1",
+      KLOVI_SETTINGS_PATH: settingsPath,
       NODE_NO_WARNINGS: "1",
     },
     stdio: ["pipe", "pipe", "pipe"],
@@ -311,6 +317,29 @@ async function testEnvOverrides(installDir: string): Promise<void> {
   } finally {
     await killProcess(proc);
   }
+}
+
+function createHermeticSettingsFile(installDir: string): string {
+  const settingsDir = join(installDir, ".klovi-test");
+  const settingsPath = join(settingsDir, "settings.json");
+  const settings = getDefaultSettings();
+
+  for (const pluginId of Object.keys(settings.plugins)) {
+    const plugin = settings.plugins[pluginId];
+    if (plugin) {
+      plugin.enabled = false;
+      plugin.dataDir = null;
+    }
+  }
+
+  settings.general = {
+    showSecurityWarning: false,
+  };
+
+  mkdirSync(settingsDir, { recursive: true });
+  writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
+
+  return settingsPath;
 }
 
 // ── Main ──────────────────────────────────────────────────

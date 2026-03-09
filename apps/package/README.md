@@ -31,6 +31,7 @@ Options:
 | `KLOVI_PORT` | `3583` | Server port |
 | `KLOVI_HOST` | `127.0.0.1` | Bind address (localhost-only by default) |
 | `KLOVI_STATIC_DIR` | (auto) | Override the static assets directory |
+| `KLOVI_SETTINGS_PATH` | `~/.klovi/settings.json` | Override the settings file used by the CLI |
 
 ## Programmatic API
 

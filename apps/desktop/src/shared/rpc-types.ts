@@ -5,7 +5,7 @@ import type {
   Project,
   Session,
   SessionSummary,
-} from "@cookielab.io/klovi-ui-components/types";
+} from "@cookielab.io/klovi-ui/bootstrap";
 import type { RPCSchema } from "electrobun/bun";
 
 export type UpdateChannel = "stable" | "candidate" | "beta";
