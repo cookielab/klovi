@@ -49,6 +49,9 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
+
       - uses: oven-sh/setup-bun@v2
 
       - uses: actions/cache@v5
@@ -94,6 +97,8 @@ jobs:
       - name: Publish to npm
         if: inputs.dry-run == false
         working-directory: apps/package/.stage/npm
+        env:
+          NODE_AUTH_TOKEN: ""
         run: npm publish --access public --provenance
 
       - name: Dry-run pack
