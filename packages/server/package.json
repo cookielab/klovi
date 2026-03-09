@@ -16,18 +16,11 @@
   "exports": {
     "./server": "./src/server.ts",
     "./effect/bootstrap": "./src/effect/bootstrap.ts",
-    "./effect/server-config": "./src/effect/server-config.ts",
-    "./effect/server-services": "./src/effect/server-services.ts",
     "./effect/http-app": "./src/effect/http-app.ts",
-    "./effect/platform-bun": "./src/effect/platform-bun.ts",
-    "./effect/platform-node": "./src/effect/platform-node.ts",
-    "./effect/plugin-runtime": "./src/effect/plugin-runtime.ts",
     "./services/app-services": "./src/services/app-services.ts",
     "./services/auto-discover": "./src/services/auto-discover.ts",
-    "./services/catalog": "./src/services/catalog.ts",
     "./services/registry": "./src/services/registry.ts",
-    "./services/settings": "./src/services/settings.ts",
-    "./services/stats": "./src/services/stats.ts"
+    "./services/settings": "./src/services/settings.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

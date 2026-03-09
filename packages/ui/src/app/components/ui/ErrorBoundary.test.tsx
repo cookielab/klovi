@@ -11,15 +11,15 @@ function SafeComponent() {
 }
 
 describe("ErrorBoundary", () => {
-  // Suppress React error boundary console.error noise
-  // biome-ignore lint/suspicious/noConsole: testing console error suppression
+  // biome-ignore lint/suspicious/noConsole: test-only console stubbing
   const originalError = console.error;
+
+  function silenceExpectedBoundaryErrors(): void {
+    console.error = () => {};
+  }
+
   beforeEach(() => {
-    console.error = (...args: unknown[]) => {
-      const msg = String(args[0]);
-      if (msg.includes("Error: Uncaught") || msg.includes("The above error")) return;
-      originalError(...args);
-    };
+    console.error = originalError;
   });
   afterEach(() => {
     cleanup();
@@ -36,6 +36,7 @@ describe("ErrorBoundary", () => {
   });
 
   test("renders view-level fallback on error", () => {
+    silenceExpectedBoundaryErrors();
     const { getByText } = render(
       <ErrorBoundary>
         <ThrowingComponent message="test crash" />
@@ -47,6 +48,7 @@ describe("ErrorBoundary", () => {
   });
 
   test("renders inline fallback on error when inline=true", () => {
+    silenceExpectedBoundaryErrors();
     const { getByText } = render(
       <ErrorBoundary inline>
         <ThrowingComponent message="render failure" />
@@ -58,6 +60,7 @@ describe("ErrorBoundary", () => {
   });
 
   test("retry resets error state on view-level boundary", () => {
+    silenceExpectedBoundaryErrors();
     let shouldThrow = true;
     function MaybeThrow(): React.JSX.Element {
       if (shouldThrow) throw new Error("boom");
@@ -77,6 +80,7 @@ describe("ErrorBoundary", () => {
   });
 
   test("retry resets error state on inline boundary", () => {
+    silenceExpectedBoundaryErrors();
     let shouldThrow = true;
     function MaybeThrow(): React.JSX.Element {
       if (shouldThrow) throw new Error("boom");

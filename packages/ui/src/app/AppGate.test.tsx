@@ -1,10 +1,32 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
+import { act } from "react";
 import { AppGate } from "./App.tsx";
 import { MockProviders, setupMockRPC } from "./test-helpers/mock-rpc.ts";
 
 describe("AppGate", () => {
-  afterEach(cleanup);
+  // biome-ignore lint/suspicious/noConsole: test-only console filtering
+  const originalError = console.error;
+
+  beforeEach(() => {
+    console.error = (...args: unknown[]) => {
+      const message = args.map(String).join(" ");
+      if (message.includes("not wrapped in act")) return;
+      originalError(...args);
+    };
+  });
+
+  afterEach(() => {
+    cleanup();
+    console.error = originalError;
+  });
+
+  async function clickAndFlush(button: HTMLElement): Promise<void> {
+    await act(async () => {
+      fireEvent.click(button);
+      await Promise.resolve();
+    });
+  }
 
   // --- First launch (isFirstLaunch=true): show full Onboarding ---
 
@@ -24,9 +46,11 @@ describe("AppGate", () => {
     });
     const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
-    fireEvent.click(nextBtn);
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
     const startBtn = await findByRole("button", { name: "Get Started" });
-    fireEvent.click(startBtn);
+    await clickAndFlush(startBtn);
     await findByText("Welcome to Klovi");
   });
 
@@ -39,9 +63,13 @@ describe("AppGate", () => {
     });
     const { findByRole } = render(<AppGate />, { wrapper: MockProviders });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
-    fireEvent.click(nextBtn);
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
     const startBtn = await findByRole("button", { name: "Get Started" });
-    fireEvent.click(startBtn);
+    act(() => {
+      fireEvent.click(startBtn);
+    });
     expect(updateGeneralSettings).not.toHaveBeenCalled();
   });
 
@@ -54,9 +82,13 @@ describe("AppGate", () => {
     });
     const { findByRole, findByLabelText } = render(<AppGate />, { wrapper: MockProviders });
     const checkbox = await findByLabelText("Don't show this again");
-    fireEvent.click(checkbox);
+    act(() => {
+      fireEvent.click(checkbox);
+    });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
-    fireEvent.click(nextBtn);
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
     expect(updateGeneralSettings).toHaveBeenCalledWith({ showSecurityWarning: false });
   });
 
@@ -79,7 +111,7 @@ describe("AppGate", () => {
     });
     const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
     const btn = await findByRole("button", { name: "Accept & Continue" });
-    fireEvent.click(btn);
+    await clickAndFlush(btn);
     await findByText("Welcome to Klovi");
   });
 
@@ -93,9 +125,13 @@ describe("AppGate", () => {
     });
     const { findByRole, findByLabelText } = render(<AppGate />, { wrapper: MockProviders });
     const checkbox = await findByLabelText("Don't show this again");
-    fireEvent.click(checkbox);
+    act(() => {
+      fireEvent.click(checkbox);
+    });
     const btn = await findByRole("button", { name: "Accept & Continue" });
-    fireEvent.click(btn);
+    act(() => {
+      fireEvent.click(btn);
+    });
     expect(updateGeneralSettings).toHaveBeenCalledWith({ showSecurityWarning: false });
   });
 
@@ -140,9 +176,11 @@ describe("AppGate", () => {
     });
     const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
     const nextBtn = await findByRole("button", { name: "Accept & Continue" });
-    fireEvent.click(nextBtn);
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
     const startBtn = await findByRole("button", { name: "Get Started" });
-    fireEvent.click(startBtn);
+    await clickAndFlush(startBtn);
     await findByText("Welcome to Klovi");
   });
 });

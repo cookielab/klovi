@@ -15,9 +15,6 @@ export interface KloviServer {
   stop(): void;
 }
 
-export { ServerConfig, type ServerConfigShape } from "./effect/server-config.ts";
-export { KloviServicesLive, type KloviServicesShape } from "./effect/server-services.ts";
-
 export function startKloviServer(options: StartKloviServerOptions = {}): Promise<KloviServer> {
   return bootstrapServer(options, makeServeLayer);
 }

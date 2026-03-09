@@ -115,7 +115,7 @@ Use the root workspace scripts that match the runtime you want to exercise:
 - [docs/architecture.md](docs/architecture.md) - runtime/package architecture
 - [docs/components.md](docs/components.md) - UI layers and wrapper composition
 - [docs/testing.md](docs/testing.md) - test setup and verification workflow
-- [docs/arch2/VISION.md](docs/arch2/VISION.md) - canonical Arch2 target state
+- [docs/ARCH2-VISION.md](docs/ARCH2-VISION.md) - canonical Arch2 target state
 - [CONTENT_TYPES.md](CONTENT_TYPES.md) - JSONL content type catalog
 
 ## Contributing

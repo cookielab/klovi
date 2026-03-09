@@ -181,6 +181,9 @@ Source: `packages/server/src/effect/platform-bun.ts`, `packages/server/src/effec
 
 The core Arch2 source architecture is implemented. The single-package npm publish path is fully wired and verified.
 
+Re-validated on March 9, 2026 with:
+`bun run check`, `bun run typecheck`, `bun test`, `bun run test:node-smoke`, `bun run stage:npm`, `bun run verify:packed-artifact`.
+
 - `packages/server` (`@cookielab.io/klovi-server`) exists as a pure internal backend with Effect-based services, dual runtime adapters (Bun + Node via `@effect/platform`), and `startKloviServer()`. It has no static file serving or CLI responsibilities in source.
 - `packages/ui` exists as the shared React application with `mountKloviApp()`, `KloviClient`, `KloviHostBridge`, and capability gating.
 - `apps/package` exists as the composition layer for the browser-served variant and as the npm package source for `@cookielab.io/klovi`.
