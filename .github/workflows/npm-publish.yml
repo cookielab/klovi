@@ -44,13 +44,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@latest
 
       - uses: oven-sh/setup-bun@v2
 
@@ -98,8 +95,13 @@ jobs:
         if: inputs.dry-run == false
         working-directory: apps/package/.stage/npm
         env:
-          NODE_AUTH_TOKEN: ""
-        run: npm publish --access public --provenance
+          VERSION: ${{ inputs.version }}
+        run: |
+          TAG_FLAG=""
+          if echo "$VERSION" | grep -qE '-(beta|rc|alpha)\.'; then
+            TAG_FLAG="--tag beta"
+          fi
+          npm publish --access public $TAG_FLAG
 
       - name: Dry-run pack
         if: inputs.dry-run == true
