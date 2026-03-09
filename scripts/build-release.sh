@@ -82,8 +82,119 @@ trap cleanup EXIT
 
 # --- Set version and commit in package.json ---
 COMMIT=$(git rev-parse --short HEAD)
-echo "Setting version to $VERSION and commit to $COMMIT in package.json..."
+echo "Syncing Bun dependencies and patching Electrobun macOS runtime..."
 cd "$PROJECT_DIR"
+bun install --frozen-lockfile
+
+ELECTROBUN_PACKAGE_DIR="$PROJECT_DIR/node_modules/electrobun"
+if [[ ! -d "$ELECTROBUN_PACKAGE_DIR" ]]; then
+  echo "Error: Electrobun install not found at $ELECTROBUN_PACKAGE_DIR"
+  exit 1
+fi
+
+ELECTROBUN_PACKAGE_DIR="$ELECTROBUN_PACKAGE_DIR" bun -e '
+  const root = process.env.ELECTROBUN_PACKAGE_DIR;
+  if (!root) throw new Error("ELECTROBUN_PACKAGE_DIR is not set");
+
+  const patchFile = async (relativePath: string, transform: (text: string) => string) => {
+    const path = `${root}/${relativePath}`;
+    const file = Bun.file(path);
+    if (!(await file.exists())) {
+      throw new Error(`Electrobun runtime file not found: ${path}`);
+    }
+
+    const before = await file.text();
+    const after = transform(before);
+    if (before !== after) {
+      await Bun.write(path, after);
+    }
+  };
+
+  await patchFile("dist-macos-arm64/main.js", (text) =>
+    text.replaceAll("process.argv0", "process.execPath"),
+  );
+
+  await patchFile("dist-macos-arm64/api/bun/core/BuildConfig.ts", (text) => {
+    let next = text;
+    if (!next.includes(`import { join, dirname } from "path";`)) {
+      next = next.replace(
+        "export type BuildConfigType = {",
+        `import { join, dirname } from "path";\n\nexport type BuildConfigType = {`,
+      );
+    }
+
+    return next.replace(
+      "Bun.file(`../${resourcesDir}/build.json`).json()",
+      "Bun.file(join(dirname(process.execPath), \"..\", resourcesDir, \"build.json\")).json()",
+    );
+  });
+
+  await patchFile("dist-macos-arm64/api/bun/core/Paths.ts", (text) => {
+    let next = text;
+    if (!next.includes(`import { resolve, dirname } from "path";`)) {
+      next = next.replace(
+        `import { resolve } from "path";`,
+        `import { resolve, dirname } from "path";`,
+      );
+    }
+
+    return next.replace(
+      `const RESOURCES_FOLDER = resolve("../Resources/");`,
+      `const RESOURCES_FOLDER = resolve(dirname(process.execPath), "../Resources/");`,
+    );
+  });
+
+  await patchFile("dist-macos-arm64/api/bun/core/Updater.ts", (text) =>
+    text.replace(
+      "Bun.file(`../${resourcesDir}/version.json`).json()",
+      "Bun.file(join(dirname(process.execPath), \"..\", resourcesDir, \"version.json\")).json()",
+    ),
+  );
+
+  await patchFile("dist-macos-arm64/api/bun/core/Utils.ts", (text) => {
+    let next = text;
+    if (!next.includes(`import { join, dirname } from "node:path";`)) {
+      next = next.replace(
+        `import { join } from "node:path";`,
+        `import { join, dirname } from "node:path";`,
+      );
+    }
+
+    return next.replace(
+      `readFileSync(join("..", resourcesDir, "version.json"), "utf-8")`,
+      `readFileSync(join(dirname(process.execPath), "..", resourcesDir, "version.json"), "utf-8")`,
+    );
+  });
+
+  await patchFile("dist-macos-arm64/api/bun/proc/native.ts", (text) => {
+    let next = text;
+    if (!next.includes(`import { join, dirname } from "path";`)) {
+      next = next.replace(
+        `import { join } from "path";`,
+        `import { join, dirname } from "path";`,
+      );
+    }
+
+    return next.replace(
+      "join(process.cwd(), `libNativeWrapper.${suffix}`)",
+      "join(dirname(process.execPath), `libNativeWrapper.${suffix}`)",
+    );
+  });
+'
+
+if ! rg -q 'process\\.execPath' "$ELECTROBUN_PACKAGE_DIR/dist-macos-arm64/main.js"; then
+  echo "Error: Electrobun macOS runtime patch is missing in $ELECTROBUN_PACKAGE_DIR/dist-macos-arm64/main.js"
+  echo "Expected process.execPath-based launcher paths for App Translocation safety"
+  exit 1
+fi
+
+if ! rg -q 'dirname\\(process\\.execPath\\).*build\\.json' "$ELECTROBUN_PACKAGE_DIR/dist-macos-arm64/api/bun/core/BuildConfig.ts"; then
+  echo "Error: Electrobun macOS runtime patch is missing in $ELECTROBUN_PACKAGE_DIR/dist-macos-arm64/api/bun/core/BuildConfig.ts"
+  echo "Expected absolute build.json lookup for App Translocation safety"
+  exit 1
+fi
+
+echo "Setting version to $VERSION and commit to $COMMIT in package.json..."
 VERSION="$VERSION" COMMIT="$COMMIT" APP_PACKAGE_JSON="$APP_PACKAGE_JSON" bun -e "
   const pkg = await Bun.file(process.env.APP_PACKAGE_JSON).json();
   pkg.version = process.env.VERSION;
