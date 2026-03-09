@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Local release build script — mirrors .github/workflows/release.yml macOS steps
+# Local release build script — mirrors .github/workflows/release-desktop.yml macOS steps
 # Usage: ./scripts/build-release.sh <version>
 # Example: ./scripts/build-release.sh 3.0.0-beta.8
 
@@ -23,6 +23,13 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)\.[0-9]+)?$ ]]; then
   echo "Error: Invalid version format '$VERSION'"
   echo "  Expected: X.Y.Z or X.Y.Z-(beta|rc).N"
   exit 1
+fi
+
+BUILD_ENV="stable"
+if [[ "$VERSION" == *-beta.* ]]; then
+  BUILD_ENV="beta"
+elif [[ "$VERSION" == *-rc.* ]]; then
+  BUILD_ENV="candidate"
 fi
 
 # --- Load signing credentials ---
@@ -204,11 +211,11 @@ VERSION="$VERSION" COMMIT="$COMMIT" APP_PACKAGE_JSON="$APP_PACKAGE_JSON" bun -e 
 
 # --- Build ---
 echo ""
-echo "Building stable release..."
-bun run build -- --env=stable
+echo "Building $BUILD_ENV release..."
+bun run build -- --env="$BUILD_ENV"
 
 # --- Sign ---
-BUILD_DIR="apps/desktop/build/stable-macos-arm64"
+BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
 APP_BUNDLE_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
 
 if [[ -z "$APP_BUNDLE_DIR" ]]; then
@@ -257,15 +264,20 @@ echo "Stapling notarization ticket..."
 xcrun stapler staple "$APP_BUNDLE_DIR"
 
 # --- Package ---
-ZIP_NAME="apps/desktop/build/Klovi-${VERSION}-macos-arm64.zip"
+DMG_STAGING_DIR=$(mktemp -d /tmp/klovi-dmg.XXXXXX)
+DMG_NAME="apps/desktop/build/Klovi-${VERSION}-macos-arm64.dmg"
 echo ""
-echo "Packaging $ZIP_NAME..."
-ditto -c -k --keepParent "$APP_BUNDLE_DIR" "$ZIP_NAME"
+echo "Packaging $DMG_NAME..."
+cp -R "$APP_BUNDLE_DIR" "$DMG_STAGING_DIR/"
+ln -s /Applications "$DMG_STAGING_DIR/Applications"
+hdiutil create -volname "Klovi" -srcfolder "$DMG_STAGING_DIR" -ov -format ULFO "$DMG_NAME"
+rm -rf "$DMG_STAGING_DIR"
 
 # --- Summary ---
-ZIP_SIZE=$(du -h "$ZIP_NAME" | cut -f1)
+DMG_SIZE=$(du -h "$DMG_NAME" | cut -f1)
 echo ""
 echo "=== Build complete ==="
 echo "  App:     $APP_BUNDLE_DIR"
-echo "  ZIP:     $ZIP_NAME ($ZIP_SIZE)"
+echo "  DMG:     $DMG_NAME ($DMG_SIZE)"
+echo "  Env:     $BUILD_ENV"
 echo "  Version: $VERSION"

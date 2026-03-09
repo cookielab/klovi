@@ -7,8 +7,13 @@ import type { UpdateStatus } from "../shared/rpc-types.ts";
 import {
   filterReleasesByChannel,
   findLatestRelease,
+  findReleaseAsset,
   type GitHubRelease,
-  getAssetName,
+  getElectrobunPlatformPrefix,
+  getElectrobunTarballName,
+  getReleaseBundleAssetName,
+  getReleaseChannel,
+  getZstdBinaryPath,
   UpdateManager,
 } from "./updater.ts";
 
@@ -79,25 +84,96 @@ describe("filterReleasesByChannel", () => {
   });
 });
 
-describe("getAssetName", () => {
-  test("returns correct name for macos arm64", () => {
-    expect(getAssetName("2.0.0", "macos", "arm64")).toBe("Klovi-2.0.0-macos-arm64.zip");
+describe("Electrobun asset helpers", () => {
+  test("maps release tags to updater channels", () => {
+    expect(getReleaseChannel("2.0.0")).toBe("stable");
+    expect(getReleaseChannel("2.1.0-rc.1")).toBe("candidate");
+    expect(getReleaseChannel("2.1.0-beta.1")).toBe("beta");
   });
 
-  test("returns correct name for linux amd64", () => {
-    expect(getAssetName("2.0.0", "linux", "x64")).toBe("Klovi-2.0.0-linux-amd64.tar.gz");
+  test("builds platform prefixes", () => {
+    expect(getElectrobunPlatformPrefix("stable", "macos", "arm64")).toBe("stable-macos-arm64");
+    expect(getElectrobunPlatformPrefix("candidate", "win", "x64")).toBe("candidate-win-x64");
+    expect(getElectrobunPlatformPrefix("beta", "linux", "arm64")).toBe("beta-linux-arm64");
   });
 
-  test("returns correct name for linux arm64", () => {
-    expect(getAssetName("2.0.0", "linux", "arm64")).toBe("Klovi-2.0.0-linux-arm64.tar.gz");
+  test("returns normalized tarball names", () => {
+    expect(getElectrobunTarballName("macos")).toBe("Klovi.app.tar.zst");
+    expect(getElectrobunTarballName("linux")).toBe("Klovi.tar.zst");
+    expect(getElectrobunTarballName("win")).toBe("Klovi.tar.zst");
   });
 
-  test("returns correct name for windows amd64", () => {
-    expect(getAssetName("2.0.0", "win", "x64")).toBe("Klovi-2.0.0-windows-amd64.zip");
+  test("builds macos release bundle asset name", () => {
+    expect(getReleaseBundleAssetName("2.0.0", "macos", "arm64")).toBe(
+      "stable-macos-arm64-Klovi.app.tar.zst",
+    );
   });
 
-  test("returns correct name for windows arm64", () => {
-    expect(getAssetName("2.0.0", "win", "arm64")).toBe("Klovi-2.0.0-windows-arm64.zip");
+  test("builds windows release bundle asset name", () => {
+    expect(getReleaseBundleAssetName("2.1.0-rc.1", "win", "x64")).toBe(
+      "candidate-win-x64-Klovi.tar.zst",
+    );
+  });
+
+  test("builds linux x64 release bundle asset name", () => {
+    expect(getReleaseBundleAssetName("2.1.0-beta.1", "linux", "x64")).toBe(
+      "beta-linux-x64-Klovi.tar.zst",
+    );
+  });
+
+  test("builds linux arm64 release bundle asset name", () => {
+    expect(getReleaseBundleAssetName("2.0.0", "linux", "arm64")).toBe(
+      "stable-linux-arm64-Klovi.tar.zst",
+    );
+  });
+
+  test("resolves zstd path for unix platforms", () => {
+    expect(getZstdBinaryPath("macos", "/Applications/Klovi.app/Contents/MacOS/Klovi")).toBe(
+      "/Applications/Klovi.app/Contents/MacOS/zig-zstd",
+    );
+    expect(getZstdBinaryPath("linux", "/opt/Klovi/bin/launcher")).toBe("/opt/Klovi/bin/zig-zstd");
+  });
+
+  test("resolves zstd path for windows", () => {
+    expect(getZstdBinaryPath("win", "C:/Users/demo/AppData/Local/Klovi/bin/launcher.exe")).toBe(
+      "C:/Users/demo/AppData/Local/Klovi/bin/zig-zstd.exe",
+    );
+  });
+});
+
+describe("findReleaseAsset", () => {
+  test("ignores user-facing installer assets and returns normalized tarball", () => {
+    const release: GitHubRelease = {
+      ...makeRelease("2.1.0-rc.1", true),
+      assets: [
+        {
+          name: "Klovi-2.1.0-windows-amd64.exe",
+          browser_download_url: "https://example.com/setup.exe",
+        },
+        {
+          name: "candidate-win-x64-Klovi.tar.zst",
+          browser_download_url: "https://example.com/bundle.tar.zst",
+        },
+      ],
+    };
+
+    expect(findReleaseAsset(release, "candidate-win-x64-Klovi.tar.zst")?.browser_download_url).toBe(
+      "https://example.com/bundle.tar.zst",
+    );
+  });
+
+  test("returns null when the tarball asset is missing", () => {
+    const release: GitHubRelease = {
+      ...makeRelease("2.0.0", false),
+      assets: [
+        {
+          name: "Klovi-2.0.0-macos-arm64.dmg",
+          browser_download_url: "https://example.com/Klovi.dmg",
+        },
+      ],
+    };
+
+    expect(findReleaseAsset(release, "stable-macos-arm64-Klovi.app.tar.zst")).toBeNull();
   });
 });
 
@@ -107,7 +183,7 @@ describe("findLatestRelease", () => {
       ...makeRelease("2.1.0-beta.1", true),
       assets: [
         {
-          name: "Klovi-2.1.0-beta.1-macos-arm64.zip",
+          name: "beta-macos-arm64-Klovi.app.tar.zst",
           browser_download_url: "https://example.com/beta",
         },
       ],
@@ -116,7 +192,7 @@ describe("findLatestRelease", () => {
       ...makeRelease("2.1.0-rc.1", true),
       assets: [
         {
-          name: "Klovi-2.1.0-rc.1-macos-arm64.zip",
+          name: "candidate-macos-arm64-Klovi.app.tar.zst",
           browser_download_url: "https://example.com/rc",
         },
       ],
@@ -125,7 +201,7 @@ describe("findLatestRelease", () => {
       ...makeRelease("2.0.0", false),
       assets: [
         {
-          name: "Klovi-2.0.0-macos-arm64.zip",
+          name: "stable-macos-arm64-Klovi.app.tar.zst",
           browser_download_url: "https://example.com/stable",
         },
       ],
@@ -148,13 +224,12 @@ describe("findLatestRelease", () => {
     expect(result?.tag_name).toBe("2.1.0-rc.1");
   });
 
-  test("returns beta release on beta channel", () => {
-    const result = findLatestRelease(releases, "beta", "2.0.0");
-    // On beta channel, 2.1.0-rc.1 > 2.1.0-beta.1, so rc.1 is the latest
+  test("returns stable release on candidate channel when it is newest allowed", () => {
+    const result = findLatestRelease(releases, "candidate", "1.0.0");
     expect(result?.tag_name).toBe("2.1.0-rc.1");
   });
 
-  test("returns highest version on beta channel from old version", () => {
+  test("returns highest version on beta channel", () => {
     const result = findLatestRelease(releases, "beta", "1.0.0");
     expect(result?.tag_name).toBe("2.1.0-rc.1");
   });
@@ -182,7 +257,7 @@ describe("UpdateManager", () => {
 
   test("cleanup removes files from updates directory", async () => {
     await mkdir(join(testDir, "updates", "2.0.0"), { recursive: true });
-    await Bun.write(join(testDir, "updates", "2.0.0", "test.zip"), "data");
+    await Bun.write(join(testDir, "updates", "2.0.0", "test.tar"), "data");
 
     const mgr = new UpdateManager({
       currentVersion: "1.0.0",
@@ -215,8 +290,37 @@ describe("UpdateManager", () => {
       appDataDir: testDir,
     });
     const statuses: UpdateStatus[] = [];
-    mgr.setStatusCallback((s) => statuses.push(s));
-    // Verify the callback mechanism is wired up and initial status is correct
+    mgr.setStatusCallback((status) => statuses.push(status));
     expect(mgr.getStatus().status).toBe("up-to-date");
+    expect(statuses).toHaveLength(0);
+  });
+
+  test("download reports error when normalized tarball asset is missing", async () => {
+    const mgr = new UpdateManager({
+      currentVersion: "1.0.0",
+      platform: "macos",
+      arch: "arm64",
+      settingsPath: join(testDir, "settings.json"),
+      appDataDir: testDir,
+    }) as any;
+
+    mgr.latestRelease = {
+      ...makeRelease("2.0.0", false),
+      assets: [
+        {
+          name: "Klovi-2.0.0-macos-arm64.dmg",
+          browser_download_url: "https://example.com/Klovi.dmg",
+        },
+      ],
+    };
+
+    await mgr.download();
+
+    expect(mgr.getStatus()).toEqual({
+      status: "error",
+      currentVersion: "1.0.0",
+      latestVersion: "2.0.0",
+      error: "Asset not found: stable-macos-arm64-Klovi.app.tar.zst",
+    });
   });
 });

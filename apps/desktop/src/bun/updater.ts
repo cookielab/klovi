@@ -5,6 +5,7 @@ import { semver } from "bun";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
+const ZSTD_SUFFIX_RE = /\.zst$/;
 
 export interface GitHubRelease {
   tag_name: string;
@@ -17,6 +18,11 @@ export interface GitHubAsset {
   name: string;
   browser_download_url: string;
 }
+
+export type Platform = "macos" | "linux" | "win";
+export type Arch = "arm64" | "x64";
+
+type StatusCallback = (status: UpdateStatus) => void;
 
 export function filterReleasesByChannel(
   releases: GitHubRelease[],
@@ -37,14 +43,38 @@ export function filterReleasesByChannel(
   });
 }
 
-export type Platform = "macos" | "linux" | "win";
-export type Arch = "arm64" | "x64";
+export function getReleaseChannel(tagName: string): UpdateChannel {
+  if (tagName.includes("-beta.")) {
+    return "beta";
+  }
+  if (tagName.includes("-rc.")) {
+    return "candidate";
+  }
+  return "stable";
+}
 
-export function getAssetName(version: string, platform: Platform, arch: Arch): string {
-  const platformName = platform === "win" ? "windows" : platform;
-  const archName = arch === "x64" ? "amd64" : "arm64";
-  const ext = platform === "linux" ? "tar.gz" : "zip";
-  return `Klovi-${version}-${platformName}-${archName}.${ext}`;
+export function getElectrobunPlatformPrefix(
+  channel: UpdateChannel,
+  platform: Platform,
+  arch: Arch,
+): string {
+  return `${channel}-${platform}-${arch}`;
+}
+
+export function getElectrobunTarballName(platform: Platform): string {
+  return platform === "macos" ? "Klovi.app.tar.zst" : "Klovi.tar.zst";
+}
+
+export function getReleaseBundleAssetName(tagName: string, platform: Platform, arch: Arch): string {
+  return `${getElectrobunPlatformPrefix(getReleaseChannel(tagName), platform, arch)}-${getElectrobunTarballName(platform)}`;
+}
+
+export function findReleaseAsset(release: GitHubRelease, name: string): GitHubAsset | null {
+  return release.assets.find((asset) => asset.name === name) ?? null;
+}
+
+export function getZstdBinaryPath(platform: Platform, executablePath = process.execPath): string {
+  return join(dirname(executablePath), platform === "win" ? "zig-zstd.exe" : "zig-zstd");
 }
 
 export async function fetchReleases(): Promise<GitHubRelease[]> {
@@ -73,8 +103,6 @@ export function findLatestRelease(
   }
   return best;
 }
-
-type StatusCallback = (status: UpdateStatus) => void;
 
 export class UpdateManager {
   private currentVersion: string;
@@ -156,7 +184,6 @@ export class UpdateManager {
   }
 
   async check(): Promise<UpdateStatus> {
-    // Rate limit: minimum 5 minutes between checks
     const now = Date.now();
     if (now - this.lastCheckTimestamp < 5 * 60 * 1000) {
       return this.currentStatus;
@@ -176,6 +203,7 @@ export class UpdateManager {
       }
 
       this.latestRelease = latest;
+      this.downloadedAssetPath = null;
 
       const status: UpdateStatus = {
         status: "available",
@@ -184,7 +212,6 @@ export class UpdateManager {
       };
       this.emitStatus(status);
 
-      // Auto-download if enabled
       if (settings.autoDownload) {
         await this.download();
       }
@@ -235,7 +262,6 @@ export class UpdateManager {
     await writer.flush();
     writer.end();
 
-    // Verify file size matches Content-Length (C4)
     if (totalBytes && bytesDownloaded !== totalBytes) {
       try {
         await rm(destPath);
@@ -247,10 +273,10 @@ export class UpdateManager {
   }
 
   private async fetchWithRetry(url: string, destPath: string, version: string): Promise<void> {
-    const MAX_RETRIES = 3;
+    const maxRetries = 3;
     let lastError: Error | null = null;
 
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         await this.fetchAndSave(url, destPath, version);
         return;
@@ -259,8 +285,8 @@ export class UpdateManager {
         try {
           await rm(destPath);
         } catch {}
-        if (attempt < MAX_RETRIES - 1) {
-          const delay = 2 ** attempt * 1000; // 1s, 2s, 4s
+        if (attempt < maxRetries - 1) {
+          const delay = 2 ** attempt * 1000;
           await Bun.sleep(delay);
         }
       }
@@ -268,12 +294,46 @@ export class UpdateManager {
     throw lastError;
   }
 
+  private async downloadBundleAsset(
+    asset: GitHubAsset,
+    compressedPath: string,
+    version: string,
+  ): Promise<void> {
+    await this.fetchWithRetry(asset.browser_download_url, compressedPath, version);
+  }
+
+  private async decompressBundle(compressedPath: string, tarPath: string): Promise<void> {
+    const zstdPath = getZstdBinaryPath(this.platform);
+    if (!(await Bun.file(zstdPath).exists())) {
+      throw new Error(`zig-zstd not found: ${zstdPath}`);
+    }
+
+    try {
+      await rm(tarPath);
+    } catch {}
+
+    const result = Bun.spawnSync(
+      [zstdPath, "decompress", "-i", compressedPath, "-o", tarPath, "--no-timing"],
+      { stdout: "ignore", stderr: "pipe" },
+    );
+    if (!result.success) {
+      const stderr = result.stderr ? Buffer.from(result.stderr).toString("utf8").trim() : "";
+      throw new Error(stderr || `zig-zstd failed with exit code ${result.exitCode}`);
+    }
+  }
+
+  private async extractBundle(tarPath: string, stagingDir: string): Promise<void> {
+    const archiveBytes = await Bun.file(tarPath).arrayBuffer();
+    const archive = new Bun.Archive(archiveBytes);
+    await archive.extract(stagingDir);
+  }
+
   async download(): Promise<void> {
     if (!this.latestRelease) return;
 
     const version = this.latestRelease.tag_name;
-    const assetName = getAssetName(version, this.platform, this.arch);
-    const asset = this.latestRelease.assets.find((a) => a.name === assetName);
+    const assetName = getReleaseBundleAssetName(version, this.platform, this.arch);
+    const asset = findReleaseAsset(this.latestRelease, assetName);
 
     if (!asset) {
       this.emitStatus({
@@ -294,10 +354,12 @@ export class UpdateManager {
 
     const dir = join(this.updatesDir(), version);
     await mkdir(dir, { recursive: true });
-    const destPath = join(dir, assetName);
+    const compressedPath = join(dir, assetName);
+    const tarPath = join(dir, assetName.replace(ZSTD_SUFFIX_RE, ""));
 
     try {
-      await this.fetchWithRetry(asset.browser_download_url, destPath, version);
+      await this.downloadBundleAsset(asset, compressedPath, version);
+      await this.decompressBundle(compressedPath, tarPath);
     } catch (error) {
       try {
         await rm(dir, { recursive: true });
@@ -311,7 +373,11 @@ export class UpdateManager {
       return;
     }
 
-    this.downloadedAssetPath = destPath;
+    try {
+      await rm(compressedPath);
+    } catch {}
+
+    this.downloadedAssetPath = tarPath;
     this.emitStatus({
       status: "ready",
       currentVersion: this.currentVersion,
@@ -328,25 +394,7 @@ export class UpdateManager {
     await mkdir(stagingDir, { recursive: true });
 
     try {
-      // Extract the archive using platform-native tools
-      if (this.platform === "linux") {
-        const proc = Bun.spawn(["tar", "xzf", this.downloadedAssetPath, "-C", stagingDir]);
-        await proc.exited;
-        if (proc.exitCode !== 0) {
-          throw new Error(`tar extraction failed with exit code ${proc.exitCode}`);
-        }
-      } else if (this.platform === "macos") {
-        const proc = Bun.spawn(["ditto", "-xk", this.downloadedAssetPath, stagingDir]);
-        await proc.exited;
-        if (proc.exitCode !== 0) {
-          throw new Error(`zip extraction failed with exit code ${proc.exitCode}`);
-        }
-      } else {
-        // Windows: use Bun.Archive
-        const archiveBytes = await Bun.file(this.downloadedAssetPath).arrayBuffer();
-        const archive = new Bun.Archive(archiveBytes);
-        await archive.extract(stagingDir);
-      }
+      await this.extractBundle(this.downloadedAssetPath, stagingDir);
 
       if (this.platform === "macos") {
         await this.applyMacOS(stagingDir);
@@ -356,21 +404,16 @@ export class UpdateManager {
         await this.applyWindows(stagingDir);
       }
     } catch (error) {
-      // Clean up staging
       try {
         await rm(stagingDir, { recursive: true });
       } catch {}
-      // Don't emitStatus here — it would change the status prop to "error",
-      // unmounting ReadyBanner before the RPC response arrives. The error
-      // is propagated via the thrown error → RPC handler → { ok: false }.
       throw error;
     }
   }
 
   private async applyMacOS(stagingDir: string): Promise<void> {
-    // Find the .app bundle in extracted directory
     const entries = await readdir(stagingDir);
-    const appBundle = entries.find((e) => e.endsWith(".app"));
+    const appBundle = entries.find((entry) => entry.endsWith(".app"));
     if (!appBundle) throw new Error("Could not find .app bundle in extracted archive");
 
     const newAppPath = join(stagingDir, appBundle);
@@ -378,28 +421,21 @@ export class UpdateManager {
       throw new Error("Extracted .app bundle does not exist");
     }
 
-    // The running app's bundle path: process.execPath is at Contents/MacOS/binary
     const runningAppPath = resolve(dirname(process.execPath), "..", "..");
-
-    // Backup-then-swap: rename old app to backup, move new in, delete backup
     const backupPath = `${runningAppPath}.bak`;
     await rename(runningAppPath, backupPath);
     try {
       await rename(newAppPath, runningAppPath);
     } catch (error) {
-      // Restore from backup if move fails
       try {
         await rename(backupPath, runningAppPath);
       } catch {}
       throw error;
     }
-    // Remove backup after successful swap
     try {
       await rm(backupPath, { recursive: true });
     } catch {}
 
-    // Remove quarantine xattr to prevent "damaged" error.
-    // All paths are app-internal, not user-supplied.
     try {
       const proc = Bun.spawn(["xattr", "-r", "-d", "com.apple.quarantine", runningAppPath], {
         stdout: "ignore",
@@ -408,7 +444,6 @@ export class UpdateManager {
       await proc.exited;
     } catch {}
 
-    // Relaunch after current process exits
     const pid = process.pid;
     Bun.spawn(
       [
@@ -420,24 +455,21 @@ export class UpdateManager {
       { detached: true, stdio: ["ignore", "ignore", "ignore"] } as any,
     );
 
-    // Clean up staging
     try {
       await rm(join(this.updatesDir(), "staging"), { recursive: true });
     } catch {}
 
-    // Quit the app
     const { Utils } = await import("electrobun/bun");
     Utils.quit();
   }
 
   private async applyLinux(stagingDir: string): Promise<void> {
-    // Find the app bundle directory
     const entries = await readdir(stagingDir);
     let foundDir: string | undefined;
-    for (const e of entries) {
-      const fullPath = join(stagingDir, e);
+    for (const entry of entries) {
+      const fullPath = join(stagingDir, entry);
       if ((await stat(fullPath)).isDirectory()) {
-        foundDir = e;
+        foundDir = entry;
         break;
       }
     }
@@ -446,31 +478,24 @@ export class UpdateManager {
     const newAppPath = join(stagingDir, foundDir);
     const runningAppPath = join(this.appDataDir, "app");
 
-    // Backup-then-swap: rename old app to backup, move new in, delete backup
     const backupPath = `${runningAppPath}.bak`;
     try {
       await stat(runningAppPath);
       await rename(runningAppPath, backupPath);
-    } catch {
-      // runningAppPath doesn't exist, no backup needed
-    }
+    } catch {}
     try {
       await rename(newAppPath, runningAppPath);
     } catch (error) {
-      // Restore from backup if move fails
       try {
         await stat(backupPath);
         await rename(backupPath, runningAppPath);
       } catch {}
       throw error;
     }
-    // Remove backup after successful swap
     try {
       await rm(backupPath, { recursive: true });
     } catch {}
 
-    // Ensure binaries are executable.
-    // All paths are app-internal, not user-supplied.
     const launcherPath = join(runningAppPath, "bin", "launcher");
     if (await Bun.file(launcherPath).exists()) {
       const proc = Bun.spawn(["chmod", "+x", launcherPath]);
@@ -482,16 +507,13 @@ export class UpdateManager {
       await proc.exited;
     }
 
-    // Relaunch
     // biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option needed for process survival
     Bun.spawn(["sh", "-c", `"${launcherPath}" &`], { detached: true } as any);
 
-    // Clean up staging
     try {
       await rm(join(this.updatesDir(), "staging"), { recursive: true });
     } catch {}
 
-    // Quit the app
     const { Utils } = await import("electrobun/bun");
     Utils.quit();
   }
@@ -499,13 +521,12 @@ export class UpdateManager {
   private async applyWindows(stagingDir: string): Promise<void> {
     const runningAppPath = join(this.appDataDir, "app");
 
-    // Find app directory in staging
     const entries = await readdir(stagingDir);
     let foundDir: string | undefined;
-    for (const e of entries) {
-      const fullPath = join(stagingDir, e);
+    for (const entry of entries) {
+      const fullPath = join(stagingDir, entry);
       if ((await stat(fullPath)).isDirectory()) {
-        foundDir = e;
+        foundDir = entry;
         break;
       }
     }
@@ -513,9 +534,6 @@ export class UpdateManager {
 
     const newAppPath = join(stagingDir, foundDir);
     const launcherPath = join(runningAppPath, "bin", "launcher.exe");
-
-    // Write update batch script.
-    // All paths are app-internal, not user-supplied.
     const parentDir = dirname(runningAppPath);
     const updateScriptPath = join(parentDir, "update.bat");
 
@@ -553,8 +571,6 @@ del "%~f0"
 
     await Bun.write(updateScriptPath, updateScript);
 
-    // Use Windows Task Scheduler to run the update script independently.
-    // All paths are app-internal, not user-supplied.
     const scriptPathWin = updateScriptPath.replace(/\//g, "\\");
     const taskName = `KloviUpdate_${Date.now()}`;
 
@@ -581,7 +597,6 @@ del "%~f0"
     });
     await runProc.exited;
 
-    // Quit the app
     const { Utils } = await import("electrobun/bun");
     Utils.quit();
   }

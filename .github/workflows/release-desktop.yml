@@ -25,14 +25,73 @@ on:
         default: false
 
 jobs:
+  release-meta:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release_meta.outputs.version }}
+      build_env: ${{ steps.release_meta.outputs.build_env }}
+      commit: ${{ steps.release_meta.outputs.commit }}
+    steps:
+      - name: Validate version format
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)\.[0-9]+)?$'; then
+            echo "::error::Invalid version format '$VERSION'. Expected X.Y.Z, X.Y.Z-beta.N, or X.Y.Z-rc.N"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Set release metadata
+        id: release_meta
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if echo "$VERSION" | grep -q -- '-beta\.'; then
+            BUILD_ENV="beta"
+          elif echo "$VERSION" | grep -q -- '-rc\.'; then
+            BUILD_ENV="candidate"
+          else
+            BUILD_ENV="stable"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_env=$BUILD_ENV" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: release-meta
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release-meta.outputs.version }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run typecheck
+      - run: bun test
+
   build-macos:
     runs-on: macos-14
+    needs: [release-meta, verify]
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.release-meta.outputs.version }}
 
       - uses: oven-sh/setup-bun@v2
 
@@ -46,19 +105,23 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Set version in package.json
+      - name: Set version and commit in package.json
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          COMMIT: ${{ needs.release-meta.outputs.commit }}
         run: |
           bun -e "
             const packageJson = 'apps/desktop/package.json';
             const pkg = await Bun.file(packageJson).json();
             pkg.version = process.env.VERSION;
+            pkg.commit = process.env.COMMIT;
             await Bun.write(packageJson, JSON.stringify(pkg, null, 2) + '\n');
           "
 
       - name: Build Electrobun app
-        run: bun run build -- --env=stable
+        env:
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+        run: bun run build -- --env="$BUILD_ENV"
 
       - name: Import code signing certificate
         env:
@@ -85,11 +148,12 @@ jobs:
 
       - name: Sign and notarize macOS app
         env:
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          BUILD_DIR="apps/desktop/build/stable-macos-arm64"
+          BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
           if [ ! -d "$BUILD_DIR" ]; then
             echo "::error::Expected build output in $BUILD_DIR"
             find apps/desktop/build -maxdepth 2 -type d || true
@@ -104,24 +168,20 @@ jobs:
 
           IDENTITY="Developer ID Application: Cookielab s.r.o. ($APPLE_TEAM_ID)"
 
-          # Sign all nested binaries, frameworks, and dylibs from the inside out
           find "$APP_DIR" -type f \( -name "*.dylib" -o -name "*.so" \) -exec \
             codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
           find "$APP_DIR" -type d -name "*.framework" -exec \
             codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
-          # Sign any helper executables inside the bundle
           find "$APP_DIR/Contents/MacOS" -type f -perm +111 -exec \
             codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" {} \;
 
-          # Sign the app bundle itself
           codesign --force --options runtime --sign "$IDENTITY" --keychain "$KEYCHAIN_FILE" "$APP_DIR"
 
           echo "Verifying signature..."
           codesign --verify --deep --strict "$APP_DIR"
 
-          # Create zip for notarization
           NOTARIZE_ZIP=$(mktemp /tmp/notarize.XXXXXX.zip)
           ditto -c -k --keepParent "$APP_DIR" "$NOTARIZE_ZIP"
 
@@ -138,25 +198,66 @@ jobs:
           xcrun stapler staple "$APP_DIR"
 
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_ENV"
 
-      - name: Package and upload macOS arm64 asset
+      - name: Package macOS DMG and signed updater bundle
+        env:
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+        run: |
+          PREFIX="${BUILD_ENV}-macos-arm64"
+          USER_DMG="Klovi-${VERSION}-macos-arm64.dmg"
+          STAGING_DIR=$(mktemp -d /tmp/klovi-dmg.XXXXXX)
+          cp -R "$APP_DIR" "$STAGING_DIR/"
+          ln -s /Applications "$STAGING_DIR/Applications"
+          hdiutil create -volname "Klovi" -srcfolder "$STAGING_DIR" -ov -format ULFO "$USER_DMG"
+          rm -rf "$STAGING_DIR"
+
+          TARBALL_PATH="${BUILD_DIR}/Klovi.app.tar"
+          ZSTD_PATH="${APP_DIR}/Contents/MacOS/zig-zstd"
+          if [ ! -x "$ZSTD_PATH" ]; then
+            echo "::error::Expected zig-zstd at $ZSTD_PATH"
+            exit 1
+          fi
+
+          tar -cf "$TARBALL_PATH" -C "$(dirname "$APP_DIR")" "$(basename "$APP_DIR")"
+          "$ZSTD_PATH" compress -i "$TARBALL_PATH" -o "apps/desktop/artifacts/${PREFIX}-Klovi.app.tar.zst" --threads max --no-timing
+          rm -f "$TARBALL_PATH"
+
+          echo "USER_DMG=$USER_DMG" >> "$GITHUB_ENV"
+
+      - name: Upload macOS user-facing asset
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+        run: gh release upload "$VERSION" "$USER_DMG" --clobber
+
+      - name: Upload macOS updater assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: |
-          ZIP_NAME="Klovi-${VERSION}-macos-arm64.zip"
-          ditto -c -k --keepParent "$APP_DIR" "$ZIP_NAME"
-          gh release upload "$VERSION" "$ZIP_NAME" --clobber
+          PREFIX="${BUILD_ENV}-macos-arm64"
+          for file in \
+            "apps/desktop/artifacts/${PREFIX}-Klovi.app.tar.zst" \
+            apps/desktop/artifacts/${PREFIX}-*.patch \
+            "apps/desktop/artifacts/${PREFIX}-update.json"
+          do
+            [ -e "$file" ] || continue
+            gh release upload "$VERSION" "$file" --clobber
+          done
 
       - name: Clean up keychain
         if: always()
         run: |
-          if [ -n "$KEYCHAIN_FILE" ] && [ -f "$KEYCHAIN_FILE" ]; then
+          if [ -n "${KEYCHAIN_FILE:-}" ] && [ -f "$KEYCHAIN_FILE" ]; then
             security delete-keychain "$KEYCHAIN_FILE"
           fi
 
   build-linux:
     runs-on: ${{ matrix.runner }}
+    needs: [release-meta, verify]
     strategy:
       fail-fast: false
       matrix:
@@ -172,7 +273,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.release-meta.outputs.version }}
 
       - uses: oven-sh/setup-bun@v2
 
@@ -188,39 +289,59 @@ jobs:
 
       - name: Set version and commit in package.json
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          COMMIT: ${{ needs.release-meta.outputs.commit }}
         run: |
-          COMMIT=$(git rev-parse --short HEAD)
           bun -e "
             const packageJson = 'apps/desktop/package.json';
             const pkg = await Bun.file(packageJson).json();
             pkg.version = process.env.VERSION;
-            pkg.commit = '$COMMIT';
+            pkg.commit = process.env.COMMIT;
             await Bun.write(packageJson, JSON.stringify(pkg, null, 2) + '\n');
           "
 
       - name: Build Electrobun app
-        run: bun run build -- --env=stable
+        env:
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+        run: bun run build -- --env="$BUILD_ENV"
 
-      - name: Package tar.gz installer
+      - name: Upload Linux user-facing and updater assets
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         run: |
-          # Electrobun stable builds produce a self-extracting installer in apps/desktop/artifacts/
-          INSTALLER="apps/desktop/artifacts/stable-linux-${ELECTROBUN_ARCH}-Klovi-Setup.tar.gz"
-          if [ ! -f "$INSTALLER" ]; then
-            echo "::error::Expected installer at $INSTALLER"
-            find apps/desktop/artifacts -type f 2>/dev/null || echo "No artifacts directory found"
-            find apps/desktop/build -maxdepth 2 -type f -name "*.tar.gz" 2>/dev/null || true
+          PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
+          INSTALLER=$(find "apps/desktop/build/${PREFIX}" -maxdepth 1 -type f -name '*Setup*.tar.gz' | head -1)
+          if [ -z "$INSTALLER" ]; then
+            echo "::error::Expected installer in apps/desktop/build/${PREFIX}"
+            find apps/desktop/build -maxdepth 2 -type f -name '*.tar.gz' 2>/dev/null || true
             exit 1
           fi
 
-          ASSET_NAME="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
-          cp "$INSTALLER" "$ASSET_NAME"
-          gh release upload "$VERSION" "$ASSET_NAME" --clobber
+          USER_ASSET="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
+          cp "$INSTALLER" "$USER_ASSET"
+          gh release upload "$VERSION" "$USER_ASSET" --clobber
+
+          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
+          if [ -z "$FULL_BUNDLE" ]; then
+            echo "::error::Expected updater bundle for ${PREFIX}"
+            find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*" 2>/dev/null || true
+            exit 1
+          fi
+
+          NORMALIZED_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
+          if [ "$FULL_BUNDLE" != "$NORMALIZED_BUNDLE" ]; then
+            cp "$FULL_BUNDLE" "$NORMALIZED_BUNDLE"
+          fi
+          gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
+
+          for file in apps/desktop/artifacts/${PREFIX}-*.patch "apps/desktop/artifacts/${PREFIX}-update.json"; do
+            [ -e "$file" ] || continue
+            gh release upload "$VERSION" "$file" --clobber
+          done
 
       - name: Install nfpm
         run: |
@@ -232,10 +353,11 @@ jobs:
         working-directory: apps/desktop
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
-          BUILD_DIR: build/stable-linux-${{ matrix.electrobun_arch }}
+          BUILD_DIR: build/${{ needs.release-meta.outputs.build_env }}-linux-${{ matrix.electrobun_arch }}
           NFPM_ARCH: ${{ matrix.artifact_arch }}
         run: |
           if [ ! -d "$BUILD_DIR" ]; then
@@ -259,12 +381,13 @@ jobs:
 
   build-windows:
     runs-on: windows-2025
+    needs: [release-meta, verify]
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.version }}
+          ref: ${{ needs.release-meta.outputs.version }}
 
       - uses: oven-sh/setup-bun@v2
 
@@ -281,68 +404,85 @@ jobs:
       - name: Set version and commit in package.json
         shell: bash
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          COMMIT: ${{ needs.release-meta.outputs.commit }}
         run: |
-          COMMIT=$(git rev-parse --short HEAD)
           bun -e "
             const packageJson = 'apps/desktop/package.json';
             const pkg = await Bun.file(packageJson).json();
             pkg.version = process.env.VERSION;
-            pkg.commit = '$COMMIT';
+            pkg.commit = process.env.COMMIT;
             await Bun.write(packageJson, JSON.stringify(pkg, null, 2) + '\n');
           "
 
       - name: Build Electrobun app
-        run: bun run build -- --env=stable
+        env:
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+        run: bun run build -- --env="$BUILD_ENV"
 
-      - name: Package and upload Windows asset
+      - name: Upload Windows user-facing and updater assets
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-        shell: pwsh
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: |
-          # Electrobun stable builds produce a self-extracting installer zip in apps/desktop/artifacts/
-          $installer = "apps/desktop/artifacts/stable-win-x64-Klovi-Setup.zip"
-          if (-not (Test-Path $installer)) {
-            Write-Host "::error::Expected installer at $installer"
-            if (Test-Path apps/desktop/artifacts) {
-              Get-ChildItem apps/desktop/artifacts -File -Recurse | ForEach-Object { $_.FullName }
-            }
-            if (Test-Path apps/desktop/build) {
-              Get-ChildItem apps/desktop/build -File -Recurse -Filter "*.zip" | ForEach-Object { $_.FullName }
-            }
-            exit 1
-          }
+          PREFIX="${BUILD_ENV}-win-x64"
+          BUILD_DIR="apps/desktop/build/${PREFIX}"
 
-          $assetName = "Klovi-$env:VERSION-windows-amd64.zip"
-          Copy-Item $installer $assetName
-          gh release upload $env:VERSION $assetName --clobber
+          INSTALLER=$(find "$BUILD_DIR" -maxdepth 1 -type f -name '*Setup*.exe' | head -1)
+          if [ -z "$INSTALLER" ]; then
+            echo "::error::Expected Windows installer in $BUILD_DIR"
+            find apps/desktop/build -maxdepth 2 -type f -name '*.exe' 2>/dev/null || true
+            exit 1
+          fi
+
+          USER_ASSET="Klovi-${VERSION}-windows-amd64.exe"
+          cp "$INSTALLER" "$USER_ASSET"
+          gh release upload "$VERSION" "$USER_ASSET" --clobber
+
+          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
+          if [ -z "$FULL_BUNDLE" ]; then
+            echo "::error::Expected updater bundle for ${PREFIX}"
+            find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*" 2>/dev/null || true
+            exit 1
+          fi
+
+          NORMALIZED_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
+          if [ "$FULL_BUNDLE" != "$NORMALIZED_BUNDLE" ]; then
+            cp "$FULL_BUNDLE" "$NORMALIZED_BUNDLE"
+          fi
+          gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
+
+          for file in apps/desktop/artifacts/${PREFIX}-*.patch "apps/desktop/artifacts/${PREFIX}-update.json"; do
+            [ -e "$file" ] || continue
+            gh release upload "$VERSION" "$file" --clobber
+          done
 
   update-cask:
     if: ${{ inputs.prerelease != true }}
     runs-on: ubuntu-latest
-    needs: build-macos
+    needs: [release-meta, build-macos]
     environment: homebrew
     steps:
       - name: Download release asset and update Homebrew cask
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
           REPO: ${{ github.repository }}
         run: |
           set -e
 
-          ZIP_NAME="Klovi-${VERSION}-macos-arm64.zip"
-          curl -L -o "$ZIP_NAME" \
-            "https://github.com/${REPO}/releases/download/${VERSION}/${ZIP_NAME}"
+          DMG_NAME="Klovi-${VERSION}-macos-arm64.dmg"
+          curl -L -o "$DMG_NAME" \
+            "https://github.com/${REPO}/releases/download/${VERSION}/${DMG_NAME}"
 
-          SHA256=$(sha256sum "$ZIP_NAME" | cut -d' ' -f1)
+          SHA256=$(sha256sum "$DMG_NAME" | cut -d' ' -f1)
           BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
 
           git clone "https://x-access-token:${GH_TOKEN}@github.com/cookielab/homebrew-tap.git"
           cd homebrew-tap
 
-          # Remove old Formula if it exists
           rm -f Formula/klovi.rb
 
           mkdir -p Casks
@@ -351,7 +491,7 @@ jobs:
             version "${VERSION}"
             sha256 "${SHA256}"
 
-            url "${BASE_URL}/${ZIP_NAME}"
+            url "${BASE_URL}/${DMG_NAME}"
             name "Klovi"
             desc "Native desktop app for browsing and presenting AI coding session history"
             homepage "https://github.com/${REPO}"
@@ -368,7 +508,6 @@ jobs:
           end
           CASK
 
-          # Remove leading whitespace from heredoc indentation
           sed -i 's/^          //' Casks/klovi.rb
 
           git config user.name "github-actions[bot]"
