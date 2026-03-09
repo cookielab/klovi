@@ -1,0 +1,221 @@
+diff --git a/dist/api/bun/core/ApplicationMenu.ts b/dist/api/bun/core/ApplicationMenu.ts
+index 65f59ff7f8563ee1132846c2ae999595f01ff96b..699110ec3479250c76c81e6751d18339b292b671 100644
+--- a/dist/api/bun/core/ApplicationMenu.ts
++++ b/dist/api/bun/core/ApplicationMenu.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, type ApplicationMenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { roleLabelMap } from "./menuRoles";
+diff --git a/dist/api/bun/core/BrowserView.ts b/dist/api/bun/core/BrowserView.ts
+index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078d59a7124 100644
+--- a/dist/api/bun/core/BrowserView.ts
++++ b/dist/api/bun/core/BrowserView.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { native, toCString, ffi } from "../proc/native";
+ import * as fs from "fs";
+ import electrobunEventEmitter from "../events/eventEmitter";
+diff --git a/dist/api/bun/core/BrowserWindow.ts b/dist/api/bun/core/BrowserWindow.ts
+index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeebbd5b1045 100644
+--- a/dist/api/bun/core/BrowserWindow.ts
++++ b/dist/api/bun/core/BrowserWindow.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { BrowserView } from "./BrowserView";
+diff --git a/dist/api/bun/core/BuildConfig.ts b/dist/api/bun/core/BuildConfig.ts
+index 1da33bfc3d6ac777eabfb7fab31ffd002db63f5e..e8ad633df8cf778bd13e6ded6be7bb2a2c16b1c0 100644
+--- a/dist/api/bun/core/BuildConfig.ts
++++ b/dist/api/bun/core/BuildConfig.ts
+@@ -1,3 +1,5 @@
++import { join, dirname } from "path";
++
+ export type BuildConfigType = {
+ 	defaultRenderer: "native" | "cef";
+ 	availableRenderers: ("native" | "cef")[];
+@@ -22,7 +24,7 @@ const BuildConfig = {
+ 
+ 		try {
+ 			const resourcesDir = "Resources";
+-			buildConfig = await Bun.file(`../${resourcesDir}/build.json`).json();
++			buildConfig = await Bun.file(join(dirname(process.execPath), "..", resourcesDir, "build.json")).json();
+ 			return buildConfig!;
+ 		} catch (error) {
+ 			// Fallback for dev mode or missing file
+diff --git a/dist/api/bun/core/ContextMenu.ts b/dist/api/bun/core/ContextMenu.ts
+index 8666e598d7395ac1c725780f2c961e440bd6d7a3..70bb0c105c0d48253708ce94e2268662c25f67cb 100644
+--- a/dist/api/bun/core/ContextMenu.ts
++++ b/dist/api/bun/core/ContextMenu.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ // TODO: have a context specific menu that excludes role
+ import { ffi, type ApplicationMenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+diff --git a/dist/api/bun/core/Paths.ts b/dist/api/bun/core/Paths.ts
+index b04b630307157566006db8c5531a53846ba000a1..eeaf1b3348ae975595ef990e6f505a73831f1ebc 100644
+--- a/dist/api/bun/core/Paths.ts
++++ b/dist/api/bun/core/Paths.ts
+@@ -1,5 +1,5 @@
+-import { resolve } from "path";
++import { resolve, dirname } from "path";
+ 
+-const RESOURCES_FOLDER = resolve("../Resources/");
++const RESOURCES_FOLDER = resolve(dirname(process.execPath), "../Resources/");
+ 
+ export const VIEWS_FOLDER = resolve(RESOURCES_FOLDER, "app/views");
+diff --git a/dist/api/bun/core/Socket.ts b/dist/api/bun/core/Socket.ts
+index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e64e3ff3d5 100644
+--- a/dist/api/bun/core/Socket.ts
++++ b/dist/api/bun/core/Socket.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import type { Server, ServerWebSocket } from "bun";
+ import { BrowserView } from "./BrowserView";
+ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+diff --git a/dist/api/bun/core/Tray.ts b/dist/api/bun/core/Tray.ts
+index f836f1b716d593a908d953d3a645db97793d9896..e7f3f0ef2b456de66a5392f64c6bf0a22879cce8 100644
+--- a/dist/api/bun/core/Tray.ts
++++ b/dist/api/bun/core/Tray.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, type MenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { VIEWS_FOLDER } from "./Paths";
+diff --git a/dist/api/bun/core/Updater.ts b/dist/api/bun/core/Updater.ts
+index c747d1f91d7ad2451c5a9c1cf16ba7720da48e03..fcae30853c8ea38761c08b696900102a89adb8ee 100644
+--- a/dist/api/bun/core/Updater.ts
++++ b/dist/api/bun/core/Updater.ts
+@@ -1,10 +1,11 @@
++// @ts-nocheck
+ import { join, dirname, resolve } from "path";
+ import { homedir } from "os";
+ import {
+ 	renameSync,
+ 	unlinkSync,
+ 	mkdirSync,
+-	rmdirSync,
++	rmSync,
+ 	statSync,
+ 	readdirSync,
+ } from "fs";
+@@ -145,7 +146,7 @@ function cleanupExtractionFolder(
+ 			try {
+ 				const s = statSync(fullPath);
+ 				if (s.isDirectory()) {
+-					rmdirSync(fullPath, { recursive: true });
++					rmSync(fullPath, { recursive: true });
+ 				} else {
+ 					unlinkSync(fullPath);
+ 				}
+@@ -895,7 +896,7 @@ const Updater = {
+ 					if (currentOS === "macos") {
+ 						// Remove existing app before installing the new one
+ 						if (statSync(runningAppBundlePath, { throwIfNoEntry: false })) {
+-							rmdirSync(runningAppBundlePath, { recursive: true });
++							rmSync(runningAppBundlePath, { recursive: true });
+ 						}
+ 
+ 						emitStatus("replacing-app", "Installing new version...");
+@@ -920,7 +921,7 @@ const Updater = {
+ 						
+ 						// Remove existing app directory if it exists
+ 						if (statSync(appBundleDir, { throwIfNoEntry: false })) {
+-							rmdirSync(appBundleDir, { recursive: true });
++							rmSync(appBundleDir, { recursive: true });
+ 						}
+ 
+ 						// Move new app bundle directory to app location
+@@ -1116,7 +1117,7 @@ del "%~f0"
+ 
+ 		try {
+ 			const resourcesDir = "Resources"; // Always use capitalized Resources
+-			localInfo = await Bun.file(`../${resourcesDir}/version.json`).json();
++			localInfo = await Bun.file(join(dirname(process.execPath), "..", resourcesDir, "version.json")).json();
+ 			return localInfo;
+ 		} catch (error) {
+ 			// Handle the error
+diff --git a/dist/api/bun/core/Utils.ts b/dist/api/bun/core/Utils.ts
+index e1525291ad5a5bac43e6bf7f15491769a66c7484..60f3b7b6f6ee7d2dfbef1999a1439cdaffeff067 100644
+--- a/dist/api/bun/core/Utils.ts
++++ b/dist/api/bun/core/Utils.ts
+@@ -1,7 +1,8 @@
++// @ts-nocheck
+ import { ffi, native } from "../proc/native";
+ import { electrobunEventEmitter } from "../events/eventEmitter";
+ import { homedir, tmpdir } from "node:os";
+-import { join } from "node:path";
++import { join, dirname } from "node:path";
+ import { readFileSync } from "node:fs";
+ import { OS } from "../../shared/platform";
+ 
+@@ -344,7 +345,7 @@ function getVersionInfo(): { identifier: string; channel: string } {
+ 	if (_versionInfo) return _versionInfo;
+ 	try {
+ 		const resourcesDir = "Resources";
+-		const raw = readFileSync(join("..", resourcesDir, "version.json"), "utf-8");
++		const raw = readFileSync(join(dirname(process.execPath), "..", resourcesDir, "version.json"), "utf-8");
+ 		const parsed = JSON.parse(raw);
+ 		_versionInfo = { identifier: parsed.identifier, channel: parsed.channel };
+ 		return _versionInfo;
+diff --git a/dist/api/bun/index.ts b/dist/api/bun/index.ts
+index 112a8a141299032d8b6eb1dab32b5ab12bb015d2..268b213ab12e115ef5bbc477fe3d4549b03a8c57 100644
+--- a/dist/api/bun/index.ts
++++ b/dist/api/bun/index.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import electobunEventEmmitter from "./events/eventEmitter";
+ import { BrowserWindow, type WindowOptionsType } from "./core/BrowserWindow";
+ import { BrowserView, type BrowserViewOptions } from "./core/BrowserView";
+diff --git a/dist/api/bun/proc/native.ts b/dist/api/bun/proc/native.ts
+index 6e0e437f48542e74b7f8e1727da828457f05445f..4b924647e27c6abb58b48f08e89c42b12fa812fd 100644
+--- a/dist/api/bun/proc/native.ts
++++ b/dist/api/bun/proc/native.ts
+@@ -1,4 +1,5 @@
+-import { join } from "path";
++// @ts-nocheck
++import { join, dirname } from "path";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import ElectrobunEvent from "../events/event";
+ import { BrowserView } from "../core/BrowserView";
+@@ -83,7 +84,7 @@ export const native = (() => {
+ 	try {
+ 		// Use absolute path to native wrapper DLL to avoid working directory issues
+ 		// On Windows shortcuts, the working directory may not be set correctly
+-		const nativeWrapperPath = join(process.cwd(), `libNativeWrapper.${suffix}`);
++		const nativeWrapperPath = join(dirname(process.execPath), `libNativeWrapper.${suffix}`);
+ 		return dlopen(nativeWrapperPath, {
+ 			// window
+ 			createWindowWithFrameAndStyleFromWorker: {
+diff --git a/dist/main.js b/dist/main.js
+index 6b7eb124d4c10d837749380eedbbcef51567ea43..28b5fc3122efdc38b9a29b80b5ab507297ec8a8c 100644
+--- a/dist/main.js
++++ b/dist/main.js
+@@ -6,7 +6,7 @@ import { join, dirname, resolve } from "path";
+ import { dlopen, suffix, ptr, toArrayBuffer } from "bun:ffi";
+ import { existsSync, writeFileSync } from "fs";
+ import { tmpdir } from "os";
+-var pathToMacOS = dirname(process.argv0);
++var pathToMacOS = dirname(process.execPath);
+ var libPath = join(pathToMacOS, `libNativeWrapper.${suffix}`);
+ var absoluteLibPath = resolve(libPath);
+ function main() {
+@@ -14,7 +14,7 @@ function main() {
+   let identifier = "";
+   let name = "";
+   try {
+-    const pathToLauncherBin2 = process.argv0;
++    const pathToLauncherBin2 = process.execPath;
+     const pathToBinDir2 = dirname(pathToLauncherBin2);
+     const versionJsonPath = join(pathToBinDir2, "..", "Resources", "version.json");
+     if (existsSync(versionJsonPath)) {
+@@ -86,7 +86,7 @@ function main() {
+       throw error;
+     }
+   }
+-  const pathToLauncherBin = process.argv0;
++  const pathToLauncherBin = process.execPath;
+   const pathToBinDir = dirname(pathToLauncherBin);
+   const resourcesDir = join(pathToBinDir, "..", "Resources");
+   const asarPath = join(resourcesDir, "app.asar");
