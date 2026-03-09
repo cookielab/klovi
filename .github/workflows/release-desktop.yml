@@ -241,7 +241,6 @@ jobs:
           PREFIX="${BUILD_ENV}-macos-arm64"
           for file in \
             "apps/desktop/artifacts/${PREFIX}-Klovi.app.tar.zst" \
-            apps/desktop/artifacts/${PREFIX}-*.patch \
             "apps/desktop/artifacts/${PREFIX}-update.json"
           do
             [ -e "$file" ] || continue
@@ -338,46 +337,10 @@ jobs:
           fi
           gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
 
-          for file in apps/desktop/artifacts/${PREFIX}-*.patch "apps/desktop/artifacts/${PREFIX}-update.json"; do
+          for file in "apps/desktop/artifacts/${PREFIX}-update.json"; do
             [ -e "$file" ] || continue
             gh release upload "$VERSION" "$file" --clobber
           done
-
-      - name: Install nfpm
-        run: |
-          ARCH=$(uname -m)
-          [ "$ARCH" = "aarch64" ] && ARCH="arm64"
-          curl -sfL "https://github.com/goreleaser/nfpm/releases/download/v2.41.1/nfpm_2.41.1_Linux_${ARCH}.tar.gz" | tar xz -C /usr/local/bin nfpm
-
-      - name: Build .deb, .rpm, and .pkg.tar.zst packages
-        working-directory: apps/desktop
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.release-meta.outputs.version }}
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
-          ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
-          BUILD_DIR: build/${{ needs.release-meta.outputs.build_env }}-linux-${{ matrix.electrobun_arch }}
-          NFPM_ARCH: ${{ matrix.artifact_arch }}
-        run: |
-          if [ ! -d "$BUILD_DIR" ]; then
-            echo "::error::Expected build output in $BUILD_DIR"
-            find build -maxdepth 2 -type d || true
-            exit 1
-          fi
-
-          envsubst < packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
-          nfpm package -p deb -f /tmp/nfpm.yaml
-          nfpm package -p rpm -f /tmp/nfpm.yaml
-          nfpm package -p archlinux -f /tmp/nfpm.yaml
-
-          DEB_FILE=$(ls klovi_*.deb)
-          RPM_FILE=$(ls klovi-*.rpm)
-          ARCH_FILE=$(ls klovi-*.pkg.tar.zst)
-
-          gh release upload "$VERSION" "$DEB_FILE" --clobber
-          gh release upload "$VERSION" "$RPM_FILE" --clobber
-          gh release upload "$VERSION" "$ARCH_FILE" --clobber
 
   build-windows:
     runs-on: windows-2025
@@ -454,7 +417,7 @@ jobs:
           fi
           gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
 
-          for file in apps/desktop/artifacts/${PREFIX}-*.patch "apps/desktop/artifacts/${PREFIX}-update.json"; do
+          for file in "apps/desktop/artifacts/${PREFIX}-update.json"; do
             [ -e "$file" ] || continue
             gh release upload "$VERSION" "$file" --clobber
           done
