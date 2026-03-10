@@ -59,14 +59,30 @@ jobs:
 
       - name: Generate release notes
         id: changelog
-        uses: requarks/changelog-action@v1
-        with:
-          token: ${{ github.token }}
-          tag: ${{ steps.release_meta.outputs.version }}
-          writeToFile: false
-          useGitmojis: false
-          excludeTypes: ""
-          includeInvalidCommits: true
+        env:
+          VERSION: ${{ steps.release_meta.outputs.version }}
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | grep -Fxv "$VERSION" | head -n 1 || true)
+          NOTES_FILE=$(mktemp)
+
+          if [ -n "$PREV_TAG" ]; then
+            git log --pretty=format:'- %s (%h)' "$PREV_TAG..$VERSION" > "$NOTES_FILE"
+          else
+            git log --pretty=format:'- %s (%h)' -n 20 "$VERSION" > "$NOTES_FILE"
+          fi
+
+          if [ ! -s "$NOTES_FILE" ]; then
+            echo "- No commit summary available for $VERSION." > "$NOTES_FILE"
+          fi
+
+          {
+            echo "changes<<EOF"
+            echo "## Changes"
+            echo ""
+            cat "$NOTES_FILE"
+            echo ""
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create release
         uses: softprops/action-gh-release@v2
