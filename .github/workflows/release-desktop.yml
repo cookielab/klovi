@@ -254,11 +254,9 @@ jobs:
           - runner: ubuntu-24.04
             electrobun_arch: x64
             artifact_arch: amd64
-            appimagetool_arch: x86_64
           - runner: ubuntu-24.04-arm
             electrobun_arch: arm64
             artifact_arch: arm64
-            appimagetool_arch: aarch64
     permissions:
       contents: write
     steps:
@@ -305,7 +303,6 @@ jobs:
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
-          APPIMAGETOOL_ARCH: ${{ matrix.appimagetool_arch }}
         run: |
           PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
           UPDATER_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
@@ -326,8 +323,7 @@ jobs:
             --tarball "$UPDATER_BUNDLE" \
             --arch "$ELECTROBUN_ARCH" \
             --version "$VERSION" \
-            --output "$USER_ASSET" \
-            --appimagetool-arch "$APPIMAGETOOL_ARCH"
+            --output "$USER_ASSET"
 
           echo "USER_ASSET=$USER_ASSET" >> "$GITHUB_ENV"
           echo "UPDATER_BUNDLE=$UPDATER_BUNDLE" >> "$GITHUB_ENV"

@@ -14,18 +14,21 @@
  *     --output <output-appimage-path>
  */
 
+import { readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 // ---------------------------------------------------------------------------
-// CLI argument parsing
+// CLI argument parsing (exported for testing)
 // ---------------------------------------------------------------------------
 
-function parseArgs(argv: string[]): {
+export type ParsedArgs = {
   tarball: string;
   arch: "x64" | "arm64";
   version: string;
   output: string;
-} {
+};
+
+export function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2); // skip bun + script path
 
   let tarball: string | undefined;
@@ -70,6 +73,15 @@ function fail(message: string): never {
 }
 
 // ---------------------------------------------------------------------------
+// Architecture mapping (exported for testing)
+// ---------------------------------------------------------------------------
+
+export const APPIMAGE_ARCH_MAP: Record<string, string> = {
+  x64: "x86_64",
+  arm64: "aarch64",
+};
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -96,14 +108,9 @@ async function ensureDir(path: string): Promise<void> {
 
 const APPIMAGE_TOOL_BASE_URL = "https://github.com/AppImage/appimagetool/releases/latest/download";
 
-const ARCH_MAP: Record<string, string> = {
-  x64: "x86_64",
-  arm64: "aarch64",
-};
-
 const APPRUN_CONTENT = `#!/bin/bash
 HERE="$(dirname "$(readlink -f "\${0}")")"
-exec "\${HERE}/usr/opt/klovi/bin/launcher" "$@"
+exec "\${HERE}/usr/lib/klovi/bin/launcher" "$@"
 `;
 
 const DESKTOP_ENTRY = `[Desktop Entry]
@@ -124,7 +131,8 @@ async function main(): Promise<void> {
   const outputPath = resolve(output);
   const workDir = join(dirname(outputPath), `.appimage-work-${Date.now()}`);
   const appDir = join(workDir, "Klovi.AppDir");
-  const appOptDir = join(appDir, "usr", "opt", "klovi");
+  const appLibDir = join(appDir, "usr", "lib", "klovi");
+  const appBinDir = join(appDir, "usr", "bin");
   const extractDir = join(workDir, "extracted");
 
   console.log(`Packaging AppImage for ${arch} v${version}`);
@@ -134,99 +142,56 @@ async function main(): Promise<void> {
 
   // 1. Create working directories
   await ensureDir(extractDir);
-  await ensureDir(appOptDir);
+  await ensureDir(appLibDir);
+  await ensureDir(appBinDir);
 
-  // 2. Extract the .tar.zst to a temporary location to get zig-zstd
-  //    First we need to do a raw extraction to get the zig-zstd binary.
-  //    Use tar with --zstd if available, or decompress in two steps.
-  //    We'll do a two-step approach: decompress .zst → .tar, then extract.
+  // 2. Decompress .tar.zst using system tar (Ubuntu 24.04 CI has zstd support)
+  console.log("\nStep 1: Extract .tar.zst...");
+  await run(["tar", "--zstd", "-xf", tarballPath, "-C", extractDir]);
 
-  const tarFile = join(workDir, "bundle.tar");
-
-  // Try extracting with tar --zstd first (needs zstd installed), fall back to
-  // manual decompression with zig-zstd from inside the archive.
-  // Since zig-zstd is INSIDE the tarball, we need an initial extraction.
-  // Strategy: use Bun to do the initial .tar.zst extraction directly.
-
-  // Actually, the requirement says to use zig-zstd found next to the
-  // extracted bin/launcher. So we need a bootstrap: extract the .tar.zst
-  // using system tar (which on most Linux CI supports --zstd), get zig-zstd,
-  // then we already have the extracted files.
-  //
-  // Simpler approach: decompress .tar.zst → .tar using the system `zstd`
-  // command or `tar --zstd`, then extract.
-  //
-  // Per the requirement: use zig-zstd. To bootstrap, we'll first do a
-  // partial extract or decompress with whatever is available, then use
-  // zig-zstd for the actual decompression.
-  //
-  // Cleanest interpretation: decompress the .tar.zst using zig-zstd.
-  // But zig-zstd is inside the archive. The solution is:
-  //   1. Copy the tarball
-  //   2. Use `tar -xf` on the .tar.zst (system tar can handle zstd on modern Linux)
-  //      to extract only bin/zig-zstd
-  //   3. Use zig-zstd to decompress the full .tar.zst → .tar
-  //   4. Extract the .tar
-  //
-  // Let's implement this bootstrap approach.
-
-  console.log("\nStep 1: Bootstrap — extract zig-zstd from tarball...");
-
-  // Extract just bin/zig-zstd using system tar (modern Linux tar supports zstd)
-  try {
-    await run(["tar", "--zstd", "-xf", tarballPath, "-C", extractDir, "bin/zig-zstd"], {
-      cwd: workDir,
-    });
-  } catch {
-    // Fallback: try without --zstd flag (some tar versions auto-detect)
-    await run(["tar", "-xf", tarballPath, "-C", extractDir, "bin/zig-zstd"], {
-      cwd: workDir,
-    });
+  // 3. Find the top-level bundle directory from extracted output
+  const extractedEntries = readdirSync(extractDir);
+  const bundleDir = extractedEntries[0];
+  if (!bundleDir) {
+    fail("Tarball extracted to empty directory");
   }
+  const bundlePath = join(extractDir, bundleDir);
+  console.log(`  Found bundle: ${bundleDir}`);
 
-  const zigZstd = join(extractDir, "bin", "zig-zstd");
+  // 4. Build AppDir layout
+  console.log("\nStep 2: Build AppDir layout...");
 
-  // Ensure zig-zstd is executable
-  await run(["chmod", "+x", zigZstd]);
+  // Place extracted bundle under usr/lib/klovi/
+  await run(["sh", "-c", `cp -a "${bundlePath}"/. "${appLibDir}/"`]);
 
-  // 3. Decompress .tar.zst → .tar using zig-zstd
-  console.log("\nStep 2: Decompress .tar.zst → .tar using zig-zstd...");
-  await run([zigZstd, "-d", tarballPath, "-o", tarFile]);
+  // Create usr/bin/klovi as a launcher wrapper
+  const launcherWrapper = `#!/bin/bash
+HERE="$(dirname "$(readlink -f "\${0}")")"
+exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
+`;
+  await Bun.write(join(appBinDir, "klovi"), launcherWrapper);
+  await run(["chmod", "+x", join(appBinDir, "klovi")]);
 
-  // 4. Extract the .tar into extractDir
-  console.log("\nStep 3: Extract .tar...");
-  // Clear extractDir first to avoid duplication from the bootstrap step
-  await run(["rm", "-rf", extractDir]);
-  await ensureDir(extractDir);
-  await run(["tar", "-xf", tarFile, "-C", extractDir]);
-
-  // 5. Move all extracted files into the AppDir structure
-  console.log("\nStep 4: Build AppDir layout...");
-
-  // Copy all extracted content into usr/opt/klovi/
-  await run(["sh", "-c", `cp -a "${extractDir}"/. "${appOptDir}/"`]);
-
-  // 6. Create AppRun
+  // 5. Create AppRun
   const appRunPath = join(appDir, "AppRun");
   await Bun.write(appRunPath, APPRUN_CONTENT);
   await run(["chmod", "+x", appRunPath]);
 
-  // 7. Create .desktop file
+  // 6. Create .desktop file
   await Bun.write(join(appDir, "klovi.desktop"), DESKTOP_ENTRY);
 
-  // 8. Copy icon
+  // 7. Copy icon
   const iconSource = join(import.meta.dir, "..", "icon.iconset", "icon_256x256.png");
-  const iconDest = join(appDir, "klovi.png");
-
   const iconFile = Bun.file(iconSource);
   if (!(await iconFile.exists())) {
     fail(`Icon not found at: ${iconSource}`);
   }
-  await Bun.write(iconDest, iconFile);
+  await Bun.write(join(appDir, "klovi.png"), iconFile);
+  await Bun.write(join(appDir, ".DirIcon"), iconFile);
 
-  // 9. Download appimagetool
-  console.log("\nStep 5: Download appimagetool...");
-  const appImageArch = ARCH_MAP[arch];
+  // 8. Download appimagetool (architecture derived from --arch)
+  console.log("\nStep 3: Download appimagetool...");
+  const appImageArch = APPIMAGE_ARCH_MAP[arch] ?? fail(`Unsupported arch: ${arch}`);
   const toolUrl = `${APPIMAGE_TOOL_BASE_URL}/appimagetool-${appImageArch}.AppImage`;
   const toolPath = join(workDir, "appimagetool");
 
@@ -238,13 +203,10 @@ async function main(): Promise<void> {
   await Bun.write(toolPath, response);
   await run(["chmod", "+x", toolPath]);
 
-  // 10. Build the AppImage
-  console.log("\nStep 6: Build AppImage...");
-
-  // Ensure output directory exists
+  // 9. Build the AppImage
+  console.log("\nStep 4: Build AppImage...");
   await ensureDir(dirname(outputPath));
 
-  // Set ARCH env for appimagetool
   const appImageToolEnv = { ...process.env, ARCH: appImageArch };
   const buildProc = Bun.spawn([toolPath, appDir, outputPath], {
     cwd: workDir,
@@ -257,11 +219,11 @@ async function main(): Promise<void> {
     fail(`appimagetool failed with exit code ${buildExitCode}`);
   }
 
-  // 11. Cleanup
-  console.log("\nStep 7: Cleanup...");
+  // 10. Cleanup
+  console.log("\nStep 5: Cleanup...");
   await run(["rm", "-rf", workDir]);
 
-  // 12. Done
+  // 11. Done
   const outputFile = Bun.file(outputPath);
   if (!(await outputFile.exists())) {
     fail(`AppImage was not created at: ${outputPath}`);
@@ -273,7 +235,10 @@ async function main(): Promise<void> {
   console.log(`  Size: ${(size / 1024 / 1024).toFixed(1)} MB`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only run main when executed directly, not when imported for testing
+if (import.meta.main) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
