@@ -1,24 +1,87 @@
-diff --git a/dist/api/bun/ElectrobunConfig.ts b/dist/api/bun/ElectrobunConfig.ts
---- a/dist/api/bun/ElectrobunConfig.ts
-+++ b/dist/api/bun/ElectrobunConfig.ts
-@@ -56,6 +56,17 @@
- 		 * ```
- 		 */
- 		urlSchemes?: string[];
+diff --git a/bin/electrobun.cjs b/bin/electrobun.cjs
+--- a/bin/electrobun.cjs
++++ b/bin/electrobun.cjs
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env node
+ 
+ const { execSync, spawn } = require('child_process');
+-const { existsSync, mkdirSync, unlinkSync, chmodSync, copyFileSync, createWriteStream } = require('fs');
++const { existsSync, mkdirSync, unlinkSync, chmodSync, createWriteStream } = require('fs');
+ const { join, dirname } = require('path');
+ const https = require('https');
+@@ -28,6 +28,10 @@ const electrobunDir = join(__dirname, '..');
+ const cacheDir = join(electrobunDir, '.cache');
+ const cliBinary = join(cacheDir, `electrobun${binExt}`);
+ 
++function shellEscape(arg) {
++  return `'${String(arg).replace(/'/g, `'\\''`)}'`;
++}
 +
-+		/**
-+		 * When false, non-dev builds use stable naming for app identity.
-+		 * The app and installer names stay as the base name (e.g., "Klovi")
-+		 * instead of appending the channel suffix (e.g., "Klovi-candidate").
-+		 * Channel-specific naming remains in platform prefixes, build folders,
-+		 * version.json.channel, and updater metadata.
-+		 * Dev builds always keep dev-specific naming regardless of this setting.
-+		 * @default true
-+		 */
-+		includeReleaseChannelInName?: boolean;
- 	};
-
- 	/**
+@@ -54,21 +54,12 @@ async function downloadFile(url, filePath) {
+ }
+ 
+ async function ensureCliBinary() {
+-  // Check if CLI binary exists in bin location (where npm expects it)
+-  const binLocation = join(electrobunDir, 'bin', 'electrobun' + binExt);
+-  if (existsSync(binLocation)) {
+-    return binLocation;
+-  }
+-
+-  // Check if core dependencies already exist in cache
+   if (existsSync(cliBinary)) {
+-    // Copy to bin location if it exists in cache but not in bin
+-    mkdirSync(dirname(binLocation), { recursive: true });
+-    copyFileSync(cliBinary, binLocation);
+     if (platform !== 'win') {
+-      chmodSync(binLocation, '755');
++      chmodSync(cliBinary, '755');
+     }
+-    return binLocation;
++    return cliBinary;
+   }
+ 
+   console.log('Downloading electrobun CLI for your platform...');
+@@ -95,16 +86,7 @@ async function ensureCliBinary() {
+       chmodSync(cliBinary, '755');
+     }
+ 
+-    // Copy CLI to bin location so npm scripts can find it
+-    mkdirSync(dirname(binLocation), { recursive: true });
+-    copyFileSync(cliBinary, binLocation);
+-
+-    // Make the bin location executable too
+-    if (platform !== 'win') {
+-      chmodSync(binLocation, '755');
+-    }
+-
+     console.log('electrobun CLI downloaded successfully!');
+-    return binLocation;
++    return cliBinary;
+ 
+  } catch (error) {
+    throw new Error(`Failed to download electrobun CLI: ${error.message}`);
+@@ -118,7 +104,12 @@ async function main() {
+     const args = process.argv.slice(2);
+     const cliPath = await ensureCliBinary();
+ 
+-    // Replace this process with the actual CLI
+-    const child = spawn(cliPath, args, {
+-      stdio: 'inherit',
+-      cwd: process.cwd(),
+-      shell: platform !== 'win',
+-    });
++    const child =
++      platform === 'win'
++        ? spawn(cliPath, args, {
++            stdio: 'inherit',
++            cwd: process.cwd(),
++          })
++        : spawn('/bin/sh', ['-c', [shellEscape(cliPath), ...args.map(shellEscape)].join(' ')], {
++            stdio: 'inherit',
++            cwd: process.cwd(),
++          });
+ 
+     child.on('exit', (code) => {
 diff --git a/dist/api/bun/core/ApplicationMenu.ts b/dist/api/bun/core/ApplicationMenu.ts
 index 65f59ff7f8563ee1132846c2ae999595f01ff96b..699110ec3479250c76c81e6751d18339b292b671 100644
 --- a/dist/api/bun/core/ApplicationMenu.ts
@@ -240,115 +303,3 @@ index 6b7eb124d4c10d837749380eedbbcef51567ea43..28b5fc3122efdc38b9a29b80b5ab5072
    const pathToBinDir = dirname(pathToLauncherBin);
    const resourcesDir = join(pathToBinDir, "..", "Resources");
    const asarPath = join(resourcesDir, "app.asar");
-diff --git a/src/cli/index.ts b/src/cli/index.ts
---- a/src/cli/index.ts
-+++ b/src/cli/index.ts
-@@ -1498,6 +1498,7 @@ async function createLinuxInstallerArchive(
- 	appFileName: string,
- 	config: any,
- 	buildEnvironment: string,
-+	identityEnv: string,
- 	hash: string,
- 	targetPaths: ReturnType<typeof getPlatformPaths>,
- ): Promise<string> {
-@@ -1526,7 +1527,7 @@ async function createLinuxInstallerArchive(
- 		const metadata = {
- 			identifier: config.app.identifier,
- 			name: config.app.name,
--			channel: buildEnvironment,
-+			channel: identityEnv,
- 			hash: hash,
- 		};
- 		const metadataJson = JSON.stringify(metadata);
-@@ -1802,9 +1803,7 @@
- 		// Get environment
- 		const envArg =
- 			process.argv.find((arg) => arg.startsWith("--env="))?.split("=")[1] || "";
--		const buildEnvironment = ["dev", "canary", "stable"].includes(envArg)
--			? envArg
--			: "dev";
-+		const buildEnvironment = envArg || "dev";
- 
- 		try {
- 			await runBuild(config, buildEnvironment);
-@@ -1847,11 +1846,18 @@
- 		const targetOS = currentTarget.os;
- 		const targetARCH = currentTarget.arch;
- 		const targetBinExt = targetOS === "win" ? ".exe" : "";
--		const appFileName = getAppFileName(config.app.name, buildEnvironment);
-+		// When includeReleaseChannelInName is false, non-dev builds use stable naming
-+		// so the app identity stays the same across channels (e.g., always "Klovi" not "Klovi-candidate")
-+		const identityEnv =
-+			config.app.includeReleaseChannelInName === false &&
-+			buildEnvironment !== "dev"
-+				? "stable"
-+				: buildEnvironment;
-+		const appFileName = getAppFileName(config.app.name, identityEnv);
- 		// macOS bundle display name preserves spaces for the actual .app folder
- 		const macOSBundleDisplayName = getMacOSBundleDisplayName(
- 			config.app.name,
--			buildEnvironment,
-+			identityEnv,
- 		);
- 		const platformPrefix = getPlatformPrefix(
- 			buildEnvironment,
-@@ -1866,7 +1872,7 @@
- 		// @ts-expect-error - reserved for future use
- 		const _bundleFileName = getBundleFileName(
- 			config.app.name,
--			buildEnvironment,
-+			identityEnv,
- 			targetOS,
- 		);
- 		const artifactFolder = join(projectRoot, config.build.artifactFolder);
-@@ -3480,7 +3486,7 @@
- 			const extractorMetadata = {
- 				identifier: config.app.identifier,
- 				name: config.app.name,
--				channel: buildEnvironment,
-+				channel: identityEnv,
- 				hash: hash,
- 			};
- 			await Bun.write(
-@@ -3598,10 +3604,11 @@
- 					const selfExtractingExePath = await createWindowsSelfExtractingExe(
- 						buildFolder,
- 						compressedTarPath,
- 						appFileName,
- 						targetPaths,
- 						buildEnvironment,
-+						identityEnv,
- 						hash,
- 						config,
- 						projectRoot,
- 					);
-@@ -3625,11 +3632,12 @@
- 					const installerArchivePath = await createLinuxInstallerArchive(
- 						buildFolder,
- 						linuxCompressedTarPath,
- 						appFileName,
- 						config,
- 						buildEnvironment,
-+						identityEnv,
- 						hash,
- 						targetPaths,
- 					);
- 					artifactsToUpload.push(installerArchivePath);
- 				}
-@@ -4283,6 +4291,7 @@
- 		_appFileName: string,
- 		targetPaths: any,
- 		buildEnvironment: string,
-+		identityEnv: string,
- 		hash: string,
- 		config: any,
- 		projectRoot: string,
-@@ -4347,7 +4356,7 @@
- 		const metadata = {
- 			identifier: config.app.identifier,
- 			name: config.app.name,
--			channel: buildEnvironment,
-+			channel: identityEnv,
- 			hash: hash,
- 		};
- 		const metadataJson = JSON.stringify(metadata, null, 2);

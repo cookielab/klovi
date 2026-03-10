@@ -14,12 +14,14 @@ on:
         required: true
         type: string
 
+env:
+  DESKTOP_BUILD_ENV: stable
+
 jobs:
   release-meta:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release_meta.outputs.version }}
-      build_env: ${{ steps.release_meta.outputs.build_env }}
       commit: ${{ steps.release_meta.outputs.commit }}
     steps:
       - name: Validate version format
@@ -40,16 +42,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          if echo "$VERSION" | grep -q -- '-beta\.'; then
-            BUILD_ENV="beta"
-          elif echo "$VERSION" | grep -q -- '-rc\.'; then
-            BUILD_ENV="candidate"
-          else
-            BUILD_ENV="stable"
-          fi
-
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "build_env=$BUILD_ENV" >> "$GITHUB_OUTPUT"
           echo "commit=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
   verify:
@@ -109,15 +102,11 @@ jobs:
           "
 
       - name: Build Electrobun app
-        env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-        run: bun run build -- --env="$BUILD_ENV"
+        run: bun run build -- --env="$DESKTOP_BUILD_ENV"
 
       - name: Verify macOS wrapper contract
-        env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: |
-          BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
+          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-macos-arm64"
           APP_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
           ZSTD_PATH="apps/desktop/node_modules/electrobun/dist-macos-arm64/zig-zstd"
 
@@ -153,12 +142,11 @@ jobs:
 
       - name: Sign and notarize macOS app
         env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
+          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-macos-arm64"
           if [ ! -d "$BUILD_DIR" ]; then
             echo "::error::Expected build output in $BUILD_DIR"
             find apps/desktop/build -maxdepth 2 -type d || true
@@ -208,9 +196,8 @@ jobs:
       - name: Package macOS DMG and signed updater bundle
         env:
           VERSION: ${{ needs.release-meta.outputs.version }}
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: |
-          PREFIX="${BUILD_ENV}-macos-arm64"
+          PREFIX="${DESKTOP_BUILD_ENV}-macos-arm64"
           USER_DMG="Klovi-${VERSION}-macos-arm64.dmg"
           STAGING_DIR=$(mktemp -d /tmp/klovi-dmg.XXXXXX)
           cp -R "$APP_DIR" "$STAGING_DIR/"
@@ -241,9 +228,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: |
-          PREFIX="${BUILD_ENV}-macos-arm64"
+          PREFIX="${DESKTOP_BUILD_ENV}-macos-arm64"
           for file in \
             "apps/desktop/artifacts/${PREFIX}-Klovi.app.tar.zst" \
             "apps/desktop/artifacts/${PREFIX}-update.json"
@@ -308,18 +294,15 @@ jobs:
           "
 
       - name: Build Electrobun app
-        env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-        run: bun run build -- --env="$BUILD_ENV"
+        run: bun run build -- --env="$DESKTOP_BUILD_ENV"
 
       - name: Package AppImage
         env:
           VERSION: ${{ needs.release-meta.outputs.version }}
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
           ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         run: |
-          PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
+          PREFIX="${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
           UPDATER_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
 
           if [ ! -f "$UPDATER_BUNDLE" ]; then
@@ -353,10 +336,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
         run: |
-          PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
+          PREFIX="${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
           for file in \
             "$UPDATER_BUNDLE" \
             "apps/desktop/artifacts/${PREFIX}-update.json"
@@ -403,18 +385,15 @@ jobs:
 
       - name: Build Electrobun app
         shell: bash
-        env:
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
-        run: bun run build -- --env="$BUILD_ENV"
+        run: bun run build -- --env="$DESKTOP_BUILD_ENV"
 
       - name: Upload Windows user-facing and updater assets
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
-          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: |
-          PREFIX="${BUILD_ENV}-win-x64"
+          PREFIX="${DESKTOP_BUILD_ENV}-win-x64"
           BUILD_DIR="apps/desktop/build/${PREFIX}"
 
           INSTALLER=$(find "$BUILD_DIR" -maxdepth 1 -type f -name '*Setup*.exe' | head -1)

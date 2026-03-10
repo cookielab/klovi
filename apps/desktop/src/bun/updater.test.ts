@@ -10,11 +10,11 @@ import {
   findLatestUsableRelease,
   findReleaseAsset,
   type GitHubRelease,
-  getElectrobunPlatformPrefix,
   getElectrobunTarballName,
   getReleaseBundleAssetName,
   getReleaseChannel,
   getUpdateJsonAssetName,
+  getUpdaterAssetPrefix,
   getZstdBinaryPath,
   isValidUpdateInfo,
   releaseHasUpdaterAssets,
@@ -78,11 +78,8 @@ function makeReleaseWithAssets(
   arch: "arm64" | "x64",
   opts?: { missingTarball?: boolean; missingUpdateJson?: boolean },
 ): GitHubRelease {
-  const channel = getReleaseChannel(tag);
-  const prefix = `${channel}-${platform}-${arch}`;
-  const tarballName =
-    platform === "macos" ? `${prefix}-Klovi.app.tar.zst` : `${prefix}-Klovi.tar.zst`;
-  const updateJsonName = `${prefix}-update.json`;
+  const tarballName = getReleaseBundleAssetName(platform, arch);
+  const updateJsonName = getUpdateJsonAssetName(platform, arch);
   const assets: GitHubRelease["assets"] = [];
   if (!opts?.missingTarball) {
     assets.push({ name: tarballName, browser_download_url: `https://example.com/${tarballName}` });
@@ -175,17 +172,17 @@ describe("filterReleasesByChannel ignores GitHub prerelease flag", () => {
   });
 });
 
-describe("Electrobun asset helpers", () => {
+describe("updater asset helpers", () => {
   test("maps release tags to updater channels", () => {
     expect(getReleaseChannel("2.0.0")).toBe("stable");
     expect(getReleaseChannel("2.1.0-rc.1")).toBe("candidate");
     expect(getReleaseChannel("2.1.0-beta.1")).toBe("beta");
   });
 
-  test("builds platform prefixes", () => {
-    expect(getElectrobunPlatformPrefix("stable", "macos", "arm64")).toBe("stable-macos-arm64");
-    expect(getElectrobunPlatformPrefix("candidate", "win", "x64")).toBe("candidate-win-x64");
-    expect(getElectrobunPlatformPrefix("beta", "linux", "arm64")).toBe("beta-linux-arm64");
+  test("always builds stable updater asset prefixes", () => {
+    expect(getUpdaterAssetPrefix("macos", "arm64")).toBe("stable-macos-arm64");
+    expect(getUpdaterAssetPrefix("win", "x64")).toBe("stable-win-x64");
+    expect(getUpdaterAssetPrefix("linux", "arm64")).toBe("stable-linux-arm64");
   });
 
   test("returns normalized tarball names", () => {
@@ -195,27 +192,21 @@ describe("Electrobun asset helpers", () => {
   });
 
   test("builds macos release bundle asset name", () => {
-    expect(getReleaseBundleAssetName("2.0.0", "macos", "arm64")).toBe(
+    expect(getReleaseBundleAssetName("macos", "arm64")).toBe(
       "stable-macos-arm64-Klovi.app.tar.zst",
     );
   });
 
   test("builds windows release bundle asset name", () => {
-    expect(getReleaseBundleAssetName("2.1.0-rc.1", "win", "x64")).toBe(
-      "candidate-win-x64-Klovi.tar.zst",
-    );
+    expect(getReleaseBundleAssetName("win", "x64")).toBe("stable-win-x64-Klovi.tar.zst");
   });
 
   test("builds linux x64 release bundle asset name", () => {
-    expect(getReleaseBundleAssetName("2.1.0-beta.1", "linux", "x64")).toBe(
-      "beta-linux-x64-Klovi.tar.zst",
-    );
+    expect(getReleaseBundleAssetName("linux", "x64")).toBe("stable-linux-x64-Klovi.tar.zst");
   });
 
   test("builds linux arm64 release bundle asset name", () => {
-    expect(getReleaseBundleAssetName("2.0.0", "linux", "arm64")).toBe(
-      "stable-linux-arm64-Klovi.tar.zst",
-    );
+    expect(getReleaseBundleAssetName("linux", "arm64")).toBe("stable-linux-arm64-Klovi.tar.zst");
   });
 
   test("resolves zstd path for unix platforms", () => {
@@ -232,15 +223,9 @@ describe("Electrobun asset helpers", () => {
   });
 
   test("builds update.json asset names", () => {
-    expect(getUpdateJsonAssetName("2.0.0", "macos", "arm64")).toBe(
-      "stable-macos-arm64-update.json",
-    );
-    expect(getUpdateJsonAssetName("2.1.0-rc.1", "win", "x64")).toBe(
-      "candidate-win-x64-update.json",
-    );
-    expect(getUpdateJsonAssetName("2.1.0-beta.1", "linux", "arm64")).toBe(
-      "beta-linux-arm64-update.json",
-    );
+    expect(getUpdateJsonAssetName("macos", "arm64")).toBe("stable-macos-arm64-update.json");
+    expect(getUpdateJsonAssetName("win", "x64")).toBe("stable-win-x64-update.json");
+    expect(getUpdateJsonAssetName("linux", "arm64")).toBe("stable-linux-arm64-update.json");
   });
 });
 
@@ -325,13 +310,13 @@ describe("findReleaseAsset", () => {
           browser_download_url: "https://example.com/setup.exe",
         },
         {
-          name: "candidate-win-x64-Klovi.tar.zst",
+          name: "stable-win-x64-Klovi.tar.zst",
           browser_download_url: "https://example.com/bundle.tar.zst",
         },
       ],
     };
 
-    expect(findReleaseAsset(release, "candidate-win-x64-Klovi.tar.zst")?.browser_download_url).toBe(
+    expect(findReleaseAsset(release, "stable-win-x64-Klovi.tar.zst")?.browser_download_url).toBe(
       "https://example.com/bundle.tar.zst",
     );
   });
@@ -357,7 +342,7 @@ describe("findLatestRelease", () => {
       ...makeRelease("2.1.0-beta.1", true),
       assets: [
         {
-          name: "beta-macos-arm64-Klovi.app.tar.zst",
+          name: "stable-macos-arm64-Klovi.app.tar.zst",
           browser_download_url: "https://example.com/beta",
         },
       ],
@@ -366,7 +351,7 @@ describe("findLatestRelease", () => {
       ...makeRelease("2.1.0-rc.1", true),
       assets: [
         {
-          name: "candidate-macos-arm64-Klovi.app.tar.zst",
+          name: "stable-macos-arm64-Klovi.app.tar.zst",
           browser_download_url: "https://example.com/rc",
         },
       ],
@@ -475,6 +460,25 @@ describe("findLatestUsableRelease", () => {
     // Beta channel should see both, pick newest
     const beta = findLatestUsableRelease(releases, "beta", "1.0.0", "macos", "arm64");
     expect(beta?.tag_name).toBe("2.1.0-beta.1");
+  });
+
+  test("rejects legacy beta-prefixed updater assets under the future-only contract", () => {
+    const legacyBetaRelease: GitHubRelease = {
+      ...makeRelease("2.1.0-beta.1", true),
+      assets: [
+        {
+          name: "beta-macos-arm64-Klovi.app.tar.zst",
+          browser_download_url: "https://example.com/beta.tar.zst",
+        },
+        {
+          name: "beta-macos-arm64-update.json",
+          browser_download_url: "https://example.com/beta-update.json",
+        },
+      ],
+    };
+
+    const result = findLatestUsableRelease([legacyBetaRelease], "beta", "1.0.0", "macos", "arm64");
+    expect(result).toBeNull();
   });
 });
 

@@ -61,24 +61,20 @@ export function getReleaseChannel(tagName: string): UpdateChannel {
   return "stable";
 }
 
-export function getElectrobunPlatformPrefix(
-  channel: UpdateChannel,
-  platform: Platform,
-  arch: Arch,
-): string {
-  return `${channel}-${platform}-${arch}`;
+export function getUpdaterAssetPrefix(platform: Platform, arch: Arch): string {
+  return `stable-${platform}-${arch}`;
 }
 
 export function getElectrobunTarballName(platform: Platform): string {
   return platform === "macos" ? "Klovi.app.tar.zst" : "Klovi.tar.zst";
 }
 
-export function getReleaseBundleAssetName(tagName: string, platform: Platform, arch: Arch): string {
-  return `${getElectrobunPlatformPrefix(getReleaseChannel(tagName), platform, arch)}-${getElectrobunTarballName(platform)}`;
+export function getReleaseBundleAssetName(platform: Platform, arch: Arch): string {
+  return `${getUpdaterAssetPrefix(platform, arch)}-${getElectrobunTarballName(platform)}`;
 }
 
-export function getUpdateJsonAssetName(tagName: string, platform: Platform, arch: Arch): string {
-  return `${getElectrobunPlatformPrefix(getReleaseChannel(tagName), platform, arch)}-update.json`;
+export function getUpdateJsonAssetName(platform: Platform, arch: Arch): string {
+  return `${getUpdaterAssetPrefix(platform, arch)}-update.json`;
 }
 
 export function isValidUpdateInfo(data: unknown): data is UpdateInfo {
@@ -127,8 +123,8 @@ export function releaseHasUpdaterAssets(
   platform: Platform,
   arch: Arch,
 ): boolean {
-  const tarball = getReleaseBundleAssetName(release.tag_name, platform, arch);
-  const updateJson = getUpdateJsonAssetName(release.tag_name, platform, arch);
+  const tarball = getReleaseBundleAssetName(platform, arch);
+  const updateJson = getUpdateJsonAssetName(platform, arch);
   return (
     findReleaseAsset(release, tarball) !== null && findReleaseAsset(release, updateJson) !== null
   );
@@ -293,7 +289,7 @@ export class UpdateManager {
       }
 
       // Fetch and validate update.json before marking as available
-      const updateJsonName = getUpdateJsonAssetName(latest.tag_name, this.platform, this.arch);
+      const updateJsonName = getUpdateJsonAssetName(this.platform, this.arch);
       const updateJsonAsset = findReleaseAsset(latest, updateJsonName);
       if (!updateJsonAsset) {
         throw new Error(`Update metadata asset not found: ${updateJsonName}`);
@@ -446,7 +442,7 @@ export class UpdateManager {
     if (!this.latestRelease) return;
 
     const version = this.latestRelease.tag_name;
-    const assetName = getReleaseBundleAssetName(version, this.platform, this.arch);
+    const assetName = getReleaseBundleAssetName(this.platform, this.arch);
     const asset = findReleaseAsset(this.latestRelease, assetName);
 
     if (!asset) {

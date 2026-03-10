@@ -9,7 +9,6 @@ export default {
     name: "Klovi",
     identifier: "io.cookielab.klovi",
     version: version,
-    includeReleaseChannelInName: false,
   },
   release: {
     generatePatch: false,

@@ -52,8 +52,8 @@ export function parseArgs(argv: string[]): VerifyArgs {
   return zstdPath ? { appPath, zstdPath } : { appPath };
 }
 
-export function getExpectedBundleName(appName: string, channel: string): string {
-  return `${channel === "stable" ? appName : `${appName}-${channel}`}.app`;
+export function getExpectedBundleName(appName: string): string {
+  return `${appName}.app`;
 }
 
 export function parseTarEntries(stdout: string): string[] {
@@ -144,7 +144,7 @@ export async function verifyMacOSWrapperContract(args: VerifyArgs): Promise<void
 
   const metadata = await readMetadata(appPath);
   const archivePath = await findEmbeddedArchive(appPath);
-  const expectedBundleName = getExpectedBundleName(metadata.name, metadata.channel);
+  const expectedBundleName = getExpectedBundleName(metadata.name);
 
   const tempDir = await mkdtemp(join(tmpdir(), "klovi-wrapper-contract-"));
   const tarPath = join(tempDir, basename(archivePath, ZSTD_SUFFIX));
