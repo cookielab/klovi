@@ -21,12 +21,6 @@ the same core UI and backend logic:
 Download the latest release for your platform from the
 [Releases page](https://github.com/cookielab/klovi/releases).
 
-Or install via [Homebrew](https://brew.sh):
-
-```bash
-brew install --cask cookielab/tap/klovi
-```
-
 ### Browser-served npm package
 
 ```bash

@@ -130,16 +130,16 @@ Runtime updater behavior should remain a Klovi-owned GitHub Releases adapter ins
 
 ### F. Remove legacy release/distribution paths
 
-Future implementation cleanup targets:
+Removed:
 
-- [scripts/build-release.sh](/Users/vrtak-cz/Workspace/Cookielab/Klovi/scripts/build-release.sh)
-- [apps/desktop/packaging/linux/nfpm.yaml](/Users/vrtak-cz/Workspace/Cookielab/Klovi/apps/desktop/packaging/linux/nfpm.yaml)
-- [apps/desktop/packaging/linux/postinstall.sh](/Users/vrtak-cz/Workspace/Cookielab/Klovi/apps/desktop/packaging/linux/postinstall.sh)
-- [apps/desktop/packaging/linux/preremove.sh](/Users/vrtak-cz/Workspace/Cookielab/Klovi/apps/desktop/packaging/linux/preremove.sh)
-- [apps/desktop/packaging/aur/PKGBUILD](/Users/vrtak-cz/Workspace/Cookielab/Klovi/apps/desktop/packaging/aur/PKGBUILD)
-- Homebrew references in [README.md](/Users/vrtak-cz/Workspace/Cookielab/Klovi/README.md) and workflow/docs
+- `scripts/build-release.sh`
+- `apps/desktop/packaging/linux/nfpm.yaml`
+- `apps/desktop/packaging/linux/postinstall.sh`
+- `apps/desktop/packaging/linux/preremove.sh`
+- `apps/desktop/packaging/aur/PKGBUILD`
+- Homebrew install section from `README.md`
 
-This current doc-only task should only describe this cleanup, not perform it.
+Kept `apps/desktop/packaging/linux/klovi.desktop` for AppImage packaging.
 
 ### G. Verification and acceptance criteria for the future implementation
 
