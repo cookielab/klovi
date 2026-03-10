@@ -37,11 +37,12 @@ export function filterReleasesByChannel(
 ): GitHubRelease[] {
   return releases.filter((r) => {
     if (r.draft) return false;
+    const tagChannel = getReleaseChannel(r.tag_name);
     switch (channel) {
       case "stable":
-        return !r.prerelease;
+        return tagChannel === "stable";
       case "candidate":
-        return !r.prerelease || r.tag_name.includes("-rc.");
+        return tagChannel === "stable" || tagChannel === "candidate";
       case "beta":
         return true;
       default:

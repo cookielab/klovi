@@ -125,6 +125,56 @@ describe("filterReleasesByChannel", () => {
   });
 });
 
+describe("filterReleasesByChannel ignores GitHub prerelease flag", () => {
+  test("beta tag marked prerelease:false is excluded from stable", () => {
+    const releases = [makeRelease("1.2.3-beta.1", false)];
+    const filtered = filterReleasesByChannel(releases, "stable");
+    expect(filtered).toHaveLength(0);
+  });
+
+  test("rc tag marked prerelease:false is excluded from stable", () => {
+    const releases = [makeRelease("1.2.3-rc.1", false)];
+    const filtered = filterReleasesByChannel(releases, "stable");
+    expect(filtered).toHaveLength(0);
+  });
+
+  test("beta tag marked prerelease:false is excluded from candidate", () => {
+    const releases = [makeRelease("1.2.3-beta.1", false)];
+    const filtered = filterReleasesByChannel(releases, "candidate");
+    expect(filtered).toHaveLength(0);
+  });
+
+  test("rc tag marked prerelease:true is accepted by candidate", () => {
+    const releases = [makeRelease("1.2.3-rc.1", true)];
+    const filtered = filterReleasesByChannel(releases, "candidate");
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]!.tag_name).toBe("1.2.3-rc.1");
+  });
+
+  test("stable tag marked prerelease:true is accepted by stable", () => {
+    const releases = [makeRelease("1.2.3", true)];
+    const filtered = filterReleasesByChannel(releases, "stable");
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]!.tag_name).toBe("1.2.3");
+  });
+
+  test("stable tag marked prerelease:true is accepted by candidate", () => {
+    const releases = [makeRelease("1.2.3", true)];
+    const filtered = filterReleasesByChannel(releases, "candidate");
+    expect(filtered).toHaveLength(1);
+  });
+
+  test("all tags accepted by beta regardless of prerelease flag", () => {
+    const releases = [
+      makeRelease("1.2.3", true),
+      makeRelease("1.2.3-rc.1", false),
+      makeRelease("1.2.3-beta.1", false),
+    ];
+    const filtered = filterReleasesByChannel(releases, "beta");
+    expect(filtered).toHaveLength(3);
+  });
+});
+
 describe("Electrobun asset helpers", () => {
   test("maps release tags to updater channels", () => {
     expect(getReleaseChannel("2.0.0")).toBe("stable");

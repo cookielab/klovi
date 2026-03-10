@@ -80,7 +80,6 @@ jobs:
     uses: ./.github/workflows/release-desktop.yml
     with:
       version: ${{ needs.release.outputs.version }}
-      prerelease: ${{ needs.release.outputs.prerelease == 'true' }}
     secrets: inherit
 
   npm:
