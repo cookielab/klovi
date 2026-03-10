@@ -117,6 +117,71 @@ export function getZstdBinaryPath(platform: Platform, executablePath = process.e
   return join(dirname(executablePath), platform === "win" ? "zig-zstd.exe" : "zig-zstd");
 }
 
+export async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getRequiredLauncherRelativePath(platform: Platform): string {
+  switch (platform) {
+    case "macos":
+      return join("Contents", "MacOS", "launcher");
+    case "linux":
+      return join("bin", "launcher");
+    case "win":
+      return join("bin", "launcher.exe");
+  }
+}
+
+export async function findExtractedAppBundlePath(
+  platform: Platform,
+  stagingDir: string,
+): Promise<string> {
+  if (platform === "macos") {
+    const entries = await readdir(stagingDir);
+    const appBundle = entries.find((entry) => entry.endsWith(".app"));
+    if (!appBundle) throw new Error("Could not find .app bundle in extracted archive");
+
+    const appBundlePath = join(stagingDir, appBundle);
+    if (!(await pathExists(appBundlePath))) {
+      throw new Error("Extracted .app bundle does not exist");
+    }
+
+    return appBundlePath;
+  }
+
+  const entries = await readdir(stagingDir);
+  for (const entry of entries) {
+    const fullPath = join(stagingDir, entry);
+    if ((await stat(fullPath)).isDirectory()) {
+      return fullPath;
+    }
+  }
+
+  if (platform === "linux") {
+    throw new Error("Could not find app bundle directory in extracted archive");
+  }
+  throw new Error("Could not find app bundle in extracted archive");
+}
+
+export async function validateExtractedBundle(
+  platform: Platform,
+  stagingDir: string,
+): Promise<string> {
+  const appBundlePath = await findExtractedAppBundlePath(platform, stagingDir);
+  const launcherPath = join(appBundlePath, getRequiredLauncherRelativePath(platform));
+  if (!(await pathExists(launcherPath))) {
+    throw new Error(
+      `Extracted app bundle is missing launcher: ${getRequiredLauncherRelativePath(platform)}`,
+    );
+  }
+  return appBundlePath;
+}
+
 /** Check whether a release has both the updater tarball and update.json assets. */
 export function releaseHasUpdaterAssets(
   release: GitHubRelease,
@@ -522,14 +587,7 @@ export class UpdateManager {
   }
 
   private async applyMacOS(stagingDir: string): Promise<void> {
-    const entries = await readdir(stagingDir);
-    const appBundle = entries.find((entry) => entry.endsWith(".app"));
-    if (!appBundle) throw new Error("Could not find .app bundle in extracted archive");
-
-    const newAppPath = join(stagingDir, appBundle);
-    if (!(await Bun.file(newAppPath).exists())) {
-      throw new Error("Extracted .app bundle does not exist");
-    }
+    const newAppPath = await validateExtractedBundle(this.platform, stagingDir);
 
     const runningAppPath = resolve(dirname(process.execPath), "..", "..");
     const backupPath = `${runningAppPath}.bak`;
@@ -574,18 +632,7 @@ export class UpdateManager {
   }
 
   private async applyLinux(stagingDir: string): Promise<void> {
-    const entries = await readdir(stagingDir);
-    let foundDir: string | undefined;
-    for (const entry of entries) {
-      const fullPath = join(stagingDir, entry);
-      if ((await stat(fullPath)).isDirectory()) {
-        foundDir = entry;
-        break;
-      }
-    }
-    if (!foundDir) throw new Error("Could not find app bundle directory in extracted archive");
-
-    const newAppPath = join(stagingDir, foundDir);
+    const newAppPath = await validateExtractedBundle(this.platform, stagingDir);
     const runningAppPath = join(this.appDataDir, "app");
 
     const backupPath = `${runningAppPath}.bak`;
@@ -630,19 +677,7 @@ export class UpdateManager {
 
   private async applyWindows(stagingDir: string): Promise<void> {
     const runningAppPath = join(this.appDataDir, "app");
-
-    const entries = await readdir(stagingDir);
-    let foundDir: string | undefined;
-    for (const entry of entries) {
-      const fullPath = join(stagingDir, entry);
-      if ((await stat(fullPath)).isDirectory()) {
-        foundDir = entry;
-        break;
-      }
-    }
-    if (!foundDir) throw new Error("Could not find app bundle in extracted archive");
-
-    const newAppPath = join(stagingDir, foundDir);
+    const newAppPath = await validateExtractedBundle(this.platform, stagingDir);
     const launcherPath = join(runningAppPath, "bin", "launcher.exe");
     const parentDir = dirname(runningAppPath);
     const updateScriptPath = join(parentDir, "update.bat");

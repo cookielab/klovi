@@ -55,6 +55,7 @@ distribution entrypoint.
 - `src/bun/updater.test.ts`
 - `scripts/package-appimage.test.ts`
 - `scripts/verify-macos-wrapper-contract.test.ts`
+- `scripts/verify-updater-artifact.test.ts`
 
 Desktop-specific tests are currently concentrated around updater behavior and
 desktop packaging/runtime wiring.

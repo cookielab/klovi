@@ -6,6 +6,7 @@ import { semver } from "bun";
 import type { UpdateStatus } from "../shared/rpc-types.ts";
 import {
   filterReleasesByChannel,
+  findExtractedAppBundlePath,
   findLatestRelease,
   findLatestUsableRelease,
   findReleaseAsset,
@@ -13,12 +14,15 @@ import {
   getElectrobunTarballName,
   getReleaseBundleAssetName,
   getReleaseChannel,
+  getRequiredLauncherRelativePath,
   getUpdateJsonAssetName,
   getUpdaterAssetPrefix,
   getZstdBinaryPath,
   isValidUpdateInfo,
+  pathExists,
   releaseHasUpdaterAssets,
   UpdateManager,
+  validateExtractedBundle,
   validateUpdateInfo,
 } from "./updater.ts";
 
@@ -226,6 +230,82 @@ describe("updater asset helpers", () => {
     expect(getUpdateJsonAssetName("macos", "arm64")).toBe("stable-macos-arm64-update.json");
     expect(getUpdateJsonAssetName("win", "x64")).toBe("stable-win-x64-update.json");
     expect(getUpdateJsonAssetName("linux", "arm64")).toBe("stable-linux-arm64-update.json");
+  });
+
+  test("pathExists returns true for directories", async () => {
+    const dir = join(tmpdir(), `klovi-path-exists-test-${Date.now()}`);
+    const appPath = join(dir, "Klovi.app");
+    await mkdir(appPath, { recursive: true });
+    try {
+      await expect(pathExists(appPath)).resolves.toBe(true);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("returns required launcher path for each platform", () => {
+    expect(getRequiredLauncherRelativePath("macos")).toBe("Contents/MacOS/launcher");
+    expect(getRequiredLauncherRelativePath("linux")).toBe("bin/launcher");
+    expect(getRequiredLauncherRelativePath("win")).toBe("bin/launcher.exe");
+  });
+
+  test("finds macOS .app bundle path", async () => {
+    const dir = join(tmpdir(), `klovi-macos-bundle-test-${Date.now()}`);
+    const appPath = join(dir, "Klovi.app");
+    await mkdir(appPath, { recursive: true });
+    try {
+      await expect(findExtractedAppBundlePath("macos", dir)).resolves.toBe(appPath);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("validateExtractedBundle accepts macOS extracted bundle", async () => {
+    const dir = join(tmpdir(), `klovi-macos-validate-test-${Date.now()}`);
+    const launcherPath = join(dir, "Klovi.app", "Contents", "MacOS", "launcher");
+    await mkdir(join(launcherPath, ".."), { recursive: true });
+    await Bun.write(launcherPath, "#!/bin/sh\n");
+    try {
+      await expect(validateExtractedBundle("macos", dir)).resolves.toBe(join(dir, "Klovi.app"));
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("validateExtractedBundle accepts linux extracted bundle", async () => {
+    const dir = join(tmpdir(), `klovi-linux-validate-test-${Date.now()}`);
+    const launcherPath = join(dir, "Klovi", "bin", "launcher");
+    await mkdir(join(launcherPath, ".."), { recursive: true });
+    await Bun.write(launcherPath, "#!/bin/sh\n");
+    try {
+      await expect(validateExtractedBundle("linux", dir)).resolves.toBe(join(dir, "Klovi"));
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("validateExtractedBundle accepts windows extracted bundle", async () => {
+    const dir = join(tmpdir(), `klovi-win-validate-test-${Date.now()}`);
+    const launcherPath = join(dir, "Klovi", "bin", "launcher.exe");
+    await mkdir(join(launcherPath, ".."), { recursive: true });
+    await Bun.write(launcherPath, "binary");
+    try {
+      await expect(validateExtractedBundle("win", dir)).resolves.toBe(join(dir, "Klovi"));
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("validateExtractedBundle rejects bundle missing launcher", async () => {
+    const dir = join(tmpdir(), `klovi-missing-launcher-test-${Date.now()}`);
+    await mkdir(join(dir, "Klovi.app"), { recursive: true });
+    try {
+      await expect(validateExtractedBundle("macos", dir)).rejects.toThrow(
+        "Extracted app bundle is missing launcher",
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
 
