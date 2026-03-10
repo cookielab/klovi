@@ -387,6 +387,7 @@ jobs:
           "
 
       - name: Build Electrobun app
+        shell: bash
         env:
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: bun run build -- --env="$BUILD_ENV"
