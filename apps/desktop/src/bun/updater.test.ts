@@ -148,14 +148,14 @@ describe("filterReleasesByChannel ignores GitHub prerelease flag", () => {
     const releases = [makeRelease("1.2.3-rc.1", true)];
     const filtered = filterReleasesByChannel(releases, "candidate");
     expect(filtered).toHaveLength(1);
-    expect(filtered[0]!.tag_name).toBe("1.2.3-rc.1");
+    expect(filtered[0]?.tag_name).toBe("1.2.3-rc.1");
   });
 
   test("stable tag marked prerelease:true is accepted by stable", () => {
     const releases = [makeRelease("1.2.3", true)];
     const filtered = filterReleasesByChannel(releases, "stable");
     expect(filtered).toHaveLength(1);
-    expect(filtered[0]!.tag_name).toBe("1.2.3");
+    expect(filtered[0]?.tag_name).toBe("1.2.3");
   });
 
   test("stable tag marked prerelease:true is accepted by candidate", () => {

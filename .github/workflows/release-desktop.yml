@@ -204,7 +204,7 @@ jobs:
           rm -rf "$STAGING_DIR"
 
           TARBALL_PATH="${BUILD_DIR}/Klovi.app.tar"
-          ZSTD_PATH="${APP_DIR}/Contents/MacOS/zig-zstd"
+          ZSTD_PATH="apps/desktop/node_modules/electrobun/dist-macos-arm64/zig-zstd"
           if [ ! -x "$ZSTD_PATH" ]; then
             echo "::error::Expected zig-zstd at $ZSTD_PATH"
             exit 1

@@ -77,6 +77,8 @@ jobs:
 
   desktop:
     needs: release
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-desktop.yml
     with:
       version: ${{ needs.release.outputs.version }}
