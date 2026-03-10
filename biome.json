@@ -104,6 +104,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["apps/desktop/scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {
