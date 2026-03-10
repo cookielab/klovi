@@ -91,12 +91,46 @@ export function isValidUpdateInfo(data: unknown): data is UpdateInfo {
   );
 }
 
+export function validateUpdateInfo(
+  data: UpdateInfo,
+  tagName: string,
+  platform: Platform,
+  arch: Arch,
+): string | null {
+  if (data.version !== tagName) {
+    return `version mismatch: expected "${tagName}", got "${data.version}"`;
+  }
+  if (data.platform !== platform) {
+    return `platform mismatch: expected "${platform}", got "${data.platform}"`;
+  }
+  if (data.arch !== arch) {
+    return `arch mismatch: expected "${arch}", got "${data.arch}"`;
+  }
+  if (!data.hash) {
+    return "hash is empty";
+  }
+  return null;
+}
+
 export function findReleaseAsset(release: GitHubRelease, name: string): GitHubAsset | null {
   return release.assets.find((asset) => asset.name === name) ?? null;
 }
 
 export function getZstdBinaryPath(platform: Platform, executablePath = process.execPath): string {
   return join(dirname(executablePath), platform === "win" ? "zig-zstd.exe" : "zig-zstd");
+}
+
+/** Check whether a release has both the updater tarball and update.json assets. */
+export function releaseHasUpdaterAssets(
+  release: GitHubRelease,
+  platform: Platform,
+  arch: Arch,
+): boolean {
+  const tarball = getReleaseBundleAssetName(release.tag_name, platform, arch);
+  const updateJson = getUpdateJsonAssetName(release.tag_name, platform, arch);
+  return (
+    findReleaseAsset(release, tarball) !== null && findReleaseAsset(release, updateJson) !== null
+  );
 }
 
 async function fetchReleases(): Promise<GitHubRelease[]> {
@@ -109,6 +143,33 @@ async function fetchReleases(): Promise<GitHubRelease[]> {
   return response.json();
 }
 
+/**
+ * Find the newest release that is:
+ * 1. Newer than currentVersion
+ * 2. Allowed by the channel filter
+ * 3. Has both updater tarball and update.json assets
+ */
+export function findLatestUsableRelease(
+  releases: GitHubRelease[],
+  channel: UpdateChannel,
+  currentVersion: string,
+  platform: Platform,
+  arch: Arch,
+): GitHubRelease | null {
+  const filtered = filterReleasesByChannel(releases, channel);
+
+  // Sort newest-first
+  const sorted = [...filtered].sort((a, b) => semver.order(b.tag_name, a.tag_name));
+
+  for (const release of sorted) {
+    if (semver.order(release.tag_name, currentVersion) <= 0) continue;
+    if (!releaseHasUpdaterAssets(release, platform, arch)) continue;
+    return release;
+  }
+  return null;
+}
+
+/** @deprecated Use findLatestUsableRelease instead. Kept for backward compatibility in tests. */
 export function findLatestRelease(
   releases: GitHubRelease[],
   channel: UpdateChannel,
@@ -216,12 +277,42 @@ export class UpdateManager {
 
     try {
       const releases = await fetchReleases();
-      const latest = findLatestRelease(releases, settings.channel, this.currentVersion);
+      const latest = findLatestUsableRelease(
+        releases,
+        settings.channel,
+        this.currentVersion,
+        this.platform,
+        this.arch,
+      );
 
       if (!latest) {
         const status: UpdateStatus = { status: "up-to-date", currentVersion: this.currentVersion };
         this.emitStatus(status);
         return status;
+      }
+
+      // Fetch and validate update.json before marking as available
+      const updateJsonName = getUpdateJsonAssetName(latest.tag_name, this.platform, this.arch);
+      const updateJsonAsset = findReleaseAsset(latest, updateJsonName);
+      if (!updateJsonAsset) {
+        throw new Error(`Update metadata asset not found: ${updateJsonName}`);
+      }
+      const updateJsonResponse = await fetch(updateJsonAsset.browser_download_url);
+      if (!updateJsonResponse.ok) {
+        throw new Error(`Failed to fetch update metadata: HTTP ${updateJsonResponse.status}`);
+      }
+      const updateJsonData: unknown = await updateJsonResponse.json();
+      if (!isValidUpdateInfo(updateJsonData)) {
+        throw new Error("Invalid update metadata format");
+      }
+      const validationError = validateUpdateInfo(
+        updateJsonData,
+        latest.tag_name,
+        this.platform,
+        this.arch,
+      );
+      if (validationError) {
+        throw new Error(`Update metadata rejected: ${validationError}`);
       }
 
       this.latestRelease = latest;
@@ -367,18 +458,6 @@ export class UpdateManager {
       return;
     }
 
-    const updateJsonName = getUpdateJsonAssetName(version, this.platform, this.arch);
-    const updateJsonAsset = findReleaseAsset(this.latestRelease, updateJsonName);
-    if (!updateJsonAsset) {
-      this.emitStatus({
-        status: "error",
-        currentVersion: this.currentVersion,
-        latestVersion: version,
-        error: `Update metadata not found: ${updateJsonName}`,
-      });
-      return;
-    }
-
     this.emitStatus({
       status: "downloading",
       currentVersion: this.currentVersion,
@@ -394,15 +473,6 @@ export class UpdateManager {
     try {
       await this.downloadBundleAsset(asset, compressedPath, version);
       await this.decompressBundle(compressedPath, tarPath);
-
-      const updateJsonResponse = await fetch(updateJsonAsset.browser_download_url);
-      if (!updateJsonResponse.ok) {
-        throw new Error(`Failed to fetch update metadata: HTTP ${updateJsonResponse.status}`);
-      }
-      const updateJsonData: unknown = await updateJsonResponse.json();
-      if (!isValidUpdateInfo(updateJsonData)) {
-        throw new Error("Invalid update metadata format");
-      }
     } catch (error) {
       try {
         await rm(dir, { recursive: true });

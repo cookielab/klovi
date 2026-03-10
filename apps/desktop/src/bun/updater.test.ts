@@ -7,6 +7,7 @@ import type { UpdateStatus } from "../shared/rpc-types.ts";
 import {
   filterReleasesByChannel,
   findLatestRelease,
+  findLatestUsableRelease,
   findReleaseAsset,
   type GitHubRelease,
   getElectrobunPlatformPrefix,
@@ -16,7 +17,9 @@ import {
   getUpdateJsonAssetName,
   getZstdBinaryPath,
   isValidUpdateInfo,
+  releaseHasUpdaterAssets,
   UpdateManager,
+  validateUpdateInfo,
 } from "./updater.ts";
 
 type MutableUpdateManagerForTest = {
@@ -66,6 +69,36 @@ function makeRelease(tag: string, prerelease: boolean): GitHubRelease {
     draft: false,
     assets: [],
   };
+}
+
+function makeReleaseWithAssets(
+  tag: string,
+  prerelease: boolean,
+  platform: "macos" | "linux" | "win",
+  arch: "arm64" | "x64",
+  opts?: { missingTarball?: boolean; missingUpdateJson?: boolean },
+): GitHubRelease {
+  const channel = getReleaseChannel(tag);
+  const prefix = `${channel}-${platform}-${arch}`;
+  const tarballName =
+    platform === "macos" ? `${prefix}-Klovi.app.tar.zst` : `${prefix}-Klovi.tar.zst`;
+  const updateJsonName = `${prefix}-update.json`;
+  const assets: GitHubRelease["assets"] = [];
+  if (!opts?.missingTarball) {
+    assets.push({ name: tarballName, browser_download_url: `https://example.com/${tarballName}` });
+  }
+  if (!opts?.missingUpdateJson) {
+    assets.push({
+      name: updateJsonName,
+      browser_download_url: `https://example.com/${updateJsonName}`,
+    });
+  }
+  // Add a user-facing installer asset (should be ignored by updater)
+  assets.push({
+    name: `Klovi-${tag}-macos-arm64.dmg`,
+    browser_download_url: `https://example.com/Klovi-${tag}.dmg`,
+  });
+  return { ...makeRelease(tag, prerelease), assets };
 }
 
 describe("filterReleasesByChannel", () => {
@@ -184,6 +217,54 @@ describe("isValidUpdateInfo", () => {
   });
 });
 
+describe("validateUpdateInfo", () => {
+  test("returns null for valid matching info", () => {
+    const info = { version: "2.0.0", hash: "abc123", platform: "macos", arch: "arm64" };
+    expect(validateUpdateInfo(info, "2.0.0", "macos", "arm64")).toBeNull();
+  });
+
+  test("rejects mismatched version", () => {
+    const info = { version: "1.9.0", hash: "abc123", platform: "macos", arch: "arm64" };
+    expect(validateUpdateInfo(info, "2.0.0", "macos", "arm64")).toContain("version mismatch");
+  });
+
+  test("rejects mismatched platform", () => {
+    const info = { version: "2.0.0", hash: "abc123", platform: "linux", arch: "arm64" };
+    expect(validateUpdateInfo(info, "2.0.0", "macos", "arm64")).toContain("platform mismatch");
+  });
+
+  test("rejects mismatched arch", () => {
+    const info = { version: "2.0.0", hash: "abc123", platform: "macos", arch: "x64" };
+    expect(validateUpdateInfo(info, "2.0.0", "macos", "arm64")).toContain("arch mismatch");
+  });
+
+  test("rejects empty hash", () => {
+    const info = { version: "2.0.0", hash: "", platform: "macos", arch: "arm64" };
+    expect(validateUpdateInfo(info, "2.0.0", "macos", "arm64")).toContain("hash is empty");
+  });
+});
+
+describe("releaseHasUpdaterAssets", () => {
+  test("returns true when both tarball and update.json exist", () => {
+    const release = makeReleaseWithAssets("2.0.0", false, "macos", "arm64");
+    expect(releaseHasUpdaterAssets(release, "macos", "arm64")).toBe(true);
+  });
+
+  test("returns false when tarball is missing", () => {
+    const release = makeReleaseWithAssets("2.0.0", false, "macos", "arm64", {
+      missingTarball: true,
+    });
+    expect(releaseHasUpdaterAssets(release, "macos", "arm64")).toBe(false);
+  });
+
+  test("returns false when update.json is missing", () => {
+    const release = makeReleaseWithAssets("2.0.0", false, "macos", "arm64", {
+      missingUpdateJson: true,
+    });
+    expect(releaseHasUpdaterAssets(release, "macos", "arm64")).toBe(false);
+  });
+});
+
 describe("findReleaseAsset", () => {
   test("ignores user-facing installer assets and returns normalized tarball", () => {
     const release: GitHubRelease = {
@@ -278,6 +359,75 @@ describe("findLatestRelease", () => {
   });
 });
 
+describe("findLatestUsableRelease", () => {
+  test("skips incomplete newer release and picks newest usable", () => {
+    const releases: GitHubRelease[] = [
+      // Newer but missing update.json
+      makeReleaseWithAssets("2.2.0", false, "macos", "arm64", { missingUpdateJson: true }),
+      // Complete release
+      makeReleaseWithAssets("2.1.0", false, "macos", "arm64"),
+      // Older
+      makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
+    ];
+
+    const result = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+    expect(result?.tag_name).toBe("2.1.0");
+  });
+
+  test("skips release missing normalized tarball", () => {
+    const releases: GitHubRelease[] = [
+      makeReleaseWithAssets("2.1.0", false, "macos", "arm64", { missingTarball: true }),
+      makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
+    ];
+
+    const result = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+    expect(result?.tag_name).toBe("2.0.0");
+  });
+
+  test("returns null when no usable release is newer", () => {
+    const releases: GitHubRelease[] = [
+      makeReleaseWithAssets("2.0.0", false, "macos", "arm64", { missingUpdateJson: true }),
+    ];
+    const result = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+    expect(result).toBeNull();
+  });
+
+  test("returns null when current is latest", () => {
+    const releases: GitHubRelease[] = [makeReleaseWithAssets("2.0.0", false, "macos", "arm64")];
+    const result = findLatestUsableRelease(releases, "stable", "2.0.0", "macos", "arm64");
+    expect(result).toBeNull();
+  });
+
+  test("user-facing installer assets are ignored for selection", () => {
+    // Release only has a DMG (user-facing), no updater assets
+    const release: GitHubRelease = {
+      ...makeRelease("2.1.0", false),
+      assets: [
+        {
+          name: "Klovi-2.1.0-macos-arm64.dmg",
+          browser_download_url: "https://example.com/Klovi.dmg",
+        },
+      ],
+    };
+    const result = findLatestUsableRelease([release], "stable", "1.0.0", "macos", "arm64");
+    expect(result).toBeNull();
+  });
+
+  test("respects channel filtering for usable releases", () => {
+    const releases: GitHubRelease[] = [
+      makeReleaseWithAssets("2.1.0-beta.1", true, "macos", "arm64"),
+      makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
+    ];
+    // Stable channel should not see beta
+    const stable = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+    expect(stable?.tag_name).toBe("2.0.0");
+
+    // Beta channel should see both, pick newest
+    const beta = findLatestUsableRelease(releases, "beta", "1.0.0", "macos", "arm64");
+    expect(beta?.tag_name).toBe("2.1.0-beta.1");
+  });
+});
+
 describe("UpdateManager", () => {
   const testDir = join(tmpdir(), `klovi-updater-test-${Date.now()}`);
 
@@ -368,35 +518,6 @@ describe("UpdateManager", () => {
       currentVersion: "1.0.0",
       latestVersion: "2.0.0",
       error: "Asset not found: stable-macos-arm64-Klovi.app.tar.zst",
-    });
-  });
-
-  test("download reports error when update.json is missing", async () => {
-    const mgr = new UpdateManager({
-      currentVersion: "1.0.0",
-      platform: "macos",
-      arch: "arm64",
-      settingsPath: join(testDir, "settings.json"),
-      appDataDir: testDir,
-    }) as unknown as MutableUpdateManagerForTest;
-
-    mgr.latestRelease = {
-      ...makeRelease("2.0.0", false),
-      assets: [
-        {
-          name: "stable-macos-arm64-Klovi.app.tar.zst",
-          browser_download_url: "https://example.com/bundle.tar.zst",
-        },
-      ],
-    };
-
-    await mgr.download();
-
-    expect(mgr.getStatus()).toEqual({
-      status: "error",
-      currentVersion: "1.0.0",
-      latestVersion: "2.0.0",
-      error: "Update metadata not found: stable-macos-arm64-update.json",
     });
   });
 });
