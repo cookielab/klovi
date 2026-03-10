@@ -113,7 +113,7 @@ jobs:
         run: |
           TAG_FLAG=""
           if echo "$VERSION" | grep -q -- '-'; then
-            TAG_FLAG="--tag beta"
+            TAG_FLAG="--tag next"
           fi
           npm publish --access public $TAG_FLAG
 
