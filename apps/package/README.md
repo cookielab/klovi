@@ -6,7 +6,7 @@ and OpenCode.
 ## Quick Start
 
 ```bash
-bunx @cookielab.io/klovi
+bunx @cookielab.io/klovi@latest
 ```
 
 Klovi starts a local server on `http://127.0.0.1:3583` and opens your browser.
@@ -16,7 +16,7 @@ local storage.
 Compatibility run:
 
 ```bash
-npx @cookielab.io/klovi
+npx @cookielab.io/klovi@latest
 ```
 
 ## CLI Options
