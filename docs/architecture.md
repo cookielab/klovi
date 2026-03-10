@@ -14,6 +14,12 @@ The shared source-of-truth packages are:
 - `packages/plugin-*`, `packages/ui-components`, and `packages/design-system`
   for plugins and reusable UI
 
+Built-in plugins currently cover:
+
+- Claude Code
+- Codex CLI
+- OpenCode
+
 ## Workspace Structure
 
 ```text
@@ -64,7 +70,7 @@ Klovi/
 
 At runtime:
 
-1. The user runs `npx @cookielab.io/klovi` or `bunx @cookielab.io/klovi`
+1. The user runs `bunx @cookielab.io/klovi` or `npx @cookielab.io/klovi`
 2. `startKloviPackageServer(...)` starts the backend and serves the UI bundle
 3. The browser loads `packages/ui` assets and talks to `/api/rpc/:method`
 
@@ -149,6 +155,7 @@ shared bootstrap logic in `packages/server/src/effect/bootstrap.ts`.
 - HTTP RPC routing in `src/effect/http-app.ts`
 - service composition in `src/effect/server-services.ts`
 - registry creation and settings-backed refresh in `src/services/**`
+- built-in plugin catalog and auto-discovery based on configured data directories
 
 Plugins remain separate packages:
 
@@ -157,6 +164,13 @@ Plugins remain separate packages:
 - `packages/plugin-opencode`
 
 `packages/plugin-core` provides the registry and canonical plugin contracts.
+
+Settings are stored in JSON and include:
+
+- per-plugin `enabled` state
+- per-plugin `dataDir` overrides
+- general security warning preference
+- desktop update channel/check interval/auto-download preferences
 
 ## UI Layering
 
@@ -172,11 +186,14 @@ primitives consumed by `packages/ui` and `packages/ui-components`.
 
 ## Verification Workflow
 
-The baseline verification set for the implemented architecture is:
+The repository baseline verification set is:
 
 - `bun run check`
 - `bun run typecheck`
 - `bun test`
+
+Additional release/runtime verification:
+
 - `bun run test:node-smoke`
 - `bun run stage:npm`
 - `bun run verify:packed-artifact`

@@ -43,12 +43,9 @@ bun test packages/plugin-opencode/src
 
 ### `apps/package`
 
-- `src/cli.test.ts`
 - `src/cli-config.test.ts`
 - `src/server.test.ts`
 - `src/integration.test.ts`
-- `src/http-app.test.ts`
-- `src/static-handler.test.ts`
 
 These validate CLI wiring, package-only HTTP composition, and the browser/npm
 distribution entrypoint.
@@ -56,6 +53,8 @@ distribution entrypoint.
 ### `apps/desktop`
 
 - `src/bun/updater.test.ts`
+- `scripts/package-appimage.test.ts`
+- `scripts/verify-macos-wrapper-contract.test.ts`
 
 Desktop-specific tests are currently concentrated around updater behavior and
 desktop packaging/runtime wiring.

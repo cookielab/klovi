@@ -32,6 +32,8 @@ This keeps distribution-specific behavior out of the reusable rendering layer.
 - `hooks/useViewState.ts` for route restoration and navigation
 - `hooks/useUpdateStatus.ts` for updater status subscription through the host bridge
 - `hooks/useTheme.ts` and `hooks/useHiddenProjects.ts` for persisted UI state
+- `hooks/usePresentationMode.ts`, `hooks/useKeyboard.ts`, and related utilities
+  for session presentation UX
 
 ### Wrapper components
 
@@ -51,6 +53,22 @@ These components connect `packages/ui-components` to `KloviClient`,
 
 The `Package*` prefix is intentional: these are app-shell wrappers around the
 reusable UI package, not dead code.
+
+## Settings and Onboarding
+
+`packages/ui/src/app/components/ui/Onboarding.tsx` drives first-run setup:
+
+- step 1 shows the local security notice
+- step 2 lets the user enable/disable plugins and adjust plugin data paths
+
+`packages/ui/src/app/components/settings/SettingsView.tsx` owns the in-app
+settings experience. The current sidebar tabs are:
+
+- `general`
+- `plugins`
+
+In desktop mode the general tab also surfaces update controls through
+`KloviHostBridge`.
 
 ## Reusable UI (`packages/ui-components`)
 

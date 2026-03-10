@@ -1,18 +1,23 @@
 # @cookielab.io/klovi
 
-Browse and present AI coding session history. Supports Claude Code, Codex (CLI & app), and OpenCode.
+Browse and present AI coding session history. Supports Claude Code, Codex CLI,
+and OpenCode.
 
 ## Quick Start
 
 ```bash
-# Run with Node.js
-npx @cookielab.io/klovi
-
-# Run with Bun
 bunx @cookielab.io/klovi
 ```
 
-Klovi starts a local server on `http://127.0.0.1:3583` and opens your browser. All data stays on your machine — sessions are read directly from each tool's local storage.
+Klovi starts a local server on `http://127.0.0.1:3583` and opens your browser.
+All data stays on your machine. Sessions are read directly from each tool's
+local storage.
+
+Compatibility run:
+
+```bash
+npx @cookielab.io/klovi
+```
 
 ## CLI Options
 
@@ -65,8 +70,20 @@ Starts the Klovi backend server. Returns `{ url, stop() }`.
 ## Supported Tools
 
 - **Claude Code** — reads from `~/.claude/projects/`
-- **Codex** (CLI & app) — reads from `~/.codex/sessions/`
+- **Codex CLI** — reads from `~/.codex/sessions/`
 - **OpenCode** — reads from `~/.local/share/opencode/opencode.db`
+
+## Settings
+
+Klovi stores settings in `~/.klovi/settings.json` by default. The settings file
+tracks:
+
+- enabled/disabled state for each built-in plugin
+- optional custom data directory overrides per plugin
+- general UI settings such as the security warning preference
+
+In browser-served mode there is no native directory picker, so custom plugin
+paths are edited manually.
 
 ## License
 
