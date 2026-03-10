@@ -9,6 +9,10 @@ export default {
     name: "Klovi",
     identifier: "io.cookielab.klovi",
     version: version,
+    includeReleaseChannelInName: !isDev,
+  },
+  release: {
+    generatePatch: false,
   },
   runtime: {
     exitOnLastWindowClosed: true,
@@ -38,9 +42,11 @@ export default {
     linux: {
       bundleCEF: true,
       defaultRenderer: "cef",
+      icon: "icon.iconset/icon_256x256.png",
     },
     win: {
       defaultRenderer: "native",
+      icon: "favicon.ico",
     },
   },
 } satisfies ElectrobunConfig;
