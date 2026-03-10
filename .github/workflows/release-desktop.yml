@@ -7,22 +7,12 @@ on:
         description: "Version tag to build assets for (e.g. 1.2.3)"
         required: true
         type: string
-      prerelease:
-        description: "Whether this is a prerelease (skips Homebrew cask update)"
-        required: false
-        type: boolean
-        default: false
   workflow_call:
     inputs:
       version:
         description: "Version tag to build assets for"
         required: true
         type: string
-      prerelease:
-        description: "Whether this is a prerelease (skips Homebrew cask update)"
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   release-meta:
@@ -264,9 +254,11 @@ jobs:
           - runner: ubuntu-24.04
             electrobun_arch: x64
             artifact_arch: amd64
+            appimagetool_arch: x86_64
           - runner: ubuntu-24.04-arm
             electrobun_arch: arm64
             artifact_arch: arm64
+            appimagetool_arch: aarch64
     permissions:
       contents: write
     steps:
@@ -286,6 +278,9 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - name: Install FUSE for appimagetool
+        run: sudo apt-get update && sudo apt-get install -y libfuse2t64
+
       - name: Set version and commit in package.json
         env:
           VERSION: ${{ needs.release-meta.outputs.version }}
@@ -304,40 +299,57 @@ jobs:
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: bun run build -- --env="$BUILD_ENV"
 
-      - name: Upload Linux user-facing and updater assets
+      - name: Package AppImage
+        env:
+          VERSION: ${{ needs.release-meta.outputs.version }}
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+          ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
+          APPIMAGETOOL_ARCH: ${{ matrix.appimagetool_arch }}
+        run: |
+          PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
+          UPDATER_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
+
+          if [ ! -f "$UPDATER_BUNDLE" ]; then
+            FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
+            if [ -z "$FULL_BUNDLE" ]; then
+              echo "::error::Expected updater bundle for ${PREFIX}"
+              find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*" 2>/dev/null || true
+              exit 1
+            fi
+            cp "$FULL_BUNDLE" "$UPDATER_BUNDLE"
+          fi
+
+          USER_ASSET="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.AppImage"
+
+          bun apps/desktop/scripts/package-appimage.ts \
+            --tarball "$UPDATER_BUNDLE" \
+            --arch "$ELECTROBUN_ARCH" \
+            --version "$VERSION" \
+            --output "$USER_ASSET" \
+            --appimagetool-arch "$APPIMAGETOOL_ARCH"
+
+          echo "USER_ASSET=$USER_ASSET" >> "$GITHUB_ENV"
+          echo "UPDATER_BUNDLE=$UPDATER_BUNDLE" >> "$GITHUB_ENV"
+
+      - name: Upload Linux user-facing asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release-meta.outputs.version }}
+        run: gh release upload "$VERSION" "$USER_ASSET" --clobber
+
+      - name: Upload Linux updater assets
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
-          ARTIFACT_ARCH: ${{ matrix.artifact_arch }}
         run: |
           PREFIX="${BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
-          INSTALLER=$(find "apps/desktop/build/${PREFIX}" -maxdepth 1 -type f -name '*Setup*.tar.gz' | head -1)
-          if [ -z "$INSTALLER" ]; then
-            echo "::error::Expected installer in apps/desktop/build/${PREFIX}"
-            find apps/desktop/build -maxdepth 2 -type f -name '*.tar.gz' 2>/dev/null || true
-            exit 1
-          fi
-
-          USER_ASSET="Klovi-${VERSION}-linux-${ARTIFACT_ARCH}.tar.gz"
-          cp "$INSTALLER" "$USER_ASSET"
-          gh release upload "$VERSION" "$USER_ASSET" --clobber
-
-          FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
-          if [ -z "$FULL_BUNDLE" ]; then
-            echo "::error::Expected updater bundle for ${PREFIX}"
-            find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*" 2>/dev/null || true
-            exit 1
-          fi
-
-          NORMALIZED_BUNDLE="apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst"
-          if [ "$FULL_BUNDLE" != "$NORMALIZED_BUNDLE" ]; then
-            cp "$FULL_BUNDLE" "$NORMALIZED_BUNDLE"
-          fi
-          gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
-
-          for file in "apps/desktop/artifacts/${PREFIX}-update.json"; do
+          for file in \
+            "$UPDATER_BUNDLE" \
+            "apps/desktop/artifacts/${PREFIX}-update.json"
+          do
             [ -e "$file" ] || continue
             gh release upload "$VERSION" "$file" --clobber
           done
@@ -421,60 +433,3 @@ jobs:
             [ -e "$file" ] || continue
             gh release upload "$VERSION" "$file" --clobber
           done
-
-  update-cask:
-    if: ${{ inputs.prerelease != true }}
-    runs-on: ubuntu-latest
-    needs: [release-meta, build-macos]
-    environment: homebrew
-    steps:
-      - name: Download release asset and update Homebrew cask
-        env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          VERSION: ${{ needs.release-meta.outputs.version }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -e
-
-          DMG_NAME="Klovi-${VERSION}-macos-arm64.dmg"
-          curl -L -o "$DMG_NAME" \
-            "https://github.com/${REPO}/releases/download/${VERSION}/${DMG_NAME}"
-
-          SHA256=$(sha256sum "$DMG_NAME" | cut -d' ' -f1)
-          BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
-
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/cookielab/homebrew-tap.git"
-          cd homebrew-tap
-
-          rm -f Formula/klovi.rb
-
-          mkdir -p Casks
-          cat > Casks/klovi.rb << CASK
-          cask "klovi" do
-            version "${VERSION}"
-            sha256 "${SHA256}"
-
-            url "${BASE_URL}/${DMG_NAME}"
-            name "Klovi"
-            desc "Native desktop app for browsing and presenting AI coding session history"
-            homepage "https://github.com/${REPO}"
-
-            depends_on arch: :arm64
-
-            app "Klovi.app"
-
-            zap trash: [
-              "~/Library/Application Support/io.cookielab.klovi",
-              "~/Library/Preferences/io.cookielab.klovi.plist",
-              "~/Library/Caches/io.cookielab.klovi",
-            ]
-          end
-          CASK
-
-          sed -i 's/^          //' Casks/klovi.rb
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Update klovi cask to ${VERSION}"
-          git push
