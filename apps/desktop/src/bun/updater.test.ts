@@ -13,7 +13,9 @@ import {
   getElectrobunTarballName,
   getReleaseBundleAssetName,
   getReleaseChannel,
+  getUpdateJsonAssetName,
   getZstdBinaryPath,
+  isValidUpdateInfo,
   UpdateManager,
 } from "./updater.ts";
 
@@ -143,6 +145,41 @@ describe("Electrobun asset helpers", () => {
   test("resolves zstd path for windows", () => {
     expect(getZstdBinaryPath("win", "C:/Users/demo/AppData/Local/Klovi/bin/launcher.exe")).toBe(
       "C:/Users/demo/AppData/Local/Klovi/bin/zig-zstd.exe",
+    );
+  });
+
+  test("builds update.json asset names", () => {
+    expect(getUpdateJsonAssetName("2.0.0", "macos", "arm64")).toBe(
+      "stable-macos-arm64-update.json",
+    );
+    expect(getUpdateJsonAssetName("2.1.0-rc.1", "win", "x64")).toBe(
+      "candidate-win-x64-update.json",
+    );
+    expect(getUpdateJsonAssetName("2.1.0-beta.1", "linux", "arm64")).toBe(
+      "beta-linux-arm64-update.json",
+    );
+  });
+});
+
+describe("isValidUpdateInfo", () => {
+  test("accepts valid update info", () => {
+    expect(
+      isValidUpdateInfo({ version: "2.0.0", hash: "abc123", platform: "macos", arch: "arm64" }),
+    ).toBe(true);
+  });
+
+  test("rejects missing fields", () => {
+    expect(isValidUpdateInfo({ version: "2.0.0", hash: "abc123" })).toBe(false);
+  });
+
+  test("rejects non-object", () => {
+    expect(isValidUpdateInfo(null)).toBe(false);
+    expect(isValidUpdateInfo("string")).toBe(false);
+  });
+
+  test("rejects wrong types", () => {
+    expect(isValidUpdateInfo({ version: 1, hash: "abc", platform: "macos", arch: "arm64" })).toBe(
+      false,
     );
   });
 });
@@ -317,6 +354,10 @@ describe("UpdateManager", () => {
           name: "Klovi-2.0.0-macos-arm64.dmg",
           browser_download_url: "https://example.com/Klovi.dmg",
         },
+        {
+          name: "stable-macos-arm64-update.json",
+          browser_download_url: "https://example.com/update.json",
+        },
       ],
     };
 
@@ -327,6 +368,35 @@ describe("UpdateManager", () => {
       currentVersion: "1.0.0",
       latestVersion: "2.0.0",
       error: "Asset not found: stable-macos-arm64-Klovi.app.tar.zst",
+    });
+  });
+
+  test("download reports error when update.json is missing", async () => {
+    const mgr = new UpdateManager({
+      currentVersion: "1.0.0",
+      platform: "macos",
+      arch: "arm64",
+      settingsPath: join(testDir, "settings.json"),
+      appDataDir: testDir,
+    }) as unknown as MutableUpdateManagerForTest;
+
+    mgr.latestRelease = {
+      ...makeRelease("2.0.0", false),
+      assets: [
+        {
+          name: "stable-macos-arm64-Klovi.app.tar.zst",
+          browser_download_url: "https://example.com/bundle.tar.zst",
+        },
+      ],
+    };
+
+    await mgr.download();
+
+    expect(mgr.getStatus()).toEqual({
+      status: "error",
+      currentVersion: "1.0.0",
+      latestVersion: "2.0.0",
+      error: "Update metadata not found: stable-macos-arm64-update.json",
     });
   });
 });

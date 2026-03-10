@@ -19,6 +19,13 @@ export interface GitHubAsset {
   browser_download_url: string;
 }
 
+export interface UpdateInfo {
+  version: string;
+  hash: string;
+  platform: string;
+  arch: string;
+}
+
 type Platform = "macos" | "linux" | "win";
 type Arch = "arm64" | "x64";
 
@@ -67,6 +74,21 @@ export function getElectrobunTarballName(platform: Platform): string {
 
 export function getReleaseBundleAssetName(tagName: string, platform: Platform, arch: Arch): string {
   return `${getElectrobunPlatformPrefix(getReleaseChannel(tagName), platform, arch)}-${getElectrobunTarballName(platform)}`;
+}
+
+export function getUpdateJsonAssetName(tagName: string, platform: Platform, arch: Arch): string {
+  return `${getElectrobunPlatformPrefix(getReleaseChannel(tagName), platform, arch)}-update.json`;
+}
+
+export function isValidUpdateInfo(data: unknown): data is UpdateInfo {
+  if (typeof data !== "object" || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    typeof obj["version"] === "string" &&
+    typeof obj["hash"] === "string" &&
+    typeof obj["platform"] === "string" &&
+    typeof obj["arch"] === "string"
+  );
 }
 
 export function findReleaseAsset(release: GitHubRelease, name: string): GitHubAsset | null {
@@ -345,6 +367,18 @@ export class UpdateManager {
       return;
     }
 
+    const updateJsonName = getUpdateJsonAssetName(version, this.platform, this.arch);
+    const updateJsonAsset = findReleaseAsset(this.latestRelease, updateJsonName);
+    if (!updateJsonAsset) {
+      this.emitStatus({
+        status: "error",
+        currentVersion: this.currentVersion,
+        latestVersion: version,
+        error: `Update metadata not found: ${updateJsonName}`,
+      });
+      return;
+    }
+
     this.emitStatus({
       status: "downloading",
       currentVersion: this.currentVersion,
@@ -360,6 +394,15 @@ export class UpdateManager {
     try {
       await this.downloadBundleAsset(asset, compressedPath, version);
       await this.decompressBundle(compressedPath, tarPath);
+
+      const updateJsonResponse = await fetch(updateJsonAsset.browser_download_url);
+      if (!updateJsonResponse.ok) {
+        throw new Error(`Failed to fetch update metadata: HTTP ${updateJsonResponse.status}`);
+      }
+      const updateJsonData: unknown = await updateJsonResponse.json();
+      if (!isValidUpdateInfo(updateJsonData)) {
+        throw new Error("Invalid update metadata format");
+      }
     } catch (error) {
       try {
         await rm(dir, { recursive: true });
