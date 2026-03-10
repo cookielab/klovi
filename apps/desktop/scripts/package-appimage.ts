@@ -239,10 +239,15 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
   console.log(`  Size: ${(size / 1024 / 1024).toFixed(1)} MB`);
 }
 
-// Only run main when executed directly, not when imported for testing
+// Only run main when executed directly, not when imported for testing.
+// Use top-level await so Bun's event loop stays alive during async I/O
+// (fetch, file writes). A bare main().catch() can let the process exit
+// before the promise chain settles.
 if (import.meta.main) {
-  main().catch((err) => {
+  try {
+    await main();
+  } catch (err) {
     console.error(err);
     process.exit(1);
-  });
+  }
 }
