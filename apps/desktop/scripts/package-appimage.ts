@@ -200,7 +200,11 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
   if (!response.ok) {
     fail(`Failed to download appimagetool: ${response.status} ${response.statusText}`);
   }
-  await Bun.write(toolPath, response);
+  // Use arrayBuffer() to fully download before writing — streaming a Response
+  // directly via Bun.write() can silently fail on some CI environments.
+  const toolBytes = await response.arrayBuffer();
+  console.log(`  Downloaded ${toolBytes.byteLength} bytes`);
+  await Bun.write(toolPath, toolBytes);
   await run(["chmod", "+x", toolPath]);
 
   // 9. Build the AppImage
