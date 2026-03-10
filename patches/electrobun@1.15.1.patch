@@ -1,3 +1,24 @@
+diff --git a/dist/api/bun/ElectrobunConfig.ts b/dist/api/bun/ElectrobunConfig.ts
+--- a/dist/api/bun/ElectrobunConfig.ts
++++ b/dist/api/bun/ElectrobunConfig.ts
+@@ -56,6 +56,17 @@
+ 		 * ```
+ 		 */
+ 		urlSchemes?: string[];
++
++		/**
++		 * When false, non-dev builds use stable naming for app identity.
++		 * The app and installer names stay as the base name (e.g., "Klovi")
++		 * instead of appending the channel suffix (e.g., "Klovi-candidate").
++		 * Channel-specific naming remains in platform prefixes, build folders,
++		 * version.json.channel, and updater metadata.
++		 * Dev builds always keep dev-specific naming regardless of this setting.
++		 * @default true
++		 */
++		includeReleaseChannelInName?: boolean;
+ 	};
+
+ 	/**
 diff --git a/dist/api/bun/core/ApplicationMenu.ts b/dist/api/bun/core/ApplicationMenu.ts
 index 65f59ff7f8563ee1132846c2ae999595f01ff96b..699110ec3479250c76c81e6751d18339b292b671 100644
 --- a/dist/api/bun/core/ApplicationMenu.ts
@@ -219,3 +240,38 @@ index 6b7eb124d4c10d837749380eedbbcef51567ea43..28b5fc3122efdc38b9a29b80b5ab5072
    const pathToBinDir = dirname(pathToLauncherBin);
    const resourcesDir = join(pathToBinDir, "..", "Resources");
    const asarPath = join(resourcesDir, "app.asar");
+diff --git a/src/cli/index.ts b/src/cli/index.ts
+--- a/src/cli/index.ts
++++ b/src/cli/index.ts
+@@ -1802,9 +1802,7 @@
+ 		// Get environment
+ 		const envArg =
+ 			process.argv.find((arg) => arg.startsWith("--env="))?.split("=")[1] || "";
+-		const buildEnvironment = ["dev", "canary", "stable"].includes(envArg)
+-			? envArg
+-			: "dev";
++		const buildEnvironment = envArg || "dev";
+
+ 		try {
+ 			await runBuild(config, buildEnvironment);
+@@ -1847,11 +1845,18 @@
+ 		const targetOS = currentTarget.os;
+ 		const targetARCH = currentTarget.arch;
+ 		const targetBinExt = targetOS === "win" ? ".exe" : "";
+-		const appFileName = getAppFileName(config.app.name, buildEnvironment);
++		// When includeReleaseChannelInName is false, non-dev builds use stable naming
++		// so the app identity stays the same across channels (e.g., always "Klovi" not "Klovi-candidate")
++		const namingEnv =
++			config.app.includeReleaseChannelInName === false &&
++			buildEnvironment !== "dev"
++				? "stable"
++				: buildEnvironment;
++		const appFileName = getAppFileName(config.app.name, namingEnv);
+ 		// macOS bundle display name preserves spaces for the actual .app folder
+ 		const macOSBundleDisplayName = getMacOSBundleDisplayName(
+ 			config.app.name,
+-			buildEnvironment,
++			namingEnv,
+ 		);
+ 		const platformPrefix = getPlatformPrefix(
+ 			buildEnvironment,
