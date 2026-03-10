@@ -113,6 +113,21 @@ jobs:
           BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
         run: bun run build -- --env="$BUILD_ENV"
 
+      - name: Verify macOS wrapper contract
+        env:
+          BUILD_ENV: ${{ needs.release-meta.outputs.build_env }}
+        run: |
+          BUILD_DIR="apps/desktop/build/${BUILD_ENV}-macos-arm64"
+          APP_DIR=$(find "$BUILD_DIR" -maxdepth 1 -type d -name "*.app" | head -1)
+          ZSTD_PATH="apps/desktop/node_modules/electrobun/dist-macos-arm64/zig-zstd"
+
+          if [ -z "$APP_DIR" ]; then
+            echo "::error::Could not find .app bundle in $BUILD_DIR"
+            exit 1
+          fi
+
+          bun apps/desktop/scripts/verify-macos-wrapper-contract.ts "$APP_DIR" --zstd "$ZSTD_PATH"
+
       - name: Import code signing certificate
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
