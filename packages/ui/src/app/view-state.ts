@@ -1,5 +1,6 @@
 import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import type { KloviClient } from "../lib/client.ts";
+import { isRpcTransportError } from "../lib/rpc-errors.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { getFrontendPlugin } from "./plugin-registry.ts";
 
@@ -9,6 +10,7 @@ export type ViewState =
   | { kind: "home" }
   | { kind: "hidden" }
   | { kind: "settings" }
+  | { kind: "restoring"; hash: string }
   | { kind: "project"; project: Project }
   | {
       kind: "session";
@@ -40,11 +42,16 @@ export function getResumeCommand(
 export function viewToHash(view: ViewState): string {
   if (view.kind === "hidden") return "#/hidden";
   if (view.kind === "settings") return "#/settings";
+  if (view.kind === "restoring") return view.hash;
   if (view.kind === "project") return `#/${view.project.encodedPath}`;
   if (view.kind === "session") return `#/${view.project.encodedPath}/${view.session.sessionId}`;
   if (view.kind === "subagent")
     return `#/${view.project.encodedPath}/${view.sessionId}/subagent/${view.agentId}`;
   return "#/";
+}
+
+function createRestoringView(): ViewState {
+  return { kind: "restoring", hash: window.location.hash || "#/" };
 }
 
 async function loadProject(client: KloviClient, encodedPath: string): Promise<Project | undefined> {
@@ -92,7 +99,10 @@ export async function restoreFromHash(client: KloviClient): Promise<ViewState> {
   let project: Project | undefined;
   try {
     project = await loadProject(client, encodedPath);
-  } catch {
+  } catch (error) {
+    if (isRpcTransportError(error)) {
+      return createRestoringView();
+    }
     return { kind: "home" };
   }
   if (!project) return { kind: "home" };
@@ -107,8 +117,10 @@ export async function restoreFromHash(client: KloviClient): Promise<ViewState> {
     if (session) {
       return { kind: "session", project, session, presenting: false };
     }
-  } catch {
-    // fall through
+  } catch (error) {
+    if (isRpcTransportError(error)) {
+      return createRestoringView();
+    }
   }
   return { kind: "project", project };
 }
@@ -119,6 +131,9 @@ export function getHeaderInfo(view: ViewState): { title: string; breadcrumb: str
   }
   if (view.kind === "settings") {
     return { title: "Settings", breadcrumb: "" };
+  }
+  if (view.kind === "restoring") {
+    return { title: "Klovi", breadcrumb: "" };
   }
   if (view.kind === "project") {
     const parts = view.project.name.split("/").filter(Boolean);

@@ -24,6 +24,7 @@ import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
+import { ensureDesktopRuntimeDirs, resolveLinuxRenderer } from "./linux-runtime.ts";
 import { UpdateManager } from "./updater.ts";
 
 // Initialize version from package.json
@@ -37,6 +38,12 @@ function getSettingsPath(): string {
 }
 
 const settingsPath = getSettingsPath();
+ensureDesktopRuntimeDirs({
+  userData: Utils.paths.userData,
+  userCache: Utils.paths.userCache,
+  userLogs: Utils.paths.userLogs,
+});
+const linuxRenderer = resolveLinuxRenderer();
 
 // Registry lifecycle: created on acceptRisks, refreshed after settings changes
 let registry: PluginRegistry | null = null;
@@ -199,6 +206,7 @@ const win = new BrowserWindow({
   title: "Klovi",
   url: "views://main/index.html",
   frame: { x: 0, y: 0, width: 1400, height: 900 },
+  ...(linuxRenderer ? { renderer: linuxRenderer } : {}),
   rpc,
 });
 

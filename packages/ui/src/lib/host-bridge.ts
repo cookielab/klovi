@@ -7,8 +7,11 @@ export interface KloviHostCapabilities {
   menuActions: boolean;
 }
 
+export type KloviHostConnectionState = "connecting" | "connected" | "disconnected";
+
 export interface KloviHostBridge {
   getCapabilities(): KloviHostCapabilities;
+  getConnectionState(): KloviHostConnectionState;
   browseDirectory(params: { startingFolder?: string }): Promise<{ path: string | null }>;
   getUpdateSettings(): Promise<UpdateSettingsInfo>;
   updateUpdateSettings(params: {
@@ -31,4 +34,5 @@ export interface KloviHostBridge {
   ): () => void;
   onUpdateStatus(callback: (status: UpdateStatus) => void): () => void;
   onManualUpdateResult(callback: (result: UpdateStatus) => void): () => void;
+  onConnectionState(callback: (state: KloviHostConnectionState) => void): () => void;
 }

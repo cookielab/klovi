@@ -41,6 +41,10 @@ export default {
     linux: {
       bundleCEF: true,
       defaultRenderer: "cef",
+      chromiumFlags: {
+        "disable-gpu": true,
+        "disable-gpu-compositing": true,
+      },
       icon: "icon.iconset/icon_256x256.png",
     },
     win: {

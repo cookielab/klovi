@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { act } from "react";
 import { AppGate } from "./App.tsx";
-import { MockProviders, setupMockRPC } from "./test-helpers/mock-rpc.ts";
+import {
+  MockProviders,
+  setMockHostConnectionState,
+  setupMockRPC,
+} from "./test-helpers/mock-rpc.ts";
 
 describe("AppGate", () => {
   // biome-ignore lint/suspicious/noConsole: test-only console filtering
@@ -181,6 +185,40 @@ describe("AppGate", () => {
     });
     const startBtn = await findByRole("button", { name: "Get Started" });
     await clickAndFlush(startBtn);
+    await findByText("Welcome to Klovi");
+  });
+
+  test("shows desktop reconnect state on transport failure instead of onboarding", async () => {
+    setupMockRPC({
+      isFirstLaunch: () => Promise.reject(new Error("RPC request timed out.")),
+    });
+
+    const { findByText, queryByText } = render(<AppGate />, { wrapper: MockProviders });
+
+    expect(await findByText("Connecting to Klovi desktop host...")).toBeTruthy();
+    expect(queryByText("Session Data Notice")).toBeNull();
+  });
+
+  test("desktop reconnect screen retries into the app after host recovery", async () => {
+    const isFirstLaunch = mock<() => Promise<{ firstLaunch: boolean }>>(() =>
+      Promise.reject(new Error("RPC request timed out.")),
+    );
+
+    setupMockRPC({
+      isFirstLaunch,
+      getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
+      acceptRisks: () => Promise.resolve({ ok: true }),
+    });
+
+    const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
+    expect(await findByText("Connecting to Klovi desktop host...")).toBeTruthy();
+
+    isFirstLaunch.mockImplementation(() => Promise.resolve({ firstLaunch: false }));
+    setMockHostConnectionState("connected");
+
+    const retryButton = await findByRole("button", { name: "Retry" });
+    await clickAndFlush(retryButton);
+
     await findByText("Welcome to Klovi");
   });
 });

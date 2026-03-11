@@ -1,7 +1,11 @@
 import { createElement } from "react";
 import type { KloviClient } from "../../lib/client.ts";
 import { KloviClientContext, KloviHostBridgeContext } from "../../lib/context.ts";
-import type { KloviHostBridge, KloviHostCapabilities } from "../../lib/host-bridge.ts";
+import type {
+  KloviHostBridge,
+  KloviHostCapabilities,
+  KloviHostConnectionState,
+} from "../../lib/host-bridge.ts";
 
 type MockClientOverrides = {
   [K in keyof KloviClient]?: KloviClient[K];
@@ -24,6 +28,8 @@ const defaultCapabilities: KloviHostCapabilities = {
 
 let mockClient: KloviClient;
 let mockHostBridge: KloviHostBridge;
+let mockConnectionState: KloviHostConnectionState = "connected";
+const connectionStateListeners = new Set<(state: KloviHostConnectionState) => void>();
 
 function createMockClient(overrides: MockClientOverrides = {}): KloviClient {
   return {
@@ -69,6 +75,7 @@ function createMockClient(overrides: MockClientOverrides = {}): KloviClient {
 function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHostBridge {
   return {
     getCapabilities: () => defaultCapabilities,
+    getConnectionState: () => mockConnectionState,
     browseDirectory: () => Promise.resolve({ path: null }),
     getUpdateSettings: () =>
       Promise.resolve({
@@ -89,12 +96,20 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
     onMenuAction: () => () => {},
     onUpdateStatus: () => () => {},
     onManualUpdateResult: () => () => {},
+    onConnectionState: (callback) => {
+      connectionStateListeners.add(callback);
+      return () => {
+        connectionStateListeners.delete(callback);
+      };
+    },
     ...overrides,
   };
 }
 
 export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
   const { hostBridge: hostBridgeOverrides, ...clientOverrides } = overrides;
+  mockConnectionState = "connected";
+  connectionStateListeners.clear();
   mockClient = createMockClient(clientOverrides);
   mockHostBridge = createMockHostBridge(hostBridgeOverrides);
 }
@@ -105,6 +120,13 @@ export function getMockClient(): KloviClient {
 
 export function getMockHostBridge(): KloviHostBridge {
   return mockHostBridge;
+}
+
+export function setMockHostConnectionState(state: KloviHostConnectionState): void {
+  mockConnectionState = state;
+  for (const listener of connectionStateListeners) {
+    listener(state);
+  }
 }
 
 export function MockProviders({ children }: { children: React.ReactNode }) {

@@ -70,6 +70,10 @@ Use the root workspace scripts that match the runtime you want to exercise:
 - `bun run dev:bun` starts the browser-served package through Bun
 - `bun run dev:node` starts the browser/npm variant through Node/tsx
 
+Linux note:
+
+- Klovi defaults to CEF on Linux. If a Wayland/X11 setup is unstable, launch with `KLOVI_LINUX_RENDERER=native` to use the native renderer fallback.
+
 ## Workspace Layout
 
 ### Apps

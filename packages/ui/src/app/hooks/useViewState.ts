@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useKloviClient } from "../../lib/context.ts";
+import { useKloviClient, useKloviHostBridge } from "../../lib/context.ts";
+import type { KloviHostConnectionState } from "../../lib/host-bridge.ts";
 import type { Project, SessionSummary } from "../../shared/types.ts";
 import { restoreFromHash, type ViewState, viewToHash } from "../view-state.ts";
 
@@ -16,20 +17,74 @@ interface UseViewStateResult {
   closeSettings: () => void;
   canPresent: boolean;
   togglePresentation: () => void;
+  hostConnectionState: KloviHostConnectionState;
+  retryRestore: () => void;
+}
+
+function shouldKeepCurrentView(view: ViewState): boolean {
+  return view.kind === "project" || view.kind === "session" || view.kind === "subagent";
 }
 
 export function useViewState(): UseViewStateResult {
   const client = useKloviClient();
-  const [view, setView] = useState<ViewState>({ kind: "home" });
+  const hostBridge = useKloviHostBridge();
+  const [view, setViewState] = useState<ViewState>({ kind: "home" });
   const [ready, setReady] = useState(false);
+  const [hostConnectionState, setHostConnectionState] = useState<KloviHostConnectionState>(
+    hostBridge.getConnectionState(),
+  );
   const previousView = useRef<ViewState>({ kind: "home" });
+  const currentView = useRef<ViewState>({ kind: "home" });
+  const pendingHashRef = useRef<string | null>(null);
+
+  const applyRestoredView = useCallback((nextView: ViewState, preserveCurrentView: boolean) => {
+    if (nextView.kind === "restoring") {
+      pendingHashRef.current = nextView.hash;
+      if (!preserveCurrentView || !shouldKeepCurrentView(currentView.current)) {
+        setViewState(nextView);
+      }
+      return;
+    }
+
+    pendingHashRef.current = null;
+    setViewState(nextView);
+  }, []);
+
+  const setView = useCallback<Dispatch<SetStateAction<ViewState>>>((nextView) => {
+    pendingHashRef.current = null;
+    setViewState(nextView);
+  }, []);
+
+  const retryRestore = useCallback(() => {
+    const pendingHash = pendingHashRef.current;
+    if (!pendingHash) {
+      return;
+    }
+
+    if (window.location.hash !== pendingHash) {
+      window.location.hash = pendingHash;
+    }
+
+    void restoreFromHash(client).then((nextView) => {
+      applyRestoredView(nextView, true);
+    });
+  }, [applyRestoredView, client]);
 
   useEffect(() => {
-    void restoreFromHash(client).then((v) => {
-      setView(v);
+    currentView.current = view;
+  }, [view]);
+
+  useEffect(() => {
+    setHostConnectionState(hostBridge.getConnectionState());
+    return hostBridge.onConnectionState(setHostConnectionState);
+  }, [hostBridge]);
+
+  useEffect(() => {
+    void restoreFromHash(client).then((nextView) => {
+      applyRestoredView(nextView, false);
       setReady(true);
     });
-  }, [client]);
+  }, [applyRestoredView, client]);
 
   useEffect(() => {
     if (!ready) return;
@@ -41,18 +96,30 @@ export function useViewState(): UseViewStateResult {
 
   useEffect(() => {
     const handler = () => {
-      void restoreFromHash(client).then(setView);
+      void restoreFromHash(client).then((nextView) => {
+        applyRestoredView(nextView, true);
+      });
     };
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
-  }, [client]);
+  }, [applyRestoredView, client]);
+
+  useEffect(() => {
+    if (hostConnectionState !== "connected" || !pendingHashRef.current) {
+      return;
+    }
+
+    retryRestore();
+  }, [hostConnectionState, retryRestore]);
 
   const selectProject = useCallback((project: Project) => {
-    setView({ kind: "project", project });
+    pendingHashRef.current = null;
+    setViewState({ kind: "project", project });
   }, []);
 
   const selectSession = useCallback((session: SessionSummary) => {
-    setView((current) => {
+    pendingHashRef.current = null;
+    setViewState((current) => {
       if (current.kind === "project" || current.kind === "session") {
         return {
           kind: "session",
@@ -65,10 +132,17 @@ export function useViewState(): UseViewStateResult {
     });
   }, []);
 
-  const goHome = useCallback(() => setView({ kind: "home" }), []);
-  const goHidden = useCallback(() => setView({ kind: "hidden" }), []);
+  const goHome = useCallback(() => {
+    pendingHashRef.current = null;
+    setViewState({ kind: "home" });
+  }, []);
+  const goHidden = useCallback(() => {
+    pendingHashRef.current = null;
+    setViewState({ kind: "hidden" });
+  }, []);
   const goSettings = useCallback(() => {
-    setView((current) => {
+    pendingHashRef.current = null;
+    setViewState((current) => {
       if (current.kind === "settings") {
         return previousView.current;
       }
@@ -77,12 +151,13 @@ export function useViewState(): UseViewStateResult {
     });
   }, []);
   const closeSettings = useCallback(() => {
-    setView(previousView.current);
+    pendingHashRef.current = null;
+    setViewState(previousView.current);
   }, []);
   const canPresent = view.kind === "session" || view.kind === "subagent";
 
   const togglePresentation = useCallback(() => {
-    setView((current) => {
+    setViewState((current) => {
       if (current.kind === "session" || current.kind === "subagent") {
         return { ...current, presenting: !current.presenting };
       }
@@ -102,5 +177,7 @@ export function useViewState(): UseViewStateResult {
     closeSettings,
     canPresent,
     togglePresentation,
+    hostConnectionState,
+    retryRestore,
   };
 }

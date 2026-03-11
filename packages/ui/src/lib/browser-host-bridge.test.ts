@@ -49,4 +49,11 @@ describe("browserHostBridge methods in browser mode", () => {
     expect(typeof unsubscribe).toBe("function");
     unsubscribe();
   });
+
+  test("connection state is always connected", () => {
+    expect(browserHostBridge.getConnectionState()).toBe("connected");
+    const unsubscribe = browserHostBridge.onConnectionState(() => {});
+    expect(typeof unsubscribe).toBe("function");
+    unsubscribe();
+  });
 });

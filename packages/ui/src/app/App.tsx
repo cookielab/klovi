@@ -2,6 +2,7 @@ import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
 import { useKloviClient, useKloviHostBridge } from "../lib/context.ts";
+import { isRpcTransportError } from "../lib/rpc-errors.ts";
 import type { GlobalSessionResult } from "../shared/types.ts";
 import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats.tsx";
 import { Header } from "./components/layout/Header.tsx";
@@ -57,6 +58,8 @@ export function App() {
     canPresent,
     togglePresentation,
     closeSettings,
+    hostConnectionState,
+    retryRestore,
   } = useViewState();
 
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
@@ -137,6 +140,7 @@ export function App() {
     settingsTab,
     setSettingsTab,
     closeSettings,
+    hostConnectionState,
   });
 
   const isPresenting =
@@ -215,77 +219,143 @@ export function App() {
           manualCheckResult={manualCheckResult}
           onDismissManualCheck={dismissManualCheck}
         />
-        <ErrorBoundary>
-          {view.kind === "home" && (
-            <>
-              <div className="empty-state">
-                <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
-                <div className="empty-state-title">Welcome to Klovi</div>
-                <p>Select a project from the sidebar to browse your AI coding sessions</p>
-              </div>
-              <PackageDashboardStats />
-            </>
-          )}
-          {view.kind === "hidden" && (
-            <PackageHiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
-          )}
-          {view.kind === "settings" && (
-            <SettingsView
-              activeTab={settingsTab}
-              onNavigateHome={closeSettings}
-              theme={themeHook}
-              fontSize={fontSizeHook}
-              presentationTheme={presentationThemeHook}
-              presentationFontSize={presentationFontSizeHook}
-            />
-          )}
-          {view.kind === "project" && (
-            <div className="empty-state">
-              <div className="empty-state-title">Select a session</div>
-              <p>Choose a conversation from the sidebar</p>
-            </div>
-          )}
-          {view.kind === "session" &&
-            (view.presenting ? (
-              <SessionPresentation
-                sessionId={view.session.sessionId}
-                project={view.project.encodedPath}
-                onExit={togglePresentation}
-              />
-            ) : (
-              <SessionView
-                sessionId={view.session.sessionId}
-                project={view.project.encodedPath}
-                gitBranch={view.session.gitBranch}
-              />
-            ))}
-          {view.kind === "subagent" &&
-            (view.presenting ? (
-              <SubAgentPresentation
-                sessionId={view.sessionId}
-                project={view.project.encodedPath}
-                agentId={view.agentId}
-                onExit={togglePresentation}
-              />
-            ) : (
-              <PackageSubAgentView
-                sessionId={view.sessionId}
-                project={view.project.encodedPath}
-                agentId={view.agentId}
-              />
-            ))}
-        </ErrorBoundary>
+        <AppMainContent
+          view={view}
+          hiddenIds={hiddenIds}
+          unhide={unhide}
+          goHome={goHome}
+          closeSettings={closeSettings}
+          settingsTab={settingsTab}
+          themeHook={themeHook}
+          fontSizeHook={fontSizeHook}
+          presentationThemeHook={presentationThemeHook}
+          presentationFontSizeHook={presentationFontSizeHook}
+          togglePresentation={togglePresentation}
+          hostConnectionState={hostConnectionState}
+          retryRestore={retryRestore}
+        />
       </Layout>
     </>
+  );
+}
+
+interface AppMainContentProps {
+  view: ReturnType<typeof useViewState>["view"];
+  hiddenIds: Set<string>;
+  unhide: (encodedPath: string) => void;
+  goHome: () => void;
+  closeSettings: () => void;
+  settingsTab: SettingsTab;
+  themeHook: ReturnType<typeof useTheme>;
+  fontSizeHook: ReturnType<typeof useFontSize>;
+  presentationThemeHook: ReturnType<typeof usePresentationTheme>;
+  presentationFontSizeHook: ReturnType<typeof usePresentationFontSize>;
+  togglePresentation: () => void;
+  hostConnectionState: ReturnType<typeof useViewState>["hostConnectionState"];
+  retryRestore: () => void;
+}
+
+function AppMainContent({
+  view,
+  hiddenIds,
+  unhide,
+  goHome,
+  closeSettings,
+  settingsTab,
+  themeHook,
+  fontSizeHook,
+  presentationThemeHook,
+  presentationFontSizeHook,
+  togglePresentation,
+  hostConnectionState,
+  retryRestore,
+}: AppMainContentProps) {
+  return (
+    <ErrorBoundary>
+      {view.kind === "restoring" && (
+        <DesktopHostReconnectPanel
+          title={
+            hostConnectionState === "connected"
+              ? "Restoring selected session..."
+              : "Reconnecting to Klovi desktop host..."
+          }
+          description="Klovi is waiting for the desktop bridge before restoring the current project or session."
+          actionLabel="Retry"
+          onAction={retryRestore}
+        />
+      )}
+      {view.kind === "home" && (
+        <>
+          <div className="empty-state">
+            <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
+            <div className="empty-state-title">Welcome to Klovi</div>
+            <p>Select a project from the sidebar to browse your AI coding sessions</p>
+          </div>
+          <PackageDashboardStats />
+        </>
+      )}
+      {view.kind === "hidden" && (
+        <PackageHiddenProjectList hiddenIds={hiddenIds} onUnhide={unhide} onBack={goHome} />
+      )}
+      {view.kind === "settings" && (
+        <SettingsView
+          activeTab={settingsTab}
+          onNavigateHome={closeSettings}
+          theme={themeHook}
+          fontSize={fontSizeHook}
+          presentationTheme={presentationThemeHook}
+          presentationFontSize={presentationFontSizeHook}
+        />
+      )}
+      {view.kind === "project" && (
+        <div className="empty-state">
+          <div className="empty-state-title">Select a session</div>
+          <p>Choose a conversation from the sidebar</p>
+        </div>
+      )}
+      {view.kind === "session" &&
+        (view.presenting ? (
+          <SessionPresentation
+            sessionId={view.session.sessionId}
+            project={view.project.encodedPath}
+            onExit={togglePresentation}
+          />
+        ) : (
+          <SessionView
+            sessionId={view.session.sessionId}
+            project={view.project.encodedPath}
+            gitBranch={view.session.gitBranch}
+          />
+        ))}
+      {view.kind === "subagent" &&
+        (view.presenting ? (
+          <SubAgentPresentation
+            sessionId={view.sessionId}
+            project={view.project.encodedPath}
+            agentId={view.agentId}
+            onExit={togglePresentation}
+          />
+        ) : (
+          <PackageSubAgentView
+            sessionId={view.sessionId}
+            project={view.project.encodedPath}
+            agentId={view.agentId}
+          />
+        ))}
+    </ErrorBoundary>
   );
 }
 
 export function AppGate() {
   useTheme();
   const client = useKloviClient();
+  const hostBridge = useKloviHostBridge();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [screen, setScreen] = useState<"onboarding" | "security-warning" | "none">("onboarding");
+  const [screen, setScreen] = useState<"connecting" | "onboarding" | "security-warning" | "none">(
+    "onboarding",
+  );
+  const isDesktopHost = hostBridge.getCapabilities().desktop;
 
   const initialize = useCallback(() => {
     setAccepted(false);
@@ -307,14 +377,24 @@ export function AppGate() {
           return client
             .acceptRisks()
             .then(() => setAccepted(true))
-            .catch(() => setAccepted(true));
+            .catch((error) => {
+              if (isDesktopHost && isRpcTransportError(error)) {
+                setScreen("connecting");
+                return;
+              }
+              setAccepted(true);
+            });
         });
       })
-      .catch(() => {
+      .catch((error) => {
+        if (isDesktopHost && isRpcTransportError(error)) {
+          setScreen("connecting");
+          return;
+        }
         setScreen("onboarding");
       })
       .finally(() => setLoading(false));
-  }, [client]);
+  }, [client, isDesktopHost]);
 
   useEffect(() => {
     initialize();
@@ -333,15 +413,27 @@ export function AppGate() {
     client
       .acceptRisks()
       .then(() => setAccepted(true))
-      .catch(() => setAccepted(true));
-  }, [client]);
+      .catch((error) => {
+        if (isDesktopHost && isRpcTransportError(error)) {
+          setScreen("connecting");
+          return;
+        }
+        setAccepted(true);
+      });
+  }, [client, isDesktopHost]);
 
   const handleSecurityAccept = useCallback(() => {
     client
       .acceptRisks()
       .then(() => setAccepted(true))
-      .catch(() => setAccepted(true));
-  }, [client]);
+      .catch((error) => {
+        if (isDesktopHost && isRpcTransportError(error)) {
+          setScreen("connecting");
+          return;
+        }
+        setAccepted(true);
+      });
+  }, [client, isDesktopHost]);
 
   const handleDontShowAgain = useCallback(() => {
     client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
@@ -355,6 +447,17 @@ export function AppGate() {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 
+  if (!accepted && screen === "connecting") {
+    return (
+      <DesktopHostReconnectPanel
+        title="Connecting to Klovi desktop host..."
+        description="The desktop runtime is still reconnecting. Retry once the host bridge is available again."
+        actionLabel="Retry"
+        onAction={initialize}
+      />
+    );
+  }
+
   if (!accepted && screen === "security-warning") {
     return (
       <SecurityWarning onAccept={handleSecurityAccept} onDontShowAgain={handleDontShowAgain} />
@@ -366,4 +469,29 @@ export function AppGate() {
   }
 
   return <App />;
+}
+
+interface DesktopHostReconnectPanelProps {
+  title: string;
+  description: string;
+  actionLabel: string;
+  onAction: () => void;
+}
+
+function DesktopHostReconnectPanel({
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: DesktopHostReconnectPanelProps) {
+  return (
+    <section className="empty-state">
+      <img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
+      <div className="empty-state-title">{title}</div>
+      <p>{description}</p>
+      <button type="button" className="security-warning-button" onClick={onAction}>
+        {actionLabel}
+      </button>
+    </section>
+  );
 }

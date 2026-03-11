@@ -5,7 +5,11 @@ import { PluginRow, type PluginRowProps } from "../app/components/settings/Plugi
 import { UpdateNotification } from "../app/components/UpdateNotification.tsx";
 import type { KloviClient } from "./client.ts";
 import { KloviClientContext, KloviHostBridgeContext } from "./context.ts";
-import type { KloviHostBridge, KloviHostCapabilities } from "./host-bridge.ts";
+import type {
+  KloviHostBridge,
+  KloviHostCapabilities,
+  KloviHostConnectionState,
+} from "./host-bridge.ts";
 
 function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviHostBridge {
   const capabilities: KloviHostCapabilities = {
@@ -15,8 +19,10 @@ function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviH
     menuActions: false,
     ...caps,
   };
+  const connectionState: KloviHostConnectionState = "connected";
   return {
     getCapabilities: () => capabilities,
+    getConnectionState: () => connectionState,
     browseDirectory: () => Promise.resolve({ path: null }),
     getUpdateSettings: () =>
       Promise.resolve({ channel: "stable" as const, checkIntervalHours: 0, autoDownload: false }),
@@ -29,6 +35,7 @@ function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviH
     onMenuAction: () => () => {},
     onUpdateStatus: () => () => {},
     onManualUpdateResult: () => () => {},
+    onConnectionState: () => () => {},
   };
 }
 

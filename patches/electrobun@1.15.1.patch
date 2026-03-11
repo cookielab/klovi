@@ -129,6 +129,80 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  import { native, toCString, ffi } from "../proc/native";
  import * as fs from "fs";
  import electrobunEventEmitter from "../events/eventEmitter";
+@@ -10,7 +10,7 @@ import {
+ import { Updater } from "./Updater";
+ import { BuildConfig } from "./BuildConfig";
+-import { rpcPort, sendMessageToWebviewViaSocket } from "./Socket";
++import { disposeWebviewSocket, rpcPort, sendMessageToWebviewViaSocket } from "./Socket";
+ import { randomBytes } from "crypto";
+ import { type Pointer } from "bun:ffi";
+ 
+@@ -100,6 +100,7 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+ 	sandbox: boolean = false;
+ 	startTransparent: boolean = false;
+ 	startPassthrough: boolean = false;
++	disposed: boolean = false;
+ 
+ 	constructor(config: Partial<BrowserViewOptions<T>> = {}) {
+ 		this.id = nextWebviewId++;
+@@ -221,6 +222,23 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+ 		ffi.request.evaluateJavascriptWithNoCompletion({ id: this.id, js });
+ 	}
+ 
++	setFrame(frame: { x: number; y: number; width: number; height: number }) {
++		this.frame = { ...frame };
++
++		if (!this.ptr || this.disposed) {
++			return;
++		}
++
++		native.symbols.resizeWebview(
++			this.ptr,
++			frame.x,
++			frame.y,
++			frame.width,
++			frame.height,
++			toCString("[]"),
++		);
++	}
++
+ 	loadURL(url: string) {
+ 		if (!url) throw new Error("No URL provided");
+ 		const viewType = BuildConfig.renderer === "native" ? "native" : "cef";
+@@ -323,11 +341,31 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+ 		}
+ 	}
+ 
+-	remove() {
+-		native.symbols.webviewRemove(this.ptr);
++	cleanup({ skipNativeRemove = false }: { skipNativeRemove?: boolean } = {}) {
++		if (this.disposed) {
++			return;
++		}
++
++		this.disposed = true;
++		disposeWebviewSocket(this.id);
++
++		if (!skipNativeRemove && this.ptr) {
++			native.symbols.webviewRemove(this.ptr);
++		}
++
++		this.ptr = null as any;
++		this.rpcHandler = undefined;
+ 		delete BrowserViewMap[this.id];
+ 	}
+ 
++	disposeForWindowClose() {
++		this.cleanup({ skipNativeRemove: true });
++	}
++
++	remove() {
++		this.cleanup();
++	}
++
+ 	/**
+ 	 * @deprecated use `webview.url = "https://google.com"` instead
+ 	 */
 diff --git a/dist/api/bun/core/BrowserWindow.ts b/dist/api/bun/core/BrowserWindow.ts
 index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeebbd5b1045 100644
 --- a/dist/api/bun/core/BrowserWindow.ts
@@ -138,6 +212,56 @@ index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeeb
  import { ffi } from "../proc/native";
  import electrobunEventEmitter from "../events/eventEmitter";
  import { BrowserView } from "./BrowserView";
+@@ -61,6 +62,41 @@ export const WindowMap: {
+ 	[id: number]: BrowserWindow;
+ } = {};
+ 
++electrobunEventEmitter.on(
++	"resize",
++	(event: {
++		data: { id: number; x: number; y: number; width: number; height: number };
++	}) => {
++		const window = BrowserWindowMap[event.data.id];
++		if (!window) {
++			return;
++		}
++
++		window.frame = {
++			x: event.data.x,
++			y: event.data.y,
++			width: event.data.width,
++			height: event.data.height,
++		};
++
++		if (process.platform !== "linux") {
++			return;
++		}
++
++		const webview = BrowserView.getById(window.webviewId);
++		if (!webview || webview.windowId !== event.data.id) {
++			return;
++		}
++
++		webview.setFrame({
++			x: 0,
++			y: 0,
++			width: event.data.width,
++			height: event.data.height,
++		});
++	},
++);
++
+ function cleanUpWebviews(windowId: number) {
+ 	for (const view of BrowserView.getAll()) {
+ 		if (view.windowId === windowId) {
+@@ -69,7 +105,7 @@ function cleanUpWebviews(windowId: number) {
+ 	for (const view of BrowserView.getAll()) {
+ 		if (view.windowId === windowId) {
+-			view.remove();
++			view.disposeForWindowClose();
+ 		}
+ 	}
+ }
 diff --git a/dist/api/bun/core/BuildConfig.ts b/dist/api/bun/core/BuildConfig.ts
 index 1da33bfc3d6ac777eabfb7fab31ffd002db63f5e..e8ad633df8cf778bd13e6ded6be7bb2a2c16b1c0 100644
 --- a/dist/api/bun/core/BuildConfig.ts
@@ -187,6 +311,27 @@ index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e6
  import type { Server, ServerWebSocket } from "bun";
  import { BrowserView } from "./BrowserView";
  import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+@@ -48,6 +48,21 @@ export const socketMap: {
+ 	[webviewId: number]: { socket: ServerWebSocket<undefined>; aesKey: Buffer };
+ } = {};
+ 
++export const disposeWebviewSocket = (webviewId: number): void => {
++	const socketState = socketMap[webviewId];
++	if (!socketState) {
++		return;
++	}
++
++	try {
++		socketState.socket?.close();
++	} catch (_error) {
++		// Ignore socket close errors during shutdown.
++	}
++
++	delete socketMap[webviewId];
++};
++
+ const startRPCServer = () => {
+ 	if (server || serverStarted) return;
 diff --git a/dist/api/bun/core/Tray.ts b/dist/api/bun/core/Tray.ts
 index f836f1b716d593a908d953d3a645db97793d9896..e7f3f0ef2b456de66a5392f64c6bf0a22879cce8 100644
 --- a/dist/api/bun/core/Tray.ts

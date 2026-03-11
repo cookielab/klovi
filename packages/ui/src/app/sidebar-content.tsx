@@ -1,4 +1,5 @@
 import type React from "react";
+import type { KloviHostConnectionState } from "../lib/host-bridge.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { PackageProjectList } from "./components/project/PackageProjectList.tsx";
 import { PackageSessionList } from "./components/project/PackageSessionList.tsx";
@@ -14,6 +15,7 @@ interface SidebarActions {
   settingsTab: SettingsTab;
   setSettingsTab: (tab: SettingsTab) => void;
   closeSettings: () => void;
+  hostConnectionState: KloviHostConnectionState;
 }
 
 export function getSidebarContent(
@@ -39,6 +41,16 @@ export function getSidebarContent(
         onHide={actions.hide}
         onShowHidden={actions.goHidden}
       />
+    );
+  }
+
+  if (view.kind === "restoring") {
+    return (
+      <div className="loading">
+        {actions.hostConnectionState === "connected"
+          ? "Restoring selection..."
+          : "Reconnecting to desktop host..."}
+      </div>
     );
   }
 

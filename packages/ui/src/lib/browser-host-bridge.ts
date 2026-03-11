@@ -10,6 +10,7 @@ const browserCapabilities: KloviHostCapabilities = {
 
 export const browserHostBridge: KloviHostBridge = {
   getCapabilities: () => browserCapabilities,
+  getConnectionState: () => "connected",
   browseDirectory: () => Promise.resolve({ path: null }),
   getUpdateSettings: () =>
     Promise.resolve({
@@ -33,4 +34,5 @@ export const browserHostBridge: KloviHostBridge = {
   onMenuAction: () => () => {},
   onUpdateStatus: () => () => {},
   onManualUpdateResult: () => () => {},
+  onConnectionState: () => () => {},
 };
