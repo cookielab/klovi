@@ -129,7 +129,7 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  import { native, toCString, ffi } from "../proc/native";
  import * as fs from "fs";
  import electrobunEventEmitter from "../events/eventEmitter";
-@@ -10,7 +10,7 @@ import {
+@@ -10,7 +11,7 @@ import {
  import { Updater } from "./Updater";
  import { BuildConfig } from "./BuildConfig";
 -import { rpcPort, sendMessageToWebviewViaSocket } from "./Socket";
@@ -137,7 +137,8 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  import { randomBytes } from "crypto";
  import { type Pointer } from "bun:ffi";
  
-@@ -100,6 +100,7 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+ const BrowserViewMap: {
+@@ -99,6 +100,7 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
  	sandbox: boolean = false;
  	startTransparent: boolean = false;
  	startPassthrough: boolean = false;
@@ -145,7 +146,7 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  
  	constructor(config: Partial<BrowserViewOptions<T>> = {}) {
  		this.id = nextWebviewId++;
-@@ -221,6 +222,23 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+@@ -220,6 +222,23 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
  		ffi.request.evaluateJavascriptWithNoCompletion({ id: this.id, js });
  	}
  
@@ -169,7 +170,7 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  	loadURL(url: string) {
  		if (!url) throw new Error("No URL provided");
  		const viewType = BuildConfig.renderer === "native" ? "native" : "cef";
-@@ -323,11 +341,31 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+@@ -322,11 +341,31 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
  		}
  	}
  
@@ -255,6 +256,7 @@ index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeeb
  	for (const view of BrowserView.getAll()) {
  		if (view.windowId === windowId) {
 @@ -69,7 +105,7 @@ function cleanUpWebviews(windowId: number) {
+ 	// Clean up all webviews associated with this window
  	for (const view of BrowserView.getAll()) {
  		if (view.windowId === windowId) {
 -			view.remove();
@@ -311,7 +313,7 @@ index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e6
  import type { Server, ServerWebSocket } from "bun";
  import { BrowserView } from "./BrowserView";
  import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-@@ -48,6 +48,21 @@ export const socketMap: {
+@@ -47,6 +48,21 @@ export const socketMap: {
  	[webviewId: number]: { socket: ServerWebSocket<undefined>; aesKey: Buffer };
  } = {};
  
@@ -332,6 +334,7 @@ index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e6
 +
  const startRPCServer = () => {
  	if (server || serverStarted) return;
+ 	const payloadLimit = 1024 * 1024 * 500; // 500MB
 diff --git a/dist/api/bun/core/Tray.ts b/dist/api/bun/core/Tray.ts
 index f836f1b716d593a908d953d3a645db97793d9896..e7f3f0ef2b456de66a5392f64c6bf0a22879cce8 100644
 --- a/dist/api/bun/core/Tray.ts
