@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -76,7 +76,11 @@
           "level": "error",
           "options": {
             "requireAscii": true,
-            "filenameCases": ["camelCase", "PascalCase", "kebab-case"]
+            "filenameCases": [
+              "camelCase",
+              "PascalCase",
+              "kebab-case"
+            ]
           }
         },
         "noEnum": "error",
@@ -106,7 +110,9 @@
   },
   "overrides": [
     {
-      "includes": ["apps/desktop/scripts/**"],
+      "includes": [
+        "apps/desktop/scripts/**"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
