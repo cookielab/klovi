@@ -38,12 +38,15 @@ export function parsePidList(stdout: string): number[] {
     .filter((value) => Number.isInteger(value) && value > 0);
 }
 
-async function runTextCommand(command: string[]): Promise<string> {
+async function runTextCommand(
+  command: string[],
+  allowedExitCodes: number[] = [0],
+): Promise<string> {
   const proc = Bun.spawn(command, { stdout: "pipe", stderr: "pipe" });
   const stdout = await new Response(proc.stdout).text();
   const stderr = await new Response(proc.stderr).text();
   const exitCode = await proc.exited;
-  if (exitCode !== 0) {
+  if (!allowedExitCodes.includes(exitCode)) {
     throw new Error(stderr.trim() || `Command failed: ${command.join(" ")}`);
   }
   return stdout;
@@ -55,7 +58,7 @@ async function listWindowIds(): Promise<string[]> {
 }
 
 async function listChildPids(pid: number): Promise<number[]> {
-  const stdout = await runTextCommand(["ps", "-o", "pid=", "--ppid", String(pid)]);
+  const stdout = await runTextCommand(["ps", "-o", "pid=", "--ppid", String(pid)], [0, 1]);
   return parsePidList(stdout);
 }
 
