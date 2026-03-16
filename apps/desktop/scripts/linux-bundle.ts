@@ -8,6 +8,7 @@ export const LINUX_NATIVE_WRAPPER_FILENAMES = [
 ] as const;
 
 const LINUX_LAUNCHER_RELATIVE_PATHS = [
+  ["launcher"],
   ["bin", "launcher"],
   ["usr", "lib", "klovi", "bin", "launcher"],
 ] as const;
@@ -47,7 +48,7 @@ export async function findNamedFiles(
         continue;
       }
 
-      if (entry.isFile() && wanted.has(entry.name)) {
+      if ((entry.isFile() || entry.isSymbolicLink()) && wanted.has(entry.name)) {
         matches.push(fullPath);
       }
     }

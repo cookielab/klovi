@@ -325,15 +325,18 @@ jobs:
         env:
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
         run: |
-          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}/Klovi"
-          bun apps/desktop/scripts/check-linux-runtime-deps.ts "$BUILD_DIR"
+          DIST_DIR="apps/desktop/node_modules/electrobun/dist-linux-${ELECTROBUN_ARCH}"
+          bun apps/desktop/scripts/check-linux-runtime-deps.ts "$DIST_DIR"
 
       - name: Patch Linux native wrapper WM_CLASS
         env:
           ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
         run: |
-          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}/Klovi"
-          bun apps/desktop/scripts/patch-linux-native-wrapper.ts "$BUILD_DIR"
+          DIST_DIR="apps/desktop/node_modules/electrobun/dist-linux-${ELECTROBUN_ARCH}"
+          bun apps/desktop/scripts/patch-linux-native-wrapper.ts "$DIST_DIR"
+
+      - name: Rebuild Electrobun app with patched Linux wrapper
+        run: bun run build -- --env="$DESKTOP_BUILD_ENV"
 
       - name: Verify Linux bundle contract
         env:
