@@ -81,6 +81,8 @@ export const APPIMAGE_ARCH_MAP: Record<string, string> = {
   arm64: "aarch64",
 };
 
+export const APPIMAGE_DESKTOP_ENTRY_FILENAME = "io.cookielab.klovi.desktop";
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -113,14 +115,15 @@ HERE="$(dirname "$(readlink -f "\${0}")")"
 exec "\${HERE}/usr/lib/klovi/bin/launcher" "$@"
 `;
 
-const DESKTOP_ENTRY = `[Desktop Entry]
+export const DESKTOP_ENTRY = `[Desktop Entry]
 Name=Klovi
 Comment=Desktop viewer for AI coding sessions
 Exec=klovi %U
 Icon=klovi
 Type=Application
 Categories=Development;
-StartupWMClass=klovi
+StartupWMClass=Klovi
+X-GNOME-WMClass=Klovi
 Terminal=false
 `;
 
@@ -178,7 +181,7 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
   await run(["chmod", "+x", appRunPath]);
 
   // 6. Create .desktop file
-  await Bun.write(join(appDir, "klovi.desktop"), DESKTOP_ENTRY);
+  await Bun.write(join(appDir, APPIMAGE_DESKTOP_ENTRY_FILENAME), DESKTOP_ENTRY);
 
   // 7. Copy icon
   const iconSource = join(import.meta.dir, "..", "icon.iconset", "icon_256x256.png");

@@ -514,7 +514,24 @@ index ea045de3984ad44c38aa66f4adaa236ee21a65a5..cebde4a799f36ce5b797ea514dd5ccc1
  /**
   * Creates a Linux installer tar.gz containing:
   * - Self-extracting installer executable (with embedded app archive)
-@@ -3555,7 +3578,7 @@ Categories=Utility;Application;
+@@ -2015,13 +2038,14 @@ Categories=Utility;Application;
+ Comment=${config.app.description || `${config.app.name} application`}
+ Exec=launcher
+ Icon=appIcon.png
+ Terminal=false
+ StartupWMClass=${config.app.name}
++X-GNOME-WMClass=${config.app.name}
+ Categories=Utility;Application;
+ `;
+ 
+ 				const desktopFilePath = join(
+ 					appBundleFolderPath,
+-					`${config.app.name}.desktop`,
++					`${config.app.identifier}.desktop`,
+ 				);
+ 				writeFileSync(desktopFilePath, desktopContent);
+ 				console.log(`Created Linux desktop file: ${desktopFilePath}`);
+@@ -3555,7 +3579,7 @@ Categories=Utility;Application;
  
  					// hdiutil create -volname "YourAppName" -srcfolder /path/to/staging -ov -format UDZO YourAppName.dmg
  					// Note: use ULFO (lzfse) for better compatibility with large CEF frameworks and modern macOS

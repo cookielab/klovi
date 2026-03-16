@@ -289,8 +289,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Install FUSE for appimagetool
-        run: sudo apt-get update && sudo apt-get install -y libfuse2t64
+      - name: Install Linux packaging dependencies
+        run: sudo apt-get update && sudo apt-get install -y libfuse2t64 xvfb x11-utils
 
       - name: Set version and commit in package.json
         env:
@@ -307,6 +307,20 @@ jobs:
 
       - name: Build Electrobun app
         run: bun run build -- --env="$DESKTOP_BUILD_ENV"
+
+      - name: Verify Linux bundle contract
+        env:
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+        run: |
+          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}/Klovi"
+          bun apps/desktop/scripts/verify-linux-wrapper-contract.ts "$BUILD_DIR"
+
+      - name: Verify Linux window identity
+        env:
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+        run: |
+          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}/Klovi"
+          xvfb-run -a bun apps/desktop/scripts/verify-linux-window-identity.ts "$BUILD_DIR"
 
       - name: Package AppImage
         env:
