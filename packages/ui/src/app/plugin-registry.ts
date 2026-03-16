@@ -7,8 +7,7 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { openCodeFrontendPlugin } from "@cookielab.io/klovi-plugin-opencode/frontend";
 
-export type { InputFormatter, SummaryExtractor };
-export type { FrontendPlugin };
+export type { FrontendPlugin, InputFormatter, SummaryExtractor };
 
 const pluginRegistry = new Map<string, FrontendPlugin>();
 
