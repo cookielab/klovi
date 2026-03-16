@@ -234,7 +234,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
-        run: gh release upload "$VERSION" "$USER_DMG" --clobber
+        run: bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$USER_DMG"
 
       - name: Upload macOS updater assets
         env:
@@ -247,7 +247,7 @@ jobs:
             "apps/desktop/artifacts/${PREFIX}-update.json"
           do
             [ -e "$file" ] || continue
-            gh release upload "$VERSION" "$file" --clobber
+            bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$file"
           done
 
       - name: Clean up keychain
@@ -369,7 +369,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
-        run: gh release upload "$VERSION" "$USER_ASSET" --clobber
+        run: bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$USER_ASSET"
 
       - name: Upload Linux updater assets
         env:
@@ -383,7 +383,7 @@ jobs:
             "apps/desktop/artifacts/${PREFIX}-update.json"
           do
             [ -e "$file" ] || continue
-            gh release upload "$VERSION" "$file" --clobber
+            bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$file"
           done
 
   build-windows:
@@ -469,7 +469,7 @@ jobs:
 
           USER_ASSET="Klovi-${VERSION}-windows-amd64.exe"
           cp "$INSTALLER" "$USER_ASSET"
-          gh release upload "$VERSION" "$USER_ASSET" --clobber
+          bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$USER_ASSET"
 
           FULL_BUNDLE=$(find apps/desktop/artifacts -maxdepth 1 -type f -name "${PREFIX}-*.tar.zst" ! -name "${PREFIX}-*Setup*.tar.zst" | head -1)
           if [ -z "$FULL_BUNDLE" ]; then
@@ -482,9 +482,9 @@ jobs:
           if [ "$FULL_BUNDLE" != "$NORMALIZED_BUNDLE" ]; then
             cp "$FULL_BUNDLE" "$NORMALIZED_BUNDLE"
           fi
-          gh release upload "$VERSION" "$NORMALIZED_BUNDLE" --clobber
+          bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$NORMALIZED_BUNDLE"
 
           for file in "apps/desktop/artifacts/${PREFIX}-update.json"; do
             [ -e "$file" ] || continue
-            gh release upload "$VERSION" "$file" --clobber
+            bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$file"
           done
