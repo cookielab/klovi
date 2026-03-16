@@ -1,118 +1,5 @@
-diff --git a/bin/electrobun.cjs b/bin/electrobun.cjs
-index c85043d53f371f38139f78cdeb98c304b1939d32..d642f205146c5d234f5b5673baca63a45378ed26 100755
---- a/bin/electrobun.cjs
-+++ b/bin/electrobun.cjs
-@@ -1,8 +1,8 @@
- #!/usr/bin/env node
- 
--const { execSync, spawn } = require('child_process');
--const { existsSync, mkdirSync, unlinkSync, chmodSync, copyFileSync, createWriteStream } = require('fs');
--const { join, dirname } = require('path');
-+const { spawn, spawnSync } = require('child_process');
-+const { existsSync, mkdirSync, unlinkSync, chmodSync, createWriteStream } = require('fs');
-+const { join, dirname, basename } = require('path');
- const https = require('https');
- 
- // Detect platform and architecture
-@@ -33,6 +33,10 @@ const electrobunDir = join(__dirname, '..');
- const cacheDir = join(electrobunDir, '.cache');
- const cliBinary = join(cacheDir, `electrobun${binExt}`);
- 
-+function shellEscape(arg) {
-+  return `'${String(arg).replace(/'/g, `'\\''`)}'`;
-+}
-+
- async function downloadFile(url, filePath) {
-   return new Promise((resolve, reject) => {
-     mkdirSync(dirname(filePath), { recursive: true });
-@@ -62,21 +66,11 @@ async function downloadFile(url, filePath) {
- }
- 
- async function ensureCliBinary() {
--  // Check if CLI binary exists in bin location (where npm expects it)
--  const binLocation = join(electrobunDir, 'bin', 'electrobun' + binExt);
--  if (existsSync(binLocation)) {
--    return binLocation;
--  }
--
--  // Check if core dependencies already exist in cache
-   if (existsSync(cliBinary)) {
--    // Copy to bin location if it exists in cache but not in bin
--    mkdirSync(dirname(binLocation), { recursive: true });
--    copyFileSync(cliBinary, binLocation);
-     if (platform !== 'win') {
--      chmodSync(binLocation, '755');
-+      chmodSync(cliBinary, '755');
-     }
--    return binLocation;
-+    return cliBinary;
-   }
- 
-   console.log('Downloading electrobun CLI for your platform...');
-@@ -93,8 +87,18 @@ async function ensureCliBinary() {
-     // Download tarball
-     await downloadFile(tarballUrl, tarballPath);
- 
--    // Extract using system tar (available on macOS, Linux, and Windows 10+)
--    execSync(`tar -xzf "${tarballPath}"`, { cwd: cacheDir, stdio: 'pipe' });
-+    const tarArgs = ['-xzf', platform === 'win' ? basename(tarballPath) : tarballPath];
-+    if (platform === 'win') {
-+      tarArgs.push('--force-local');
-+    }
-+    const tarResult = spawnSync('tar', tarArgs, { cwd: cacheDir, stdio: 'pipe' });
-+    if (tarResult.status !== 0) {
-+      throw new Error(
-+        tarResult.stderr?.toString().trim() ||
-+          tarResult.stdout?.toString().trim() ||
-+          `tar exited with status ${tarResult.status}`,
-+      );
-+    }
- 
-     // Clean up tarball
-     unlinkSync(tarballPath);
-@@ -109,17 +113,8 @@ async function ensureCliBinary() {
-       chmodSync(cliBinary, '755');
-     }
- 
--    // Copy CLI to bin location so npm scripts can find it
--    mkdirSync(dirname(binLocation), { recursive: true });
--    copyFileSync(cliBinary, binLocation);
--
--    // Make the bin location executable too
--    if (platform !== 'win') {
--      chmodSync(binLocation, '755');
--    }
--
-     console.log('electrobun CLI downloaded successfully!');
--    return binLocation;
-+    return cliBinary;
- 
-   } catch (error) {
-     throw new Error(`Failed to download electrobun CLI: ${error.message}`);
-@@ -131,11 +126,16 @@ async function main() {
-     const args = process.argv.slice(2);
-     const cliPath = await ensureCliBinary();
- 
--    // Replace this process with the actual CLI
--    const child = spawn(cliPath, args, {
--      stdio: 'inherit',
--      cwd: process.cwd()
--    });
-+    const child =
-+      platform === 'win'
-+        ? spawn(cliPath, args, {
-+            stdio: 'inherit',
-+            cwd: process.cwd(),
-+          })
-+        : spawn('/bin/sh', ['-c', [shellEscape(cliPath), ...args.map(shellEscape)].join(' ')], {
-+            stdio: 'inherit',
-+            cwd: process.cwd(),
-+          });
- 
-     child.on('exit', (code) => {
-       process.exit(code || 0);
 diff --git a/dist/api/bun/core/ApplicationMenu.ts b/dist/api/bun/core/ApplicationMenu.ts
-index 65f59ff7f8563ee1132846c2ae999595f01ff96b..699110ec3479250c76c81e6751d18339b292b671 100644
+index 65f59ff..699110e 100644
 --- a/dist/api/bun/core/ApplicationMenu.ts
 +++ b/dist/api/bun/core/ApplicationMenu.ts
 @@ -1,3 +1,4 @@
@@ -121,7 +8,7 @@ index 65f59ff7f8563ee1132846c2ae999595f01ff96b..699110ec3479250c76c81e6751d18339
  import electrobunEventEmitter from "../events/eventEmitter";
  import { roleLabelMap } from "./menuRoles";
 diff --git a/dist/api/bun/core/BrowserView.ts b/dist/api/bun/core/BrowserView.ts
-index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078d59a7124 100644
+index f2f6245..bbb485c 100644
 --- a/dist/api/bun/core/BrowserView.ts
 +++ b/dist/api/bun/core/BrowserView.ts
 @@ -1,3 +1,4 @@
@@ -129,7 +16,8 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  import { native, toCString, ffi } from "../proc/native";
  import * as fs from "fs";
  import electrobunEventEmitter from "../events/eventEmitter";
-@@ -10,7 +11,7 @@ import {
+@@ -9,7 +10,7 @@ import {
+ } from "../../shared/rpc.js";
  import { Updater } from "./Updater";
  import { BuildConfig } from "./BuildConfig";
 -import { rpcPort, sendMessageToWebviewViaSocket } from "./Socket";
@@ -137,16 +25,15 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
  import { randomBytes } from "crypto";
  import { type Pointer } from "bun:ffi";
  
- const BrowserViewMap: {
-@@ -99,6 +100,7 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+@@ -102,6 +103,7 @@ export class BrowserView<T extends RPCWithTransport = RPCWithTransport> {
  	sandbox: boolean = false;
  	startTransparent: boolean = false;
  	startPassthrough: boolean = false;
 +	disposed: boolean = false;
  
- 	constructor(config: Partial<BrowserViewOptions<T>> = {}) {
- 		this.id = nextWebviewId++;
-@@ -220,6 +222,23 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
+ 	constructor(options: Partial<BrowserViewOptions<T>> = defaultOptions) {
+ 		// const rpc = options.rpc;
+@@ -214,6 +216,23 @@ export class BrowserView<T extends RPCWithTransport = RPCWithTransport> {
  		ffi.request.evaluateJavascriptWithNoCompletion({ id: this.id, js });
  	}
  
@@ -168,11 +55,11 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
 +	}
 +
  	loadURL(url: string) {
- 		if (!url) throw new Error("No URL provided");
- 		const viewType = BuildConfig.renderer === "native" ? "native" : "cef";
-@@ -322,11 +341,31 @@ export class BrowserView<T extends RPCWithTransport | undefined = undefined> {
- 		}
- 	}
+ 		console.log(`DEBUG: loadURL called for webview ${this.id}: ${url}`);
+ 		this.url = url;
+@@ -332,11 +351,31 @@ export class BrowserView<T extends RPCWithTransport = RPCWithTransport> {
+ 		};
+ 	};
  
 -	remove() {
 -		native.symbols.webviewRemove(this.ptr);
@@ -201,11 +88,11 @@ index eefef652d735ac974ae2f8f821e38f05171d30ab..8d82f245d92111e652709965e4fa7078
 +		this.cleanup();
 +	}
 +
- 	/**
- 	 * @deprecated use `webview.url = "https://google.com"` instead
- 	 */
+ 	static getById(id: number) {
+ 		return BrowserViewMap[id];
+ 	}
 diff --git a/dist/api/bun/core/BrowserWindow.ts b/dist/api/bun/core/BrowserWindow.ts
-index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeebbd5b1045 100644
+index 7370127..a4ce562 100644
 --- a/dist/api/bun/core/BrowserWindow.ts
 +++ b/dist/api/bun/core/BrowserWindow.ts
 @@ -1,3 +1,4 @@
@@ -213,8 +100,8 @@ index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeeb
  import { ffi } from "../proc/native";
  import electrobunEventEmitter from "../events/eventEmitter";
  import { BrowserView } from "./BrowserView";
-@@ -61,6 +62,41 @@ export const WindowMap: {
- 	[id: number]: BrowserWindow;
+@@ -68,6 +69,41 @@ export const BrowserWindowMap: {
+ 	[id: number]: BrowserWindow<RPCWithTransport>;
  } = {};
  
 +electrobunEventEmitter.on(
@@ -252,10 +139,10 @@ index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeeb
 +	},
 +);
 +
- function cleanUpWebviews(windowId: number) {
- 	for (const view of BrowserView.getAll()) {
- 		if (view.windowId === windowId) {
-@@ -69,7 +105,7 @@ function cleanUpWebviews(windowId: number) {
+ // Clean up the window map when a window closes and optionally quit the app
+ electrobunEventEmitter.on("close", (event: { data: { id: number } }) => {
+ 	const windowId = event.data.id;
+@@ -76,7 +112,7 @@ electrobunEventEmitter.on("close", (event: { data: { id: number } }) => {
  	// Clean up all webviews associated with this window
  	for (const view of BrowserView.getAll()) {
  		if (view.windowId === windowId) {
@@ -263,9 +150,9 @@ index 61824a2ad19c2c0ca5a5ccd0dc838b4c5411ab49..ce5536c516b642011df52af3c9d1aeeb
 +			view.disposeForWindowClose();
  		}
  	}
- }
+ 
 diff --git a/dist/api/bun/core/BuildConfig.ts b/dist/api/bun/core/BuildConfig.ts
-index 1da33bfc3d6ac777eabfb7fab31ffd002db63f5e..e8ad633df8cf778bd13e6ded6be7bb2a2c16b1c0 100644
+index 1da33bf..82da4c1 100644
 --- a/dist/api/bun/core/BuildConfig.ts
 +++ b/dist/api/bun/core/BuildConfig.ts
 @@ -1,3 +1,5 @@
@@ -274,26 +161,28 @@ index 1da33bfc3d6ac777eabfb7fab31ffd002db63f5e..e8ad633df8cf778bd13e6ded6be7bb2a
  export type BuildConfigType = {
  	defaultRenderer: "native" | "cef";
  	availableRenderers: ("native" | "cef")[];
-@@ -22,7 +24,7 @@ const BuildConfig = {
+@@ -22,7 +24,9 @@ const BuildConfig = {
  
  		try {
  			const resourcesDir = "Resources";
 -			buildConfig = await Bun.file(`../${resourcesDir}/build.json`).json();
-+			buildConfig = await Bun.file(join(dirname(process.execPath), "..", resourcesDir, "build.json")).json();
++			buildConfig = await Bun.file(
++				join(dirname(process.execPath), "..", resourcesDir, "build.json"),
++			).json();
  			return buildConfig!;
  		} catch (error) {
  			// Fallback for dev mode or missing file
 diff --git a/dist/api/bun/core/ContextMenu.ts b/dist/api/bun/core/ContextMenu.ts
-index 8666e598d7395ac1c725780f2c961e440bd6d7a3..70bb0c105c0d48253708ce94e2268662c25f67cb 100644
+index 807fd20..3142526 100644
 --- a/dist/api/bun/core/ContextMenu.ts
 +++ b/dist/api/bun/core/ContextMenu.ts
 @@ -1,3 +1,4 @@
 +// @ts-nocheck
- // TODO: have a context specific menu that excludes role
- import { ffi, type ApplicationMenuItemConfig } from "../proc/native";
- import electrobunEventEmitter from "../events/eventEmitter";
+ // Context menus intentionally share ApplicationMenuItemConfig for now:
+ // - macOS supports role-based context menu items.
+ // - Windows has partial role behavior.
 diff --git a/dist/api/bun/core/Paths.ts b/dist/api/bun/core/Paths.ts
-index b04b630307157566006db8c5531a53846ba000a1..eeaf1b3348ae975595ef990e6f505a73831f1ebc 100644
+index b04b630..eeaf1b3 100644
 --- a/dist/api/bun/core/Paths.ts
 +++ b/dist/api/bun/core/Paths.ts
 @@ -1,5 +1,5 @@
@@ -305,7 +194,7 @@ index b04b630307157566006db8c5531a53846ba000a1..eeaf1b3348ae975595ef990e6f505a73
  
  export const VIEWS_FOLDER = resolve(RESOURCES_FOLDER, "app/views");
 diff --git a/dist/api/bun/core/Socket.ts b/dist/api/bun/core/Socket.ts
-index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e64e3ff3d5 100644
+index 098aa8a..ce9ea00 100644
 --- a/dist/api/bun/core/Socket.ts
 +++ b/dist/api/bun/core/Socket.ts
 @@ -1,3 +1,4 @@
@@ -314,7 +203,7 @@ index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e6
  import { BrowserView } from "./BrowserView";
  import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 @@ -47,6 +48,21 @@ export const socketMap: {
- 	[webviewId: number]: { socket: ServerWebSocket<undefined>; aesKey: Buffer };
+ 	};
  } = {};
  
 +export const disposeWebviewSocket = (webviewId: number): void => {
@@ -333,72 +222,39 @@ index 098aa8a05e4eab4425c3b50df4bb456474ba04fd..2fdc619d8a2a1e23809e39cbddfec1e6
 +};
 +
  const startRPCServer = () => {
- 	if (server || serverStarted) return;
- 	const payloadLimit = 1024 * 1024 * 500; // 500MB
+ 	const startPort = 50000;
+ 	const endPort = 65535;
 diff --git a/dist/api/bun/core/Tray.ts b/dist/api/bun/core/Tray.ts
-index f836f1b716d593a908d953d3a645db97793d9896..e7f3f0ef2b456de66a5392f64c6bf0a22879cce8 100644
+index 9625a2e..edcef80 100644
 --- a/dist/api/bun/core/Tray.ts
 +++ b/dist/api/bun/core/Tray.ts
 @@ -1,3 +1,4 @@
 +// @ts-nocheck
- import { ffi, type MenuItemConfig } from "../proc/native";
+ import { ffi, type MenuItemConfig, type Rectangle } from "../proc/native";
  import electrobunEventEmitter from "../events/eventEmitter";
  import { VIEWS_FOLDER } from "./Paths";
 diff --git a/dist/api/bun/core/Updater.ts b/dist/api/bun/core/Updater.ts
-index c747d1f91d7ad2451c5a9c1cf16ba7720da48e03..fcae30853c8ea38761c08b696900102a89adb8ee 100644
+index f4df82b..2b548ce 100644
 --- a/dist/api/bun/core/Updater.ts
 +++ b/dist/api/bun/core/Updater.ts
-@@ -1,10 +1,11 @@
+@@ -1,3 +1,4 @@
 +// @ts-nocheck
  import { join, dirname, resolve } from "path";
  import { homedir } from "os";
  import {
- 	renameSync,
- 	unlinkSync,
- 	mkdirSync,
--	rmdirSync,
-+	rmSync,
- 	statSync,
- 	readdirSync,
- } from "fs";
-@@ -145,7 +146,7 @@ function cleanupExtractionFolder(
- 			try {
- 				const s = statSync(fullPath);
- 				if (s.isDirectory()) {
--					rmdirSync(fullPath, { recursive: true });
-+					rmSync(fullPath, { recursive: true });
- 				} else {
- 					unlinkSync(fullPath);
- 				}
-@@ -895,7 +896,7 @@ const Updater = {
- 					if (currentOS === "macos") {
- 						// Remove existing app before installing the new one
- 						if (statSync(runningAppBundlePath, { throwIfNoEntry: false })) {
--							rmdirSync(runningAppBundlePath, { recursive: true });
-+							rmSync(runningAppBundlePath, { recursive: true });
- 						}
- 
- 						emitStatus("replacing-app", "Installing new version...");
-@@ -920,7 +921,7 @@ const Updater = {
- 						
- 						// Remove existing app directory if it exists
- 						if (statSync(appBundleDir, { throwIfNoEntry: false })) {
--							rmdirSync(appBundleDir, { recursive: true });
-+							rmSync(appBundleDir, { recursive: true });
- 						}
- 
- 						// Move new app bundle directory to app location
-@@ -1116,7 +1117,7 @@ del "%~f0"
+@@ -1116,7 +1117,9 @@ del "%~f0"
  
  		try {
  			const resourcesDir = "Resources"; // Always use capitalized Resources
 -			localInfo = await Bun.file(`../${resourcesDir}/version.json`).json();
-+			localInfo = await Bun.file(join(dirname(process.execPath), "..", resourcesDir, "version.json")).json();
++			localInfo = await Bun.file(
++				join(dirname(process.execPath), "..", resourcesDir, "version.json"),
++			).json();
  			return localInfo;
  		} catch (error) {
  			// Handle the error
 diff --git a/dist/api/bun/core/Utils.ts b/dist/api/bun/core/Utils.ts
-index e1525291ad5a5bac43e6bf7f15491769a66c7484..60f3b7b6f6ee7d2dfbef1999a1439cdaffeff067 100644
+index a2ebe33..839bf3b 100644
 --- a/dist/api/bun/core/Utils.ts
 +++ b/dist/api/bun/core/Utils.ts
 @@ -1,7 +1,8 @@
@@ -411,17 +267,20 @@ index e1525291ad5a5bac43e6bf7f15491769a66c7484..60f3b7b6f6ee7d2dfbef1999a1439cda
  import { readFileSync } from "node:fs";
  import { OS } from "../../shared/platform";
  
-@@ -344,7 +345,7 @@ function getVersionInfo(): { identifier: string; channel: string } {
+@@ -352,7 +353,10 @@ function getVersionInfo(): { identifier: string; channel: string } {
  	if (_versionInfo) return _versionInfo;
  	try {
  		const resourcesDir = "Resources";
 -		const raw = readFileSync(join("..", resourcesDir, "version.json"), "utf-8");
-+		const raw = readFileSync(join(dirname(process.execPath), "..", resourcesDir, "version.json"), "utf-8");
++		const raw = readFileSync(
++			join(dirname(process.execPath), "..", resourcesDir, "version.json"),
++			"utf-8",
++		);
  		const parsed = JSON.parse(raw);
  		_versionInfo = { identifier: parsed.identifier, channel: parsed.channel };
  		return _versionInfo;
 diff --git a/dist/api/bun/index.ts b/dist/api/bun/index.ts
-index 112a8a141299032d8b6eb1dab32b5ab12bb015d2..268b213ab12e115ef5bbc477fe3d4549b03a8c57 100644
+index 112a8a1..268b213 100644
 --- a/dist/api/bun/index.ts
 +++ b/dist/api/bun/index.ts
 @@ -1,3 +1,4 @@
@@ -430,7 +289,7 @@ index 112a8a141299032d8b6eb1dab32b5ab12bb015d2..268b213ab12e115ef5bbc477fe3d4549
  import { BrowserWindow, type WindowOptionsType } from "./core/BrowserWindow";
  import { BrowserView, type BrowserViewOptions } from "./core/BrowserView";
 diff --git a/dist/api/bun/proc/native.ts b/dist/api/bun/proc/native.ts
-index 6e0e437f48542e74b7f8e1727da828457f05445f..4b924647e27c6abb58b48f08e89c42b12fa812fd 100644
+index 181c4f1..76f8d3d 100644
 --- a/dist/api/bun/proc/native.ts
 +++ b/dist/api/bun/proc/native.ts
 @@ -1,4 +1,5 @@
@@ -440,17 +299,20 @@ index 6e0e437f48542e74b7f8e1727da828457f05445f..4b924647e27c6abb58b48f08e89c42b1
  import electrobunEventEmitter from "../events/eventEmitter";
  import ElectrobunEvent from "../events/event";
  import { BrowserView } from "../core/BrowserView";
-@@ -83,7 +84,7 @@ export const native = (() => {
+@@ -83,7 +84,10 @@ export const native = (() => {
  	try {
  		// Use absolute path to native wrapper DLL to avoid working directory issues
  		// On Windows shortcuts, the working directory may not be set correctly
 -		const nativeWrapperPath = join(process.cwd(), `libNativeWrapper.${suffix}`);
-+		const nativeWrapperPath = join(dirname(process.execPath), `libNativeWrapper.${suffix}`);
++		const nativeWrapperPath = join(
++			dirname(process.execPath),
++			`libNativeWrapper.${suffix}`,
++		);
  		return dlopen(nativeWrapperPath, {
  			// window
  			createWindowWithFrameAndStyleFromWorker: {
 diff --git a/dist/main.js b/dist/main.js
-index 6b7eb124d4c10d837749380eedbbcef51567ea43..28b5fc3122efdc38b9a29b80b5ab507297ec8a8c 100644
+index 6b7eb12..28b5fc3 100644
 --- a/dist/main.js
 +++ b/dist/main.js
 @@ -6,7 +6,7 @@ import { join, dirname, resolve } from "path";
@@ -481,11 +343,11 @@ index 6b7eb124d4c10d837749380eedbbcef51567ea43..28b5fc3122efdc38b9a29b80b5ab5072
    const resourcesDir = join(pathToBinDir, "..", "Resources");
    const asarPath = join(resourcesDir, "app.asar");
 diff --git a/src/cli/index.ts b/src/cli/index.ts
-index ea045de3984ad44c38aa66f4adaa236ee21a65a5..cebde4a799f36ce5b797ea514dd5ccc14e49baf4 100644
+index d1ecbb7..534244c 100644
 --- a/src/cli/index.ts
 +++ b/src/cli/index.ts
-@@ -1483,6 +1483,29 @@ function escapePathForTerminal(path: string): string {
- 	return `"${path.replace(/"/g, '\\"')}"`;
+@@ -1462,6 +1462,29 @@ function escapePathForTerminal(path: string): string {
+ 	}
  }
  
 +function execSyncWithRetries(
@@ -514,9 +376,7 @@ index ea045de3984ad44c38aa66f4adaa236ee21a65a5..cebde4a799f36ce5b797ea514dd5ccc1
  /**
   * Creates a Linux installer tar.gz containing:
   * - Self-extracting installer executable (with embedded app archive)
-@@ -2015,13 +2038,14 @@ Categories=Utility;Application;
- Comment=${config.app.description || `${config.app.name} application`}
- Exec=launcher
+@@ -1977,12 +2000,13 @@ Exec=launcher
  Icon=appIcon.png
  Terminal=false
  StartupWMClass=${config.app.name}
@@ -531,7 +391,7 @@ index ea045de3984ad44c38aa66f4adaa236ee21a65a5..cebde4a799f36ce5b797ea514dd5ccc1
  				);
  				writeFileSync(desktopFilePath, desktopContent);
  				console.log(`Created Linux desktop file: ${desktopFilePath}`);
-@@ -3555,7 +3579,7 @@ Categories=Utility;Application;
+@@ -3534,7 +3558,7 @@ Categories=Utility;Application;
  
  					// hdiutil create -volname "YourAppName" -srcfolder /path/to/staging -ov -format UDZO YourAppName.dmg
  					// Note: use ULFO (lzfse) for better compatibility with large CEF frameworks and modern macOS

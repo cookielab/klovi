@@ -25,6 +25,6 @@
   "dependencies": {
     "@cookielab.io/klovi-server": "workspace:*",
     "@cookielab.io/klovi-ui": "workspace:*",
-    "electrobun": "^1.14.4"
+    "electrobun": "^1.16.0"
   }
 }
