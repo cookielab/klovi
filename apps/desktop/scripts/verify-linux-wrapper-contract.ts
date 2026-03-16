@@ -8,6 +8,7 @@ export const EXPECTED_LINUX_APP_IDENTIFIER = "io.cookielab.klovi";
 export const EXPECTED_LINUX_WM_CLASS = "Klovi";
 export const EXPECTED_LINUX_ICON_BASENAME = "klovi";
 export const EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME = `${EXPECTED_LINUX_APP_IDENTIFIER}.desktop`;
+export const METADATA_FILENAMES = ["version.json", "metadata.json"] as const;
 
 type WrapperMetadata = {
   identifier: string;
@@ -35,10 +36,18 @@ export function parseArgs(argv: string[]): VerifyArgs {
   return { bundlePath: args[0] };
 }
 
+async function hasMetadataFile(dir: string): Promise<boolean> {
+  for (const filename of METADATA_FILENAMES) {
+    if (await Bun.file(join(dir, "Resources", filename)).exists()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function detectLayout(bundlePath: string): Promise<Layout> {
   const inputRoot = resolve(bundlePath);
-  const bundleVersionPath = join(inputRoot, "Resources", "version.json");
-  if (await Bun.file(bundleVersionPath).exists()) {
+  if (await hasMetadataFile(inputRoot)) {
     return {
       inputRoot,
       bundleRoot: inputRoot,
@@ -48,8 +57,7 @@ export async function detectLayout(bundlePath: string): Promise<Layout> {
   }
 
   const appDirBundleRoot = join(inputRoot, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
-  const appDirVersionPath = join(appDirBundleRoot, "Resources", "version.json");
-  if (await Bun.file(appDirVersionPath).exists()) {
+  if (await hasMetadataFile(appDirBundleRoot)) {
     return {
       inputRoot,
       bundleRoot: appDirBundleRoot,
@@ -96,10 +104,15 @@ export function parseDesktopEntry(raw: string): Map<string, string> {
 }
 
 async function readWrapperMetadata(bundleRoot: string): Promise<WrapperMetadata> {
-  const metadataPath = join(bundleRoot, "Resources", "version.json");
-  const parsed: unknown = await Bun.file(metadataPath).json();
-  assertMetadata(parsed);
-  return parsed;
+  for (const filename of METADATA_FILENAMES) {
+    const filePath = join(bundleRoot, "Resources", filename);
+    if (await Bun.file(filePath).exists()) {
+      const parsed: unknown = await Bun.file(filePath).json();
+      assertMetadata(parsed);
+      return parsed;
+    }
+  }
+  throw new Error(`No metadata file found under ${join(bundleRoot, "Resources")}`);
 }
 
 async function findDesktopEntryPath(desktopRoot: string): Promise<string> {

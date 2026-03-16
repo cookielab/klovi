@@ -8,6 +8,7 @@ import {
   EXPECTED_LINUX_APP_NAME,
   EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME,
   EXPECTED_LINUX_ICON_BASENAME,
+  METADATA_FILENAMES,
   parseArgs,
   parseDesktopEntry,
   verifyLinuxWrapperContract,
@@ -37,9 +38,9 @@ async function makeTempDir(prefix: string): Promise<string> {
   return path;
 }
 
-async function writeBundle(root: string): Promise<void> {
+async function writeBundle(root: string, metadataFilename: string = "version.json"): Promise<void> {
   await Bun.write(
-    join(root, "Resources", "version.json"),
+    join(root, "Resources", metadataFilename),
     JSON.stringify({
       version: "1.2.3",
       hash: "abc123",
@@ -70,51 +71,55 @@ describe("parseDesktopEntry", () => {
 });
 
 describe("detectLayout", () => {
-  test("detects a normalized Linux bundle", async () => {
-    const root = await makeTempDir("klovi-linux-bundle-");
-    await writeBundle(root);
+  for (const metadataFilename of METADATA_FILENAMES) {
+    test(`detects a normalized Linux bundle with ${metadataFilename}`, async () => {
+      const root = await makeTempDir("klovi-linux-bundle-");
+      await writeBundle(root, metadataFilename);
 
-    await expect(detectLayout(root)).resolves.toEqual({
-      inputRoot: root,
-      bundleRoot: root,
-      desktopRoot: root,
-      isAppDir: false,
+      await expect(detectLayout(root)).resolves.toEqual({
+        inputRoot: root,
+        bundleRoot: root,
+        desktopRoot: root,
+        isAppDir: false,
+      });
     });
-  });
 
-  test("detects an AppDir layout", async () => {
-    const root = await makeTempDir("klovi-linux-appdir-");
-    const bundleRoot = join(root, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
-    await writeBundle(bundleRoot);
-    await Bun.write(join(root, EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME), DESKTOP_ENTRY_FIXTURE);
-    await Bun.write(join(root, `${EXPECTED_LINUX_ICON_BASENAME}.png`), "png");
-    await Bun.write(join(root, ".DirIcon"), "png");
+    test(`detects an AppDir layout with ${metadataFilename}`, async () => {
+      const root = await makeTempDir("klovi-linux-appdir-");
+      const bundleRoot = join(root, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
+      await writeBundle(bundleRoot, metadataFilename);
+      await Bun.write(join(root, EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME), DESKTOP_ENTRY_FIXTURE);
+      await Bun.write(join(root, `${EXPECTED_LINUX_ICON_BASENAME}.png`), "png");
+      await Bun.write(join(root, ".DirIcon"), "png");
 
-    await expect(detectLayout(root)).resolves.toEqual({
-      inputRoot: root,
-      bundleRoot,
-      desktopRoot: root,
-      isAppDir: true,
+      await expect(detectLayout(root)).resolves.toEqual({
+        inputRoot: root,
+        bundleRoot,
+        desktopRoot: root,
+        isAppDir: true,
+      });
     });
-  });
+  }
 });
 
 describe("linux wrapper contract", () => {
-  test("accepts a normalized bundle", async () => {
-    const root = await makeTempDir("klovi-linux-contract-");
-    await writeBundle(root);
+  for (const metadataFilename of METADATA_FILENAMES) {
+    test(`accepts a normalized bundle with ${metadataFilename}`, async () => {
+      const root = await makeTempDir("klovi-linux-contract-");
+      await writeBundle(root, metadataFilename);
 
-    await expect(verifyLinuxWrapperContract({ bundlePath: root })).resolves.toBeUndefined();
-  });
+      await expect(verifyLinuxWrapperContract({ bundlePath: root })).resolves.toBeUndefined();
+    });
 
-  test("accepts an AppDir", async () => {
-    const root = await makeTempDir("klovi-linux-appdir-contract-");
-    const bundleRoot = join(root, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
-    await writeBundle(bundleRoot);
-    await Bun.write(join(root, EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME), DESKTOP_ENTRY_FIXTURE);
-    await Bun.write(join(root, `${EXPECTED_LINUX_ICON_BASENAME}.png`), "png");
-    await Bun.write(join(root, ".DirIcon"), "png");
+    test(`accepts an AppDir with ${metadataFilename}`, async () => {
+      const root = await makeTempDir("klovi-linux-appdir-contract-");
+      const bundleRoot = join(root, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
+      await writeBundle(bundleRoot, metadataFilename);
+      await Bun.write(join(root, EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME), DESKTOP_ENTRY_FIXTURE);
+      await Bun.write(join(root, `${EXPECTED_LINUX_ICON_BASENAME}.png`), "png");
+      await Bun.write(join(root, ".DirIcon"), "png");
 
-    await expect(verifyLinuxWrapperContract({ bundlePath: root })).resolves.toBeUndefined();
-  });
+      await expect(verifyLinuxWrapperContract({ bundlePath: root })).resolves.toBeUndefined();
+    });
+  }
 });
