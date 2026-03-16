@@ -1,11 +1,13 @@
 #!/usr/bin/env bun
 
 import { mkdirSync } from "node:fs";
+import { homedir, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 const desktopRoot = resolve(import.meta.dir, "..");
 const electrobunDir = join(desktopRoot, "node_modules", "electrobun");
 const cliEntrypoint = join(electrobunDir, "src", "cli", "index.ts");
+const isLinux = platform() === "linux";
 
 const shims: Record<string, string> = {
   "src/shared/platform.ts": `import { platform, arch } from "os";
@@ -203,6 +205,55 @@ async function ensureShims(): Promise<void> {
   }
 }
 
+const HARDCODED_WM_CLASS = "ElectrobunKitchenSink-dev";
+const REPLACEMENT_WM_CLASS = "Klovi";
+
+async function patchNativeLibraries(): Promise<void> {
+  const distDir = join(electrobunDir, "dist-linux-x64");
+  const libs = ["libNativeWrapper.so", "libNativeWrapper_cef.so"];
+  const searchBytes = Buffer.from(HARDCODED_WM_CLASS, "utf-8");
+  const replacement = Buffer.alloc(searchBytes.length);
+  replacement.write(REPLACEMENT_WM_CLASS, "utf-8"); // rest is null bytes
+
+  for (const lib of libs) {
+    const libPath = join(distDir, lib);
+    const file = Bun.file(libPath);
+    if (!(await file.exists())) continue;
+
+    const buf = Buffer.from(await file.arrayBuffer());
+    const idx = buf.indexOf(searchBytes);
+    if (idx === -1) continue; // already patched or not present
+
+    replacement.copy(buf, idx);
+    await Bun.write(libPath, buf);
+  }
+}
+
+async function installDevDesktopEntry(): Promise<void> {
+  const buildDir = join(desktopRoot, "build", "dev-linux-x64", "Klovi-dev");
+  const iconPath = join(buildDir, "Resources", "appIcon.png");
+  const execPath = join(buildDir, "bin", "launcher");
+
+  const entry = `[Desktop Entry]
+Type=Application
+Name=Klovi (dev)
+Icon=${iconPath}
+Exec=${execPath}
+StartupWMClass=Klovi
+NoDisplay=true
+`;
+
+  const appsDir = join(homedir(), ".local", "share", "applications");
+  mkdirSync(appsDir, { recursive: true });
+  const desktopFile = join(appsDir, "io.cookielab.klovi.desktop");
+
+  const file = Bun.file(desktopFile);
+  const current = (await file.exists()) ? await file.text() : null;
+  if (current !== entry) {
+    await Bun.write(desktopFile, entry);
+  }
+}
+
 async function main(): Promise<void> {
   const cliArgs = Bun.argv.slice(2);
   if (cliArgs.length === 0) {
@@ -210,6 +261,13 @@ async function main(): Promise<void> {
   }
 
   await ensureShims();
+
+  if (isLinux) {
+    await patchNativeLibraries();
+    if (cliArgs[0] === "dev") {
+      await installDevDesktopEntry();
+    }
+  }
 
   const proc = Bun.spawn([process.execPath, cliEntrypoint, ...cliArgs], {
     cwd: desktopRoot,
