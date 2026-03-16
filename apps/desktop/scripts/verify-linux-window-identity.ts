@@ -10,6 +10,7 @@ const PID_REGEX = /_NET_WM_PID\(CARDINAL\)\s*=\s*(\d+)/;
 const WM_CLASS_REGEX = /WM_CLASS\([^)]+\)\s*=\s*(.+)/;
 const WINDOW_NAME_REGEX = /_NET_WM_NAME\([^)]+\)\s*=\s*"(.+)"/;
 const WINDOW_ID_REGEX = /0x[0-9a-f]+/gi;
+const WHITESPACE_REGEX = /\s+/;
 
 type VerifyArgs = {
   bundlePath: string;
@@ -30,6 +31,13 @@ export function parseArgs(argv: string[]): VerifyArgs {
   return { bundlePath: args[0] };
 }
 
+export function parsePidList(stdout: string): number[] {
+  return stdout
+    .split(WHITESPACE_REGEX)
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isInteger(value) && value > 0);
+}
+
 async function runTextCommand(command: string[]): Promise<string> {
   const proc = Bun.spawn(command, { stdout: "pipe", stderr: "pipe" });
   const stdout = await new Response(proc.stdout).text();
@@ -44,6 +52,11 @@ async function runTextCommand(command: string[]): Promise<string> {
 async function listWindowIds(): Promise<string[]> {
   const stdout = await runTextCommand(["xprop", "-root", "_NET_CLIENT_LIST"]);
   return [...stdout.matchAll(WINDOW_ID_REGEX)].map((match) => match[0]);
+}
+
+async function listChildPids(pid: number): Promise<number[]> {
+  const stdout = await runTextCommand(["ps", "-o", "pid=", "--ppid", String(pid)]);
+  return parsePidList(stdout);
 }
 
 async function readWindowIdentity(windowId: string): Promise<WindowIdentity> {
@@ -68,20 +81,102 @@ async function readWindowIdentity(windowId: string): Promise<WindowIdentity> {
   };
 }
 
-async function findWindowForPid(pid: number, timeoutMs = 30_000): Promise<WindowIdentity> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const windowIds = await listWindowIds();
-    for (const windowId of windowIds) {
-      const identity = await readWindowIdentity(windowId);
-      if (identity.pid === pid) {
-        return identity;
+async function listProcessFamily(rootPid: number): Promise<Set<number>> {
+  const pending = [rootPid];
+  const seen = new Set<number>();
+
+  while (pending.length > 0) {
+    const pid = pending.shift();
+    if (pid == null || seen.has(pid)) {
+      continue;
+    }
+
+    seen.add(pid);
+
+    for (const childPid of await listChildPids(pid)) {
+      if (!seen.has(childPid)) {
+        pending.push(childPid);
       }
     }
+  }
+
+  return seen;
+}
+
+function matchesExpectedWindow(identity: WindowIdentity): boolean {
+  const wmClass = identity.wmClass ?? "";
+  const name = identity.name ?? "";
+
+  if (wmClass.includes(FORBIDDEN_WM_CLASS)) {
+    return false;
+  }
+  if (!wmClass.includes(EXPECTED_WM_CLASS)) {
+    return false;
+  }
+  if (name !== "" && !name.includes(EXPECTED_WM_CLASS)) {
+    return false;
+  }
+
+  return true;
+}
+
+export function selectWindowCandidate(
+  identities: WindowIdentity[],
+  ownerPids: Set<number>,
+  existingWindowIds: Set<string>,
+): WindowIdentity | null {
+  for (const identity of identities) {
+    if (identity.pid !== null && ownerPids.has(identity.pid) && matchesExpectedWindow(identity)) {
+      return identity;
+    }
+  }
+
+  for (const identity of identities) {
+    if (!existingWindowIds.has(identity.id) && matchesExpectedWindow(identity)) {
+      return identity;
+    }
+  }
+
+  return null;
+}
+
+function formatWindowIdentity(identity: WindowIdentity): string {
+  return [
+    identity.id,
+    `pid=${identity.pid ?? "?"}`,
+    `wmClass=${identity.wmClass ?? "(missing)"}`,
+    `name=${identity.name ?? "(missing)"}`,
+  ].join(" ");
+}
+
+async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise<WindowIdentity> {
+  const existingWindowIds = new Set(await listWindowIds());
+  let lastObservedWindows: WindowIdentity[] = [];
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const windowIds = await listWindowIds();
+    const identities = await Promise.all(windowIds.map((windowId) => readWindowIdentity(windowId)));
+    const ownerPids = await listProcessFamily(rootPid);
+    const match = selectWindowCandidate(identities, ownerPids, existingWindowIds);
+
+    lastObservedWindows = identities;
+
+    if (match) {
+      return match;
+    }
+
     await Bun.sleep(500);
   }
 
-  throw new Error(`Timed out waiting for a window owned by pid ${pid}`);
+  const summary =
+    lastObservedWindows.length > 0
+      ? lastObservedWindows.map((identity) => formatWindowIdentity(identity)).join("; ")
+      : "(no windows found)";
+
+  throw new Error(
+    `Timed out waiting for a Klovi window after launching pid ${rootPid}. ${summary}`,
+  );
 }
 
 async function resolveLauncherPath(bundlePath: string): Promise<string> {
@@ -99,21 +194,37 @@ async function resolveLauncherPath(bundlePath: string): Promise<string> {
   throw new Error(`Could not find launcher under ${resolvedBundle}`);
 }
 
-function killProcess(proc: Bun.Subprocess): Promise<void> {
-  return new Promise((resolvePromise) => {
-    const finish = () => resolvePromise();
-    if (proc.exitCode !== null) {
-      finish();
+function processExists(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function killProcessTree(rootPid: number): Promise<void> {
+  const pids = [...(await listProcessFamily(rootPid))].sort((left, right) => right - left);
+
+  for (const pid of pids) {
+    if (processExists(pid)) {
+      process.kill(pid, "SIGTERM");
+    }
+  }
+
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    if (!pids.some((pid) => processExists(pid))) {
       return;
     }
-    proc.exited.then(() => finish()).catch(() => finish());
-    proc.kill("SIGTERM");
-    setTimeout(() => {
-      if (proc.exitCode === null) {
-        proc.kill("SIGKILL");
-      }
-    }, 5_000);
-  });
+    await Bun.sleep(100);
+  }
+
+  for (const pid of pids) {
+    if (processExists(pid)) {
+      process.kill(pid, "SIGKILL");
+    }
+  }
 }
 
 export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
@@ -142,7 +253,7 @@ export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void>
       throw new Error("Failed to start launcher process");
     }
 
-    const identity = await findWindowForPid(pid);
+    const identity = await findWindowForLaunch(pid);
     const wmClass = identity.wmClass ?? "";
     const name = identity.name ?? "";
 
@@ -158,7 +269,9 @@ export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void>
 
     console.log(`Verified Linux window identity: ${wmClass}${name ? ` (${name})` : ""}`);
   } finally {
-    await killProcess(proc);
+    if (proc.pid != null) {
+      await killProcessTree(proc.pid);
+    }
     await rm(tempHome, { recursive: true, force: true });
   }
 }
