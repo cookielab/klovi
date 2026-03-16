@@ -18,8 +18,8 @@
     "bun": ">=1.3"
   },
   "scripts": {
-    "dev": "electrobun dev",
-    "build": "electrobun build",
+    "dev": "bun scripts/run-electrobun-cli.ts dev",
+    "build": "bun scripts/run-electrobun-cli.ts build",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
