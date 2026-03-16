@@ -45,6 +45,8 @@ const RPC_TIMEOUTS: Partial<Record<DesktopRpcMethod, number>> = {
 
 let hostConnectionState: KloviHostConnectionState = "connecting";
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectDelay = 1_000;
+const MAX_RECONNECT_DELAY = 30_000;
 const observedSockets = new WeakSet<WebSocket>();
 
 const rpc = Electroview.defineRPC<KloviRPC>({
@@ -107,6 +109,7 @@ function attachSocketStateListeners(socket: WebSocket | undefined): void {
 
   socket.addEventListener("open", () => {
     clearReconnectTimer();
+    reconnectDelay = 1_000;
     setHostConnectionState("connected");
   });
 
@@ -143,10 +146,13 @@ function scheduleReconnect(): void {
     return;
   }
 
+  const delay = reconnectDelay;
+  reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
+
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
     reconnectSocket();
-  }, 1_000);
+  }, delay);
 }
 
 function waitForHostConnection(timeoutMs: number): Promise<boolean> {
