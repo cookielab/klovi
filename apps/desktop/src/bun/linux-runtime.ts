@@ -17,7 +17,7 @@ export function resolveLinuxRenderer(
     return;
   }
 
-  return env["KLOVI_LINUX_RENDERER"] === "native" ? "native" : "cef";
+  return env["KLOVI_LINUX_RENDERER"] === "cef" ? "cef" : "native";
 }
 
 export function getDesktopRuntimeDirs(paths: DesktopRuntimePaths): string[] {

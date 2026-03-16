@@ -9,13 +9,13 @@ import {
 } from "./linux-runtime.ts";
 
 describe("resolveLinuxRenderer", () => {
-  test("defaults to CEF on Linux", () => {
-    expect(resolveLinuxRenderer("linux", {})).toBe("cef");
+  test("defaults to native on Linux", () => {
+    expect(resolveLinuxRenderer("linux", {})).toBe("native");
   });
 
-  test("allows native override only on Linux", () => {
-    expect(resolveLinuxRenderer("linux", { KLOVI_LINUX_RENDERER: "native" })).toBe("native");
-    expect(resolveLinuxRenderer("darwin", { KLOVI_LINUX_RENDERER: "native" })).toBeUndefined();
+  test("allows CEF override only on Linux", () => {
+    expect(resolveLinuxRenderer("linux", { KLOVI_LINUX_RENDERER: "cef" })).toBe("cef");
+    expect(resolveLinuxRenderer("darwin", { KLOVI_LINUX_RENDERER: "cef" })).toBeUndefined();
   });
 });
 
