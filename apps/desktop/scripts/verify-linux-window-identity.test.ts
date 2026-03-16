@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { parseArgs, parsePidList, selectWindowCandidate } from "./verify-linux-window-identity.ts";
+import {
+  formatLaunchFailure,
+  parseArgs,
+  parsePidList,
+  selectWindowCandidate,
+} from "./verify-linux-window-identity.ts";
 
 describe("parseArgs", () => {
   test("accepts a single bundle path", () => {
@@ -84,5 +89,42 @@ describe("selectWindowCandidate", () => {
     );
 
     expect(result).toBeNull();
+  });
+});
+
+describe("formatLaunchFailure", () => {
+  test("includes launcher exit diagnostics when the process exits early", () => {
+    const message = formatLaunchFailure({
+      lastObservedWindows: [],
+      launchExitCode: 127,
+      launchStderr: "error while loading shared libraries: libwebkit2gtk-4.1.so.0",
+      launchStdout: "Launcher starting on linux...",
+      rootPid: 1234,
+    });
+
+    expect(message).toContain("Timed out waiting for a Klovi window after launching pid 1234.");
+    expect(message).toContain("Launcher exited before a matching window appeared (exit code 127).");
+    expect(message).toContain("Launcher stderr tail:");
+    expect(message).toContain("libwebkit2gtk-4.1.so.0");
+    expect(message).toContain("Launcher stdout tail:");
+  });
+
+  test("includes the last observed windows in timeout output", () => {
+    const message = formatLaunchFailure({
+      lastObservedWindows: [
+        {
+          id: "0x9",
+          pid: 321,
+          wmClass: '"Browser", "Browser"',
+          name: "Browser",
+        },
+      ],
+      launchExitCode: null,
+      launchStderr: "",
+      launchStdout: "",
+      rootPid: 456,
+    });
+
+    expect(message).toContain('0x9 pid=321 wmClass="Browser", "Browser" name=Browser');
   });
 });

@@ -2,7 +2,8 @@
 
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
+import { resolveLinuxLauncherPath } from "./linux-bundle.ts";
 
 const EXPECTED_WM_CLASS = "Klovi";
 const FORBIDDEN_WM_CLASS = "ElectrobunKitchenSink";
@@ -11,16 +12,25 @@ const WM_CLASS_REGEX = /WM_CLASS\([^)]+\)\s*=\s*(.+)/;
 const WINDOW_NAME_REGEX = /_NET_WM_NAME\([^)]+\)\s*=\s*"(.+)"/;
 const WINDOW_ID_REGEX = /0x[0-9a-f]+/gi;
 const WHITESPACE_REGEX = /\s+/;
+const OUTPUT_TAIL_LINE_COUNT = 20;
 
 type VerifyArgs = {
   bundlePath: string;
 };
 
-type WindowIdentity = {
+export type WindowIdentity = {
   id: string;
   pid: number | null;
   wmClass: string | null;
   name: string | null;
+};
+
+export type LaunchFailureDetails = {
+  lastObservedWindows: WindowIdentity[];
+  launchExitCode: number | null;
+  launchStderr: string;
+  launchStdout: string;
+  rootPid: number;
 };
 
 export function parseArgs(argv: string[]): VerifyArgs {
@@ -152,6 +162,62 @@ function formatWindowIdentity(identity: WindowIdentity): string {
   ].join(" ");
 }
 
+function formatOutputTail(label: string, output: string): string | null {
+  const trimmed = output.trim();
+  if (trimmed === "") {
+    return null;
+  }
+
+  const lines = trimmed.split("\n");
+  const tail = lines.slice(-OUTPUT_TAIL_LINE_COUNT);
+  return `${label}:\n${tail.join("\n")}`;
+}
+
+export function formatLaunchFailure(details: LaunchFailureDetails): string {
+  const summary =
+    details.lastObservedWindows.length > 0
+      ? details.lastObservedWindows.map((identity) => formatWindowIdentity(identity)).join("; ")
+      : "(no windows found)";
+
+  const lines = [
+    `Timed out waiting for a Klovi window after launching pid ${details.rootPid}. ${summary}`,
+  ];
+  if (details.launchExitCode !== null) {
+    lines.push(
+      `Launcher exited before a matching window appeared (exit code ${details.launchExitCode}).`,
+    );
+    const stderrTail = formatOutputTail("Launcher stderr tail", details.launchStderr);
+    if (stderrTail) {
+      lines.push(stderrTail);
+    }
+    const stdoutTail = formatOutputTail("Launcher stdout tail", details.launchStdout);
+    if (stdoutTail) {
+      lines.push(stdoutTail);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+class WindowSearchTimeoutError extends Error {
+  readonly lastObservedWindows: WindowIdentity[];
+  readonly rootPid: number;
+
+  constructor(rootPid: number, lastObservedWindows: WindowIdentity[]) {
+    super(
+      formatLaunchFailure({
+        lastObservedWindows,
+        launchExitCode: null,
+        launchStderr: "",
+        launchStdout: "",
+        rootPid,
+      }),
+    );
+    this.lastObservedWindows = lastObservedWindows;
+    this.rootPid = rootPid;
+  }
+}
+
 async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise<WindowIdentity> {
   const existingWindowIds = new Set(await listWindowIds());
   let lastObservedWindows: WindowIdentity[] = [];
@@ -172,29 +238,9 @@ async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise
     await Bun.sleep(500);
   }
 
-  const summary =
-    lastObservedWindows.length > 0
-      ? lastObservedWindows.map((identity) => formatWindowIdentity(identity)).join("; ")
-      : "(no windows found)";
+  const summary = lastObservedWindows.length > 0 ? lastObservedWindows : [];
 
-  throw new Error(
-    `Timed out waiting for a Klovi window after launching pid ${rootPid}. ${summary}`,
-  );
-}
-
-async function resolveLauncherPath(bundlePath: string): Promise<string> {
-  const resolvedBundle = resolve(bundlePath);
-  const bundleLauncher = join(resolvedBundle, "bin", "launcher");
-  if (await Bun.file(bundleLauncher).exists()) {
-    return bundleLauncher;
-  }
-
-  const appDirLauncher = join(resolvedBundle, "usr", "lib", "klovi", "bin", "launcher");
-  if (await Bun.file(appDirLauncher).exists()) {
-    return appDirLauncher;
-  }
-
-  throw new Error(`Could not find launcher under ${resolvedBundle}`);
+  throw new WindowSearchTimeoutError(rootPid, summary);
 }
 
 function processExists(pid: number): boolean {
@@ -235,12 +281,11 @@ export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void>
     throw new Error("DISPLAY is not set. Run this script under xvfb-run or an X11 session.");
   }
 
-  const launcherPath = await resolveLauncherPath(args.bundlePath);
+  const launcherPath = await resolveLinuxLauncherPath(args.bundlePath);
   const tempHome = await mkdtemp(join(tmpdir(), "klovi-linux-window-"));
   const settingsPath = join(tempHome, "settings.json");
-  const bundleDir = dirname(launcherPath);
   const proc = Bun.spawn([launcherPath], {
-    cwd: bundleDir,
+    cwd: dirname(launcherPath),
     stdout: "pipe",
     stderr: "pipe",
     env: {
@@ -249,6 +294,13 @@ export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void>
       KLOVI_SETTINGS_PATH: settingsPath,
     },
   });
+  const stdoutPromise = new Response(proc.stdout).text();
+  const stderrPromise = new Response(proc.stderr).text();
+  let launchExitCode: number | null = null;
+  const exitCodePromise = proc.exited.then((exitCode) => {
+    launchExitCode = exitCode;
+    return exitCode;
+  });
 
   try {
     const pid = proc.pid;
@@ -256,7 +308,25 @@ export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void>
       throw new Error("Failed to start launcher process");
     }
 
-    const identity = await findWindowForLaunch(pid);
+    let identity: WindowIdentity;
+    try {
+      identity = await findWindowForLaunch(pid);
+    } catch (error) {
+      if (error instanceof WindowSearchTimeoutError && launchExitCode !== null) {
+        await exitCodePromise;
+        const [launchStdout, launchStderr] = await Promise.all([stdoutPromise, stderrPromise]);
+        throw new Error(
+          formatLaunchFailure({
+            lastObservedWindows: error.lastObservedWindows,
+            launchExitCode,
+            launchStderr,
+            launchStdout,
+            rootPid: error.rootPid,
+          }),
+        );
+      }
+      throw error;
+    }
     const wmClass = identity.wmClass ?? "";
     const name = identity.name ?? "";
 
@@ -275,6 +345,7 @@ export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void>
     if (proc.pid != null) {
       await killProcessTree(proc.pid);
     }
+    await Promise.allSettled([exitCodePromise, stdoutPromise, stderrPromise]);
     await rm(tempHome, { recursive: true, force: true });
   }
 }

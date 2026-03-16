@@ -290,7 +290,20 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Install Linux packaging dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfuse2t64 xvfb x11-utils
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfuse2t64 \
+            xvfb \
+            x11-utils \
+            libgtk-3-0 \
+            libwebkit2gtk-4.1-0 \
+            libjavascriptcoregtk-4.1-0 \
+            libsoup-3.0-0 \
+            libayatana-appindicator3-1 \
+            libglib2.0-0 \
+            libgdk-pixbuf-2.0-0 \
+            libcairo2
 
       - name: Set version and commit in package.json
         env:
@@ -307,6 +320,20 @@ jobs:
 
       - name: Build Electrobun app
         run: bun run build -- --env="$DESKTOP_BUILD_ENV"
+
+      - name: Check Linux runtime dependencies
+        env:
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+        run: |
+          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}/Klovi"
+          bun apps/desktop/scripts/check-linux-runtime-deps.ts "$BUILD_DIR"
+
+      - name: Patch Linux native wrapper WM_CLASS
+        env:
+          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
+        run: |
+          BUILD_DIR="apps/desktop/build/${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}/Klovi"
+          bun apps/desktop/scripts/patch-linux-native-wrapper.ts "$BUILD_DIR"
 
       - name: Verify Linux bundle contract
         env:
