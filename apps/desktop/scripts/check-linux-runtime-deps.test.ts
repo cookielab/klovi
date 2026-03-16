@@ -6,6 +6,7 @@ import {
   buildLdLibraryPath,
   type CommandRunner,
   checkLinuxRuntimeDeps,
+  isSkippableLddFailure,
   parseArgs,
   parseMissingDependencies,
 } from "./check-linux-runtime-deps.ts";
@@ -72,6 +73,14 @@ describe("buildLdLibraryPath", () => {
   });
 });
 
+describe("isSkippableLddFailure", () => {
+  test("treats non-dynamic binaries as skippable", () => {
+    expect(isSkippableLddFailure("not a dynamic executable")).toBe(true);
+    expect(isSkippableLddFailure("statically linked")).toBe(true);
+    expect(isSkippableLddFailure("ldd: missing file")).toBe(false);
+  });
+});
+
 describe("checkLinuxRuntimeDeps", () => {
   test("passes bundle-local library directories through LD_LIBRARY_PATH", async () => {
     const root = await makeTempDir("klovi-linux-runtime-pass-");
@@ -100,6 +109,34 @@ describe("checkLinuxRuntimeDeps", () => {
     expect(observedLdLibraryPath.split(delimiter)).toEqual(
       expect.arrayContaining([join(root, "bin"), join(root, "lib")]),
     );
+  });
+
+  test("skips launcher binaries that ldd reports as non-dynamic", async () => {
+    const root = await makeTempDir("klovi-linux-runtime-static-launcher-");
+    const { launcherPath, localLibPath, wrapperPath } = await writeBundle(root);
+
+    const runner: CommandRunner = ([, targetPath = ""]) => {
+      if (targetPath === launcherPath) {
+        return Promise.resolve({
+          exitCode: 1,
+          stderr: "not a dynamic executable",
+          stdout: "",
+        });
+      }
+
+      return Promise.resolve({
+        exitCode: 0,
+        stderr: "",
+        stdout: [
+          `\tlibasar.so => ${localLibPath} (0x1234)`,
+          "\tlibgtk-3.so.0 => /usr/lib/libgtk-3.so.0 (0x2345)",
+          "",
+        ].join("\n"),
+      });
+    };
+
+    await expect(checkLinuxRuntimeDeps({ bundlePath: root }, runner)).resolves.toBeUndefined();
+    expect(wrapperPath).toContain("libNativeWrapper.so");
   });
 
   test("reports only unresolved system dependencies", async () => {

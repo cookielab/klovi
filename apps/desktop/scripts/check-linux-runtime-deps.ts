@@ -8,6 +8,7 @@ import {
 } from "./linux-bundle.ts";
 
 const MISSING_DEPENDENCY_REGEX = /^\s*(\S+)\s*=>\s*not found\s*$/;
+const NON_DYNAMIC_EXECUTABLE_REGEX = /\b(not a dynamic executable|statically linked)\b/i;
 
 export type RuntimeDependencyArgs = {
   bundlePath: string;
@@ -54,6 +55,10 @@ export function buildLdLibraryPath(libraryDirs: string[], currentValue?: string)
   return [...new Set(entries)].join(delimiter);
 }
 
+export function isSkippableLddFailure(output: string): boolean {
+  return NON_DYNAMIC_EXECUTABLE_REGEX.test(output);
+}
+
 async function runCommand(
   command: string[],
   env: Record<string, string | undefined>,
@@ -92,7 +97,11 @@ export async function checkLinuxRuntimeDeps(
   for (const targetPath of [launcherPath, ...nativeWrapperPaths]) {
     const result = await commandRunner(["ldd", targetPath], env);
     if (result.exitCode !== 0) {
-      throw new Error(result.stderr.trim() || `ldd failed for ${targetPath}`);
+      const combinedOutput = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+      if (isSkippableLddFailure(combinedOutput)) {
+        continue;
+      }
+      throw new Error(combinedOutput || `ldd failed for ${targetPath}`);
     }
 
     const missing = parseMissingDependencies(result.stdout);
