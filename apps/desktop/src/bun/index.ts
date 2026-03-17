@@ -178,7 +178,7 @@ ApplicationMenu.setApplicationMenu([
       { label: "Preferences...", action: "openSettings", accelerator: "CmdOrCtrl+," },
       { label: "Check for Updates...", action: "checkForUpdates" },
       { type: "separator" },
-      { label: "Quit Klovi", role: "quit", accelerator: "q" },
+      { label: "Quit Klovi", role: "quit", accelerator: "CmdOrCtrl+q" },
     ],
   },
   {
