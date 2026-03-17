@@ -388,39 +388,11 @@ jobs:
           echo "USER_ASSET=$USER_ASSET" >> "$GITHUB_ENV"
           echo "UPDATER_BUNDLE=$UPDATER_BUNDLE" >> "$GITHUB_ENV"
 
-      - name: Verify Linux updater artifact
-        env:
-          VERSION: ${{ needs.release-meta.outputs.version }}
-          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
-        run: |
-          PREFIX="${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
-          bun apps/desktop/scripts/verify-updater-artifact.ts \
-            --platform linux \
-            --arch "$ELECTROBUN_ARCH" \
-            --version "$VERSION" \
-            --tarball "apps/desktop/artifacts/${PREFIX}-Klovi.tar.zst" \
-            --update-json "apps/desktop/artifacts/${PREFIX}-update.json"
-
       - name: Upload Linux user-facing asset
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release-meta.outputs.version }}
         run: bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$USER_ASSET"
-
-      - name: Upload Linux updater assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.release-meta.outputs.version }}
-          ELECTROBUN_ARCH: ${{ matrix.electrobun_arch }}
-        run: |
-          PREFIX="${DESKTOP_BUILD_ENV}-linux-${ELECTROBUN_ARCH}"
-          for file in \
-            "$UPDATER_BUNDLE" \
-            "apps/desktop/artifacts/${PREFIX}-update.json"
-          do
-            [ -e "$file" ] || continue
-            bash scripts/gh-release-upload-with-retry.sh "$VERSION" "$file"
-          done
 
   build-windows:
     runs-on: windows-2025

@@ -30,6 +30,7 @@ import { UpdateManager } from "./updater.ts";
 // Initialize version from package.json
 setVersion(pkg.version ?? "0.0.0", pkg.commit ?? "");
 
+const isLinux = process.platform === "linux";
 let updateManager: UpdateManager | null = null;
 
 function getSettingsPath(): string {
@@ -75,13 +76,15 @@ function getUpdateManager(): UpdateManager {
   return updateManager;
 }
 
-// Start update checking
-const mgr = getUpdateManager();
-mgr.setStatusCallback((status) => {
-  win.webview.rpc?.send.updateStatus(status);
-});
-await mgr.cleanup();
-await mgr.startSchedule();
+// Start update checking (skip on Linux — no auto-update support)
+if (!isLinux) {
+  const mgr = getUpdateManager();
+  mgr.setStatusCallback((status) => {
+    win.webview.rpc?.send.updateStatus(status);
+  });
+  await mgr.cleanup();
+  await mgr.startSchedule();
+}
 
 // Desktop RPC: native host bridge + data methods
 const rpc = BrowserView.defineRPC<KloviRPC>({
@@ -98,16 +101,26 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         const selected = paths[0];
         return { path: selected && selected !== "" ? selected : null };
       },
-      getUpdateSettings: () => getUpdateSettings(settingsPath),
+      getUpdateSettings: () => {
+        if (isLinux)
+          return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
+        return getUpdateSettings(settingsPath);
+      },
       updateUpdateSettings: async (params) => {
+        if (isLinux)
+          return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
         const result = await updateUpdateSettings(settingsPath, params);
-        await mgr.restartSchedule();
+        await getUpdateManager().restartSchedule();
         return result;
       },
-      checkForUpdate: () => mgr.check(),
+      checkForUpdate: () => {
+        if (isLinux) return { status: "up-to-date" as const, currentVersion: pkg.version ?? "dev" };
+        return getUpdateManager().check();
+      },
       applyUpdate: async () => {
+        if (isLinux) return { ok: false, error: "Auto-update is not supported on Linux" };
         try {
-          await mgr.apply();
+          await getUpdateManager().apply();
           return { ok: true };
         } catch (error) {
           return { ok: false, error: error instanceof Error ? error.message : "Update failed" };
@@ -176,7 +189,7 @@ ApplicationMenu.setApplicationMenu([
       { label: "About Klovi", role: "about" },
       { type: "separator" },
       { label: "Preferences...", action: "openSettings", accelerator: "CmdOrCtrl+," },
-      { label: "Check for Updates...", action: "checkForUpdates" },
+      ...(isLinux ? [] : [{ label: "Check for Updates...", action: "checkForUpdates" }]),
       { type: "separator" },
       { label: "Quit Klovi", role: "quit", accelerator: "CmdOrCtrl+q" },
     ],
@@ -231,16 +244,20 @@ Electrobun.events.on("application-menu-clicked", (e) => {
       rpcSend.openSettings({});
       break;
     case "checkForUpdates":
-      getUpdateManager()
-        .check()
-        .then((result) => {
-          win.webview.rpc?.send.checkForUpdatesResult(result);
-        })
-        .catch(() => {});
+      if (!isLinux) {
+        getUpdateManager()
+          .check()
+          .then((result) => {
+            win.webview.rpc?.send.checkForUpdatesResult(result);
+          })
+          .catch(() => {});
+      }
       break;
   }
 });
 
 Electrobun.events.on("before-quit", () => {
-  updateManager?.stopSchedule();
+  if (!isLinux) {
+    updateManager?.stopSchedule();
+  }
 });

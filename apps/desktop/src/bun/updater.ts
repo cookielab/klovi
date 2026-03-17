@@ -574,7 +574,7 @@ export class UpdateManager {
       if (this.platform === "macos") {
         await this.applyMacOS(stagingDir);
       } else if (this.platform === "linux") {
-        await this.applyLinux(stagingDir);
+        throw new Error("Auto-update is not supported on Linux");
       } else if (this.platform === "win") {
         await this.applyWindows(stagingDir);
       }
@@ -622,50 +622,6 @@ export class UpdateManager {
       // biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option needed for process survival
       { detached: true, stdio: ["ignore", "ignore", "ignore"] } as any,
     );
-
-    try {
-      await rm(join(this.updatesDir(), "staging"), { recursive: true });
-    } catch {}
-
-    const { Utils } = await import("electrobun/bun");
-    Utils.quit();
-  }
-
-  private async applyLinux(stagingDir: string): Promise<void> {
-    const newAppPath = await validateExtractedBundle(this.platform, stagingDir);
-    const runningAppPath = join(this.appDataDir, "app");
-
-    const backupPath = `${runningAppPath}.bak`;
-    try {
-      await stat(runningAppPath);
-      await rename(runningAppPath, backupPath);
-    } catch {}
-    try {
-      await rename(newAppPath, runningAppPath);
-    } catch (error) {
-      try {
-        await stat(backupPath);
-        await rename(backupPath, runningAppPath);
-      } catch {}
-      throw error;
-    }
-    try {
-      await rm(backupPath, { recursive: true });
-    } catch {}
-
-    const launcherPath = join(runningAppPath, "bin", "launcher");
-    if (await Bun.file(launcherPath).exists()) {
-      const proc = Bun.spawn(["chmod", "+x", launcherPath]);
-      await proc.exited;
-    }
-    const bunPath = join(runningAppPath, "bin", "bun");
-    if (await Bun.file(bunPath).exists()) {
-      const proc = Bun.spawn(["chmod", "+x", bunPath]);
-      await proc.exited;
-    }
-
-    // biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option needed for process survival
-    Bun.spawn(["sh", "-c", `"${launcherPath}" &`], { detached: true } as any);
 
     try {
       await rm(join(this.updatesDir(), "staging"), { recursive: true });

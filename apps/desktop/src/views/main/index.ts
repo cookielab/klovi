@@ -299,10 +299,12 @@ const desktopClient: KloviClient = {
     ),
 };
 
+const isLinux = navigator.platform.startsWith("Linux");
+
 const desktopCapabilities: KloviHostCapabilities = {
   desktop: true,
   browseDirectory: true,
-  updater: true,
+  updater: !isLinux,
   menuActions: true,
 };
 
