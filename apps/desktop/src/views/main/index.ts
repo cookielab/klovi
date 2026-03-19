@@ -30,6 +30,7 @@ const menuActionListeners = new Set<(action: MenuAction) => void>();
 const updateStatusListeners = new Set<(status: UpdateStatus) => void>();
 const manualUpdateListeners = new Set<(result: UpdateStatus) => void>();
 const connectionStateListeners = new Set<(state: KloviHostConnectionState) => void>();
+const systemThemeListeners = new Set<(theme: "dark" | "light") => void>();
 
 type DesktopRpcMethod = keyof KloviRPC["bun"]["requests"];
 
@@ -74,6 +75,9 @@ const rpc = Electroview.defineRPC<KloviRPC>({
       },
       checkForUpdatesResult: (data) => {
         for (const cb of manualUpdateListeners) cb(data);
+      },
+      systemThemeChanged: (data) => {
+        for (const cb of systemThemeListeners) cb(data.theme);
       },
     },
   },
@@ -370,6 +374,18 @@ const desktopHostBridge: KloviHostBridge = {
     connectionStateListeners.add(callback);
     return () => {
       connectionStateListeners.delete(callback);
+    };
+  },
+  getSystemTheme: () =>
+    callDesktopRpc(
+      "getSystemTheme",
+      () => rpc.request.getSystemTheme(empty),
+      getRpcTimeout("getSystemTheme"),
+    ),
+  onSystemThemeChange: (callback) => {
+    systemThemeListeners.add(callback);
+    return () => {
+      systemThemeListeners.delete(callback);
     };
   },
 };

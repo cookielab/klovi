@@ -36,6 +36,8 @@ function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviH
     onUpdateStatus: () => () => {},
     onManualUpdateResult: () => () => {},
     onConnectionState: () => () => {},
+    getSystemTheme: () => Promise.resolve({ theme: null }),
+    onSystemThemeChange: () => () => {},
   };
 }
 

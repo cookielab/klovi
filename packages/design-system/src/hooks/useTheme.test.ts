@@ -84,6 +84,16 @@ describe("resolveTheme", () => {
     expect(resolveTheme("light")).toBe("light");
     expect(resolveTheme("dark")).toBe("dark");
   });
+
+  test("uses override when setting is system", () => {
+    expect(resolveTheme("system", "dark")).toBe("dark");
+    expect(resolveTheme("system", "light")).toBe("light");
+  });
+
+  test("ignores override for explicit settings", () => {
+    expect(resolveTheme("light", "dark")).toBe("light");
+    expect(resolveTheme("dark", "light")).toBe("dark");
+  });
 });
 
 describe("useTheme", () => {
@@ -152,6 +162,48 @@ describe("useTheme", () => {
     expect(result.current.setting).toBe("dark");
     expect(result.current.resolved).toBe("dark");
     expect(localStorage.getItem(THEME_KEY)).toBe("dark");
+  });
+
+  test("uses systemThemeOverride when set and setting is system", () => {
+    installMatchMedia(false);
+
+    const { result } = renderHook(() => useTheme({ systemThemeOverride: "dark" }));
+
+    expect(result.current.setting).toBe("system");
+    expect(result.current.resolved).toBe("dark");
+  });
+
+  test("ignores systemThemeOverride when setting is explicit", () => {
+    installMatchMedia(false);
+    localStorage.setItem(THEME_KEY, "light");
+
+    const { result } = renderHook(() => useTheme({ systemThemeOverride: "dark" }));
+
+    expect(result.current.setting).toBe("light");
+    expect(result.current.resolved).toBe("light");
+  });
+
+  test("does not subscribe to matchMedia when systemThemeOverride is active", () => {
+    const media = installMatchMedia(false);
+
+    renderHook(() => useTheme({ systemThemeOverride: "dark" }));
+
+    expect(media.addEventListener).toHaveBeenCalledTimes(0);
+  });
+
+  test("reacts to systemThemeOverride changes", () => {
+    installMatchMedia(false);
+
+    const { result, rerender } = renderHook(
+      ({ override }: { override: "dark" | "light" | null }) =>
+        useTheme({ systemThemeOverride: override }),
+      { initialProps: { override: "dark" as "dark" | "light" | null } },
+    );
+
+    expect(result.current.resolved).toBe("dark");
+
+    rerender({ override: "light" });
+    expect(result.current.resolved).toBe("light");
   });
 });
 

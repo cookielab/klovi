@@ -24,7 +24,12 @@ import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
-import { ensureDesktopRuntimeDirs, resolveLinuxRenderer } from "./linux-runtime.ts";
+import {
+  detectLinuxSystemTheme,
+  ensureDesktopRuntimeDirs,
+  resolveLinuxRenderer,
+  type SystemTheme,
+} from "./linux-runtime.ts";
 import { UpdateManager } from "./updater.ts";
 
 // Initialize version from package.json
@@ -85,6 +90,10 @@ if (!isLinux) {
   await mgr.cleanup();
   await mgr.startSchedule();
 }
+
+// Linux system theme polling (5s interval)
+let lastLinuxTheme: SystemTheme | null = null;
+let themePollingInterval: ReturnType<typeof setInterval> | null = null;
 
 // Desktop RPC: native host bridge + data methods
 const rpc = BrowserView.defineRPC<KloviRPC>({
@@ -176,6 +185,10 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
         await refreshRegistry();
         return result;
       },
+      getSystemTheme: async () => {
+        const theme = await detectLinuxSystemTheme();
+        return { theme };
+      },
     },
     messages: {},
   },
@@ -256,8 +269,22 @@ Electrobun.events.on("application-menu-clicked", (e) => {
   }
 });
 
+// Start Linux theme polling after window is created
+if (isLinux) {
+  themePollingInterval = setInterval(async () => {
+    const theme = await detectLinuxSystemTheme();
+    if (theme && theme !== lastLinuxTheme) {
+      lastLinuxTheme = theme;
+      win.webview.rpc?.send.systemThemeChanged({ theme });
+    }
+  }, 5_000);
+}
+
 Electrobun.events.on("before-quit", () => {
   if (!isLinux) {
     updateManager?.stopSchedule();
+  }
+  if (themePollingInterval) {
+    clearInterval(themePollingInterval);
   }
 });

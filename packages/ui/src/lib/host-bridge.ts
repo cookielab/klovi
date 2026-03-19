@@ -35,4 +35,6 @@ export interface KloviHostBridge {
   onUpdateStatus(callback: (status: UpdateStatus) => void): () => void;
   onManualUpdateResult(callback: (result: UpdateStatus) => void): () => void;
   onConnectionState(callback: (state: KloviHostConnectionState) => void): () => void;
+  getSystemTheme(): Promise<{ theme: "dark" | "light" | null }>;
+  onSystemThemeChange(callback: (theme: "dark" | "light") => void): () => void;
 }

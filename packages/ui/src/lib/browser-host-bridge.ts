@@ -35,4 +35,6 @@ export const browserHostBridge: KloviHostBridge = {
   onUpdateStatus: () => () => {},
   onManualUpdateResult: () => () => {},
   onConnectionState: () => () => {},
+  getSystemTheme: () => Promise.resolve({ theme: null }),
+  onSystemThemeChange: () => () => {},
 };

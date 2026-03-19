@@ -107,6 +107,10 @@ export interface KloviRPC {
         params: Record<string, never>;
         response: { ok: boolean };
       };
+      getSystemTheme: {
+        params: Record<string, never>;
+        response: { theme: "dark" | "light" | null };
+      };
     };
     messages: Record<string, never>;
   }>;
@@ -120,6 +124,7 @@ export interface KloviRPC {
       openSettings: Record<string, never>;
       updateStatus: UpdateStatus;
       checkForUpdatesResult: UpdateStatus;
+      systemThemeChanged: { theme: "dark" | "light" };
     };
   }>;
 }

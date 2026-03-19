@@ -1,9 +1,30 @@
 import type { ThemeSetting } from "@cookielab.io/klovi-design-system";
 import { useCallback, useEffect, useState } from "react";
+import { useKloviHostBridge } from "../../lib/context.ts";
 
-export type { ThemeSetting } from "@cookielab.io/klovi-design-system";
+export type { ThemeSetting, UseThemeOptions } from "@cookielab.io/klovi-design-system";
 // Re-export core theme hooks from DS
 export { resolveTheme, useFontSize, useTheme } from "@cookielab.io/klovi-design-system";
+
+export function useSystemThemeOverride(): "dark" | "light" | null {
+  const hostBridge = useKloviHostBridge();
+  const [theme, setTheme] = useState<"dark" | "light" | null>(null);
+
+  useEffect(() => {
+    hostBridge
+      .getSystemTheme()
+      .then((result) => setTheme(result.theme))
+      .catch(() => {});
+  }, [hostBridge]);
+
+  useEffect(() => {
+    return hostBridge.onSystemThemeChange((newTheme) => {
+      setTheme(newTheme);
+    });
+  }, [hostBridge]);
+
+  return theme;
+}
 
 export function usePresentationTheme() {
   const [setting, setSetting] = useState<ThemeSetting>(() => {

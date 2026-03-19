@@ -17,6 +17,7 @@ export { Modal } from "./components/Modal/Modal.tsx";
 export { ThemeProvider } from "./components/ThemeProvider/ThemeProvider.tsx";
 export { TurnBox } from "./components/TurnBox/TurnBox.tsx";
 export { useFontSize } from "./hooks/useFontSize.ts";
+export type { UseThemeOptions } from "./hooks/useTheme.ts";
 // Hooks
 export { resolveTheme, useTheme } from "./hooks/useTheme.ts";
 export type { BadgeVariant, ResolvedTheme, ThemeSetting, TurnRole } from "./types.ts";

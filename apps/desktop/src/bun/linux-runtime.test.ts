@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  detectLinuxSystemTheme,
   ensureDesktopRuntimeDirs,
   getDesktopRuntimeDirs,
   resolveLinuxRenderer,
@@ -16,6 +17,25 @@ describe("resolveLinuxRenderer", () => {
   test("allows CEF override only on Linux", () => {
     expect(resolveLinuxRenderer("linux", { KLOVI_LINUX_RENDERER: "cef" })).toBe("cef");
     expect(resolveLinuxRenderer("darwin", { KLOVI_LINUX_RENDERER: "cef" })).toBeUndefined();
+  });
+});
+
+describe("detectLinuxSystemTheme", () => {
+  test("returns null on non-Linux platforms", async () => {
+    expect(await detectLinuxSystemTheme("darwin", {})).toBeNull();
+    expect(await detectLinuxSystemTheme("win32", {})).toBeNull();
+  });
+
+  test("detects dark from GTK_THEME with -dark suffix", async () => {
+    expect(await detectLinuxSystemTheme("linux", { GTK_THEME: "Adwaita-dark" })).toBe("dark");
+  });
+
+  test("detects dark from GTK_THEME with :dark variant", async () => {
+    expect(await detectLinuxSystemTheme("linux", { GTK_THEME: "Adwaita:dark" })).toBe("dark");
+  });
+
+  test("detects light from GTK_THEME without dark", async () => {
+    expect(await detectLinuxSystemTheme("linux", { GTK_THEME: "Adwaita" })).toBe("light");
   });
 });
 

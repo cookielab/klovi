@@ -5,40 +5,52 @@ function getSystemTheme(): ResolvedTheme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function resolveTheme(setting: ThemeSetting): ResolvedTheme {
-  if (setting === "system") return getSystemTheme();
+export function resolveTheme(
+  setting: ThemeSetting,
+  systemThemeOverride?: "dark" | "light" | null,
+): ResolvedTheme {
+  if (setting === "system") return systemThemeOverride ?? getSystemTheme();
   return setting;
 }
 
-export function useTheme() {
+export interface UseThemeOptions {
+  systemThemeOverride?: "dark" | "light" | null;
+}
+
+export function useTheme(options?: UseThemeOptions) {
+  const systemThemeOverride = options?.systemThemeOverride ?? null;
+
   const [setting, setSetting] = useState<ThemeSetting>(() => {
     const stored = localStorage.getItem("klovi-theme");
     if (stored === "light" || stored === "dark") return stored;
     return "system";
   });
 
-  const [resolved, setResolved] = useState<ResolvedTheme>(() => resolveTheme(setting));
+  const [resolved, setResolved] = useState<ResolvedTheme>(() =>
+    resolveTheme(setting, systemThemeOverride),
+  );
 
   // Apply theme to DOM
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", resolved);
   }, [resolved]);
 
-  // Persist setting
+  // Persist setting and resolve theme
   useEffect(() => {
     localStorage.setItem("klovi-theme", setting);
-    setResolved(resolveTheme(setting));
-  }, [setting]);
+    setResolved(resolveTheme(setting, systemThemeOverride));
+  }, [setting, systemThemeOverride]);
 
-  // Listen for system theme changes when in "system" mode
+  // Listen for system theme changes when in "system" mode (skip when override is active)
   useEffect(() => {
     if (setting !== "system") return;
+    if (systemThemeOverride) return;
 
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => setResolved(getSystemTheme());
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [setting]);
+  }, [setting, systemThemeOverride]);
 
   const cycle = useCallback(() => {
     setSetting((s) => {

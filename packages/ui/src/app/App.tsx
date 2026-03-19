@@ -29,6 +29,7 @@ import {
   useFontSize,
   usePresentationFontSize,
   usePresentationTheme,
+  useSystemThemeOverride,
   useTheme,
 } from "./hooks/useTheme.ts";
 import { useUpdateStatus } from "./hooks/useUpdateStatus.ts";
@@ -39,7 +40,8 @@ import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./vie
 export function App() {
   const client = useKloviClient();
   const hostBridge = useKloviHostBridge();
-  const themeHook = useTheme();
+  const systemThemeOverride = useSystemThemeOverride();
+  const themeHook = useTheme({ systemThemeOverride });
   const { cycle: cycleTheme } = themeHook;
   const fontSizeHook = useFontSize();
   const { increase, decrease } = fontSizeHook;
@@ -151,7 +153,7 @@ export function App() {
     if (!isPresenting) return;
 
     if (!presentationThemeHook.sameAsGlobal) {
-      const resolved = resolveTheme(presentationThemeHook.setting);
+      const resolved = resolveTheme(presentationThemeHook.setting, systemThemeOverride);
       document.documentElement.setAttribute("data-theme", resolved);
     }
     if (!presentationFontSizeHook.sameAsGlobal) {
@@ -174,6 +176,7 @@ export function App() {
     presentationFontSizeHook.size,
     themeHook.resolved,
     fontSizeHook.size,
+    systemThemeOverride,
   ]);
 
   if (!ready) {
@@ -347,7 +350,8 @@ function AppMainContent({
 }
 
 export function AppGate() {
-  useTheme();
+  const systemThemeOverride = useSystemThemeOverride();
+  useTheme({ systemThemeOverride });
   const client = useKloviClient();
   const hostBridge = useKloviHostBridge();
   const [accepted, setAccepted] = useState(false);

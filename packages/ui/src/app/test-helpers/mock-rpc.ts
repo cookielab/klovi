@@ -102,6 +102,8 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
         connectionStateListeners.delete(callback);
       };
     },
+    getSystemTheme: () => Promise.resolve({ theme: null }),
+    onSystemThemeChange: () => () => {},
     ...overrides,
   };
 }
