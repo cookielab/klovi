@@ -63,7 +63,7 @@ Content can be a string or an array of content blocks:
     "model": "claude-opus-4-6",
     "role": "assistant",
     "content": [
-      { "type": "thinking", "thinking": "Let me analyze..." },
+      { "type": "thinking", "thinking": "Let me analyze...", "signature": "..." },
       { "type": "text", "text": "Here's what I found..." },
       { "type": "tool_use", "id": "toolu_abc", "name": "Read", "input": { "file_path": "/foo.ts" } }
     ],
