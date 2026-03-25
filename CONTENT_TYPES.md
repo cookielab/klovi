@@ -33,8 +33,10 @@ Regular markdown text. Rendered with `react-markdown` + GFM.
 Model's internal reasoning. Currently rendered as collapsible with 100-char preview.
 
 ```json
-{ "type": "thinking", "thinking": "Let me analyze the code..." }
+{ "type": "thinking", "thinking": "Let me analyze the code...", "signature": "..." }
 ```
+
+Newer Claude API responses may include a `signature` field and an empty `thinking` string (redacted content). The parser skips thinking blocks with empty text.
 
 **Status:** Handled (collapsible, italic, markdown-rendered)
 
