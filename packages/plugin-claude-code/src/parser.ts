@@ -370,7 +370,7 @@ function processContentBlock(
   current: AssistantTurn,
   toolResults: ToolResultMap,
 ): void {
-  if (block.type === "thinking" && "thinking" in block) {
+  if (block.type === "thinking" && "thinking" in block && block.thinking.trim()) {
     current.contentBlocks.push({ type: "thinking", block: { text: block.thinking } });
   } else if (block.type === "text" && "text" in block && block.text.trim()) {
     current.contentBlocks.push({ type: "text", text: block.text });
