@@ -76,11 +76,7 @@
           "level": "error",
           "options": {
             "requireAscii": true,
-            "filenameCases": [
-              "camelCase",
-              "PascalCase",
-              "kebab-case"
-            ]
+            "filenameCases": ["camelCase", "PascalCase", "kebab-case"]
           }
         },
         "noEnum": "error",
@@ -110,9 +106,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "apps/desktop/scripts/**"
-      ],
+      "includes": ["apps/desktop/scripts/**"],
       "linter": {
         "rules": {
           "suspicious": {
