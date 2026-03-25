@@ -81,6 +81,26 @@ describe("buildTurns", () => {
     expect(turn.contentBlocks[1]).toEqual({ type: "text", text: "My answer." });
   });
 
+  test("empty thinking blocks (redacted with signature) are skipped", () => {
+    const lines: RawLine[] = [
+      line({
+        type: "assistant",
+        message: {
+          role: "assistant",
+          model: "claude-opus-4-6",
+          content: [
+            { type: "thinking", thinking: "" },
+            { type: "text", text: "My answer." },
+          ],
+        },
+      }),
+    ];
+    const turns = buildTurns(lines);
+    const turn = turns[0] as AssistantTurn;
+    expect(turn.contentBlocks).toHaveLength(1);
+    expect(turn.contentBlocks[0]).toEqual({ type: "text", text: "My answer." });
+  });
+
   test("tool use + tool result matching by id", () => {
     const lines: RawLine[] = [
       line({
