@@ -410,6 +410,119 @@ describe("PluginRegistry", () => {
   });
 });
 
+describe("t3code worktree merging", () => {
+  test("merges t3code worktree projects with matching main repo project", async () => {
+    const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
+
+    registry.register(
+      createPlugin("claude-code", [
+        {
+          pluginId: "claude-code",
+          nativeId: "a",
+          resolvedPath: "/Users/dev/Workspace/Deltro",
+          displayName: "Deltro",
+          sessionCount: 3,
+          lastActivity: "2026-02-20T08:00:00Z",
+        },
+      ]),
+      testConfig,
+    );
+    registry.register(
+      createPlugin("codex-cli", [
+        {
+          pluginId: "codex-cli",
+          nativeId: "/home/.t3/worktrees/Deltro/t3code-aaa111",
+          resolvedPath: "/home/.t3/worktrees/Deltro/t3code-aaa111",
+          displayName: "Deltro",
+          sessionCount: 2,
+          lastActivity: "2026-02-21T08:00:00Z",
+        },
+        {
+          pluginId: "codex-cli",
+          nativeId: "/home/.t3/worktrees/Deltro/t3code-bbb222",
+          resolvedPath: "/home/.t3/worktrees/Deltro/t3code-bbb222",
+          displayName: "Deltro",
+          sessionCount: 1,
+          lastActivity: "2026-02-22T08:00:00Z",
+        },
+      ]),
+      testConfig,
+    );
+
+    const merged = await runEffect(registry.discoverAllProjects());
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.resolvedPath).toBe("/Users/dev/Workspace/Deltro");
+    expect(merged[0]?.sessionCount).toBe(6);
+    expect(merged[0]?.sources).toHaveLength(3);
+  });
+
+  test("merges t3code worktrees together when no main repo project exists", async () => {
+    const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
+
+    registry.register(
+      createPlugin("codex-cli", [
+        {
+          pluginId: "codex-cli",
+          nativeId: "/home/.t3/worktrees/Deltro/t3code-aaa111",
+          resolvedPath: "/home/.t3/worktrees/Deltro/t3code-aaa111",
+          displayName: "Deltro",
+          sessionCount: 2,
+          lastActivity: "2026-02-21T08:00:00Z",
+        },
+        {
+          pluginId: "codex-cli",
+          nativeId: "/home/.t3/worktrees/Deltro/t3code-bbb222",
+          resolvedPath: "/home/.t3/worktrees/Deltro/t3code-bbb222",
+          displayName: "Deltro",
+          sessionCount: 1,
+          lastActivity: "2026-02-22T08:00:00Z",
+        },
+      ]),
+      testConfig,
+    );
+
+    const merged = await runEffect(registry.discoverAllProjects());
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.resolvedPath).toBe("/home/.t3/worktrees/Deltro");
+    expect(merged[0]?.sessionCount).toBe(3);
+    expect(merged[0]?.sources).toHaveLength(2);
+  });
+
+  test("does not affect non-t3code projects", async () => {
+    const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
+
+    registry.register(
+      createPlugin("claude-code", [
+        {
+          pluginId: "claude-code",
+          nativeId: "a",
+          resolvedPath: "/Users/dev/project-a",
+          displayName: "project-a",
+          sessionCount: 1,
+          lastActivity: "2026-02-20T08:00:00Z",
+        },
+        {
+          pluginId: "claude-code",
+          nativeId: "b",
+          resolvedPath: "/Users/dev/project-b",
+          displayName: "project-b",
+          sessionCount: 1,
+          lastActivity: "2026-02-21T08:00:00Z",
+        },
+      ]),
+      testConfig,
+    );
+
+    const merged = await runEffect(registry.discoverAllProjects());
+
+    expect(merged).toHaveLength(2);
+    expect(merged[0]?.resolvedPath).toBe("/Users/dev/project-b");
+    expect(merged[1]?.resolvedPath).toBe("/Users/dev/project-a");
+  });
+});
+
 describe("encodeResolvedPath", () => {
   test("encodes unix paths with leading slash", () => {
     expect(encodeResolvedPath("/Users/dev/project")).toBe("-Users-dev-project");

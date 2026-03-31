@@ -30,6 +30,7 @@ export type {
   ToolPluginSessionDetail,
   ToolPluginSubAgentParams,
 } from "./plugin-types.ts";
+export { stripT3CodeSuffix } from "./resolve-worktree.ts";
 export type { ParsedSessionId } from "./session-id.ts";
 export { encodeSessionId, parseSessionId } from "./session-id.ts";
 export type {

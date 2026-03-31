@@ -9,6 +9,7 @@ import type {
   RegistrySessionSummary,
   ToolPlugin,
 } from "./plugin-types.ts";
+import { resolveT3CodePaths } from "./resolve-worktree.ts";
 import { encodeSessionId } from "./session-id.ts";
 
 export type SessionIdEncoder<TPluginId extends string> = (
@@ -95,6 +96,8 @@ export class PluginRegistry<
         );
         allProjects.push(...projects);
       }
+
+      yield* resolveT3CodePaths(allProjects);
 
       const projectsByPath = new Map<string, PluginProject<TPluginId>[]>();
       for (const project of allProjects) {
