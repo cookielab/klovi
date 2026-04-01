@@ -71,7 +71,7 @@ function getUpdateManager(): UpdateManager {
 	if (!updateManager) {
 		updateManager = new UpdateManager({
 			currentVersion: pkg.version ?? "dev",
-			platform: process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux",
+			platform: ({ darwin: "macos", win32: "win" } as const)[process.platform] ?? "linux",
 			arch: process.arch === "arm64" ? "arm64" : "x64",
 			settingsPath: settingsPath,
 			appDataDir: Utils.paths.userData,

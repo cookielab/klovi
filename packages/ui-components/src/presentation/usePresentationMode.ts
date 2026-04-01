@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { AssistantTurn, Turn } from "../types/index.ts";
 import { groupContentBlocks } from "../types/index.ts";
 
-export type PresentationState = {
+type PresentationState = {
 	active: boolean;
 	fullscreen: boolean;
 	currentStep: number;
@@ -26,7 +26,7 @@ function countSubSteps(turn: Turn): number {
 	return Math.max(groupContentBlocks(a.contentBlocks).length, 1);
 }
 
-export function usePresentationMode(turns: Turn[]): PresentationState {
+function usePresentationMode(turns: Turn[]): PresentationState {
 	const [active, setActive] = useState(false);
 	const [fullscreen, setFullscreen] = useState(false);
 	const [currentStep, setCurrentStep] = useState(0);
@@ -151,3 +151,6 @@ export function usePresentationMode(turns: Turn[]): PresentationState {
 		toggleFullscreen: toggleFullscreen,
 	};
 }
+
+export type { PresentationState };
+export { usePresentationMode };

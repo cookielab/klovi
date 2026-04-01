@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { readTextPrefix } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
-export type CodexSessionMeta = {
+type CodexSessionMeta = {
 	uuid: string;
 	name?: string;
 	cwd: string;
@@ -14,7 +14,7 @@ export type CodexSessionMeta = {
 	provider_id: string;
 };
 
-export type SessionFileInfo = {
+type SessionFileInfo = {
 	filePath: string;
 	meta: CodexSessionMeta;
 	mtime: string;
@@ -22,7 +22,7 @@ export type SessionFileInfo = {
 
 const FIRST_LINE_SCAN_BYTES = 512 * 1024;
 
-export function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
+function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
 	return (
 		typeof obj === "object" &&
 		obj !== null &&
@@ -62,7 +62,7 @@ function isNewFormatMeta(obj: unknown): obj is NewFormatMeta {
 	);
 }
 
-export function normalizeSessionMeta(parsed: unknown, fileMtimeEpoch?: number): CodexSessionMeta | null {
+function normalizeSessionMeta(parsed: unknown, fileMtimeEpoch?: number): CodexSessionMeta | null {
 	if (isCodexSessionMeta(parsed)) {
 		return parsed;
 	}
@@ -185,7 +185,7 @@ function walkJsonlFiles(
 	});
 }
 
-export function scanCodexSessions() {
+function scanCodexSessions() {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const fs = yield* FileSystem.FileSystem;
@@ -246,7 +246,7 @@ function walkForFile(
 	});
 }
 
-export function findCodexSessionFileById(sessionId: string) {
+function findCodexSessionFileById(sessionId: string) {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const fs = yield* FileSystem.FileSystem;
@@ -263,3 +263,6 @@ export function findCodexSessionFileById(sessionId: string) {
 		return info?.type === "File" ? filePath : null;
 	});
 }
+
+export type { CodexSessionMeta, SessionFileInfo };
+export { findCodexSessionFileById, isCodexSessionMeta, normalizeSessionMeta, scanCodexSessions };

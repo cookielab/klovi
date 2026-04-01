@@ -11,7 +11,7 @@ const GIT_WORKTREES_SEGMENT = "/.git/worktrees/";
  * parent path plus the project name (last segment of the parent).
  * Returns `null` if the path does not match the t3code worktree pattern.
  */
-export function stripT3CodeSuffix(path: string): { path: string; projectName: string } | null {
+function stripT3CodeSuffix(path: string): { path: string; projectName: string } | null {
 	if (!T3CODE_SUFFIX_REGEX.test(path)) {
 		return null;
 	}
@@ -29,7 +29,7 @@ export function stripT3CodeSuffix(path: string): { path: string; projectName: st
  * Returns the main repository path if successfully resolved, otherwise falls
  * back to the original `worktreePath`.
  */
-export function resolveGitWorktree(worktreePath: string) {
+function resolveGitWorktree(worktreePath: string) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const dotGitPath = join(worktreePath, ".git");
@@ -145,7 +145,7 @@ function resolveEntry<T extends { resolvedPath: string }>(entry: T3CodeEntry<T>,
  *          one match, use its `resolvedPath`.
  * Phase 3: If multiple name matches, fall back to reading the `.git` file.
  */
-export function resolveT3CodePaths<T extends { resolvedPath: string }>(projects: T[]) {
+function resolveT3CodePaths<T extends { resolvedPath: string }>(projects: T[]) {
 	return Effect.gen(function* () {
 		const t3codeEntries = collectT3CodeEntries(projects);
 		if (t3codeEntries.length === 0) {
@@ -160,3 +160,5 @@ export function resolveT3CodePaths<T extends { resolvedPath: string }>(projects:
 		}
 	});
 }
+
+export { resolveGitWorktree, resolveT3CodePaths, stripT3CodeSuffix };

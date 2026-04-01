@@ -53,6 +53,21 @@ function DefaultToolContent({
 	);
 }
 
+function ToolContentBody({
+	call,
+	pluginId,
+	getFrontendPlugin: getFrontendPluginFn,
+}: {
+	call: ToolCallWithResult;
+	pluginId?: string | undefined;
+	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
+}) {
+	if (call.name === "Bash") {
+		return <BashToolContent call={call} />;
+	}
+	return <DefaultToolContent call={call} pluginId={pluginId} getFrontendPlugin={getFrontendPluginFn} />;
+}
+
 function getMcpServer(name: string): string | null {
 	if (!name.startsWith("mcp__")) {
 		return null;
@@ -81,11 +96,15 @@ export function ToolCall({
 	const skillName = getSkillName(call);
 	const hasSubAgent = call.name === "Task" && call.subAgentId && sessionId && project;
 
-	const displayName = hasSubAgent
-		? "Sub-Agent"
-		: mcpServer
-			? call.name.split("__").slice(1).join("__").replace(/__/gu, " > ")
-			: (skillName ?? call.name);
+	const displayName = (() => {
+		if (hasSubAgent) {
+			return "Sub-Agent";
+		}
+		if (mcpServer) {
+			return call.name.split("__").slice(1).join("__").replace(/__/gu, " > ");
+		}
+		return skillName ?? call.name;
+	})();
 
 	return (
 		<div className={s(styles["toolCall"])}>
@@ -116,10 +135,8 @@ export function ToolCall({
 						oldString={String(call.input["old_string"])}
 						newString={String(call.input["new_string"])}
 					/>
-				) : call.name === "Bash" ? (
-					<BashToolContent call={call} />
 				) : (
-					<DefaultToolContent call={call} pluginId={pluginId} getFrontendPlugin={getFrontendPluginFn} />
+					<ToolContentBody call={call} pluginId={pluginId} getFrontendPlugin={getFrontendPluginFn} />
 				)}
 			</Collapsible>
 		</div>

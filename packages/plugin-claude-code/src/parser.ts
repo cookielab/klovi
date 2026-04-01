@@ -22,7 +22,7 @@ type ParsedSession = {
 	slug: string | undefined;
 };
 
-export function loadClaudeSession(nativeId: string, sessionId: string) {
+function loadClaudeSession(nativeId: string, sessionId: string) {
 	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
@@ -60,7 +60,7 @@ export function loadClaudeSession(nativeId: string, sessionId: string) {
 	});
 }
 
-export function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: string) {
+function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: string) {
 	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
@@ -128,7 +128,7 @@ function extractFromToolResult(line: RawLine, map: Map<string, string>): void {
 	}
 }
 
-export function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
+function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
 	const map = new Map<string, string>();
 	for (const line of lines) {
 		extractFromProgressEvent(line, map);
@@ -137,7 +137,7 @@ export function extractSubAgentMap(lines: RawLine[]): Map<string, string> {
 	return map;
 }
 
-export function extractSlug(lines: RawLine[]): string | undefined {
+function extractSlug(lines: RawLine[]): string | undefined {
 	for (const line of lines) {
 		if (line.slug) {
 			return line.slug;
@@ -151,7 +151,7 @@ const PLAN_PREFIX = "Implement the following plan";
 
 const STATUS_RE = /^\[.+\]$/u;
 
-export function findPlanSessionId(
+function findPlanSessionId(
 	turns: Turn[],
 	slug: string | undefined,
 	sessions: SessionSummary[],
@@ -168,7 +168,7 @@ export function findPlanSessionId(
 	return match?.sessionId;
 }
 
-export function findImplSessionId(
+function findImplSessionId(
 	slug: string | undefined,
 	sessions: SessionSummary[],
 	currentSessionId: string,
@@ -497,7 +497,7 @@ function handleSystemLine(line: RawLine, currentAssistant: AssistantTurn | null,
 	return null;
 }
 
-export function buildTurns(lines: RawLine[], parseErrors: ParseErrorTurn[] = []): Turn[] {
+function buildTurns(lines: RawLine[], parseErrors: ParseErrorTurn[] = []): Turn[] {
 	const displayable = lines.filter(isDisplayableLine);
 	const toolResults = collectToolResults(displayable);
 
@@ -551,3 +551,13 @@ function extractToolResult(tr: RawToolResultBlock): {
 	}
 	return { text: "", images: [] };
 }
+
+export {
+	buildTurns,
+	extractSlug,
+	extractSubAgentMap,
+	findImplSessionId,
+	findPlanSessionId,
+	loadClaudeSession,
+	parseSubAgentSession,
+};

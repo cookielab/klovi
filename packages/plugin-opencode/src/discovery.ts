@@ -85,7 +85,7 @@ type SessionPreview = {
 
 // --- Discovery ---
 
-export function discoverOpenCodeProjects() {
+function discoverOpenCodeProjects() {
 	return Effect.gen(function* () {
 		const db = yield* openOpenCodeDb();
 		if (!db) {
@@ -211,7 +211,7 @@ function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
 	};
 }
 
-export function listOpenCodeSessions(nativeId: string) {
+function listOpenCodeSessions(nativeId: string) {
 	return Effect.gen(function* () {
 		const db = yield* openOpenCodeDb();
 		if (!db) {
@@ -293,3 +293,5 @@ function getFirstUserTextPart(db: SqliteDb, messageId: string): string {
 
 	return "";
 }
+
+export { discoverOpenCodeProjects, listOpenCodeSessions };

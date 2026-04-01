@@ -21,14 +21,14 @@ import { dirname, join, resolve } from "node:path";
 // CLI argument parsing (exported for testing)
 // ---------------------------------------------------------------------------
 
-export type ParsedArgs = {
+type ParsedArgs = {
 	tarball: string;
 	arch: "x64" | "arm64";
 	version: string;
 	output: string;
 };
 
-export function parseArgs(argv: string[]): ParsedArgs {
+function parseArgs(argv: string[]): ParsedArgs {
 	const args = argv.slice(2); // skip bun + script path
 
 	let tarball: string | undefined;
@@ -85,12 +85,12 @@ function fail(message: string): never {
 // Architecture mapping (exported for testing)
 // ---------------------------------------------------------------------------
 
-export const APPIMAGE_ARCH_MAP: Record<string, string> = {
+const APPIMAGE_ARCH_MAP: Record<string, string> = {
 	x64: "x86_64",
 	arm64: "aarch64",
 };
 
-export const APPIMAGE_DESKTOP_ENTRY_FILENAME = "io.cookielab.klovi.desktop";
+const APPIMAGE_DESKTOP_ENTRY_FILENAME = "io.cookielab.klovi.desktop";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -124,7 +124,7 @@ HERE="$(dirname "$(readlink -f "\${0}")")"
 exec "\${HERE}/usr/lib/klovi/bin/launcher" "$@"
 `;
 
-export const DESKTOP_ENTRY = `[Desktop Entry]
+const DESKTOP_ENTRY = `[Desktop Entry]
 Name=Klovi
 Comment=Desktop viewer for AI coding sessions
 Exec=klovi %U
@@ -263,3 +263,6 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export type { ParsedArgs };
+export { APPIMAGE_ARCH_MAP, APPIMAGE_DESKTOP_ENTRY_FILENAME, DESKTOP_ENTRY, parseArgs };

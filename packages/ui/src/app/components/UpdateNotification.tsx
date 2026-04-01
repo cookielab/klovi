@@ -30,7 +30,7 @@ function formatManualCheckResult(status: UpdateStatus): string {
 	return "Check complete";
 }
 
-export function UpdateNotification({
+function UpdateNotification({
 	status,
 	dismissed,
 	onDismiss,
@@ -100,3 +100,5 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 		</div>
 	);
 }
+
+export { UpdateNotification };

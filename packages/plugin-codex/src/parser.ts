@@ -9,7 +9,7 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { findCodexSessionFileById, normalizeSessionMeta } from "./session-index.ts";
+import { type CodexSessionMeta, findCodexSessionFileById, normalizeSessionMeta } from "./session-index.ts";
 import { readFileText } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
@@ -56,7 +56,7 @@ type CodexItem =
 	| CodexItemAgentMessage
 	| CodexItemReasoning;
 
-export type CodexEvent = {
+type CodexEvent = {
 	type: string;
 	item?: CodexItem | undefined;
 	text?: string | undefined;
@@ -104,6 +104,19 @@ type EnvelopeEvent = {
 
 function isKnownModel(model: string | null | undefined): model is string {
 	return typeof model === "string" && model.length > 0 && model !== "unknown";
+}
+
+function resolveCodexModel(metaInfo: CodexSessionMeta | null, turnContextModel: string | null): string {
+	if (isKnownModel(metaInfo?.model)) {
+		return metaInfo.model;
+	}
+	if (isKnownModel(turnContextModel)) {
+		return turnContextModel;
+	}
+	if (isKnownModel(metaInfo?.provider_id)) {
+		return metaInfo.provider_id;
+	}
+	return "unknown";
 }
 
 function extractTurnContextModel(parsed: unknown): string | null {
@@ -452,7 +465,7 @@ function dispatchEvent(
 	}
 }
 
-export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string): Turn[] {
+function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string): Turn[] {
 	let toolUseCounter = 0;
 	let userTurnCounter = 0;
 	let assistantTurnCounter = 0;
@@ -485,7 +498,7 @@ export function buildCodexTurns(events: CodexEvent[], model: string, timestamp: 
 	return state.turns;
 }
 
-export function loadCodexSession(_nativeId: string, sessionId: string) {
+function loadCodexSession(_nativeId: string, sessionId: string) {
 	return Effect.gen(function* () {
 		const filePath = yield* findCodexSessionFileById(sessionId);
 		if (!filePath) {
@@ -527,13 +540,7 @@ export function loadCodexSession(_nativeId: string, sessionId: string) {
 		});
 
 		const metaInfo = normalizeSessionMeta(meta);
-		const model = isKnownModel(metaInfo?.model)
-			? metaInfo.model
-			: isKnownModel(turnContextModel)
-				? turnContextModel
-				: isKnownModel(metaInfo?.provider_id)
-					? metaInfo.provider_id
-					: "unknown";
+		const model = resolveCodexModel(metaInfo, turnContextModel);
 		const timestamp = metaInfo ? epochSecondsToIso(metaInfo.timestamps.created) : "";
 
 		const turns = buildCodexTurns(events, model, timestamp);
@@ -546,3 +553,6 @@ export function loadCodexSession(_nativeId: string, sessionId: string) {
 		} as Session;
 	});
 }
+
+export type { CodexEvent };
+export { buildCodexTurns, loadCodexSession };

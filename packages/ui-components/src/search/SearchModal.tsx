@@ -12,7 +12,7 @@ function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
 }
 
-export type SearchModalProps = {
+type SearchModalProps = {
 	open: boolean;
 	onClose: () => void;
 	sessions: GlobalSessionResult[];
@@ -31,7 +31,7 @@ function matchesQuery(result: GlobalSessionResult, query: string): boolean {
 	);
 }
 
-export function SearchModal({
+function SearchModal({
 	open,
 	onClose,
 	sessions,
@@ -193,3 +193,6 @@ export function SearchModal({
 		</div>
 	);
 }
+
+export type { SearchModalProps };
+export { SearchModal };

@@ -1,4 +1,4 @@
-export function formatTimestamp(iso: string): string {
+function formatTimestamp(iso: string): string {
 	const date = new Date(iso);
 	if (Number.isNaN(date.getTime())) {
 		return "";
@@ -27,7 +27,7 @@ export function formatTimestamp(iso: string): string {
 	return `${month} ${day}, ${hours}:${minutes}`;
 }
 
-export function formatRelativeTime(iso: string): string {
+function formatRelativeTime(iso: string): string {
 	const date = new Date(iso);
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
@@ -50,7 +50,7 @@ export function formatRelativeTime(iso: string): string {
 	return date.toLocaleDateString();
 }
 
-export function formatFullDateTime(iso: string): string {
+function formatFullDateTime(iso: string): string {
 	const date = new Date(iso);
 	if (Number.isNaN(date.getTime())) {
 		return "";
@@ -65,7 +65,7 @@ export function formatFullDateTime(iso: string): string {
 	});
 }
 
-export function formatTime(iso: string): string {
+function formatTime(iso: string): string {
 	const d = new Date(iso);
 	return d.toLocaleDateString(undefined, {
 		month: "short",
@@ -81,11 +81,11 @@ const OPENAI_REASONING_REGEX = /^(o\d+(?:-\w+)?)(?:-\d{4}-\d{2}-\d{2})?$/u;
 const GEMINI_MODEL_REGEX = /^gemini-([\d]+\.[\d]+[\w-]*)$/u;
 const CODEX_MODEL_REGEX = /^codex-([\w-]+)$/u;
 
-export function isClaudeModel(model: string): boolean {
+function isClaudeModel(model: string): boolean {
 	return model.startsWith("claude-");
 }
 
-export function shortModel(model: string): string {
+function shortModel(model: string): string {
 	// Claude: claude-opus-4-6, claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001
 	const claudeMatch = model.match(CLAUDE_MODEL_REGEX);
 	if (claudeMatch) {
@@ -122,3 +122,5 @@ export function shortModel(model: string): string {
 
 	return model;
 }
+
+export { formatFullDateTime, formatRelativeTime, formatTime, formatTimestamp, isClaudeModel, shortModel };

@@ -6,7 +6,7 @@ import { setPluginLayer } from "./plugin-runtime.ts";
 import { ServerConfig } from "./server-config.ts";
 import { KloviServicesLive } from "./server-services.ts";
 
-export type BootstrapOptions = {
+type BootstrapOptions = {
 	host?: string;
 	port?: number;
 	version?: string;
@@ -15,7 +15,7 @@ export type BootstrapOptions = {
 	runtime?: "auto" | "bun" | "node";
 };
 
-export type BootstrapResult = {
+type BootstrapResult = {
 	url: string;
 	stop: () => void;
 };
@@ -39,7 +39,7 @@ function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "no
  * `packages/server` to pass the RPC-only serve layer while `apps/package`
  * can compose RPC + static file serving.
  */
-export async function bootstrapServer(
+async function bootstrapServer(
 	options: BootstrapOptions,
 	makeServe: () => Layer.Layer<
 		never,
@@ -117,3 +117,6 @@ export async function bootstrapServer(
 		},
 	};
 }
+
+export type { BootstrapOptions, BootstrapResult };
+export { bootstrapServer };

@@ -95,7 +95,15 @@ export function AssistantMessage({
 
 	// Split: intro text before tree, rest in tree nodes
 	const introGroup = hasNonText && firstIsText ? visibleGroups[0] : null;
-	const treeGroups = hasNonText ? (introGroup ? visibleGroups.slice(1) : visibleGroups) : [];
+	const treeGroups = (() => {
+		if (!hasNonText) {
+			return [];
+		}
+		if (introGroup) {
+			return visibleGroups.slice(1);
+		}
+		return visibleGroups;
+	})();
 	const flatGroups = hasNonText ? [] : visibleGroups;
 
 	return (

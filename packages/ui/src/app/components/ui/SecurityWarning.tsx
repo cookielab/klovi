@@ -8,7 +8,7 @@ type SecurityNoticeContentProps = {
 	onDontShowAgain?: () => void;
 };
 
-export function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: SecurityNoticeContentProps) {
+function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: SecurityNoticeContentProps) {
 	const [dontShow, setDontShow] = useState(false);
 
 	const handleAccept = () => {
@@ -54,7 +54,7 @@ type SecurityWarningProps = {
 	onDontShowAgain: () => void;
 };
 
-export function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningProps) {
+function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningProps) {
 	return (
 		<section className="security-warning" aria-labelledby="security-warning-heading">
 			<div className="security-warning-content">
@@ -67,3 +67,5 @@ export function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningPr
 		</section>
 	);
 }
+
+export { SecurityNoticeContent, SecurityWarning };

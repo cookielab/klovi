@@ -1,4 +1,4 @@
-export type RawLine = {
+type RawLine = {
 	type: string;
 	parentUuid?: string | null;
 	uuid?: string;
@@ -28,7 +28,7 @@ type RawMessage = {
 	};
 };
 
-export type RawContentBlock = RawTextBlock | RawThinkingBlock | RawToolUseBlock | RawToolResultBlock | RawImageBlock;
+type RawContentBlock = RawTextBlock | RawThinkingBlock | RawToolUseBlock | RawToolResultBlock | RawImageBlock;
 
 type RawTextBlock = {
 	type: "text";
@@ -47,7 +47,7 @@ type RawToolUseBlock = {
 	input: Record<string, unknown>;
 };
 
-export type RawToolResultBlock = {
+type RawToolResultBlock = {
 	type: "tool_result";
 	tool_use_id: string;
 	content: string | RawToolResultContent[];
@@ -78,3 +78,5 @@ type RawToolResultImageContent = {
 		data: string;
 	};
 };
+
+export type { RawContentBlock, RawLine, RawToolResultBlock };

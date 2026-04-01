@@ -2,7 +2,7 @@ import type { Dirent } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-export const LINUX_NATIVE_WRAPPER_FILENAMES = ["libNativeWrapper.so", "libNativeWrapper_cef.so"] as const;
+const LINUX_NATIVE_WRAPPER_FILENAMES = ["libNativeWrapper.so", "libNativeWrapper_cef.so"] as const;
 
 const LINUX_LAUNCHER_RELATIVE_PATHS = [
 	["launcher"],
@@ -12,7 +12,7 @@ const LINUX_LAUNCHER_RELATIVE_PATHS = [
 
 const LINUX_LIBRARY_SEARCH_FILENAMES = [...LINUX_NATIVE_WRAPPER_FILENAMES, "libasar.so", "launcher", "bun"] as const;
 
-export async function findNamedFiles(root: string, fileNames: readonly string[]): Promise<string[]> {
+async function findNamedFiles(root: string, fileNames: readonly string[]): Promise<string[]> {
 	const pending = [resolve(root)];
 	const matches: string[] = [];
 	const wanted = new Set(fileNames);
@@ -46,7 +46,7 @@ export async function findNamedFiles(root: string, fileNames: readonly string[])
 	return matches.sort((a, b) => a.localeCompare(b));
 }
 
-export async function resolveLinuxLauncherPath(bundlePath: string): Promise<string> {
+async function resolveLinuxLauncherPath(bundlePath: string): Promise<string> {
 	const resolvedBundle = resolve(bundlePath);
 
 	for (const segments of LINUX_LAUNCHER_RELATIVE_PATHS) {
@@ -59,11 +59,11 @@ export async function resolveLinuxLauncherPath(bundlePath: string): Promise<stri
 	throw new Error(`Could not find launcher under ${resolvedBundle}`);
 }
 
-export function resolveLinuxNativeWrapperPaths(bundlePath: string): Promise<string[]> {
+function resolveLinuxNativeWrapperPaths(bundlePath: string): Promise<string[]> {
 	return findNamedFiles(bundlePath, LINUX_NATIVE_WRAPPER_FILENAMES);
 }
 
-export async function collectLinuxLibrarySearchPaths(bundlePath: string): Promise<string[]> {
+async function collectLinuxLibrarySearchPaths(bundlePath: string): Promise<string[]> {
 	const resolvedBundle = resolve(bundlePath);
 	const launcherPath = await resolveLinuxLauncherPath(resolvedBundle);
 	const matchedFiles = await findNamedFiles(resolvedBundle, LINUX_LIBRARY_SEARCH_FILENAMES);
@@ -75,3 +75,11 @@ export async function collectLinuxLibrarySearchPaths(bundlePath: string): Promis
 
 	return [...dirs].sort();
 }
+
+export {
+	collectLinuxLibrarySearchPaths,
+	findNamedFiles,
+	LINUX_NATIVE_WRAPPER_FILENAMES,
+	resolveLinuxLauncherPath,
+	resolveLinuxNativeWrapperPaths,
+};

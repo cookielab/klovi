@@ -11,7 +11,7 @@ type MockHostBridgeOverrides = {
 	[K in keyof KloviHostBridge]?: KloviHostBridge[K];
 };
 
-export interface MockRPCOverrides extends MockClientOverrides {
+interface MockRPCOverrides extends MockClientOverrides {
 	hostBridge?: MockHostBridgeOverrides;
 }
 
@@ -103,7 +103,7 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
 	};
 }
 
-export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
+function setupMockRPC(overrides: MockRPCOverrides = {}): void {
 	const { hostBridge: hostBridgeOverrides, ...clientOverrides } = overrides;
 	mockConnectionState = "connected";
 	connectionStateListeners.clear();
@@ -111,22 +111,22 @@ export function setupMockRPC(overrides: MockRPCOverrides = {}): void {
 	mockHostBridge = createMockHostBridge(hostBridgeOverrides);
 }
 
-export function getMockClient(): KloviClient {
+function getMockClient(): KloviClient {
 	return mockClient;
 }
 
-export function getMockHostBridge(): KloviHostBridge {
+function getMockHostBridge(): KloviHostBridge {
 	return mockHostBridge;
 }
 
-export function setMockHostConnectionState(state: KloviHostConnectionState): void {
+function setMockHostConnectionState(state: KloviHostConnectionState): void {
 	mockConnectionState = state;
 	for (const listener of connectionStateListeners) {
 		listener(state);
 	}
 }
 
-export function MockProviders({ children }: { children: React.ReactNode }) {
+function MockProviders({ children }: { children: React.ReactNode }) {
 	return createElement(
 		KloviClientContext.Provider,
 		{ value: mockClient },
@@ -136,3 +136,6 @@ export function MockProviders({ children }: { children: React.ReactNode }) {
 
 // Initialize defaults
 setupMockRPC();
+
+export type { MockRPCOverrides };
+export { getMockClient, getMockHostBridge, MockProviders, setMockHostConnectionState, setupMockRPC };

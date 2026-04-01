@@ -64,7 +64,7 @@ const emptyMethodHandler = Effect.succeed(
 	HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: 400 }),
 );
 
-export const makeRpcRouter = () =>
+const makeRpcRouter = () =>
 	HttpRouter.empty.pipe(
 		HttpRouter.post("/api/rpc/", emptyMethodHandler),
 		HttpRouter.post("/api/rpc/:method", rpcHandler),
@@ -72,6 +72,8 @@ export const makeRpcRouter = () =>
 
 const notFoundHandler = Effect.succeed(HttpServerResponse.unsafeJson({ error: "Not found" }, { status: 404 }));
 
-export const makeHttpApp = () => makeRpcRouter().pipe(Effect.catchTag("RouteNotFound", () => notFoundHandler));
+const makeHttpApp = () => makeRpcRouter().pipe(Effect.catchTag("RouteNotFound", () => notFoundHandler));
 
-export const makeServeLayer = () => makeHttpApp().pipe(HttpServer.serve());
+const makeServeLayer = () => makeHttpApp().pipe(HttpServer.serve());
+
+export { makeHttpApp, makeRpcRouter, makeServeLayer };

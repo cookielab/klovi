@@ -42,10 +42,10 @@
 				},
 				"noProcessEnv": "off",
 				"noNonNullAssertion": "warn",
-				"useExportsLast": "off",
+				"useExportsLast": "error",
 				"useConsistentMemberAccessibility": "off",
 				"noExportedImports": "warn",
-				"noNestedTernary": "warn",
+				"noNestedTernary": "error",
 				"useComponentExportOnlyModules": "warn"
 			},
 			"complexity": {
@@ -56,7 +56,7 @@
 				"useMaxParams": "warn"
 			},
 			"suspicious": {
-				"noEmptyBlockStatements": "warn"
+				"noEmptyBlockStatements": "off"
 			},
 			"security": {
 				"noSecrets": "warn"
@@ -80,7 +80,8 @@
 			"linter": {
 				"rules": {
 					"style": {
-						"noDefaultExport": "off"
+						"noDefaultExport": "off",
+						"useExportsLast": "off"
 					}
 				}
 			}

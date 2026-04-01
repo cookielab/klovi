@@ -21,7 +21,7 @@ type CodexEvent = {
 
 const SESSION_TITLE_SCAN_BYTES = 256 * 1024;
 
-export function discoverCodexProjects() {
+function discoverCodexProjects() {
 	return Effect.gen(function* () {
 		const sessions = yield* scanCodexSessions();
 
@@ -91,7 +91,7 @@ function extractFirstUserMessage(text: string): string | null {
 	return message;
 }
 
-export function listCodexSessions(nativeId: string) {
+function listCodexSessions(nativeId: string) {
 	return Effect.gen(function* () {
 		const allSessions = yield* scanCodexSessions();
 		const matching = allSessions.filter((s) => s.meta.cwd === nativeId);
@@ -128,3 +128,5 @@ export function listCodexSessions(nativeId: string) {
 		return sessions;
 	});
 }
+
+export { discoverCodexProjects, listCodexSessions };

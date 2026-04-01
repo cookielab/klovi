@@ -12,9 +12,9 @@ import type {
 import { resolveT3CodePaths } from "./resolve-worktree.ts";
 import { encodeSessionId } from "./session-id.ts";
 
-export type SessionIdEncoder<TPluginId extends string> = (pluginId: TPluginId, rawSessionId: string) => string;
+type SessionIdEncoder<TPluginId extends string> = (pluginId: TPluginId, rawSessionId: string) => string;
 
-export function encodeResolvedPath(resolvedPath: string): string {
+function encodeResolvedPath(resolvedPath: string): string {
 	// Convert /Users/foo/bar -> -Users-foo-bar (same scheme as Claude Code)
 	if (resolvedPath.startsWith("/")) {
 		return resolvedPath.replace(/\//gu, "-");
@@ -37,7 +37,7 @@ type RegisteredPlugin<
 	configLayer: Layer.Layer<PluginConfig>;
 };
 
-export class PluginRegistry<
+class PluginRegistry<
 	TPluginId extends string = string,
 	TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
 	TSession extends RegistrySession = RegistrySession,
@@ -156,3 +156,6 @@ export class PluginRegistry<
 		});
 	}
 }
+
+export type { SessionIdEncoder };
+export { encodeResolvedPath, PluginRegistry };

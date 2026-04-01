@@ -4,7 +4,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 
-export type VerifyArgs = {
+type VerifyArgs = {
 	appPath: string;
 	zstdPath?: string;
 };
@@ -18,7 +18,7 @@ type WrapperMetadata = {
 
 const ZSTD_SUFFIX = ".tar.zst";
 
-export function parseArgs(argv: string[]): VerifyArgs {
+function parseArgs(argv: string[]): VerifyArgs {
 	const args = argv.slice(2);
 	let appPath: string | undefined;
 	let zstdPath: string | undefined;
@@ -49,11 +49,11 @@ export function parseArgs(argv: string[]): VerifyArgs {
 	return zstdPath ? { appPath: appPath, zstdPath: zstdPath } : { appPath: appPath };
 }
 
-export function getExpectedBundleName(appName: string): string {
+function getExpectedBundleName(appName: string): string {
 	return `${appName}.app`;
 }
 
-export function parseTarEntries(stdout: string): string[] {
+function parseTarEntries(stdout: string): string[] {
 	return stdout
 		.split("\n")
 		.map((line) => line.trim())
@@ -133,7 +133,7 @@ async function listTarEntries(tarPath: string): Promise<string[]> {
 	return parseTarEntries(stdout);
 }
 
-export async function verifyMacOSWrapperContract(args: VerifyArgs): Promise<void> {
+async function verifyMacOSWrapperContract(args: VerifyArgs): Promise<void> {
 	const appPath = resolve(args.appPath);
 	const zstdPath = await resolveZstdPath(appPath, args.zstdPath);
 
@@ -177,3 +177,5 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export { getExpectedBundleName, parseArgs, parseTarEntries, verifyMacOSWrapperContract };

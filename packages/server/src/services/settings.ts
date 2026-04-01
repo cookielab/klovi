@@ -1,15 +1,16 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
-export type UpdateChannel = "stable" | "candidate" | "beta";
 
-export type UpdateSettings = {
+type UpdateChannel = "stable" | "candidate" | "beta";
+
+type UpdateSettings = {
 	channel: UpdateChannel;
 	checkIntervalHours: number;
 	autoDownload: boolean;
 };
 
-export type PluginSettings = {
+type PluginSettings = {
 	version: 1;
 	plugins: {
 		[pluginId: string]: {
@@ -29,7 +30,7 @@ function createDefaultPluginStates(): PluginSettings["plugins"] {
 	return Object.fromEntries(BUILTIN_KLOVI_PLUGIN_IDS.map((pluginId) => [pluginId, { enabled: true, dataDir: null }]));
 }
 
-export function getDefaultSettings(): PluginSettings {
+function getDefaultSettings(): PluginSettings {
 	return {
 		version: 1,
 		plugins: createDefaultPluginStates(),
@@ -44,7 +45,7 @@ export function getDefaultSettings(): PluginSettings {
 	};
 }
 
-export async function loadSettings(path: string): Promise<PluginSettings> {
+async function loadSettings(path: string): Promise<PluginSettings> {
 	try {
 		const content = await readFile(path, "utf-8");
 		const parsed = JSON.parse(content) as Record<string, unknown>;
@@ -57,10 +58,13 @@ export async function loadSettings(path: string): Promise<PluginSettings> {
 	}
 }
 
-export async function saveSettings(path: string, settings: PluginSettings): Promise<void> {
+async function saveSettings(path: string, settings: PluginSettings): Promise<void> {
 	const dir = dirname(path);
 	await mkdir(dir, { recursive: true });
 	const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
 	await writeFile(tmpPath, JSON.stringify(settings, null, 2));
 	await rename(tmpPath, path);
 }
+
+export type { PluginSettings, UpdateChannel, UpdateSettings };
+export { getDefaultSettings, loadSettings, saveSettings };

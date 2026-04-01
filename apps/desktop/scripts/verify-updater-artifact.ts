@@ -8,7 +8,7 @@ import { isValidUpdateInfo, validateExtractedBundle, validateUpdateInfo } from "
 type Platform = "macos" | "linux" | "win";
 type Arch = "arm64" | "x64";
 
-export type VerifyUpdaterArtifactArgs = {
+type VerifyUpdaterArtifactArgs = {
 	platform: Platform;
 	arch: Arch;
 	version: string;
@@ -17,7 +17,7 @@ export type VerifyUpdaterArtifactArgs = {
 	zstdPath?: string;
 };
 
-export function parseArgs(argv: string[]): VerifyUpdaterArtifactArgs {
+function parseArgs(argv: string[]): VerifyUpdaterArtifactArgs {
 	const args = argv.slice(2);
 
 	let platform: Platform | undefined;
@@ -69,7 +69,7 @@ export function parseArgs(argv: string[]): VerifyUpdaterArtifactArgs {
 	};
 }
 
-export function getDefaultZstdPaths(platform: Platform, arch: Arch): string[] {
+function getDefaultZstdPaths(platform: Platform, arch: Arch): string[] {
 	const binaryName = platform === "win" ? "zig-zstd.exe" : "zig-zstd";
 	return [
 		resolve(import.meta.dir, "..", "node_modules", "electrobun", `dist-${platform}-${arch}`, binaryName),
@@ -156,7 +156,7 @@ async function extractArchive(tarPath: string, outputDir: string): Promise<void>
 	await archive.extract(outputDir);
 }
 
-export async function verifyUpdaterArtifact(args: VerifyUpdaterArtifactArgs): Promise<void> {
+async function verifyUpdaterArtifact(args: VerifyUpdaterArtifactArgs): Promise<void> {
 	const tempDir = await mkdtemp(join(tmpdir(), "klovi-updater-artifact-"));
 	const stagingDir = join(tempDir, "staging");
 
@@ -179,3 +179,6 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export type { VerifyUpdaterArtifactArgs };
+export { getDefaultZstdPaths, parseArgs, verifyUpdaterArtifact };

@@ -10,19 +10,19 @@ import {
 const MISSING_DEPENDENCY_REGEX = /^\s*(\S+)\s*=>\s*not found\s*$/u;
 const NON_DYNAMIC_EXECUTABLE_REGEX = /\b(not a dynamic executable|statically linked)\b/iu;
 
-export type RuntimeDependencyArgs = {
+type RuntimeDependencyArgs = {
 	bundlePath: string;
 };
 
-export type CommandResult = {
+type CommandResult = {
 	exitCode: number;
 	stderr: string;
 	stdout: string;
 };
 
-export type CommandRunner = (command: string[], env: Record<string, string | undefined>) => Promise<CommandResult>;
+type CommandRunner = (command: string[], env: Record<string, string | undefined>) => Promise<CommandResult>;
 
-export function parseArgs(argv: string[]): RuntimeDependencyArgs {
+function parseArgs(argv: string[]): RuntimeDependencyArgs {
 	const args = argv.slice(2);
 	if (args.length !== 1 || args[0] == null || args[0].startsWith("--")) {
 		throw new Error("Usage: bun check-linux-runtime-deps.ts <bundle-path>");
@@ -30,7 +30,7 @@ export function parseArgs(argv: string[]): RuntimeDependencyArgs {
 	return { bundlePath: args[0] };
 }
 
-export function parseMissingDependencies(stdout: string): string[] {
+function parseMissingDependencies(stdout: string): string[] {
 	const missing = new Set<string>();
 
 	for (const line of stdout.split("\n")) {
@@ -43,7 +43,7 @@ export function parseMissingDependencies(stdout: string): string[] {
 	return [...missing].sort();
 }
 
-export function buildLdLibraryPath(libraryDirs: string[], currentValue?: string): string {
+function buildLdLibraryPath(libraryDirs: string[], currentValue?: string): string {
 	const entries = [...libraryDirs];
 	if (currentValue) {
 		entries.push(...currentValue.split(delimiter).filter(Boolean));
@@ -52,7 +52,7 @@ export function buildLdLibraryPath(libraryDirs: string[], currentValue?: string)
 	return [...new Set(entries)].join(delimiter);
 }
 
-export function isSkippableLddFailure(output: string): boolean {
+function isSkippableLddFailure(output: string): boolean {
 	return NON_DYNAMIC_EXECUTABLE_REGEX.test(output);
 }
 
@@ -70,7 +70,7 @@ async function runCommand(command: string[], env: Record<string, string | undefi
 	return { exitCode: exitCode, stderr: stderr, stdout: stdout };
 }
 
-export async function checkLinuxRuntimeDeps(
+async function checkLinuxRuntimeDeps(
 	args: RuntimeDependencyArgs,
 	commandRunner: CommandRunner = runCommand,
 ): Promise<void> {
@@ -125,3 +125,6 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export type { CommandResult, CommandRunner, RuntimeDependencyArgs };
+export { buildLdLibraryPath, checkLinuxRuntimeDeps, isSkippableLddFailure, parseArgs, parseMissingDependencies };

@@ -1,6 +1,6 @@
 import "./SettingsView.css";
 
-export type SettingsTab = "general" | "plugins";
+type SettingsTab = "general" | "plugins";
 
 type SettingsSidebarProps = {
 	activeTab: SettingsTab;
@@ -8,7 +8,7 @@ type SettingsSidebarProps = {
 	onBack?: (() => void) | undefined;
 };
 
-export function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProps) {
+function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProps) {
 	return (
 		<nav className="settings-nav">
 			{onBack && (
@@ -33,3 +33,6 @@ export function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSide
 		</nav>
 	);
 }
+
+export type { SettingsTab };
+export { SettingsSidebar };

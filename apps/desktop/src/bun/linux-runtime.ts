@@ -1,8 +1,8 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-export type BrowserRenderer = "native" | "cef";
-export type SystemTheme = "dark" | "light";
+type BrowserRenderer = "native" | "cef";
+type SystemTheme = "dark" | "light";
 
 const DARK_SUFFIX_RE = /-dark/iu;
 const DARK_VARIANT_RE = /:dark/iu;
@@ -14,7 +14,7 @@ type DesktopRuntimePaths = {
 	userLogs: string;
 };
 
-export function resolveLinuxRenderer(
+function resolveLinuxRenderer(
 	platform: NodeJS.Platform = process.platform,
 	env: Record<string, string | undefined> = Bun.env,
 ): BrowserRenderer | undefined {
@@ -25,20 +25,20 @@ export function resolveLinuxRenderer(
 	return env["KLOVI_LINUX_RENDERER"] === "cef" ? "cef" : "native";
 }
 
-export function getDesktopRuntimeDirs(paths: DesktopRuntimePaths): string[] {
+function getDesktopRuntimeDirs(paths: DesktopRuntimePaths): string[] {
 	const cefDir = join(paths.userCache, "CEF");
 	const partitionsDir = join(cefDir, "Partitions");
 
 	return [paths.userData, paths.userCache, paths.userLogs, cefDir, partitionsDir, join(partitionsDir, "default")];
 }
 
-export function ensureDesktopRuntimeDirs(paths: DesktopRuntimePaths): void {
+function ensureDesktopRuntimeDirs(paths: DesktopRuntimePaths): void {
 	for (const dir of getDesktopRuntimeDirs(paths)) {
 		mkdirSync(dir, { recursive: true });
 	}
 }
 
-export async function detectLinuxSystemTheme(
+async function detectLinuxSystemTheme(
 	platform: NodeJS.Platform = process.platform,
 	env: Record<string, string | undefined> = Bun.env,
 ): Promise<SystemTheme | null> {
@@ -81,3 +81,6 @@ export async function detectLinuxSystemTheme(
 
 	return null;
 }
+
+export type { BrowserRenderer, SystemTheme };
+export { detectLinuxSystemTheme, ensureDesktopRuntimeDirs, getDesktopRuntimeDirs, resolveLinuxRenderer };

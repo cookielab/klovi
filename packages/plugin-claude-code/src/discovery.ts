@@ -32,7 +32,7 @@ function inspectProjectSessions(projectDir: string, sessionFiles: { fileName: st
 	});
 }
 
-export function discoverClaudeProjects() {
+function discoverClaudeProjects() {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const projectsDir = join(config.dataDir, "projects");
@@ -70,7 +70,7 @@ export function discoverClaudeProjects() {
 
 const PLAN_PREFIX = "Implement the following plan";
 
-export function listClaudeSessions(nativeId: string) {
+function listClaudeSessions(nativeId: string) {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const projectDir = join(config.dataDir, "projects", nativeId);
@@ -93,7 +93,7 @@ export function listClaudeSessions(nativeId: string) {
 	});
 }
 
-export function classifySessionTypes(sessions: SessionSummary[]): void {
+function classifySessionTypes(sessions: SessionSummary[]): void {
 	// First pass: mark implementation sessions
 	const implSlugs = new Set<string>();
 	for (const session of sessions) {
@@ -113,7 +113,7 @@ export function classifySessionTypes(sessions: SessionSummary[]): void {
 	}
 }
 
-export function extractCwd(filePath: string) {
+function extractCwd(filePath: string) {
 	return Effect.gen(function* () {
 		const text = yield* readTextPrefix(filePath, CWD_SCAN_BYTES).pipe(Effect.catchAll(() => Effect.succeed("")));
 		if (!text) {
@@ -194,7 +194,7 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 	}
 }
 
-export function extractSessionMeta(filePath: string) {
+function extractSessionMeta(filePath: string) {
 	return Effect.gen(function* () {
 		const text = yield* readTextPrefix(filePath, SESSION_META_SCAN_BYTES).pipe(
 			Effect.catchAll(() => Effect.succeed("")),
@@ -243,3 +243,5 @@ export function extractSessionMeta(filePath: string) {
 		} as Omit<SessionSummary, "sessionId">;
 	});
 }
+
+export { classifySessionTypes, discoverClaudeProjects, extractCwd, extractSessionMeta, listClaudeSessions };

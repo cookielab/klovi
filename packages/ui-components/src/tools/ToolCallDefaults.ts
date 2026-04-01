@@ -1,9 +1,9 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type { ToolCallWithResult } from "../types/index.ts";
 
-export const MAX_OUTPUT_LENGTH = 5000;
+const MAX_OUTPUT_LENGTH = 5000;
 const MAX_CONTENT_LENGTH = 2000;
-export const MAX_THINKING_PREVIEW = 100;
+const MAX_THINKING_PREVIEW = 100;
 
 type Input = Record<string, unknown>;
 type SummaryExtractor = (input: Input) => string;
@@ -16,7 +16,7 @@ function truncate(s: string, max: number): string {
 	return `${s.slice(0, max)}...`;
 }
 
-export function truncateOutput(s: string): string {
+function truncateOutput(s: string): string {
 	if (s.length <= MAX_OUTPUT_LENGTH) {
 		return s;
 	}
@@ -79,7 +79,7 @@ const SUMMARY_EXTRACTORS: Record<string, SummaryExtractor> = {
 	...interactionSummaryExtractors,
 };
 
-export function getToolSummary(
+function getToolSummary(
 	call: ToolCallWithResult,
 	getFrontendPlugin?: (id: string) => FrontendPlugin | undefined,
 	pluginId?: string,
@@ -251,7 +251,7 @@ const INPUT_FORMATTERS: Record<string, InputFormatter> = {
 	...interactionInputFormatters,
 };
 
-export function hasInputFormatter(
+function hasInputFormatter(
 	call: ToolCallWithResult,
 	getFrontendPlugin?: (id: string) => FrontendPlugin | undefined,
 	pluginId?: string,
@@ -265,7 +265,7 @@ export function hasInputFormatter(
 	return call.name in INPUT_FORMATTERS;
 }
 
-export function formatToolInput(
+function formatToolInput(
 	call: ToolCallWithResult,
 	getFrontendPlugin?: (id: string) => FrontendPlugin | undefined,
 	pluginId?: string,
@@ -280,3 +280,5 @@ export function formatToolInput(
 	const formatter = INPUT_FORMATTERS[call.name];
 	return formatter ? formatter(call.input) : JSON.stringify(call.input, null, 2);
 }
+
+export { formatToolInput, getToolSummary, hasInputFormatter, MAX_OUTPUT_LENGTH, MAX_THINKING_PREVIEW, truncateOutput };

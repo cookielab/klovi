@@ -33,7 +33,7 @@ import { useViewState } from "./hooks/useViewState.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./view-state.ts";
 
-export function App() {
+function App() {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
 	const systemThemeOverride = useSystemThemeOverride();
@@ -341,7 +341,7 @@ function AppMainContent({
 	);
 }
 
-export function AppGate() {
+function AppGate() {
 	const systemThemeOverride = useSystemThemeOverride();
 	useTheme({ systemThemeOverride: systemThemeOverride });
 	const client = useKloviClient();
@@ -482,3 +482,5 @@ function DesktopHostReconnectPanel({ title, description, actionLabel, onAction }
 		</section>
 	);
 }
+
+export { App, AppGate };

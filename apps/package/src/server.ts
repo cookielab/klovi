@@ -2,11 +2,7 @@ import { execFile } from "node:child_process";
 import { bootstrapServer } from "@cookielab.io/klovi-server/effect/bootstrap";
 import { makePackageServeLayer } from "./http-app.ts";
 
-export type { KloviServer, StartKloviServerOptions } from "@cookielab.io/klovi-server/server";
-// Re-export startKloviServer as the canonical public npm contract
-export { startKloviServer } from "@cookielab.io/klovi-server/server";
-
-export type StartKloviPackageServerOptions = {
+type StartKloviPackageServerOptions = {
 	host?: string;
 	port?: number;
 	staticDir?: string | undefined;
@@ -17,13 +13,14 @@ export type StartKloviPackageServerOptions = {
 	runtime?: "auto" | "bun" | "node";
 };
 
-export type KloviPackageServer = {
+type KloviPackageServer = {
 	url: string;
 	stop: () => void;
 };
 
 function openInBrowser(url: string): void {
-	const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
+	const commands = { darwin: "open", win32: "cmd" } as const;
+	const cmd = commands[process.platform as keyof typeof commands] ?? "xdg-open";
 	const args = process.platform === "win32" ? ["/c", "start", url] : [url];
 	execFile(cmd, args, () => {});
 }
@@ -33,9 +30,7 @@ function openInBrowser(url: string): void {
  * browser launch on top of the core Klovi server. Not part of the public
  * npm contract — use `startKloviServer` from `@cookielab.io/klovi/server`.
  */
-export async function startKloviPackageServer(
-	options: StartKloviPackageServerOptions = {},
-): Promise<KloviPackageServer> {
+async function startKloviPackageServer(options: StartKloviPackageServerOptions = {}): Promise<KloviPackageServer> {
 	const makeServe = () => makePackageServeLayer(options.staticDir);
 	const result = await bootstrapServer(options, makeServe);
 
@@ -45,3 +40,9 @@ export async function startKloviPackageServer(
 
 	return result;
 }
+
+// Re-export startKloviServer as the canonical public npm contract
+export type { KloviServer, StartKloviServerOptions } from "@cookielab.io/klovi-server/server";
+export { startKloviServer } from "@cookielab.io/klovi-server/server";
+export type { KloviPackageServer, StartKloviPackageServerOptions };
+export { startKloviPackageServer };

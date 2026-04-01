@@ -18,14 +18,14 @@ type VerifyArgs = {
 	bundlePath: string;
 };
 
-export type WindowIdentity = {
+type WindowIdentity = {
 	id: string;
 	pid: number | null;
 	wmClass: string | null;
 	name: string | null;
 };
 
-export type LaunchFailureDetails = {
+type LaunchFailureDetails = {
 	lastObservedWindows: WindowIdentity[];
 	launchExitCode: number | null;
 	launchStderr: string;
@@ -33,7 +33,7 @@ export type LaunchFailureDetails = {
 	rootPid: number;
 };
 
-export function parseArgs(argv: string[]): VerifyArgs {
+function parseArgs(argv: string[]): VerifyArgs {
 	const args = argv.slice(2);
 	if (args.length !== 1 || args[0] == null || args[0].startsWith("--")) {
 		throw new Error("Usage: bun verify-linux-window-identity.ts <bundle-path>");
@@ -41,7 +41,7 @@ export function parseArgs(argv: string[]): VerifyArgs {
 	return { bundlePath: args[0] };
 }
 
-export function parsePidList(stdout: string): number[] {
+function parsePidList(stdout: string): number[] {
 	return stdout
 		.split(WHITESPACE_REGEX)
 		.map((value) => Number(value.trim()))
@@ -123,7 +123,7 @@ function matchesExpectedWindow(identity: WindowIdentity): boolean {
 	return true;
 }
 
-export function selectWindowCandidate(
+function selectWindowCandidate(
 	identities: WindowIdentity[],
 	ownerPids: Set<number>,
 	existingWindowIds: Set<string>,
@@ -163,7 +163,7 @@ function formatOutputTail(label: string, output: string): string | null {
 	return `${label}:\n${tail.join("\n")}`;
 }
 
-export function formatLaunchFailure(details: LaunchFailureDetails): string {
+function formatLaunchFailure(details: LaunchFailureDetails): string {
 	const summary =
 		details.lastObservedWindows.length > 0
 			? details.lastObservedWindows.map((identity) => formatWindowIdentity(identity)).join("; ")
@@ -262,7 +262,7 @@ async function killProcessTree(rootPid: number): Promise<void> {
 	}
 }
 
-export async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
+async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
 	if (!Bun.env["DISPLAY"]) {
 		throw new Error("DISPLAY is not set. Run this script under xvfb-run or an X11 session.");
 	}
@@ -345,3 +345,6 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export type { LaunchFailureDetails, WindowIdentity };
+export { formatLaunchFailure, parseArgs, parsePidList, selectWindowCandidate, verifyLinuxWindowIdentity };

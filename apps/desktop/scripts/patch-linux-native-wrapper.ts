@@ -3,26 +3,26 @@
 import { resolve } from "node:path";
 import { resolveLinuxNativeWrapperPaths } from "./linux-bundle.ts";
 
-export const UPSTREAM_WM_CLASS = "ElectrobunKitchenSink-dev";
-export const EXPECTED_WM_CLASS = "Klovi";
+const UPSTREAM_WM_CLASS = "ElectrobunKitchenSink-dev";
+const EXPECTED_WM_CLASS = "Klovi";
 
 const SEARCH_BYTES = Buffer.from(UPSTREAM_WM_CLASS, "utf-8");
 const REPLACEMENT_BYTES = Buffer.alloc(SEARCH_BYTES.length);
 REPLACEMENT_BYTES.write(EXPECTED_WM_CLASS, "utf-8");
 
-export type PatchArgs = {
+type PatchArgs = {
 	bundlePath: string;
 };
 
-export type PatchStatus = "patched" | "already_patched" | "missing_target";
+type PatchStatus = "patched" | "already_patched" | "missing_target";
 
-export type PatchResult = {
+type PatchResult = {
 	libraryPath: string;
 	replacements: number;
 	status: PatchStatus;
 };
 
-export function parseArgs(argv: string[]): PatchArgs {
+function parseArgs(argv: string[]): PatchArgs {
 	const args = argv.slice(2);
 	if (args.length !== 1 || args[0] == null || args[0].startsWith("--")) {
 		throw new Error("Usage: bun patch-linux-native-wrapper.ts <bundle-path>");
@@ -30,7 +30,7 @@ export function parseArgs(argv: string[]): PatchArgs {
 	return { bundlePath: args[0] };
 }
 
-export function patchNativeWrapperBytes(source: Uint8Array): {
+function patchNativeWrapperBytes(source: Uint8Array): {
 	alreadyPatched: boolean;
 	bytes: Buffer;
 	replacements: number;
@@ -57,7 +57,7 @@ export function patchNativeWrapperBytes(source: Uint8Array): {
 	};
 }
 
-export async function patchNativeWrapperLibrary(libraryPath: string): Promise<PatchResult> {
+async function patchNativeWrapperLibrary(libraryPath: string): Promise<PatchResult> {
 	const file = Bun.file(libraryPath);
 	const { alreadyPatched, bytes, replacements } = patchNativeWrapperBytes(new Uint8Array(await file.arrayBuffer()));
 
@@ -77,7 +77,7 @@ export async function patchNativeWrapperLibrary(libraryPath: string): Promise<Pa
 	};
 }
 
-export async function patchLinuxNativeWrapper(args: PatchArgs): Promise<PatchResult[]> {
+async function patchLinuxNativeWrapper(args: PatchArgs): Promise<PatchResult[]> {
 	const bundlePath = resolve(args.bundlePath);
 	const libraryPaths = await resolveLinuxNativeWrapperPaths(bundlePath);
 	if (libraryPaths.length === 0) {
@@ -110,3 +110,13 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export type { PatchArgs, PatchResult, PatchStatus };
+export {
+	EXPECTED_WM_CLASS,
+	parseArgs,
+	patchLinuxNativeWrapper,
+	patchNativeWrapperBytes,
+	patchNativeWrapperLibrary,
+	UPSTREAM_WM_CLASS,
+};

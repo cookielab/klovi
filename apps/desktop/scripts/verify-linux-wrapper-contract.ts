@@ -3,12 +3,12 @@
 import { readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-export const EXPECTED_LINUX_APP_NAME = "Klovi";
-export const EXPECTED_LINUX_APP_IDENTIFIER = "io.cookielab.klovi";
-export const EXPECTED_LINUX_WM_CLASS = "Klovi";
-export const EXPECTED_LINUX_ICON_BASENAME = "klovi";
-export const EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME = `${EXPECTED_LINUX_APP_IDENTIFIER}.desktop`;
-export const METADATA_FILENAMES = ["version.json", "metadata.json"] as const;
+const EXPECTED_LINUX_APP_NAME = "Klovi";
+const EXPECTED_LINUX_APP_IDENTIFIER = "io.cookielab.klovi";
+const EXPECTED_LINUX_WM_CLASS = "Klovi";
+const EXPECTED_LINUX_ICON_BASENAME = "klovi";
+const EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME = `${EXPECTED_LINUX_APP_IDENTIFIER}.desktop`;
+const METADATA_FILENAMES = ["version.json", "metadata.json"] as const;
 
 type WrapperMetadata = {
 	identifier: string;
@@ -24,11 +24,11 @@ type Layout = {
 	isAppDir: boolean;
 };
 
-export type VerifyArgs = {
+type VerifyArgs = {
 	bundlePath: string;
 };
 
-export function parseArgs(argv: string[]): VerifyArgs {
+function parseArgs(argv: string[]): VerifyArgs {
 	const args = argv.slice(2);
 	if (args.length !== 1 || args[0] == null || args[0].startsWith("--")) {
 		throw new Error("Usage: bun verify-linux-wrapper-contract.ts <bundle-path>");
@@ -45,7 +45,7 @@ async function hasMetadataFile(dir: string): Promise<boolean> {
 	return false;
 }
 
-export async function detectLayout(bundlePath: string): Promise<Layout> {
+async function detectLayout(bundlePath: string): Promise<Layout> {
 	const inputRoot = resolve(bundlePath);
 	if (await hasMetadataFile(inputRoot)) {
 		return {
@@ -85,7 +85,7 @@ function assertMetadata(data: unknown): asserts data is WrapperMetadata {
 	}
 }
 
-export function parseDesktopEntry(raw: string): Map<string, string> {
+function parseDesktopEntry(raw: string): Map<string, string> {
 	const entries = new Map<string, string>();
 	for (const line of raw.split("\n")) {
 		const trimmed = line.trim();
@@ -148,7 +148,7 @@ async function assertAppDirIcons(inputRoot: string): Promise<void> {
 	}
 }
 
-export async function verifyLinuxWrapperContract(args: VerifyArgs): Promise<void> {
+async function verifyLinuxWrapperContract(args: VerifyArgs): Promise<void> {
 	const layout = await detectLayout(args.bundlePath);
 	const metadata = await readWrapperMetadata(layout.bundleRoot);
 
@@ -188,3 +188,17 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 }
+
+export type { VerifyArgs };
+export {
+	detectLayout,
+	EXPECTED_LINUX_APP_IDENTIFIER,
+	EXPECTED_LINUX_APP_NAME,
+	EXPECTED_LINUX_DESKTOP_ENTRY_FILENAME,
+	EXPECTED_LINUX_ICON_BASENAME,
+	EXPECTED_LINUX_WM_CLASS,
+	METADATA_FILENAMES,
+	parseArgs,
+	parseDesktopEntry,
+	verifyLinuxWrapperContract,
+};

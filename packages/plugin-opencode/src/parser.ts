@@ -230,7 +230,7 @@ function createAssistantTurn(
 
 // --- Exported helpers for testing ---
 
-export type OpenCodeMessage = {
+type OpenCodeMessage = {
 	id: string;
 	data: MessageData;
 	timeCreated: number;
@@ -302,7 +302,7 @@ function buildAssistantTurnFromMsg(
 	return createAssistantTurn(model, timestamp, msg.id, contentBlocks, usage, data.finish);
 }
 
-export function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
+function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
 	let toolUseCounter = 0;
 	const nextToolUseId = () => {
 		toolUseCounter++;
@@ -396,7 +396,7 @@ function loadSessionFromDb(db: SqliteDb, nativeId: string, sessionId: string): S
 	return { sessionId: sessionId, project: project, turns: turns, pluginId: "opencode" };
 }
 
-export function loadOpenCodeSession(nativeId: string, sessionId: string) {
+function loadOpenCodeSession(nativeId: string, sessionId: string) {
 	return Effect.gen(function* () {
 		const db = yield* openOpenCodeDb();
 		if (!db) {
@@ -421,3 +421,6 @@ function emptySession(project: string, sessionId: string): Session {
 		pluginId: "opencode",
 	};
 }
+
+export type { OpenCodeMessage };
+export { buildOpenCodeTurns, loadOpenCodeSession };

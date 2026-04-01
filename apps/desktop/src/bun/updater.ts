@@ -7,19 +7,19 @@ import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
 const ZSTD_SUFFIX_RE = /\.zst$/u;
 
-export type GitHubRelease = {
+type GitHubRelease = {
 	tag_name: string;
 	prerelease: boolean;
 	draft: boolean;
 	assets: GitHubAsset[];
 };
 
-export type GitHubAsset = {
+type GitHubAsset = {
 	name: string;
 	browser_download_url: string;
 };
 
-export type UpdateInfo = {
+type UpdateInfo = {
 	version: string;
 	hash: string;
 	platform: string;
@@ -31,7 +31,7 @@ type Arch = "arm64" | "x64";
 
 type StatusCallback = (status: UpdateStatus) => void;
 
-export function filterReleasesByChannel(releases: GitHubRelease[], channel: UpdateChannel): GitHubRelease[] {
+function filterReleasesByChannel(releases: GitHubRelease[], channel: UpdateChannel): GitHubRelease[] {
 	return releases.filter((r) => {
 		if (r.draft) {
 			return false;
@@ -50,7 +50,7 @@ export function filterReleasesByChannel(releases: GitHubRelease[], channel: Upda
 	});
 }
 
-export function getReleaseChannel(tagName: string): UpdateChannel {
+function getReleaseChannel(tagName: string): UpdateChannel {
 	if (tagName.includes("-beta.")) {
 		return "beta";
 	}
@@ -60,23 +60,23 @@ export function getReleaseChannel(tagName: string): UpdateChannel {
 	return "stable";
 }
 
-export function getUpdaterAssetPrefix(platform: Platform, arch: Arch): string {
+function getUpdaterAssetPrefix(platform: Platform, arch: Arch): string {
 	return `stable-${platform}-${arch}`;
 }
 
-export function getElectrobunTarballName(platform: Platform): string {
+function getElectrobunTarballName(platform: Platform): string {
 	return platform === "macos" ? "Klovi.app.tar.zst" : "Klovi.tar.zst";
 }
 
-export function getReleaseBundleAssetName(platform: Platform, arch: Arch): string {
+function getReleaseBundleAssetName(platform: Platform, arch: Arch): string {
 	return `${getUpdaterAssetPrefix(platform, arch)}-${getElectrobunTarballName(platform)}`;
 }
 
-export function getUpdateJsonAssetName(platform: Platform, arch: Arch): string {
+function getUpdateJsonAssetName(platform: Platform, arch: Arch): string {
 	return `${getUpdaterAssetPrefix(platform, arch)}-update.json`;
 }
 
-export function isValidUpdateInfo(data: unknown): data is UpdateInfo {
+function isValidUpdateInfo(data: unknown): data is UpdateInfo {
 	if (typeof data !== "object" || data === null) {
 		return false;
 	}
@@ -89,7 +89,7 @@ export function isValidUpdateInfo(data: unknown): data is UpdateInfo {
 	);
 }
 
-export function validateUpdateInfo(data: UpdateInfo, tagName: string, platform: Platform, arch: Arch): string | null {
+function validateUpdateInfo(data: UpdateInfo, tagName: string, platform: Platform, arch: Arch): string | null {
 	if (data.version !== tagName) {
 		return `version mismatch: expected "${tagName}", got "${data.version}"`;
 	}
@@ -105,15 +105,15 @@ export function validateUpdateInfo(data: UpdateInfo, tagName: string, platform: 
 	return null;
 }
 
-export function findReleaseAsset(release: GitHubRelease, name: string): GitHubAsset | null {
+function findReleaseAsset(release: GitHubRelease, name: string): GitHubAsset | null {
 	return release.assets.find((asset) => asset.name === name) ?? null;
 }
 
-export function getZstdBinaryPath(platform: Platform, executablePath = process.execPath): string {
+function getZstdBinaryPath(platform: Platform, executablePath = process.execPath): string {
 	return join(dirname(executablePath), platform === "win" ? "zig-zstd.exe" : "zig-zstd");
 }
 
-export async function pathExists(path: string): Promise<boolean> {
+async function pathExists(path: string): Promise<boolean> {
 	try {
 		await stat(path);
 		return true;
@@ -122,7 +122,7 @@ export async function pathExists(path: string): Promise<boolean> {
 	}
 }
 
-export function getRequiredLauncherRelativePath(platform: Platform): string {
+function getRequiredLauncherRelativePath(platform: Platform): string {
 	switch (platform) {
 		case "macos":
 			return join("Contents", "MacOS", "launcher");
@@ -133,7 +133,7 @@ export function getRequiredLauncherRelativePath(platform: Platform): string {
 	}
 }
 
-export async function findExtractedAppBundlePath(platform: Platform, stagingDir: string): Promise<string> {
+async function findExtractedAppBundlePath(platform: Platform, stagingDir: string): Promise<string> {
 	if (platform === "macos") {
 		const entries = await readdir(stagingDir);
 		const appBundle = entries.find((entry) => entry.endsWith(".app"));
@@ -163,7 +163,7 @@ export async function findExtractedAppBundlePath(platform: Platform, stagingDir:
 	throw new Error("Could not find app bundle in extracted archive");
 }
 
-export async function validateExtractedBundle(platform: Platform, stagingDir: string): Promise<string> {
+async function validateExtractedBundle(platform: Platform, stagingDir: string): Promise<string> {
 	const appBundlePath = await findExtractedAppBundlePath(platform, stagingDir);
 	const launcherPath = join(appBundlePath, getRequiredLauncherRelativePath(platform));
 	if (!(await pathExists(launcherPath))) {
@@ -173,7 +173,7 @@ export async function validateExtractedBundle(platform: Platform, stagingDir: st
 }
 
 /** Check whether a release has both the updater tarball and update.json assets. */
-export function releaseHasUpdaterAssets(release: GitHubRelease, platform: Platform, arch: Arch): boolean {
+function releaseHasUpdaterAssets(release: GitHubRelease, platform: Platform, arch: Arch): boolean {
 	const tarball = getReleaseBundleAssetName(platform, arch);
 	const updateJson = getUpdateJsonAssetName(platform, arch);
 	return findReleaseAsset(release, tarball) !== null && findReleaseAsset(release, updateJson) !== null;
@@ -195,7 +195,7 @@ async function fetchReleases(): Promise<GitHubRelease[]> {
  * 2. Allowed by the channel filter
  * 3. Has both updater tarball and update.json assets
  */
-export function findLatestUsableRelease(
+function findLatestUsableRelease(
 	releases: GitHubRelease[],
 	channel: UpdateChannel,
 	currentVersion: string,
@@ -220,7 +220,7 @@ export function findLatestUsableRelease(
 }
 
 /** @deprecated Use findLatestUsableRelease instead. Kept for backward compatibility in tests. */
-export function findLatestRelease(
+function findLatestRelease(
 	releases: GitHubRelease[],
 	channel: UpdateChannel,
 	currentVersion: string,
@@ -238,7 +238,7 @@ export function findLatestRelease(
 	return best;
 }
 
-export class UpdateManager {
+class UpdateManager {
 	private readonly currentVersion: string;
 	private readonly platform: Platform;
 	private readonly arch: Arch;
@@ -675,3 +675,25 @@ del "%~f0"
 		} catch {}
 	}
 }
+
+export type { GitHubAsset, GitHubRelease, UpdateInfo };
+export {
+	filterReleasesByChannel,
+	findExtractedAppBundlePath,
+	findLatestRelease,
+	findLatestUsableRelease,
+	findReleaseAsset,
+	getElectrobunTarballName,
+	getReleaseBundleAssetName,
+	getReleaseChannel,
+	getRequiredLauncherRelativePath,
+	getUpdateJsonAssetName,
+	getUpdaterAssetPrefix,
+	getZstdBinaryPath,
+	isValidUpdateInfo,
+	pathExists,
+	releaseHasUpdaterAssets,
+	UpdateManager,
+	validateExtractedBundle,
+	validateUpdateInfo,
+};

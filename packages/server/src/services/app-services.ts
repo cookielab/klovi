@@ -13,12 +13,12 @@ import type { UpdateChannel } from "./settings.ts";
 import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
 import { scanStats } from "./stats.ts";
 
-export type VersionInfo = {
+type VersionInfo = {
 	version: string;
 	commit: string;
 };
 
-export type PluginSettingInfo = {
+type PluginSettingInfo = {
 	id: string;
 	displayName: string;
 	enabled: boolean;
@@ -27,7 +27,7 @@ export type PluginSettingInfo = {
 	isCustomDir: boolean;
 };
 
-export type UpdateSettingsInfo = {
+type UpdateSettingsInfo = {
 	channel: UpdateChannel;
 	checkIntervalHours: number;
 	autoDownload: boolean;
@@ -36,29 +36,29 @@ export type UpdateSettingsInfo = {
 let _version = "dev";
 let _commit = "";
 
-export function setVersion(version: string, commit: string): void {
+function setVersion(version: string, commit: string): void {
 	_version = version == null || version === "0.0.0" ? "dev" : version;
 	_commit = commit ?? "";
 }
 
-export function getVersion(): VersionInfo {
+function getVersion(): VersionInfo {
 	return {
 		version: _version,
 		commit: _commit,
 	};
 }
 
-export async function getStats(registry: PluginRegistry) {
+async function getStats(registry: PluginRegistry) {
 	const stats = await scanStats(registry);
 	return { stats: stats };
 }
 
-export async function getProjects(registry: PluginRegistry) {
+async function getProjects(registry: PluginRegistry) {
 	const projects = await runRegistryEffect(registry.discoverAllProjects());
 	return { projects: projects };
 }
 
-export async function getSessions(registry: PluginRegistry, params: { encodedPath: string }) {
+async function getSessions(registry: PluginRegistry, params: { encodedPath: string }) {
 	const projects = await runRegistryEffect(registry.discoverAllProjects());
 	const project = projects.find((p) => p.encodedPath === params.encodedPath);
 	if (!project) {
@@ -68,7 +68,7 @@ export async function getSessions(registry: PluginRegistry, params: { encodedPat
 	return { sessions: sessions };
 }
 
-export async function getSession(registry: PluginRegistry, params: { sessionId: string; project: string }) {
+async function getSession(registry: PluginRegistry, params: { sessionId: string; project: string }) {
 	const parsed = parseSessionId(params.sessionId);
 	if (!(parsed.pluginId && parsed.rawSessionId)) {
 		throw new Error("Invalid sessionId format");
@@ -107,10 +107,7 @@ export async function getSession(registry: PluginRegistry, params: { sessionId: 
 	return { session: session };
 }
 
-export async function getSubAgent(
-	registry: PluginRegistry,
-	params: { sessionId: string; project: string; agentId: string },
-) {
+async function getSubAgent(registry: PluginRegistry, params: { sessionId: string; project: string; agentId: string }) {
 	const parsed = parseSessionId(params.sessionId);
 	if (!(parsed.pluginId && parsed.rawSessionId)) {
 		throw new Error("Invalid sessionId format");
@@ -138,7 +135,7 @@ function projectNameFromPath(fullPath: string): string {
 	return parts.slice(-2).join("/");
 }
 
-export async function searchSessions(registry: PluginRegistry) {
+async function searchSessions(registry: PluginRegistry) {
 	const projects = await runRegistryEffect(registry.discoverAllProjects());
 	const allSessions: GlobalSessionResult[] = [];
 
@@ -178,16 +175,16 @@ async function buildPluginSettingsResponse(settingsPath: string): Promise<{ plug
 	return { plugins: plugins };
 }
 
-export function getPluginSettings(settingsPath: string): Promise<{ plugins: PluginSettingInfo[] }> {
+function getPluginSettings(settingsPath: string): Promise<{ plugins: PluginSettingInfo[] }> {
 	return buildPluginSettingsResponse(settingsPath);
 }
 
-export async function getGeneralSettings(settingsPath: string): Promise<{ showSecurityWarning: boolean }> {
+async function getGeneralSettings(settingsPath: string): Promise<{ showSecurityWarning: boolean }> {
 	const settings = await loadSettings(settingsPath);
 	return { showSecurityWarning: settings.general?.showSecurityWarning ?? true };
 }
 
-export async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch: boolean }> {
+async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch: boolean }> {
 	try {
 		await access(settingsPath);
 		return { firstLaunch: false };
@@ -196,7 +193,7 @@ export async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch
 	}
 }
 
-export async function completeOnboarding(settingsPath: string): Promise<{ ok: boolean }> {
+async function completeOnboarding(settingsPath: string): Promise<{ ok: boolean }> {
 	const { firstLaunch } = await isFirstLaunch(settingsPath);
 	if (firstLaunch) {
 		await saveSettings(settingsPath, getDefaultSettings());
@@ -204,7 +201,7 @@ export async function completeOnboarding(settingsPath: string): Promise<{ ok: bo
 	return { ok: true };
 }
 
-export async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
+async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
 	try {
 		await rm(settingsPath);
 	} catch {
@@ -213,7 +210,7 @@ export async function resetSettings(settingsPath: string): Promise<{ ok: boolean
 	return { ok: true };
 }
 
-export async function updateGeneralSettings(
+async function updateGeneralSettings(
 	settingsPath: string,
 	params: { showSecurityWarning?: boolean },
 ): Promise<{ showSecurityWarning: boolean }> {
@@ -228,7 +225,7 @@ export async function updateGeneralSettings(
 	return { showSecurityWarning: settings.general.showSecurityWarning ?? true };
 }
 
-export async function updatePluginSetting(
+async function updatePluginSetting(
 	settingsPath: string,
 	params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
 ): Promise<{ plugins: PluginSettingInfo[] }> {
@@ -250,7 +247,7 @@ export async function updatePluginSetting(
 	return buildPluginSettingsResponse(settingsPath);
 }
 
-export async function getUpdateSettings(settingsPath: string): Promise<UpdateSettingsInfo> {
+async function getUpdateSettings(settingsPath: string): Promise<UpdateSettingsInfo> {
 	const settings = await loadSettings(settingsPath);
 	return {
 		channel: settings.updates?.channel ?? "stable",
@@ -259,7 +256,7 @@ export async function getUpdateSettings(settingsPath: string): Promise<UpdateSet
 	};
 }
 
-export async function updateUpdateSettings(
+async function updateUpdateSettings(
 	settingsPath: string,
 	params: { channel?: UpdateChannel; checkIntervalHours?: number; autoDownload?: boolean },
 ): Promise<UpdateSettingsInfo> {
@@ -284,3 +281,24 @@ export async function updateUpdateSettings(
 		autoDownload: settings.updates.autoDownload,
 	};
 }
+
+export type { PluginSettingInfo, UpdateSettingsInfo, VersionInfo };
+export {
+	completeOnboarding,
+	getGeneralSettings,
+	getPluginSettings,
+	getProjects,
+	getSession,
+	getSessions,
+	getStats,
+	getSubAgent,
+	getUpdateSettings,
+	getVersion,
+	isFirstLaunch,
+	resetSettings,
+	searchSessions,
+	setVersion,
+	updateGeneralSettings,
+	updatePluginSetting,
+	updateUpdateSettings,
+};

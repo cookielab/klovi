@@ -14,7 +14,7 @@ const CODE_STRUCTURE_REGEX = /^(export|import|const|let|var|function|class)\s/u;
  * Returns a Prism language identifier or null if no format is detected.
  * Only matches when the entire output is a single format (whole-output detection).
  */
-export function detectOutputFormat(output: string): string | null {
+function detectOutputFormat(output: string): string | null {
 	const trimmed = output.trim();
 	if (!trimmed) {
 		return null;
@@ -137,3 +137,5 @@ function hasCodeStructure(text: string): boolean {
 	const lines = text.split("\n");
 	return lines.length >= 2 && CODE_STRUCTURE_REGEX.test(text);
 }
+
+export { detectOutputFormat };

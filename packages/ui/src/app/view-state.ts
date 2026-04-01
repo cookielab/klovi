@@ -6,7 +6,7 @@ import { getFrontendPlugin } from "./plugin-registry.ts";
 
 const HASH_PREFIX_REGEX = /^#\/?/u;
 
-export type ViewState =
+type ViewState =
 	| { kind: "home" }
 	| { kind: "hidden" }
 	| { kind: "settings" }
@@ -26,7 +26,7 @@ export type ViewState =
 			presenting: boolean;
 	  };
 
-export function getResumeCommand(pluginId: string | undefined, encodedSessionId: string): string | undefined {
+function getResumeCommand(pluginId: string | undefined, encodedSessionId: string): string | undefined {
 	const parsedSessionId = parseSessionId(encodedSessionId);
 	const resolvedPluginId = pluginId ?? parsedSessionId.pluginId ?? undefined;
 	if (!(resolvedPluginId && parsedSessionId.rawSessionId)) {
@@ -35,7 +35,7 @@ export function getResumeCommand(pluginId: string | undefined, encodedSessionId:
 	return getFrontendPlugin(resolvedPluginId)?.getResumeCommand?.(parsedSessionId.rawSessionId) ?? undefined;
 }
 
-export function viewToHash(view: ViewState): string {
+function viewToHash(view: ViewState): string {
 	if (view.kind === "hidden") {
 		return "#/hidden";
 	}
@@ -75,7 +75,7 @@ async function loadProjectSession(
 	return data.sessions.find((s) => s.sessionId === sessionId);
 }
 
-export async function resolveProjectAndSession(
+async function resolveProjectAndSession(
 	client: KloviClient,
 	encodedPath: string,
 	sessionId: string,
@@ -95,7 +95,7 @@ export async function resolveProjectAndSession(
 	}
 }
 
-export async function restoreFromHash(client: KloviClient): Promise<ViewState> {
+async function restoreFromHash(client: KloviClient): Promise<ViewState> {
 	const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
 	if (!hash) {
 		return { kind: "home" };
@@ -148,7 +148,7 @@ export async function restoreFromHash(client: KloviClient): Promise<ViewState> {
 	return { kind: "project", project: project };
 }
 
-export function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
+function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
 	if (view.kind === "hidden") {
 		return { title: "Hidden Projects", breadcrumb: "" };
 	}
@@ -179,3 +179,6 @@ export function getHeaderInfo(view: ViewState): { title: string; breadcrumb: str
 	}
 	return { title: "Klovi", breadcrumb: "" };
 }
+
+export type { ViewState };
+export { getHeaderInfo, getResumeCommand, resolveProjectAndSession, restoreFromHash, viewToHash };

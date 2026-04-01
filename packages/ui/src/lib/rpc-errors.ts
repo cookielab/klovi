@@ -1,4 +1,4 @@
-export type KloviRpcErrorCode = "rpc-timeout" | "rpc-disconnected";
+type KloviRpcErrorCode = "rpc-timeout" | "rpc-disconnected";
 
 type KloviRpcError = Error & { code?: KloviRpcErrorCode; cause?: unknown };
 
@@ -10,15 +10,15 @@ function createRpcError(code: KloviRpcErrorCode, message: string, cause?: unknow
 	return error;
 }
 
-export function createRpcTimeoutError(method: string, timeoutMs: number, cause?: unknown): Error {
+function createRpcTimeoutError(method: string, timeoutMs: number, cause?: unknown): Error {
 	return createRpcError("rpc-timeout", `RPC request timed out. (${method} exceeded ${timeoutMs}ms)`, cause);
 }
 
-export function createRpcDisconnectedError(method: string, cause?: unknown): Error {
+function createRpcDisconnectedError(method: string, cause?: unknown): Error {
 	return createRpcError("rpc-disconnected", `Desktop host disconnected during ${method}.`, cause);
 }
 
-export function getRpcErrorCode(error: unknown): KloviRpcErrorCode | null {
+function getRpcErrorCode(error: unknown): KloviRpcErrorCode | null {
 	if (error instanceof Error) {
 		const maybeRpcError = error as KloviRpcError;
 		if (maybeRpcError.code === "rpc-timeout" || maybeRpcError.code === "rpc-disconnected") {
@@ -41,10 +41,13 @@ export function getRpcErrorCode(error: unknown): KloviRpcErrorCode | null {
 	return null;
 }
 
-export function isRpcTransportError(error: unknown): boolean {
+function isRpcTransportError(error: unknown): boolean {
 	return getRpcErrorCode(error) !== null;
 }
 
-export function isRpcTimeoutError(error: unknown): boolean {
+function isRpcTimeoutError(error: unknown): boolean {
 	return getRpcErrorCode(error) === "rpc-timeout";
 }
+
+export type { KloviRpcErrorCode };
+export { createRpcDisconnectedError, createRpcTimeoutError, getRpcErrorCode, isRpcTimeoutError, isRpcTransportError };
