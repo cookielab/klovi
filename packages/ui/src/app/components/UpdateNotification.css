@@ -1,46 +1,46 @@
 .update-notification {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 12px;
-  background: var(--accent-subtle);
-  border-bottom: 1px solid var(--border-light);
-  font-size: 0.85rem;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 12px;
+	background: var(--accent-subtle);
+	border-bottom: 1px solid var(--border-light);
+	font-size: 0.85rem;
 }
 
 .update-notification-text {
-  flex: 1;
-  color: var(--text-primary);
+	flex: 1;
+	color: var(--text-primary);
 }
 
 .update-notification-action {
-  background: var(--accent);
-  border: none;
-  padding: 4px 12px;
-  font-size: 0.8rem;
-  color: #fff;
-  cursor: pointer;
+	background: var(--accent);
+	border: none;
+	padding: 4px 12px;
+	font-size: 0.8rem;
+	color: #fff;
+	cursor: pointer;
 }
 
 .update-notification-action:hover:not(:disabled) {
-  opacity: 0.9;
+	opacity: 0.9;
 }
 
 .update-notification-action:disabled {
-  opacity: 0.6;
-  cursor: default;
+	opacity: 0.6;
+	cursor: default;
 }
 
 .update-notification-dismiss {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
+	background: none;
+	border: none;
+	font-size: 1.1rem;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 0 4px;
+	line-height: 1;
 }
 
 .update-notification-dismiss:hover {
-  color: var(--text-primary);
+	color: var(--text-primary);
 }

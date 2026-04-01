@@ -10,7 +10,7 @@ const cliEntrypoint = join(electrobunDir, "src", "cli", "index.ts");
 const isLinux = platform() === "linux";
 
 const shims: Record<string, string> = {
-  "src/shared/platform.ts": `import { platform, arch } from "os";
+	"src/shared/platform.ts": `import { platform, arch } from "os";
 
 export type SupportedOS = "macos" | "win" | "linux";
 export type SupportedArch = "arm64" | "x64";
@@ -54,7 +54,7 @@ export function getPlatformArch(): SupportedArch {
   return ARCH;
 }
 `,
-  "src/shared/naming.ts": `import type { SupportedOS, SupportedArch } from "./platform";
+	"src/shared/naming.ts": `import type { SupportedOS, SupportedArch } from "./platform";
 
 export type BuildEnvironment = "stable" | "canary" | "dev" | (string & {});
 
@@ -162,17 +162,17 @@ export function getTarballUrl(
   return \`\${baseUrl.replace(/\\/+$/, "")}/\${platformPrefix}-\${tarballFileName}\`;
 }
 `,
-  "src/shared/bun-version.ts": `export const BUN_VERSION = "1.3.9";
+	"src/shared/bun-version.ts": `export const BUN_VERSION = "1.3.9";
 `,
-  "src/shared/electrobun-version.ts": `import { version } from "../../package.json";
+	"src/shared/electrobun-version.ts": `import { version } from "../../package.json";
 
 export const ELECTROBUN_VERSION: string = version;
 `,
-  "src/shared/cef-version.ts": `export const CEF_VERSION = \`145.0.23+g3e7fe1c\`;
+	"src/shared/cef-version.ts": `export const CEF_VERSION = \`145.0.23+g3e7fe1c\`;
 export const CHROMIUM_VERSION = \`145.0.7632.68\`;
 export const DEFAULT_CEF_VERSION_STRING = \`\${CEF_VERSION}+chromium-\${CHROMIUM_VERSION}\`;
 `,
-  "src/cli/templates/embedded.ts": `type TemplateEntry = {
+	"src/cli/templates/embedded.ts": `type TemplateEntry = {
   name: string;
   files: Record<string, string>;
 };
@@ -194,47 +194,51 @@ export function getTemplate(name: string): TemplateEntry {
 };
 
 async function ensureShims(): Promise<void> {
-  for (const [relativePath, contents] of Object.entries(shims)) {
-    const fullPath = join(electrobunDir, relativePath);
-    mkdirSync(dirname(fullPath), { recursive: true });
-    const file = Bun.file(fullPath);
-    const current = (await file.exists()) ? await file.text() : null;
-    if (current !== contents) {
-      await Bun.write(fullPath, contents);
-    }
-  }
+	for (const [relativePath, contents] of Object.entries(shims)) {
+		const fullPath = join(electrobunDir, relativePath);
+		mkdirSync(dirname(fullPath), { recursive: true });
+		const file = Bun.file(fullPath);
+		const current = (await file.exists()) ? await file.text() : null;
+		if (current !== contents) {
+			await Bun.write(fullPath, contents);
+		}
+	}
 }
 
 const HARDCODED_WM_CLASS = "ElectrobunKitchenSink-dev";
 const REPLACEMENT_WM_CLASS = "Klovi";
 
 async function patchNativeLibraries(): Promise<void> {
-  const distDir = join(electrobunDir, "dist-linux-x64");
-  const libs = ["libNativeWrapper.so", "libNativeWrapper_cef.so"];
-  const searchBytes = Buffer.from(HARDCODED_WM_CLASS, "utf-8");
-  const replacement = Buffer.alloc(searchBytes.length);
-  replacement.write(REPLACEMENT_WM_CLASS, "utf-8"); // rest is null bytes
+	const distDir = join(electrobunDir, "dist-linux-x64");
+	const libs = ["libNativeWrapper.so", "libNativeWrapper_cef.so"];
+	const searchBytes = Buffer.from(HARDCODED_WM_CLASS, "utf-8");
+	const replacement = Buffer.alloc(searchBytes.length);
+	replacement.write(REPLACEMENT_WM_CLASS, "utf-8"); // rest is null bytes
 
-  for (const lib of libs) {
-    const libPath = join(distDir, lib);
-    const file = Bun.file(libPath);
-    if (!(await file.exists())) continue;
+	for (const lib of libs) {
+		const libPath = join(distDir, lib);
+		const file = Bun.file(libPath);
+		if (!(await file.exists())) {
+			continue;
+		}
 
-    const buf = Buffer.from(await file.arrayBuffer());
-    const idx = buf.indexOf(searchBytes);
-    if (idx === -1) continue; // already patched or not present
+		const buf = Buffer.from(await file.arrayBuffer());
+		const idx = buf.indexOf(searchBytes);
+		if (idx === -1) {
+			continue; // already patched or not present
+		}
 
-    replacement.copy(buf, idx);
-    await Bun.write(libPath, buf);
-  }
+		replacement.copy(buf, idx);
+		await Bun.write(libPath, buf);
+	}
 }
 
 async function installDevDesktopEntry(): Promise<void> {
-  const buildDir = join(desktopRoot, "build", "dev-linux-x64", "Klovi-dev");
-  const iconPath = join(buildDir, "Resources", "appIcon.png");
-  const execPath = join(buildDir, "bin", "launcher");
+	const buildDir = join(desktopRoot, "build", "dev-linux-x64", "Klovi-dev");
+	const iconPath = join(buildDir, "Resources", "appIcon.png");
+	const execPath = join(buildDir, "bin", "launcher");
 
-  const entry = `[Desktop Entry]
+	const entry = `[Desktop Entry]
 Type=Application
 Name=Klovi (dev)
 Icon=${iconPath}
@@ -243,40 +247,40 @@ StartupWMClass=Klovi
 NoDisplay=true
 `;
 
-  const appsDir = join(homedir(), ".local", "share", "applications");
-  mkdirSync(appsDir, { recursive: true });
-  const desktopFile = join(appsDir, "io.cookielab.klovi.desktop");
+	const appsDir = join(homedir(), ".local", "share", "applications");
+	mkdirSync(appsDir, { recursive: true });
+	const desktopFile = join(appsDir, "io.cookielab.klovi.desktop");
 
-  const file = Bun.file(desktopFile);
-  const current = (await file.exists()) ? await file.text() : null;
-  if (current !== entry) {
-    await Bun.write(desktopFile, entry);
-  }
+	const file = Bun.file(desktopFile);
+	const current = (await file.exists()) ? await file.text() : null;
+	if (current !== entry) {
+		await Bun.write(desktopFile, entry);
+	}
 }
 
 async function main(): Promise<void> {
-  const cliArgs = Bun.argv.slice(2);
-  if (cliArgs.length === 0) {
-    throw new Error("Usage: bun run-electrobun-cli.ts <command> [...args]");
-  }
+	const cliArgs = Bun.argv.slice(2);
+	if (cliArgs.length === 0) {
+		throw new Error("Usage: bun run-electrobun-cli.ts <command> [...args]");
+	}
 
-  await ensureShims();
+	await ensureShims();
 
-  if (isLinux) {
-    await patchNativeLibraries();
-    if (cliArgs[0] === "dev") {
-      await installDevDesktopEntry();
-    }
-  }
+	if (isLinux) {
+		await patchNativeLibraries();
+		if (cliArgs[0] === "dev") {
+			await installDevDesktopEntry();
+		}
+	}
 
-  const proc = Bun.spawn([process.execPath, cliEntrypoint, ...cliArgs], {
-    cwd: desktopRoot,
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const exitCode = await proc.exited;
-  process.exit(exitCode);
+	const proc = Bun.spawn([process.execPath, cliEntrypoint, ...cliArgs], {
+		cwd: desktopRoot,
+		stdin: "inherit",
+		stdout: "inherit",
+		stderr: "inherit",
+	});
+	const exitCode = await proc.exited;
+	process.exit(exitCode);
 }
 
 await main();

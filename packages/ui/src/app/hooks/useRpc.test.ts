@@ -3,50 +3,52 @@ import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { useRPC } from "./useRpc.ts";
 
 describe("useRPC", () => {
-  afterEach(() => {
-    cleanup();
-  });
+	afterEach(() => {
+		cleanup();
+	});
 
-  test("starts in loading state", () => {
-    const rpcCall = () => new Promise<{ value: number }>(() => {});
-    const { result } = renderHook(() => useRPC(rpcCall, []));
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBeNull();
-    expect(result.current.error).toBeNull();
-  });
+	test("starts in loading state", () => {
+		const rpcCall = () => new Promise<{ value: number }>(() => {});
+		const { result } = renderHook(() => useRPC(rpcCall, []));
+		expect(result.current.loading).toBe(true);
+		expect(result.current.data).toBeNull();
+		expect(result.current.error).toBeNull();
+	});
 
-  test("returns data on successful call", async () => {
-    const rpcCall = () => Promise.resolve({ value: 42 });
-    const { result } = renderHook(() => useRPC(rpcCall, []));
+	test("returns data on successful call", async () => {
+		const rpcCall = () => Promise.resolve({ value: 42 });
+		const { result } = renderHook(() => useRPC(rpcCall, []));
 
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.data).toEqual({ value: 42 });
-    expect(result.current.error).toBeNull();
-  });
+		await waitFor(() => expect(result.current.loading).toBe(false));
+		expect(result.current.data).toEqual({ value: 42 });
+		expect(result.current.error).toBeNull();
+	});
 
-  test("returns error on failure", async () => {
-    const rpcCall = () => Promise.reject(new Error("RPC failed"));
-    const { result } = renderHook(() => useRPC(rpcCall, []));
+	test("returns error on failure", async () => {
+		const rpcCall = () => Promise.reject(new Error("RPC failed"));
+		const { result } = renderHook(() => useRPC(rpcCall, []));
 
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.error).toBe("RPC failed");
-    expect(result.current.data).toBeNull();
-  });
+		await waitFor(() => expect(result.current.loading).toBe(false));
+		expect(result.current.error).toBe("RPC failed");
+		expect(result.current.data).toBeNull();
+	});
 
-  test("retry refetches data", async () => {
-    let callCount = 0;
-    const rpcCall = () => {
-      callCount++;
-      if (callCount === 1) return Promise.reject(new Error("fail"));
-      return Promise.resolve({ ok: true });
-    };
+	test("retry refetches data", async () => {
+		let callCount = 0;
+		const rpcCall = () => {
+			callCount++;
+			if (callCount === 1) {
+				return Promise.reject(new Error("fail"));
+			}
+			return Promise.resolve({ ok: true });
+		};
 
-    const { result } = renderHook(() => useRPC(rpcCall, []));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.error).toBe("fail");
+		const { result } = renderHook(() => useRPC(rpcCall, []));
+		await waitFor(() => expect(result.current.loading).toBe(false));
+		expect(result.current.error).toBe("fail");
 
-    result.current.retry();
-    await waitFor(() => expect(result.current.data).toEqual({ ok: true }));
-    expect(result.current.error).toBeNull();
-  });
+		result.current.retry();
+		await waitFor(() => expect(result.current.data).toEqual({ ok: true }));
+		expect(result.current.error).toBeNull();
+	});
 });

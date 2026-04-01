@@ -6,7 +6,7 @@ import { Layer } from "effect";
 export const NodePluginLayer = Layer.merge(NodeContext.layer, NodeSqliteLayer);
 
 export const makeNodeServerLayer = (options: { host: string; port: number }) =>
-  Layer.merge(
-    NodeHttpServer.layer(() => createServer(), options),
-    NodeContext.layer,
-  );
+	Layer.merge(
+		NodeHttpServer.layer(() => createServer(), options),
+		NodeContext.layer,
+	);

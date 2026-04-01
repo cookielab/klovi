@@ -6,6 +6,7 @@
       "name": "@cookielab.io/klovi-workspace",
       "devDependencies": {
         "@biomejs/biome": "2.4.9",
+        "@cookielab.io/biome-config": "^1.4.0",
         "@types/bun": "^1.3.11",
         "@types/react": "^19.2.13",
         "@types/react-dom": "^19.2.3",
@@ -213,6 +214,8 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.4.9", "", { "os": "win32", "cpu": "arm64" }, "sha512-aDZr0RBC3sMGJOU10BvG7eZIlWLK/i51HRIfScE2lVhfts2dQTreowLiJJd+UYg/tHKxS470IbzpuKmd0MiD6g=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.9", "", { "os": "win32", "cpu": "x64" }, "sha512-NS4g/2G9SoQ4ktKtz31pvyc/rmgzlcIDCGU/zWbmHJAqx6gcRj2gj5Q/guXhoWTzCUaQZDIqiCQXHS7BcGYc0w=="],
+
+    "@cookielab.io/biome-config": ["@cookielab.io/biome-config@1.4.0", "", { "peerDependencies": { "@biomejs/biome": ">=2.4.6" } }, "sha512-L8FY7zoKLnvX1+IwuRg7HjIzQP/TeEY5lERWTSAL95XAy6uPM74iO1QLFFHJzHm4mfIA1NxgsCEdyNs5Xheu9g=="],
 
     "@cookielab.io/klovi": ["@cookielab.io/klovi@workspace:apps/package"],
 

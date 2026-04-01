@@ -9,5 +9,5 @@ export type PluginRequirements = PluginConfig | FileSystem.FileSystem | SqliteCl
 export type RegistryRequirements = FileSystem.FileSystem | SqliteClientTag;
 
 export function makePluginConfigLayer(config: PluginConfigShape): Layer.Layer<PluginConfig> {
-  return Layer.succeed(PluginConfig, config);
+	return Layer.succeed(PluginConfig, config);
 }

@@ -12,15 +12,12 @@ const version = pkg["version"] ?? "0.0.0";
 const commit = pkg["commit"] ?? "";
 const config = resolveCliConfig(__dir);
 
-const server = await startKloviPackageServer({
-  host: config.host,
-  port: config.port,
-  staticDir: config.staticDir,
-  version,
-  commit,
-  openBrowser: config.openBrowser,
-  ...(config.settingsPath ? { settingsPath: config.settingsPath } : {}),
+await startKloviPackageServer({
+	host: config.host,
+	port: config.port,
+	staticDir: config.staticDir,
+	version: version,
+	commit: commit,
+	openBrowser: config.openBrowser,
+	...(config.settingsPath ? { settingsPath: config.settingsPath } : {}),
 });
-
-// biome-ignore lint/suspicious/noConsole: CLI output
-console.log(`Klovi server listening on ${server.url}`);

@@ -1,41 +1,39 @@
 {
-  "name": "@cookielab.io/klovi-workspace",
-  "private": true,
-  "description": "Workspace for the Klovi monorepo",
-  "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev:desktop": "bun run --filter @cookielab.io/klovi-desktop dev",
-    "dev:bun": "bun run --filter @cookielab.io/klovi dev",
-    "dev:node": "tsx apps/package/src/cli.ts",
-    "build": "bun run --filter @cookielab.io/klovi-desktop build",
-    "build:web": "bun run --filter @cookielab.io/klovi-ui build",
-    "build:package": "bun run build:web && bun run --filter @cookielab.io/klovi build",
-    "stage:npm": "bun run build:web && bun run --filter @cookielab.io/klovi stage:npm",
-    "verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
-    "test": "bun test",
-    "test:node-smoke": "tsx scripts/plugin-runtime-node-smoke.ts",
-    "typecheck": "tsc --noEmit",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "check": "biome check .",
-    "check:fix": "biome check --write .",
-    "storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.4.9",
-    "@types/bun": "^1.3.11",
-    "@types/react": "^19.2.13",
-    "@types/react-dom": "^19.2.3",
-    "effect": "^3.21.0",
-    "happy-dom": "^20.8.9",
-    "tsx": "^4.20.6",
-    "typescript": "^6.0.2"
-  },
-  "patchedDependencies": {
-    "electrobun@1.16.0": "patches/electrobun@1.16.0.patch"
-  }
+	"name": "@cookielab.io/klovi-workspace",
+	"private": true,
+	"description": "Workspace for the Klovi monorepo",
+	"type": "module",
+	"workspaces": ["apps/*", "packages/*"],
+	"scripts": {
+		"dev:desktop": "bun run --filter @cookielab.io/klovi-desktop dev",
+		"dev:bun": "bun run --filter @cookielab.io/klovi dev",
+		"dev:node": "tsx apps/package/src/cli.ts",
+		"build": "bun run --filter @cookielab.io/klovi-desktop build",
+		"build:web": "bun run --filter @cookielab.io/klovi-ui build",
+		"build:package": "bun run build:web && bun run --filter @cookielab.io/klovi build",
+		"stage:npm": "bun run build:web && bun run --filter @cookielab.io/klovi stage:npm",
+		"verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
+		"test": "bun test",
+		"test:node-smoke": "tsx scripts/plugin-runtime-node-smoke.ts",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"check": "biome check .",
+		"check:fix": "biome check --write .",
+		"storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.9",
+		"@cookielab.io/biome-config": "^1.4.0",
+		"@types/bun": "^1.3.11",
+		"@types/react": "^19.2.13",
+		"@types/react-dom": "^19.2.3",
+		"effect": "^3.21.0",
+		"happy-dom": "^20.8.9",
+		"tsx": "^4.20.6",
+		"typescript": "^6.0.2"
+	},
+	"patchedDependencies": {
+		"electrobun@1.16.0": "patches/electrobun@1.16.0.patch"
+	}
 }

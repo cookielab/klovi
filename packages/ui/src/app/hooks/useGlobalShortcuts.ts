@@ -2,88 +2,94 @@ import type { Dispatch, SetStateAction } from "react";
 import { useEffect } from "react";
 
 export function useSearchShortcut({
-  fetchSearchSessions,
-  setSearchOpen,
+	fetchSearchSessions,
+	setSearchOpen,
 }: {
-  fetchSearchSessions: () => void;
-  setSearchOpen: Dispatch<SetStateAction<boolean>>;
+	fetchSearchSessions: () => void;
+	setSearchOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  useEffect(() => {
-    function handleCmdK(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen((prev) => {
-          if (!prev) fetchSearchSessions();
-          return !prev;
-        });
-      }
-    }
-    window.addEventListener("keydown", handleCmdK);
-    return () => window.removeEventListener("keydown", handleCmdK);
-  }, [fetchSearchSessions, setSearchOpen]);
+	useEffect(() => {
+		function handleCmdK(e: KeyboardEvent) {
+			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+				e.preventDefault();
+				setSearchOpen((prev) => {
+					if (!prev) {
+						fetchSearchSessions();
+					}
+					return !prev;
+				});
+			}
+		}
+		window.addEventListener("keydown", handleCmdK);
+		return () => window.removeEventListener("keydown", handleCmdK);
+	}, [fetchSearchSessions, setSearchOpen]);
 }
 
 export function useGlobalShortcuts({
-  canPresent,
-  togglePresentation,
-  increase,
-  decrease,
+	canPresent,
+	togglePresentation,
+	increase,
+	decrease,
 }: {
-  canPresent: boolean;
-  togglePresentation: () => void;
-  increase: () => void;
-  decrease: () => void;
+	canPresent: boolean;
+	togglePresentation: () => void;
+	increase: () => void;
+	decrease: () => void;
 }) {
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+	useEffect(() => {
+		function handleKeyDown(e: KeyboardEvent) {
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+				return;
+			}
+			if (e.ctrlKey || e.metaKey || e.altKey) {
+				return;
+			}
 
-      switch (e.key) {
-        case "p":
-          if (canPresent) {
-            e.preventDefault();
-            togglePresentation();
-          }
-          break;
-        case "+":
-        case "=":
-          e.preventDefault();
-          increase();
-          break;
-        case "-":
-          e.preventDefault();
-          decrease();
-          break;
-      }
-    }
+			switch (e.key) {
+				case "p":
+					if (canPresent) {
+						e.preventDefault();
+						togglePresentation();
+					}
+					break;
+				case "+":
+				case "=":
+					e.preventDefault();
+					increase();
+					break;
+				case "-":
+					e.preventDefault();
+					decrease();
+					break;
+			}
+		}
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canPresent, togglePresentation, increase, decrease]);
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [canPresent, togglePresentation, increase, decrease]);
 }
 
 export function useSettingsShortcut({
-  isSettings,
-  closeSettings,
-  goSettings,
+	isSettings,
+	closeSettings,
+	goSettings,
 }: {
-  isSettings: boolean;
-  closeSettings: () => void;
-  goSettings: () => void;
+	isSettings: boolean;
+	closeSettings: () => void;
+	goSettings: () => void;
 }) {
-  useEffect(() => {
-    function handleCmdComma(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
-        e.preventDefault();
-        if (isSettings) {
-          closeSettings();
-        } else {
-          goSettings();
-        }
-      }
-    }
-    window.addEventListener("keydown", handleCmdComma);
-    return () => window.removeEventListener("keydown", handleCmdComma);
-  }, [isSettings, goSettings, closeSettings]);
+	useEffect(() => {
+		function handleCmdComma(e: KeyboardEvent) {
+			if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+				e.preventDefault();
+				if (isSettings) {
+					closeSettings();
+				} else {
+					goSettings();
+				}
+			}
+		}
+		window.addEventListener("keydown", handleCmdComma);
+		return () => window.removeEventListener("keydown", handleCmdComma);
+	}, [isSettings, goSettings, closeSettings]);
 }

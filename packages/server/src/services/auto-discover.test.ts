@@ -12,60 +12,60 @@ import { getDefaultSettings } from "./settings.ts";
 const testDir = join(tmpdir(), `klovi-registry-test-${Date.now()}`);
 
 describe("createRegistry with settings", () => {
-  let origClaude: string;
-  let origCodex: string;
-  let origOpenCode: string;
+	let origClaude: string;
+	let origCodex: string;
+	let origOpenCode: string;
 
-  beforeEach(async () => {
-    origClaude = getClaudeCodeDir();
-    origCodex = getCodexCliDir();
-    origOpenCode = getOpenCodeDir();
-    await mkdir(testDir, { recursive: true });
-  });
+	beforeEach(async () => {
+		origClaude = getClaudeCodeDir();
+		origCodex = getCodexCliDir();
+		origOpenCode = getOpenCodeDir();
+		await mkdir(testDir, { recursive: true });
+	});
 
-  afterEach(async () => {
-    setClaudeCodeDir(origClaude);
-    setCodexCliDir(origCodex);
-    setOpenCodeDir(origOpenCode);
-    await rm(testDir, { recursive: true, force: true });
-  });
+	afterEach(async () => {
+		setClaudeCodeDir(origClaude);
+		setCodexCliDir(origCodex);
+		setOpenCodeDir(origOpenCode);
+		await rm(testDir, { recursive: true, force: true });
+	});
 
-  test("disabled plugin is not registered even if dir exists", async () => {
-    const claudeDir = join(testDir, ".claude");
-    await mkdir(join(claudeDir, "projects"), { recursive: true });
-    setClaudeCodeDir(claudeDir);
+	test("disabled plugin is not registered even if dir exists", async () => {
+		const claudeDir = join(testDir, ".claude");
+		await mkdir(join(claudeDir, "projects"), { recursive: true });
+		setClaudeCodeDir(claudeDir);
 
-    const settings: PluginSettings = {
-      ...getDefaultSettings(),
-      plugins: {
-        ...getDefaultSettings().plugins,
-        "claude-code": { enabled: false, dataDir: null },
-      },
-    };
+		const settings: PluginSettings = {
+			...getDefaultSettings(),
+			plugins: {
+				...getDefaultSettings().plugins,
+				"claude-code": { enabled: false, dataDir: null },
+			},
+		};
 
-    const registry = await createRegistry(settings);
-    expect(registry.getAllPlugins().find((p) => p.id === "claude-code")).toBeUndefined();
-  });
+		const registry = await createRegistry(settings);
+		expect(registry.getAllPlugins().find((p) => p.id === "claude-code")).toBeUndefined();
+	});
 
-  test("custom dataDir is used for discovery", async () => {
-    const customDir = join(testDir, "custom-claude");
-    await mkdir(join(customDir, "projects"), { recursive: true });
+	test("custom dataDir is used for discovery", async () => {
+		const customDir = join(testDir, "custom-claude");
+		await mkdir(join(customDir, "projects"), { recursive: true });
 
-    const settings: PluginSettings = {
-      ...getDefaultSettings(),
-      plugins: {
-        ...getDefaultSettings().plugins,
-        "claude-code": { enabled: true, dataDir: customDir },
-      },
-    };
+		const settings: PluginSettings = {
+			...getDefaultSettings(),
+			plugins: {
+				...getDefaultSettings().plugins,
+				"claude-code": { enabled: true, dataDir: customDir },
+			},
+		};
 
-    const registry = await createRegistry(settings);
-    const plugin = registry.getAllPlugins().find((p) => p.id === "claude-code");
-    expect(plugin).toBeDefined();
-  });
+		const registry = await createRegistry(settings);
+		const plugin = registry.getAllPlugins().find((p) => p.id === "claude-code");
+		expect(plugin).toBeDefined();
+	});
 
-  test("without settings argument, behaves as before (all enabled, default dirs)", async () => {
-    const registry = await createRegistry();
-    expect(registry).toBeDefined();
-  });
+	test("without settings argument, behaves as before (all enabled, default dirs)", async () => {
+		const registry = await createRegistry();
+		expect(registry).toBeDefined();
+	});
 });

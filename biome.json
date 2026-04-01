@@ -1,127 +1,139 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "main"
-  },
-  "files": {
-    "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/build",
-      "!**/coverage",
-      "!**/.claude",
-      "!bun.lock",
-      "!scripts"
-    ]
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "trailingCommas": "all",
-      "semicolons": "always",
-      "arrowParentheses": "always"
-    }
-  },
-  "css": {
-    "linter": {
-      "enabled": true
-    }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "correctness": {
-        "noUnusedImports": "error",
-        "noUnusedVariables": "error",
-        "noNestedComponentDefinitions": "error",
-        "noUndeclaredDependencies": "error",
-        "noGlobalDirnameFilename": "error"
-      },
-      "suspicious": {
-        "noExplicitAny": "error",
-        "noConsole": "warn",
-        "noArrayIndexKey": "warn",
-        "noVar": "error",
-        "useAwait": "error",
-        "noAlert": "error"
-      },
-      "a11y": {
-        "useSemanticElements": "error",
-        "noStaticElementInteractions": "warn",
-        "useKeyWithClickEvents": "warn"
-      },
-      "style": {
-        "useImportType": "error",
-        "useConsistentArrayType": {
-          "level": "error",
-          "options": {
-            "syntax": "shorthand"
-          }
-        },
-        "noNonNullAssertion": "warn",
-        "useFilenamingConvention": {
-          "level": "error",
-          "options": {
-            "requireAscii": true,
-            "filenameCases": ["camelCase", "PascalCase", "kebab-case"]
-          }
-        },
-        "noEnum": "error",
-        "noParameterAssign": "error",
-        "useConsistentCurlyBraces": "warn",
-        "noCommonJs": "error"
-      },
-      "complexity": {
-        "noExcessiveCognitiveComplexity": "error",
-        "useLiteralKeys": "off",
-        "noUselessStringConcat": "error",
-        "noUselessUndefined": "error",
-        "noExcessiveNestedTestSuites": "error"
-      },
-      "performance": {
-        "noDelete": "error",
-        "noReExportAll": "error",
-        "useTopLevelRegex": "warn"
-      },
-      "security": {
-        "noSecrets": "warn"
-      },
-      "nursery": {
-        "noFloatingPromises": "error"
-      }
-    }
-  },
-  "overrides": [
-    {
-      "includes": ["apps/desktop/scripts/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
-        }
-      }
-    }
-  ],
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  }
+	"$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
+	"extends": ["@cookielab.io/biome-config/react"],
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/build",
+			"!**/coverage",
+			"!**/.claude",
+			"!bun.lock",
+			"!scripts"
+		]
+	},
+	"javascript": {
+		"globals": ["Bun"]
+	},
+	"linter": {
+		"rules": {
+			"correctness": {
+				"noNodejsModules": "off",
+				"noProcessGlobal": "off",
+				"noGlobalDirnameFilename": "error",
+				"noUnresolvedImports": "off"
+			},
+			"style": {
+				"noCommonJs": "error",
+				"useFilenamingConvention": {
+					"level": "error",
+					"options": {
+						"requireAscii": true,
+						"filenameCases": ["camelCase", "PascalCase", "kebab-case"]
+					}
+				},
+				"noProcessEnv": "off",
+				"noNonNullAssertion": "warn",
+				"useExportsLast": "off",
+				"useConsistentMemberAccessibility": "off",
+				"noExportedImports": "warn",
+				"noNestedTernary": "warn",
+				"useComponentExportOnlyModules": "warn"
+			},
+			"complexity": {
+				"noExcessiveCognitiveComplexity": "error",
+				"noExcessiveNestedTestSuites": "error",
+				"noUselessUndefined": "error",
+				"noVoid": "warn",
+				"useMaxParams": "warn"
+			},
+			"suspicious": {
+				"noEmptyBlockStatements": "warn"
+			},
+			"security": {
+				"noSecrets": "warn"
+			},
+			"nursery": {
+				"noJsxPropsBind": "warn",
+				"noConditionalExpect": "warn",
+				"useExpect": "warn",
+				"noLeakedRender": "warn",
+				"useNullishCoalescing": "warn",
+				"noIncrementDecrement": "warn",
+				"useRegexpExec": "warn",
+				"noShadow": "warn",
+				"noNestedPromises": "warn"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.stories.tsx", "**/*.stories.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/.storybook/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["apps/desktop/scripts/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["apps/package/scripts/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/electrobun.config.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.d.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		}
+	]
 }

@@ -12,20 +12,20 @@ import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
 const testDir = join(tmpdir(), `klovi-opencode-index-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(
-  NodeFileSystem.layer,
-  Layer.succeed(PluginConfig, { dataDir: testDir }),
-  BunSqliteLayer,
+	NodeFileSystem.layer,
+	Layer.succeed(PluginConfig, { dataDir: testDir }),
+	BunSqliteLayer,
 );
 
 function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
-  return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
+	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 
 function createDbWithSingleSession(): void {
-  const dbPath = join(testDir, "opencode.db");
-  const db = new Database(dbPath, { create: true });
+	const dbPath = join(testDir, "opencode.db");
+	const db = new Database(dbPath, { create: true });
 
-  db.run(`
+	db.run(`
     CREATE TABLE project (
       id TEXT PRIMARY KEY,
       worktree TEXT NOT NULL,
@@ -36,7 +36,7 @@ function createDbWithSingleSession(): void {
     )
   `);
 
-  db.run(`
+	db.run(`
     CREATE TABLE session (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
@@ -49,7 +49,7 @@ function createDbWithSingleSession(): void {
     )
   `);
 
-  db.run(`
+	db.run(`
     CREATE TABLE message (
       id TEXT PRIMARY KEY,
       session_id TEXT NOT NULL,
@@ -59,7 +59,7 @@ function createDbWithSingleSession(): void {
     )
   `);
 
-  db.run(`
+	db.run(`
     CREATE TABLE part (
       id TEXT PRIMARY KEY,
       message_id TEXT NOT NULL,
@@ -70,114 +70,94 @@ function createDbWithSingleSession(): void {
     )
   `);
 
-  db.run(
-    "INSERT INTO project (id, worktree, name, time_created, time_updated, sandboxes) VALUES (?, ?, ?, ?, ?, '[]')",
-    ["project-1", "/Users/dev/opencode-project", "OpenCode Project", 1706000000000, 1706001000000],
-  );
+	db.run(
+		"INSERT INTO project (id, worktree, name, time_created, time_updated, sandboxes) VALUES (?, ?, ?, ?, ?, '[]')",
+		["project-1", "/Users/dev/opencode-project", "OpenCode Project", 1_706_000_000_000, 1_706_001_000_000],
+	);
 
-  db.run(
-    "INSERT INTO session (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, 'v2', ?, ?)",
-    [
-      "session-1",
-      "project-1",
-      "session-1",
-      "/Users/dev/opencode-project",
-      "",
-      1706000000000,
-      1706001000000,
-    ],
-  );
+	db.run(
+		"INSERT INTO session (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, 'v2', ?, ?)",
+		["session-1", "project-1", "session-1", "/Users/dev/opencode-project", "", 1_706_000_000_000, 1_706_001_000_000],
+	);
 
-  db.run(
-    "INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)",
-    [
-      "msg-1",
-      "session-1",
-      1706000000000,
-      1706000000000,
-      JSON.stringify({ role: "user", time: { created: 1706000000000 } }),
-    ],
-  );
+	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
+		"msg-1",
+		"session-1",
+		1_706_000_000_000,
+		1_706_000_000_000,
+		JSON.stringify({ role: "user", time: { created: 1_706_000_000_000 } }),
+	]);
 
-  db.run(
-    "INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)",
-    [
-      "part-1",
-      "msg-1",
-      "session-1",
-      1706000000001,
-      1706000000001,
-      JSON.stringify({ type: "text", text: "Please help me debug" }),
-    ],
-  );
+	db.run("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)", [
+		"part-1",
+		"msg-1",
+		"session-1",
+		1_706_000_000_001,
+		1_706_000_000_001,
+		JSON.stringify({ type: "text", text: "Please help me debug" }),
+	]);
 
-  db.run(
-    "INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)",
-    [
-      "msg-2",
-      "session-1",
-      1706000001000,
-      1706000001000,
-      JSON.stringify({ role: "assistant", modelID: "gpt-5", finish: "stop" }),
-    ],
-  );
+	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
+		"msg-2",
+		"session-1",
+		1_706_000_001_000,
+		1_706_000_001_000,
+		JSON.stringify({ role: "assistant", modelID: "gpt-5", finish: "stop" }),
+	]);
 
-  db.run(
-    "INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)",
-    [
-      "part-2",
-      "msg-2",
-      "session-1",
-      1706000001001,
-      1706000001001,
-      JSON.stringify({ type: "text", text: "Sure, I can help." }),
-    ],
-  );
+	db.run("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)", [
+		"part-2",
+		"msg-2",
+		"session-1",
+		1_706_000_001_001,
+		1_706_000_001_001,
+		JSON.stringify({ type: "text", text: "Sure, I can help." }),
+	]);
 
-  db.close();
+	db.close();
 }
 
 describe("openCodePlugin", () => {
-  beforeEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
-    await mkdir(testDir, { recursive: true });
-  });
+	beforeEach(async () => {
+		await rm(testDir, { recursive: true, force: true });
+		await mkdir(testDir, { recursive: true });
+	});
 
-  afterEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
-  });
+	afterEach(async () => {
+		await rm(testDir, { recursive: true, force: true });
+	});
 
-  test("exposes plugin identity and no resume command", () => {
-    expect(openCodePlugin.id).toBe("opencode");
-    expect(openCodePlugin.displayName).toBe("OpenCode");
-    expect(openCodePlugin.getDefaultDataDir()).toBeNull();
-    expect("getResumeCommand" in openCodePlugin).toBe(false);
-  });
+	test("exposes plugin identity and no resume command", () => {
+		expect(openCodePlugin.id).toBe("opencode");
+		expect(openCodePlugin.displayName).toBe("OpenCode");
+		expect(openCodePlugin.getDefaultDataDir()).toBeNull();
+		expect("getResumeCommand" in openCodePlugin).toBe(false);
+	});
 
-  test("discovers, lists, and loads sessions through plugin interface", async () => {
-    createDbWithSingleSession();
+	test("discovers, lists, and loads sessions through plugin interface", async () => {
+		createDbWithSingleSession();
 
-    const projects = await runEffect(openCodePlugin.discoverProjects);
-    expect(projects).toHaveLength(1);
-    expect(projects[0]?.nativeId).toBe("project-1");
-    expect(projects[0]?.resolvedPath).toBe("/Users/dev/opencode-project");
+		const projects = await runEffect(openCodePlugin.discoverProjects);
+		expect(projects).toHaveLength(1);
+		expect(projects[0]?.nativeId).toBe("project-1");
+		expect(projects[0]?.resolvedPath).toBe("/Users/dev/opencode-project");
 
-    const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
-    expect(sessions).toHaveLength(1);
-    expect(sessions[0]?.pluginId).toBe("opencode");
-    expect(sessions[0]?.firstMessage).toBe("Please help me debug");
+		const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
+		expect(sessions).toHaveLength(1);
+		expect(sessions[0]?.pluginId).toBe("opencode");
+		expect(sessions[0]?.firstMessage).toBe("Please help me debug");
 
-    const session = await runEffect(openCodePlugin.loadSession("project-1", "session-1"));
-    expect(session.pluginId).toBe("opencode");
-    expect(session.project).toBe("/Users/dev/opencode-project");
-    expect(session.turns).toHaveLength(2);
-  });
+		const session = await runEffect(openCodePlugin.loadSession("project-1", "session-1"));
+		expect(session.pluginId).toBe("opencode");
+		expect(session.project).toBe("/Users/dev/opencode-project");
+		expect(session.turns).toHaveLength(2);
+	});
 
-  test("returns empty discovery/list results when db is missing", async () => {
-    const projects = await runEffect(openCodePlugin.discoverProjects);
-    const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
+	test("returns empty discovery/list results when db is missing", async () => {
+		const projects = await runEffect(openCodePlugin.discoverProjects);
+		const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
 
-    expect(projects).toEqual([]);
-    expect(sessions).toEqual([]);
-  });
+		expect(projects).toEqual([]);
+		expect(sessions).toEqual([]);
+	});
 });

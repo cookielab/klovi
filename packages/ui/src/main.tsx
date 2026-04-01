@@ -11,7 +11,7 @@ const client = createHttpClient(baseUrl);
 const container = document.getElementById("root")!;
 
 mountKloviApp({
-  container,
-  client,
-  hostBridge: browserHostBridge,
+	container: container,
+	client: client,
+	hostBridge: browserHostBridge,
 });

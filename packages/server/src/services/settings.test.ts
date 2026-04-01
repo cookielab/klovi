@@ -9,77 +9,77 @@ import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
 const testDir = join(tmpdir(), `klovi-settings-test-${Date.now()}`);
 
 function settingsPath(): string {
-  return join(testDir, "settings.json");
+	return join(testDir, "settings.json");
 }
 
 describe("settings", () => {
-  afterEach(async () => {
-    if (await Bun.file(testDir).exists()) {
-      await rm(testDir, { recursive: true });
-    }
-  });
+	afterEach(async () => {
+		if (await Bun.file(testDir).exists()) {
+			await rm(testDir, { recursive: true });
+		}
+	});
 
-  test("getDefaultSettings returns all plugins enabled with null dataDirs", () => {
-    const settings = getDefaultSettings();
-    expect(settings.version).toBe(1);
-    expect(settings.plugins["claude-code"]).toEqual({ enabled: true, dataDir: null });
-    expect(settings.plugins["codex-cli"]).toEqual({ enabled: true, dataDir: null });
-    expect(settings.plugins["opencode"]).toEqual({ enabled: true, dataDir: null });
-  });
+	test("getDefaultSettings returns all plugins enabled with null dataDirs", () => {
+		const settings = getDefaultSettings();
+		expect(settings.version).toBe(1);
+		expect(settings.plugins["claude-code"]).toEqual({ enabled: true, dataDir: null });
+		expect(settings.plugins["codex-cli"]).toEqual({ enabled: true, dataDir: null });
+		expect(settings.plugins["opencode"]).toEqual({ enabled: true, dataDir: null });
+	});
 
-  test("loadSettings returns defaults when file does not exist", async () => {
-    const settings = await loadSettings(join(testDir, "nonexistent", "settings.json"));
-    expect(settings).toEqual(getDefaultSettings());
-  });
+	test("loadSettings returns defaults when file does not exist", async () => {
+		const settings = await loadSettings(join(testDir, "nonexistent", "settings.json"));
+		expect(settings).toEqual(getDefaultSettings());
+	});
 
-  test("saveSettings writes and loadSettings reads back", async () => {
-    await mkdir(testDir, { recursive: true });
-    const path = settingsPath();
-    const settings: PluginSettings = {
-      version: 1,
-      plugins: {
-        "claude-code": { enabled: false, dataDir: "/custom/path" },
-        "codex-cli": { enabled: true, dataDir: null },
-        opencode: { enabled: true, dataDir: null },
-      },
-    };
-    await saveSettings(path, settings);
-    const loaded = await loadSettings(path);
-    expect(loaded).toEqual(settings);
-  });
+	test("saveSettings writes and loadSettings reads back", async () => {
+		await mkdir(testDir, { recursive: true });
+		const path = settingsPath();
+		const settings: PluginSettings = {
+			version: 1,
+			plugins: {
+				"claude-code": { enabled: false, dataDir: "/custom/path" },
+				"codex-cli": { enabled: true, dataDir: null },
+				opencode: { enabled: true, dataDir: null },
+			},
+		};
+		await saveSettings(path, settings);
+		const loaded = await loadSettings(path);
+		expect(loaded).toEqual(settings);
+	});
 
-  test("saveSettings creates parent directories", async () => {
-    const deep = join(testDir, "a", "b", "settings.json");
-    await saveSettings(deep, getDefaultSettings());
-    expect(await Bun.file(deep).exists()).toBe(true);
-  });
+	test("saveSettings creates parent directories", async () => {
+		const deep = join(testDir, "a", "b", "settings.json");
+		await saveSettings(deep, getDefaultSettings());
+		expect(await Bun.file(deep).exists()).toBe(true);
+	});
 
-  test("loadSettings returns defaults for corrupted JSON", async () => {
-    await mkdir(testDir, { recursive: true });
-    const path = settingsPath();
-    await Bun.write(path, "not valid json{{{");
-    const settings = await loadSettings(path);
-    expect(settings).toEqual(getDefaultSettings());
-  });
+	test("loadSettings returns defaults for corrupted JSON", async () => {
+		await mkdir(testDir, { recursive: true });
+		const path = settingsPath();
+		await Bun.write(path, "not valid json{{{");
+		const settings = await loadSettings(path);
+		expect(settings).toEqual(getDefaultSettings());
+	});
 
-  test("getDefaultSettings includes updates with stable channel", () => {
-    const settings = getDefaultSettings();
-    expect(settings.updates).toEqual({
-      channel: "stable",
-      checkIntervalHours: 6,
-      autoDownload: true,
-    });
-  });
+	test("getDefaultSettings includes updates with stable channel", () => {
+		const settings = getDefaultSettings();
+		expect(settings.updates).toEqual({
+			channel: "stable",
+			checkIntervalHours: 6,
+			autoDownload: true,
+		});
+	});
 
-  test("loadSettings preserves updates field", async () => {
-    await mkdir(testDir, { recursive: true });
-    const path = settingsPath();
-    const settings: PluginSettings = {
-      ...getDefaultSettings(),
-      updates: { channel: "beta", checkIntervalHours: 1, autoDownload: false },
-    };
-    await saveSettings(path, settings);
-    const loaded = await loadSettings(path);
-    expect(loaded.updates).toEqual({ channel: "beta", checkIntervalHours: 1, autoDownload: false });
-  });
+	test("loadSettings preserves updates field", async () => {
+		await mkdir(testDir, { recursive: true });
+		const path = settingsPath();
+		const settings: PluginSettings = {
+			...getDefaultSettings(),
+			updates: { channel: "beta", checkIntervalHours: 1, autoDownload: false },
+		};
+		await saveSettings(path, settings);
+		const loaded = await loadSettings(path);
+		expect(loaded.updates).toEqual({ channel: "beta", checkIntervalHours: 1, autoDownload: false });
+	});
 });

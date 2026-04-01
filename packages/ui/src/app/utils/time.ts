@@ -1,6 +1,6 @@
 export {
-  formatFullDateTime,
-  formatRelativeTime,
-  formatTime,
-  formatTimestamp,
+	formatFullDateTime,
+	formatRelativeTime,
+	formatTime,
+	formatTimestamp,
 } from "@cookielab.io/klovi-ui-components/utilities";

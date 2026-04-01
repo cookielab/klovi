@@ -1,45 +1,41 @@
 {
-  "name": "@cookielab.io/klovi",
-  "version": "0.0.0",
-  "description": "Klovi — browse and present AI coding session history",
-  "type": "module",
-  "license": "MIT",
-  "author": "Cookielab s.r.o.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cookielab/klovi.git"
-  },
-  "homepage": "https://github.com/cookielab/klovi",
-  "bugs": {
-    "url": "https://github.com/cookielab/klovi/issues"
-  },
-  "bin": {
-    "klovi": "./dist/cli.js"
-  },
-  "files": [
-    "dist",
-    "package.json",
-    "README.md"
-  ],
-  "exports": {
-    "./server": "./dist/server.js"
-  },
-  "scripts": {
-    "dev": "bun run --watch src/cli.ts",
-    "build": "rm -rf dist && bun run build:entrypoints && bun run build:shebang && bun run build:web-assets && chmod +x dist/cli.js",
-    "build:entrypoints": "bun build src/cli.ts src/server.ts --outdir dist --target node --format esm --external effect --external @effect/platform --external @effect/platform-bun --external @effect/platform-node",
-    "build:shebang": "printf '#!/usr/bin/env node\\n' | cat - dist/cli.js > dist/cli.tmp && mv dist/cli.tmp dist/cli.js",
-    "build:web-assets": "rm -rf dist/web && cp -r ../../packages/ui/dist dist/web",
-    "stage:npm": "bun run build && bun scripts/stage-npm.ts",
-    "prepublishOnly": "echo 'ERROR: Do not publish from apps/package source. Publish from apps/package/.stage/npm instead. Run: bun run stage:npm' && exit 1",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
-  },
-  "dependencies": {
-    "@cookielab.io/klovi-server": "workspace:*",
-    "@cookielab.io/klovi-ui": "workspace:*",
-    "effect": "*",
-    "@effect/platform": "*",
-    "@effect/platform-bun": "*",
-    "@effect/platform-node": "*"
-  }
+	"name": "@cookielab.io/klovi",
+	"version": "0.0.0",
+	"description": "Klovi — browse and present AI coding session history",
+	"type": "module",
+	"license": "MIT",
+	"author": "Cookielab s.r.o.",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/cookielab/klovi.git"
+	},
+	"homepage": "https://github.com/cookielab/klovi",
+	"bugs": {
+		"url": "https://github.com/cookielab/klovi/issues"
+	},
+	"bin": {
+		"klovi": "./dist/cli.js"
+	},
+	"files": ["dist", "package.json", "README.md"],
+	"exports": {
+		"./server": "./dist/server.js"
+	},
+	"scripts": {
+		"dev": "bun run --watch src/cli.ts",
+		"build": "rm -rf dist && bun run build:entrypoints && bun run build:shebang && bun run build:web-assets && chmod +x dist/cli.js",
+		"build:entrypoints": "bun build src/cli.ts src/server.ts --outdir dist --target node --format esm --external effect --external @effect/platform --external @effect/platform-bun --external @effect/platform-node",
+		"build:shebang": "printf '#!/usr/bin/env node\\n' | cat - dist/cli.js > dist/cli.tmp && mv dist/cli.tmp dist/cli.js",
+		"build:web-assets": "rm -rf dist/web && cp -r ../../packages/ui/dist dist/web",
+		"stage:npm": "bun run build && bun scripts/stage-npm.ts",
+		"prepublishOnly": "echo 'ERROR: Do not publish from apps/package source. Publish from apps/package/.stage/npm instead. Run: bun run stage:npm' && exit 1",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"dependencies": {
+		"@cookielab.io/klovi-server": "workspace:*",
+		"@cookielab.io/klovi-ui": "workspace:*",
+		"effect": "*",
+		"@effect/platform": "*",
+		"@effect/platform-bun": "*",
+		"@effect/platform-node": "*"
+	}
 }

@@ -8,43 +8,39 @@ import type { KloviHostBridge } from "./lib/host-bridge.ts";
 export { browserHostBridge } from "./lib/browser-host-bridge.ts";
 export type { KloviClient } from "./lib/client.ts";
 export type {
-  KloviHostBridge,
-  KloviHostCapabilities,
-  KloviHostConnectionState,
+	KloviHostBridge,
+	KloviHostCapabilities,
+	KloviHostConnectionState,
 } from "./lib/host-bridge.ts";
 export { createHttpClient } from "./lib/http-client.ts";
 export {
-  createRpcDisconnectedError,
-  createRpcTimeoutError,
-  getRpcErrorCode,
-  isRpcTimeoutError,
-  isRpcTransportError,
+	createRpcDisconnectedError,
+	createRpcTimeoutError,
+	getRpcErrorCode,
+	isRpcTimeoutError,
+	isRpcTransportError,
 } from "./lib/rpc-errors.ts";
 export type {
-  DashboardStats,
-  GlobalSessionResult,
-  Project,
-  Session,
-  SessionSummary,
+	DashboardStats,
+	GlobalSessionResult,
+	Project,
+	Session,
+	SessionSummary,
 } from "./shared/types.ts";
 
-export interface MountKloviAppConfig {
-  container: HTMLElement;
-  client: KloviClient;
-  hostBridge: KloviHostBridge;
-}
+export type MountKloviAppConfig = {
+	container: HTMLElement;
+	client: KloviClient;
+	hostBridge: KloviHostBridge;
+};
 
 export function mountKloviApp(config: MountKloviAppConfig): void {
-  const root = createRoot(config.container);
-  root.render(
-    createElement(
-      KloviClientContext.Provider,
-      { value: config.client },
-      createElement(
-        KloviHostBridgeContext.Provider,
-        { value: config.hostBridge },
-        createElement(AppGate),
-      ),
-    ),
-  );
+	const root = createRoot(config.container);
+	root.render(
+		createElement(
+			KloviClientContext.Provider,
+			{ value: config.client },
+			createElement(KloviHostBridgeContext.Provider, { value: config.hostBridge }, createElement(AppGate)),
+		),
+	);
 }

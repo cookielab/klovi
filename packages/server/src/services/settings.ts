@@ -4,65 +4,63 @@ import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
 export type UpdateChannel = "stable" | "candidate" | "beta";
 
 export type UpdateSettings = {
-  channel: UpdateChannel;
-  checkIntervalHours: number;
-  autoDownload: boolean;
+	channel: UpdateChannel;
+	checkIntervalHours: number;
+	autoDownload: boolean;
 };
 
 export type PluginSettings = {
-  version: 1;
-  plugins: {
-    [pluginId: string]: {
-      enabled: boolean;
-      dataDir: string | null;
-    };
-  };
-  general?:
-    | {
-        showSecurityWarning?: boolean | undefined;
-      }
-    | undefined;
-  updates?: UpdateSettings | undefined;
+	version: 1;
+	plugins: {
+		[pluginId: string]: {
+			enabled: boolean;
+			dataDir: string | null;
+		};
+	};
+	general?:
+		| {
+				showSecurityWarning?: boolean | undefined;
+		  }
+		| undefined;
+	updates?: UpdateSettings | undefined;
 };
 
 function createDefaultPluginStates(): PluginSettings["plugins"] {
-  return Object.fromEntries(
-    BUILTIN_KLOVI_PLUGIN_IDS.map((pluginId) => [pluginId, { enabled: true, dataDir: null }]),
-  );
+	return Object.fromEntries(BUILTIN_KLOVI_PLUGIN_IDS.map((pluginId) => [pluginId, { enabled: true, dataDir: null }]));
 }
 
 export function getDefaultSettings(): PluginSettings {
-  return {
-    version: 1,
-    plugins: createDefaultPluginStates(),
-    general: {
-      showSecurityWarning: true,
-    },
-    updates: {
-      channel: "stable",
-      checkIntervalHours: 6,
-      autoDownload: true,
-    },
-  };
+	return {
+		version: 1,
+		plugins: createDefaultPluginStates(),
+		general: {
+			showSecurityWarning: true,
+		},
+		updates: {
+			channel: "stable",
+			checkIntervalHours: 6,
+			autoDownload: true,
+		},
+	};
 }
 
 export async function loadSettings(path: string): Promise<PluginSettings> {
-  try {
-    const content = await readFile(path, "utf-8");
-    const parsed = JSON.parse(content) as Record<string, unknown>;
-    if (parsed["version"] !== 1 || typeof parsed["plugins"] !== "object") {
-      return getDefaultSettings();
-    }
-    return parsed as unknown as PluginSettings;
-  } catch {
-    return getDefaultSettings();
-  }
+	try {
+		const content = await readFile(path, "utf-8");
+		const parsed = JSON.parse(content) as Record<string, unknown>;
+		if (parsed["version"] !== 1 || typeof parsed["plugins"] !== "object") {
+			return getDefaultSettings();
+		}
+		return parsed as unknown as PluginSettings;
+	} catch {
+		return getDefaultSettings();
+	}
 }
 
 export async function saveSettings(path: string, settings: PluginSettings): Promise<void> {
-  const dir = dirname(path);
-  await mkdir(dir, { recursive: true });
-  const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
-  await writeFile(tmpPath, JSON.stringify(settings, null, 2));
-  await rename(tmpPath, path);
+	const dir = dirname(path);
+	await mkdir(dir, { recursive: true });
+	const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
+	await writeFile(tmpPath, JSON.stringify(settings, null, 2));
+	await rename(tmpPath, path);
 }

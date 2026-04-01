@@ -6,81 +6,69 @@ import { PackageSessionList } from "./components/project/PackageSessionList.tsx"
 import { SettingsSidebar, type SettingsTab } from "./components/settings/SettingsSidebar.tsx";
 import type { ViewState } from "./view-state.ts";
 
-interface SidebarActions {
-  selectProject: (p: Project) => void;
-  selectSession: (s: SessionSummary) => void;
-  goHome: () => void;
-  goHidden: () => void;
-  hide: (id: string) => void;
-  settingsTab: SettingsTab;
-  setSettingsTab: (tab: SettingsTab) => void;
-  closeSettings: () => void;
-  hostConnectionState: KloviHostConnectionState;
-}
+type SidebarActions = {
+	selectProject: (p: Project) => void;
+	selectSession: (s: SessionSummary) => void;
+	goHome: () => void;
+	goHidden: () => void;
+	hide: (id: string) => void;
+	settingsTab: SettingsTab;
+	setSettingsTab: (tab: SettingsTab) => void;
+	closeSettings: () => void;
+	hostConnectionState: KloviHostConnectionState;
+};
 
-export function getSidebarContent(
-  view: ViewState,
-  hiddenIds: Set<string>,
-  actions: SidebarActions,
-): React.ReactNode {
-  if (view.kind === "settings") {
-    return (
-      <SettingsSidebar
-        activeTab={actions.settingsTab}
-        onTabChange={actions.setSettingsTab}
-        onBack={actions.closeSettings}
-      />
-    );
-  }
+export function getSidebarContent(view: ViewState, hiddenIds: Set<string>, actions: SidebarActions): React.ReactNode {
+	if (view.kind === "settings") {
+		return (
+			<SettingsSidebar
+				activeTab={actions.settingsTab}
+				onTabChange={actions.setSettingsTab}
+				onBack={actions.closeSettings}
+			/>
+		);
+	}
 
-  if (view.kind === "home" || view.kind === "hidden") {
-    return (
-      <PackageProjectList
-        onSelect={actions.selectProject}
-        hiddenIds={hiddenIds}
-        onHide={actions.hide}
-        onShowHidden={actions.goHidden}
-      />
-    );
-  }
+	if (view.kind === "home" || view.kind === "hidden") {
+		return (
+			<PackageProjectList
+				onSelect={actions.selectProject}
+				hiddenIds={hiddenIds}
+				onHide={actions.hide}
+				onShowHidden={actions.goHidden}
+			/>
+		);
+	}
 
-  if (view.kind === "restoring") {
-    return (
-      <div className="loading">
-        {actions.hostConnectionState === "connected"
-          ? "Restoring selection..."
-          : "Reconnecting to desktop host..."}
-      </div>
-    );
-  }
+	if (view.kind === "restoring") {
+		return (
+			<div className="loading">
+				{actions.hostConnectionState === "connected" ? "Restoring selection..." : "Reconnecting to desktop host..."}
+			</div>
+		);
+	}
 
-  if (view.kind === "project") {
-    return (
-      <PackageSessionList
-        project={view.project}
-        onSelect={actions.selectSession}
-        onBack={actions.goHome}
-      />
-    );
-  }
+	if (view.kind === "project") {
+		return <PackageSessionList project={view.project} onSelect={actions.selectSession} onBack={actions.goHome} />;
+	}
 
-  if (view.kind === "subagent") {
-    return (
-      <PackageSessionList
-        project={view.project}
-        onSelect={actions.selectSession}
-        onBack={actions.goHome}
-        selectedId={view.sessionId}
-      />
-    );
-  }
+	if (view.kind === "subagent") {
+		return (
+			<PackageSessionList
+				project={view.project}
+				onSelect={actions.selectSession}
+				onBack={actions.goHome}
+				selectedId={view.sessionId}
+			/>
+		);
+	}
 
-  return (
-    <PackageSessionList
-      project={view.project}
-      onSelect={actions.selectSession}
-      onBack={actions.goHome}
-      selectedId={view.session.sessionId}
-    />
-  );
+	return (
+		<PackageSessionList
+			project={view.project}
+			onSelect={actions.selectSession}
+			onBack={actions.goHome}
+			selectedId={view.session.sessionId}
+		/>
+	);
 }

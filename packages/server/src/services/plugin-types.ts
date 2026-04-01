@@ -1,9 +1,9 @@
 import type {
-  MergedProject as CoreMergedProject,
-  PluginProject as CorePluginProject,
-  ToolPlugin as CoreToolPlugin,
-  Session,
-  SessionSummary,
+	MergedProject as CoreMergedProject,
+	PluginProject as CorePluginProject,
+	ToolPlugin as CoreToolPlugin,
+	Session,
+	SessionSummary,
 } from "@cookielab.io/klovi-plugin-core";
 
 export type PluginProject = CorePluginProject<string>;
