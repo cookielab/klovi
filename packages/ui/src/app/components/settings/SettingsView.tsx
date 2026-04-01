@@ -1,3 +1,4 @@
+import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
 import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../../../shared/rpc-types.ts";
@@ -49,6 +50,30 @@ const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
 	{ value: "dark", label: "Dark" },
 ];
 
+function ThemeOption({
+	opt,
+	isActive,
+	disabled,
+	onChange,
+}: {
+	opt: { value: ThemeSetting; label: string };
+	isActive: boolean;
+	disabled: boolean | undefined;
+	onChange: (v: ThemeSetting) => void;
+}) {
+	const handleClick = useCallback(() => onChange(opt.value), [onChange, opt.value]);
+	return (
+		<button
+			type="button"
+			className={`settings-theme-option ${isActive ? "active" : ""}`}
+			disabled={disabled}
+			onClick={handleClick}
+		>
+			{opt.label}
+		</button>
+	);
+}
+
 function ThemeSelector({
 	value,
 	onChange,
@@ -61,15 +86,7 @@ function ThemeSelector({
 	return (
 		<div className={`settings-theme-selector ${disabled ? "disabled" : ""}`}>
 			{THEME_OPTIONS.map((opt) => (
-				<button
-					key={opt.value}
-					type="button"
-					className={`settings-theme-option ${value === opt.value ? "active" : ""}`}
-					disabled={disabled}
-					onClick={() => onChange(opt.value)}
-				>
-					{opt.label}
-				</button>
+				<ThemeOption key={opt.value} opt={opt} isActive={value === opt.value} disabled={disabled} onChange={onChange} />
 			))}
 		</div>
 	);
@@ -88,10 +105,12 @@ function FontSizeControl({
 }) {
 	return (
 		<div className={`settings-font-size-control ${disabled ? "disabled" : ""}`}>
+			{/* biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy */}
 			<button type="button" disabled={disabled || size <= 10} onClick={onDecrease}>
 				A-
 			</button>
 			<span className="settings-font-size-value">{size}</span>
+			{/* biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy */}
 			<button type="button" disabled={disabled || size >= 28} onClick={onIncrease}>
 				A+
 			</button>
@@ -134,7 +153,7 @@ function UpdatesTab({
 
 	const statusText = applyError ? `Update failed: ${applyError}` : formatUpdateStatus(updateStatus);
 
-	const handleApply = async () => {
+	const handleApply = useCallback(async () => {
 		setApplying(true);
 		setApplyError(null);
 		try {
@@ -147,7 +166,53 @@ function UpdatesTab({
 			setApplyError("Update failed");
 			setApplying(false);
 		}
-	};
+	}, [hostBridge]);
+
+	const handleChannelChange = useCallback(
+		(e: React.ChangeEvent<HTMLSelectElement>) => {
+			const channel = e.target.value as UpdateChannel;
+			setUpdateSettings({ ...updateSettings!, channel: channel });
+			hostBridge
+				.updateUpdateSettings({ channel: channel })
+				.then(() => setChanged(true))
+				.catch(() => {});
+		},
+		[updateSettings, hostBridge, setUpdateSettings, setChanged],
+	);
+
+	const handleIntervalChange = useCallback(
+		(e: React.ChangeEvent<HTMLSelectElement>) => {
+			const checkIntervalHours = Number(e.target.value);
+			setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
+			hostBridge
+				.updateUpdateSettings({ checkIntervalHours: checkIntervalHours })
+				.then(() => setChanged(true))
+				.catch(() => {});
+		},
+		[updateSettings, hostBridge, setUpdateSettings, setChanged],
+	);
+
+	const handleAutoDownloadChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const autoDownload = e.target.checked;
+			setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
+			hostBridge
+				.updateUpdateSettings({ autoDownload: autoDownload })
+				.then(() => setChanged(true))
+				.catch(() => {});
+		},
+		[updateSettings, hostBridge, setUpdateSettings, setChanged],
+	);
+
+	const handleCheckNow = useCallback(() => {
+		setChecking(true);
+		setApplyError(null);
+		hostBridge
+			.checkForUpdate()
+			.then((result) => setUpdateStatus(result))
+			.catch(() => {})
+			.finally(() => setChecking(false));
+	}, [hostBridge]);
 
 	return (
 		<>
@@ -159,18 +224,7 @@ function UpdatesTab({
 					<>
 						<div className="settings-control-row">
 							<span className="settings-control-label">Update Channel</span>
-							<select
-								className="settings-select"
-								value={updateSettings.channel}
-								onChange={(e) => {
-									const channel = e.target.value as UpdateChannel;
-									setUpdateSettings({ ...updateSettings, channel: channel });
-									hostBridge
-										.updateUpdateSettings({ channel: channel })
-										.then(() => setChanged(true))
-										.catch(() => {});
-								}}
-							>
+							<select className="settings-select" value={updateSettings.channel} onChange={handleChannelChange}>
 								<option value="stable">Stable</option>
 								<option value="candidate">Release Candidate</option>
 								<option value="beta">Beta</option>
@@ -182,14 +236,7 @@ function UpdatesTab({
 							<select
 								className="settings-select"
 								value={updateSettings.checkIntervalHours}
-								onChange={(e) => {
-									const checkIntervalHours = Number(e.target.value);
-									setUpdateSettings({ ...updateSettings, checkIntervalHours: checkIntervalHours });
-									hostBridge
-										.updateUpdateSettings({ checkIntervalHours: checkIntervalHours })
-										.then(() => setChanged(true))
-										.catch(() => {});
-								}}
+								onChange={handleIntervalChange}
 							>
 								<option value={1}>Every hour</option>
 								<option value={3}>Every 3 hours</option>
@@ -206,14 +253,7 @@ function UpdatesTab({
 										type="checkbox"
 										className="custom-checkbox"
 										checked={updateSettings.autoDownload}
-										onChange={(e) => {
-											const autoDownload = e.target.checked;
-											setUpdateSettings({ ...updateSettings, autoDownload: autoDownload });
-											hostBridge
-												.updateUpdateSettings({ autoDownload: autoDownload })
-												.then(() => setChanged(true))
-												.catch(() => {});
-										}}
+										onChange={handleAutoDownloadChange}
 									/>
 									Auto-download updates
 								</label>
@@ -230,15 +270,7 @@ function UpdatesTab({
 									type="button"
 									className="settings-reset-to-defaults-btn"
 									disabled={checking}
-									onClick={() => {
-										setChecking(true);
-										setApplyError(null);
-										hostBridge
-											.checkForUpdate()
-											.then((result) => setUpdateStatus(result))
-											.catch(() => {})
-											.finally(() => setChecking(false));
-									}}
+									onClick={handleCheckNow}
 								>
 									{checking ? "Checking..." : "Check now"}
 								</button>
@@ -369,6 +401,31 @@ export function SettingsView({
 		[client],
 	);
 
+	const handleSecurityWarningChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const value = e.target.checked;
+			setShowSecurityWarning(value);
+			client
+				.updateGeneralSettings({ showSecurityWarning: value })
+				.then(() => setChanged(true))
+				.catch(() => {});
+		},
+		[client],
+	);
+
+	const handlePresentationThemeSameChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => presentationTheme.setSameAsGlobal(e.target.checked),
+		[presentationTheme],
+	);
+
+	const handlePresentationFontSizeSameChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => presentationFontSize.setSameAsGlobal(e.target.checked),
+		[presentationFontSize],
+	);
+
+	const cancelReset = useCallback(() => setConfirmingReset(false), []);
+	const startReset = useCallback(() => setConfirmingReset(true), []);
+
 	const handleResetToDefaults = useCallback(() => {
 		if (resettingRef.current) {
 			return;
@@ -438,14 +495,7 @@ export function SettingsView({
 												type="checkbox"
 												className="custom-checkbox"
 												checked={showSecurityWarning}
-												onChange={(e) => {
-													const value = e.target.checked;
-													setShowSecurityWarning(value);
-													client
-														.updateGeneralSettings({ showSecurityWarning: value })
-														.then(() => setChanged(true))
-														.catch(() => {});
-												}}
+												onChange={handleSecurityWarningChange}
 											/>
 											Show security warning on startup
 										</label>
@@ -477,7 +527,7 @@ export function SettingsView({
 												type="checkbox"
 												className="custom-checkbox"
 												checked={presentationTheme.sameAsGlobal}
-												onChange={(e) => presentationTheme.setSameAsGlobal(e.target.checked)}
+												onChange={handlePresentationThemeSameChange}
 											/>
 											Same as global
 										</label>
@@ -497,7 +547,7 @@ export function SettingsView({
 												type="checkbox"
 												className="custom-checkbox"
 												checked={presentationFontSize.sameAsGlobal}
-												onChange={(e) => presentationFontSize.setSameAsGlobal(e.target.checked)}
+												onChange={handlePresentationFontSizeSameChange}
 											/>
 											Same as global
 										</label>
@@ -510,14 +560,14 @@ export function SettingsView({
 									</div>
 								</div>
 
-								{capabilities.updater && (
+								{capabilities.updater ? (
 									<UpdatesTab
 										loading={false}
 										updateSettings={updateSettings}
 										setUpdateSettings={setUpdateSettings}
 										setChanged={setChanged}
 									/>
-								)}
+								) : null}
 
 								<h4 className="settings-subsection-title">Reset</h4>
 								<div className="settings-control-row">
@@ -539,7 +589,7 @@ export function SettingsView({
 													type="button"
 													className="settings-reset-cancel-btn"
 													disabled={resetting}
-													onClick={() => setConfirmingReset(false)}
+													onClick={cancelReset}
 												>
 													Cancel
 												</button>
@@ -551,7 +601,7 @@ export function SettingsView({
 												type="button"
 												className="settings-reset-to-defaults-btn"
 												disabled={resetting}
-												onClick={() => setConfirmingReset(true)}
+												onClick={startReset}
 											>
 												Reset to defaults
 											</button>

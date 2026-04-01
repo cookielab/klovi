@@ -36,7 +36,7 @@ describe("useRPC", () => {
 	test("retry refetches data", async () => {
 		let callCount = 0;
 		const rpcCall = () => {
-			callCount++;
+			callCount += 1;
 			if (callCount === 1) {
 				return Promise.reject(new Error("fail"));
 			}

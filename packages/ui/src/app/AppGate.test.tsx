@@ -53,7 +53,7 @@ describe("AppGate", () => {
 		});
 		const startBtn = await findByRole("button", { name: "Get Started" });
 		await clickAndFlush(startBtn);
-		await findByText("Welcome to Klovi");
+		expect(await findByText("Welcome to Klovi")).toBeTruthy();
 	});
 
 	test("first launch: does not disable warning unless checkbox is checked", async () => {
@@ -114,7 +114,7 @@ describe("AppGate", () => {
 		const { findByRole, findByText } = render(<AppGate />, { wrapper: MockProviders });
 		const btn = await findByRole("button", { name: "Accept & Continue" });
 		await clickAndFlush(btn);
-		await findByText("Welcome to Klovi");
+		expect(await findByText("Welcome to Klovi")).toBeTruthy();
 	});
 
 	test("returning user: checking dont-show saves setting", async () => {
@@ -183,7 +183,7 @@ describe("AppGate", () => {
 		});
 		const startBtn = await findByRole("button", { name: "Get Started" });
 		await clickAndFlush(startBtn);
-		await findByText("Welcome to Klovi");
+		expect(await findByText("Welcome to Klovi")).toBeTruthy();
 	});
 
 	test("shows desktop reconnect state on transport failure instead of onboarding", async () => {

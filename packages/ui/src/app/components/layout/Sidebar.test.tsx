@@ -58,7 +58,7 @@ describe("Sidebar", () => {
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
-		await findByText("1.2.3 (abc1234)");
+		expect(await findByText("1.2.3 (abc1234)")).toBeTruthy();
 	});
 
 	test("renders version without commit hash when empty", async () => {
@@ -72,7 +72,7 @@ describe("Sidebar", () => {
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
-		await findByText("1.2.3");
+		expect(await findByText("1.2.3")).toBeTruthy();
 	});
 
 	test("renders settings button when onSettingsClick provided", () => {

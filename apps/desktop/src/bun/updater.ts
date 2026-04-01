@@ -195,23 +195,23 @@ async function fetchReleases(): Promise<GitHubRelease[]> {
  * 2. Allowed by the channel filter
  * 3. Has both updater tarball and update.json assets
  */
-function findLatestUsableRelease(
-	releases: GitHubRelease[],
-	channel: UpdateChannel,
-	currentVersion: string,
-	platform: Platform,
-	arch: Arch,
-): GitHubRelease | null {
-	const filtered = filterReleasesByChannel(releases, channel);
+function findLatestUsableRelease(options: {
+	releases: GitHubRelease[];
+	channel: UpdateChannel;
+	currentVersion: string;
+	platform: Platform;
+	arch: Arch;
+}): GitHubRelease | null {
+	const filtered = filterReleasesByChannel(options.releases, options.channel);
 
 	// Sort newest-first
 	const sorted = [...filtered].sort((a, b) => semver.order(b.tag_name, a.tag_name));
 
 	for (const release of sorted) {
-		if (semver.order(release.tag_name, currentVersion) <= 0) {
+		if (semver.order(release.tag_name, options.currentVersion) <= 0) {
 			continue;
 		}
-		if (!releaseHasUpdaterAssets(release, platform, arch)) {
+		if (!releaseHasUpdaterAssets(release, options.platform, options.arch)) {
 			continue;
 		}
 		return release;
@@ -328,7 +328,13 @@ class UpdateManager {
 
 		try {
 			const releases = await fetchReleases();
-			const latest = findLatestUsableRelease(releases, settings.channel, this.currentVersion, this.platform, this.arch);
+			const latest = findLatestUsableRelease({
+				releases: releases,
+				channel: settings.channel,
+				currentVersion: this.currentVersion,
+				platform: this.platform,
+				arch: this.arch,
+			});
 
 			if (!latest) {
 				const status: UpdateStatus = { status: "up-to-date", currentVersion: this.currentVersion };

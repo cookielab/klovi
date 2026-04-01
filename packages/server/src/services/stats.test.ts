@@ -15,6 +15,7 @@ function isoDaysAgo(days: number): string {
 	return d.toISOString();
 }
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function makeSession(
 	id: string,
 	project: string,

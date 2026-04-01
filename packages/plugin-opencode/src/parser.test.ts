@@ -95,6 +95,7 @@ function insertSession(db: Database, id: string, projectId: string, directory: s
 	);
 }
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertMessage(
 	db: Database,
 	id: string,
@@ -102,7 +103,7 @@ function insertMessage(
 	data: Record<string, unknown>,
 	timeCreated?: number,
 ): void {
-	const now = timeCreated || Date.now();
+	const now = timeCreated ?? Date.now();
 	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
 		id,
 		sessionId,
@@ -112,6 +113,7 @@ function insertMessage(
 	]);
 }
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertPart(
 	db: Database,
 	id: string,
@@ -181,9 +183,8 @@ describe("buildOpenCodeTurns", () => {
 		expect(assistant.model).toBe("claude-sonnet-4-20250514");
 		expect(assistant.contentBlocks).toHaveLength(1);
 		expect(assistant.contentBlocks[0]?.type).toBe("text");
-		if (assistant.contentBlocks[0]?.type === "text") {
-			expect(assistant.contentBlocks[0]?.text).toBe("I can help you with that!");
-		}
+		const textBlock = assistant.contentBlocks[0] as Extract<(typeof assistant.contentBlocks)[number], { type: "text" }>;
+		expect(textBlock.text).toBe("I can help you with that!");
 		expect(assistant.usage).toEqual({
 			inputTokens: 100,
 			outputTokens: 50,
@@ -215,9 +216,11 @@ describe("buildOpenCodeTurns", () => {
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.contentBlocks).toHaveLength(2);
 		expect(assistant.contentBlocks[0]?.type).toBe("thinking");
-		if (assistant.contentBlocks[0]?.type === "thinking") {
-			expect(assistant.contentBlocks[0]?.block.text).toBe("Let me think about this...");
-		}
+		const thinkBlock = assistant.contentBlocks[0] as Extract<
+			(typeof assistant.contentBlocks)[number],
+			{ type: "thinking" }
+		>;
+		expect(thinkBlock.block.text).toBe("Let me think about this...");
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 	});
 
@@ -256,13 +259,12 @@ describe("buildOpenCodeTurns", () => {
 		expect(assistant.contentBlocks).toHaveLength(1);
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.toolUseId).toBe("call-123");
-			expect(block.call.name).toBe("read_file");
-			expect(block.call.input).toEqual({ path: "/src/main.ts" });
-			expect(block.call.result).toBe("file contents here");
-			expect(block.call.isError).toBe(false);
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.toolUseId).toBe("call-123");
+		expect(toolBlock.call.name).toBe("read_file");
+		expect(toolBlock.call.input).toEqual({ path: "/src/main.ts" });
+		expect(toolBlock.call.result).toBe("file contents here");
+		expect(toolBlock.call.isError).toBe(false);
 	});
 
 	test("builds error tool call from errored tool part", () => {
@@ -295,10 +297,10 @@ describe("buildOpenCodeTurns", () => {
 
 		const assistant = turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
-		if (block?.type === "tool_call") {
-			expect(block.call.isError).toBe(true);
-			expect(block.call.result).toBe("Permission denied");
-		}
+		expect(block?.type).toBe("tool_call");
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.isError).toBe(true);
+		expect(toolBlock.call.result).toBe("Permission denied");
 	});
 
 	test("handles pending tool parts as interrupted", () => {
@@ -329,10 +331,10 @@ describe("buildOpenCodeTurns", () => {
 
 		const assistant = turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
-		if (block?.type === "tool_call") {
-			expect(block.call.isError).toBe(true);
-			expect(block.call.result).toBe("[Tool execution was interrupted]");
-		}
+		expect(block?.type).toBe("tool_call");
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.isError).toBe(true);
+		expect(toolBlock.call.result).toBe("[Tool execution was interrupted]");
 	});
 
 	test("ignores text parts marked as ignored", () => {
@@ -356,9 +358,12 @@ describe("buildOpenCodeTurns", () => {
 
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.contentBlocks).toHaveLength(1);
-		if (assistant.contentBlocks[0]?.type === "text") {
-			expect(assistant.contentBlocks[0]?.text).toBe("Visible response");
-		}
+		expect(assistant.contentBlocks[0]?.type).toBe("text");
+		const visibleBlock = assistant.contentBlocks[0] as Extract<
+			(typeof assistant.contentBlocks)[number],
+			{ type: "text" }
+		>;
+		expect(visibleBlock.text).toBe("Visible response");
 	});
 
 	test("handles mixed content in a single assistant message", () => {
@@ -657,10 +662,9 @@ describe("loadOpenCodeSession", () => {
 		const assistant = session.turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.isError).toBe(true);
-			expect(block.call.result).toBe("Operation not permitted");
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.isError).toBe(true);
+		expect(toolBlock.call.result).toBe("Operation not permitted");
 	});
 
 	test("skips malformed message data gracefully", async () => {
@@ -702,8 +706,8 @@ describe("loadOpenCodeSession", () => {
 		// Should skip the malformed message and still parse the good one
 		expect(session.turns).toHaveLength(1);
 		const assistant = session.turns[0] as AssistantTurn;
-		if (assistant.contentBlocks[0]?.type === "text") {
-			expect(assistant.contentBlocks[0]?.text).toBe("This should still work");
-		}
+		expect(assistant.contentBlocks[0]?.type).toBe("text");
+		const textBlock = assistant.contentBlocks[0] as Extract<(typeof assistant.contentBlocks)[number], { type: "text" }>;
+		expect(textBlock.text).toBe("This should still work");
 	});
 });

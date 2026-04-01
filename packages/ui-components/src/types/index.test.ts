@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { type ContentBlock, groupContentBlocks } from "./index.ts";
 
-function text(text: string): ContentBlock {
-	return { type: "text", text: text };
+function text(value: string): ContentBlock {
+	return { type: "text", text: value };
 }
 
 function thinking(textValue = "thinking"): ContentBlock {

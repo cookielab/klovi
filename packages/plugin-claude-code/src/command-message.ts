@@ -16,13 +16,13 @@ export function cleanCommandMessage(text: string): string {
 		return text;
 	}
 
-	const argsMatch = text.match(COMMAND_ARGS_REGEX);
+	const argsMatch = COMMAND_ARGS_REGEX.exec(text);
 	if (argsMatch?.[1]) {
 		return argsMatch[1].trim();
 	}
 
 	// Fallback: use command name when no args present (e.g. arg-less slash commands)
-	const nameMatch = text.match(COMMAND_NAME_REGEX);
+	const nameMatch = COMMAND_NAME_REGEX.exec(text);
 	if (nameMatch?.[1]) {
 		return nameMatch[1].trim();
 	}
@@ -36,8 +36,8 @@ export function parseCommandMessage(text: string): { name: string; args: string 
 		return null;
 	}
 
-	const nameMatch = text.match(COMMAND_NAME_REGEX);
-	const argsMatch = text.match(COMMAND_ARGS_REGEX);
+	const nameMatch = COMMAND_NAME_REGEX.exec(text);
+	const argsMatch = COMMAND_ARGS_REGEX.exec(text);
 
 	const name = nameMatch?.[1]?.trim() ?? "";
 	const args = argsMatch?.[1]?.trim() ?? "";

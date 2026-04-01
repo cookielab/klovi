@@ -334,8 +334,8 @@ function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
 	if (special) {
 		return {
 			kind: "user",
-			uuid: line.uuid || "",
-			timestamp: line.timestamp || "",
+			uuid: line.uuid ?? "",
+			timestamp: line.timestamp ?? "",
 			text: "",
 			...special,
 		};
@@ -348,8 +348,8 @@ function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
 	const command = parseCommandMessage(text);
 	return {
 		kind: "user",
-		uuid: line.uuid || "",
-		timestamp: line.timestamp || "",
+		uuid: line.uuid ?? "",
+		timestamp: line.timestamp ?? "",
 		text: command ? command.args : text,
 		command: command ?? undefined,
 		attachments: attachments.length > 0 ? attachments : undefined,
@@ -359,9 +359,9 @@ function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
 function createAssistantTurn(line: RawLine): AssistantTurn {
 	return {
 		kind: "assistant",
-		uuid: line.uuid || "",
-		timestamp: line.timestamp || "",
-		model: line.message?.model || "",
+		uuid: line.uuid ?? "",
+		timestamp: line.timestamp ?? "",
+		model: line.message?.model ?? "",
 		contentBlocks: [],
 	};
 }
@@ -436,7 +436,7 @@ function mergeBashTurns(turns: Turn[]): Turn[] {
 			next.bashStdout !== undefined
 		) {
 			merged.push({ ...turn, bashStdout: next.bashStdout, bashStderr: next.bashStderr });
-			i++; // skip merged turn
+			i += 1; // skip merged turn
 		} else {
 			merged.push(turn);
 		}
@@ -468,8 +468,8 @@ function handleAssistantLine(
 	if (!Array.isArray(line.message.content)) {
 		structureErrors.push({
 			kind: "parse_error",
-			uuid: `parse-error-${line.uuid || "unknown"}`,
-			timestamp: line.timestamp || "",
+			uuid: `parse-error-${line.uuid ?? "unknown"}`,
+			timestamp: line.timestamp ?? "",
 			lineNumber: 0,
 			rawLine: JSON.stringify(line.message.content).slice(0, 500),
 			errorType: "invalid_structure",
@@ -490,8 +490,8 @@ function handleSystemLine(line: RawLine, currentAssistant: AssistantTurn | null,
 	const text = typeof line.message.content === "string" ? line.message.content : "";
 	turns.push({
 		kind: "system",
-		uuid: line.uuid || "",
-		timestamp: line.timestamp || "",
+		uuid: line.uuid ?? "",
+		timestamp: line.timestamp ?? "",
 		text: text,
 	});
 	return null;

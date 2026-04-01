@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import styles from "./Collapsible.module.css";
 
 type CollapsibleProps = {
@@ -14,14 +14,15 @@ function s(name: string | undefined): string {
 
 export function Collapsible({ title, defaultOpen = false, children }: CollapsibleProps) {
 	const [open, setOpen] = useState(defaultOpen);
+	const handleToggle = useCallback(() => setOpen((prev) => !prev), []);
 
 	return (
 		<div className={s(styles["collapsible"])}>
-			<button type="button" className={s(styles["header"])} onClick={() => setOpen(!open)}>
+			<button type="button" className={s(styles["header"])} onClick={handleToggle}>
 				<span className={`${s(styles["chevron"])} ${open ? s(styles["chevronOpen"]) : ""}`}>&#x25B6;</span>
 				{title}
 			</button>
-			{open && <div className={s(styles["content"])}>{children}</div>}
+			{open ? <div className={s(styles["content"])}>{children}</div> : null}
 		</div>
 	);
 }

@@ -53,7 +53,7 @@ describe("SessionView", () => {
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
 		});
-		await findByText("Hello world");
+		expect(await findByText("Hello world")).toBeTruthy();
 	});
 
 	test("shows error state on fetch failure", async () => {
@@ -64,7 +64,7 @@ describe("SessionView", () => {
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
 		});
-		await findByText(ERROR_PREFIX_REGEX);
+		expect(await findByText(ERROR_PREFIX_REGEX)).toBeTruthy();
 	});
 
 	test("shows error state on network error", async () => {
@@ -75,7 +75,7 @@ describe("SessionView", () => {
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
 		});
-		await findByText(NETWORK_ERROR_REGEX);
+		expect(await findByText(NETWORK_ERROR_REGEX)).toBeTruthy();
 	});
 
 	test("renders both user and assistant messages", async () => {
@@ -87,8 +87,8 @@ describe("SessionView", () => {
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
 		});
-		await findByText("Hello world");
-		await findByText("User");
-		await findByText("Assistant");
+		expect(await findByText("Hello world")).toBeTruthy();
+		expect(await findByText("User")).toBeTruthy();
+		expect(await findByText("Assistant")).toBeTruthy();
 	});
 });

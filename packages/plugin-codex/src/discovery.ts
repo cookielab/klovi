@@ -76,9 +76,9 @@ function extractFirstUserMessage(text: string): string | null {
 
 			// New format: event_msg with user_message payload
 			if (event.type === "event_msg" && event.payload?.type === "user_message") {
-				const text = event.payload.message || event.payload.text;
-				if (typeof text === "string" && text) {
-					message = text.slice(0, 200);
+				const payloadText = event.payload.message || event.payload.text;
+				if (typeof payloadText === "string" && payloadText) {
+					message = payloadText.slice(0, 200);
 					return false;
 				}
 			}
@@ -98,15 +98,15 @@ function listCodexSessions(nativeId: string) {
 
 		const sessions: SessionSummary[] = [];
 		for (const s of matching) {
-			let firstMessage = s.meta.name || "";
+			let firstMessage = s.meta.name ?? "";
 			if (!firstMessage) {
 				const prefix = yield* readTextPrefix(s.filePath, SESSION_TITLE_SCAN_BYTES).pipe(
 					Effect.catchAll(() => Effect.succeed("")),
 				);
-				firstMessage = extractFirstUserMessage(prefix) || "";
+				firstMessage = extractFirstUserMessage(prefix) ?? "";
 				if (!firstMessage) {
 					const fullText = yield* readFileText(s.filePath).pipe(Effect.catchAll(() => Effect.succeed("")));
-					firstMessage = extractFirstUserMessage(fullText) || "";
+					firstMessage = extractFirstUserMessage(fullText) ?? "";
 				}
 				firstMessage ||= "Codex session";
 			}

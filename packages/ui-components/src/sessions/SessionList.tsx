@@ -1,4 +1,5 @@
 import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-core";
+import { useCallback } from "react";
 import type { SessionSummary } from "../types/index.ts";
 import { FetchError } from "../utilities/FetchError.tsx";
 import { formatFullDateTime, formatTime } from "../utilities/formatters.ts";
@@ -12,7 +13,7 @@ function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
 }
 
-export type SessionListProps = {
+type SessionListProps = {
 	sessions: SessionSummary[];
 	loading?: boolean | undefined;
 	error?: string | undefined;
@@ -24,7 +25,56 @@ export type SessionListProps = {
 	pluginDisplayName?: ((id: string) => string) | undefined;
 };
 
-export function SessionList({
+function SessionItem({
+	session,
+	isActive,
+	onSelect,
+	pluginDisplayName,
+}: {
+	session: SessionSummary;
+	isActive: boolean;
+	onSelect: (sessionId: string) => void;
+	pluginDisplayName: (id: string) => string;
+}) {
+	const handleClick = useCallback(() => onSelect(session.sessionId), [onSelect, session.sessionId]);
+
+	const itemClasses = [
+		s(styles["listItemButton"]),
+		s(styles["listItem"]),
+		isActive ? s(styles["listItemActive"]) : "",
+		session.sessionType === "plan" ? s(styles["listItemPlan"]) : "",
+		session.sessionType === "implementation" ? s(styles["listItemImplementation"]) : "",
+	]
+		.filter(Boolean)
+		.join(" ");
+
+	return (
+		<button type="button" className={itemClasses} onClick={handleClick}>
+			<div className={s(styles["listItemTitle"])}>{session.firstMessage || session.slug}</div>
+			<div className={s(styles["listItemMeta"])}>
+				{session.pluginId ? (
+					<span className={s(styles["pluginBadge"])}>{pluginDisplayName(session.pluginId)}</span>
+				) : null}{" "}
+				{session.sessionType ? (
+					<span
+						className={`${s(styles["sessionTypeBadge"])} ${
+							session.sessionType === "plan"
+								? s(styles["sessionTypeBadgePlan"])
+								: s(styles["sessionTypeBadgeImplementation"])
+						}`}
+					>
+						{session.sessionType === "plan" ? "Plan" : "Impl"}
+					</span>
+				) : null}{" "}
+				<time dateTime={session.timestamp} title={formatFullDateTime(session.timestamp)}>
+					{formatTime(session.timestamp)}
+				</time>
+			</div>
+		</button>
+	);
+}
+
+function SessionList({
 	sessions,
 	loading,
 	error,
@@ -44,53 +94,27 @@ export function SessionList({
 				← Projects
 			</button>
 			<div className={s(styles["sectionTitle"])}>{displayName}</div>
-			{loading && <div className={s(styles["loading"])}>Loading sessions...</div>}
-			{error && <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} />}
+			{loading ? <div className={s(styles["loading"])}>Loading sessions...</div> : null}
+			{error ? <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} /> : null}
+			{/* biome-ignore lint/nursery/useNullishCoalescing: intentionally catches false|undefined loading and empty error */}
 			{!(loading || error) &&
-				sessions.map((session) => {
-					const itemClasses = [
-						s(styles["listItemButton"]),
-						s(styles["listItem"]),
-						selectedId === session.sessionId ? s(styles["listItemActive"]) : "",
-						session.sessionType === "plan" ? s(styles["listItemPlan"]) : "",
-						session.sessionType === "implementation" ? s(styles["listItemImplementation"]) : "",
-					]
-						.filter(Boolean)
-						.join(" ");
-
-					return (
-						<button
-							type="button"
-							key={session.sessionId}
-							className={itemClasses}
-							onClick={() => onSelect(session.sessionId)}
-						>
-							<div className={s(styles["listItemTitle"])}>{session.firstMessage || session.slug}</div>
-							<div className={s(styles["listItemMeta"])}>
-								{session.pluginId && (
-									<span className={s(styles["pluginBadge"])}>{pluginDisplayName(session.pluginId)}</span>
-								)}{" "}
-								{session.sessionType && (
-									<span
-										className={`${s(styles["sessionTypeBadge"])} ${
-											session.sessionType === "plan"
-												? s(styles["sessionTypeBadgePlan"])
-												: s(styles["sessionTypeBadgeImplementation"])
-										}`}
-									>
-										{session.sessionType === "plan" ? "Plan" : "Impl"}
-									</span>
-								)}{" "}
-								<time dateTime={session.timestamp} title={formatFullDateTime(session.timestamp)}>
-									{formatTime(session.timestamp)}
-								</time>
-							</div>
-						</button>
-					);
-				})}
+				sessions.map((session) => (
+					<SessionItem
+						key={session.sessionId}
+						session={session}
+						isActive={selectedId === session.sessionId}
+						onSelect={onSelect}
+						pluginDisplayName={pluginDisplayName}
+					/>
+				))}
+			{/* biome-ignore lint/nursery/useNullishCoalescing: intentionally catches false|undefined loading and empty error */}
 			{!(loading || error) && sessions.length === 0 && (
 				<div className={s(styles["emptyMessage"])}>No sessions found</div>
 			)}
 		</div>
 	);
 }
+
+// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
+export type { SessionListProps };
+export { SessionList };

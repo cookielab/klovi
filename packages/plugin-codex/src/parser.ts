@@ -135,16 +135,16 @@ function normalizeEventMsg(payload: EnvelopePayload): CodexEvent | null {
 		case "task_started":
 			return { type: "turn.started" };
 		case "user_message":
-			return { type: "user_message", text: payload.message || payload.text || "" };
+			return { type: "user_message", text: payload.message ?? payload.text ?? "" };
 		case "agent_message":
 			return {
 				type: "item.completed",
-				item: { type: "agent_message", text: payload.message || payload.text || "" },
+				item: { type: "agent_message", text: payload.message ?? payload.text ?? "" },
 			};
 		case "agent_reasoning":
 			return {
 				type: "item.completed",
-				item: { type: "reasoning", text: payload.text || "" },
+				item: { type: "reasoning", text: payload.text ?? "" },
 			};
 		case "token_count": {
 			const src = payload.info?.last_token_usage ?? payload;
@@ -180,7 +180,7 @@ function parseArguments(args: Record<string, unknown> | string | undefined): Rec
 
 function normalizeResponseItem(payload: EnvelopePayload): CodexEvent | null {
 	if (payload.type === "function_call" || payload.type === "custom_tool_call") {
-		const name = payload.name || "unknown";
+		const name = payload.name ?? "unknown";
 		const args = parseArguments(payload.arguments);
 		return {
 			type: "item.completed",
@@ -200,7 +200,7 @@ function normalizeResponseItem(payload: EnvelopePayload): CodexEvent | null {
 		return {
 			type: "tool_output",
 			callId: payload.call_id,
-			text: payload.output || "",
+			text: payload.output ?? "",
 		};
 	}
 	return null;
@@ -239,7 +239,7 @@ function buildToolCallFromItem(item: CodexItem, nextToolUseId: () => string): To
 				toolUseId: nextToolUseId(),
 				name: "command_execution",
 				input: { command: item.command },
-				result: item.aggregated_output || "",
+				result: item.aggregated_output ?? "",
 				isError: item.exit_code !== undefined && item.exit_code !== 0,
 			};
 		case "file_change":
@@ -255,7 +255,7 @@ function buildToolCallFromItem(item: CodexItem, nextToolUseId: () => string): To
 				toolUseId: nextToolUseId(),
 				name: item.tool,
 				input: item.arguments,
-				result: item.result || "",
+				result: item.result ?? "",
 				isError: false,
 			};
 		case "web_search":
@@ -311,9 +311,9 @@ function handleTurnStarted(
 	nextUserTurnId: () => string,
 ): void {
 	flushAssistant(state);
-	state.turnCount++;
+	state.turnCount += 1;
 	if (state.turnCount > 1) {
-		state.turns.push(createUserTurn(event.text || "", timestamp, nextUserTurnId()));
+		state.turns.push(createUserTurn(event.text ?? "", timestamp, nextUserTurnId()));
 	}
 }
 
@@ -329,23 +329,24 @@ function handleTurnCompleted(state: TurnBuilderState, event: CodexEvent): void {
 	flushAssistant(state);
 }
 
-function handleItemCompleted(
-	state: TurnBuilderState,
-	event: CodexEvent,
-	model: string,
-	timestamp: string,
-	nextToolUseId: () => string,
-	nextAssistantTurnId: () => string,
-): void {
+type TurnBuilderContext = {
+	model: string;
+	timestamp: string;
+	nextToolUseId: () => string;
+	nextUserTurnId: () => string;
+	nextAssistantTurnId: () => string;
+};
+
+function handleItemCompleted(state: TurnBuilderState, event: CodexEvent, ctx: TurnBuilderContext): void {
 	if (!event.item) {
 		return;
 	}
 
 	if (!state.currentAssistant) {
-		state.currentAssistant = createAssistantTurn(model, timestamp, nextAssistantTurnId());
+		state.currentAssistant = createAssistantTurn(ctx.model, ctx.timestamp, ctx.nextAssistantTurnId());
 	}
 
-	const block = itemToContentBlock(event.item, nextToolUseId);
+	const block = itemToContentBlock(event.item, ctx.nextToolUseId);
 	if (block) {
 		state.currentAssistant.contentBlocks.push(block);
 	}
@@ -374,15 +375,15 @@ function handleUserMessage(state: TurnBuilderState, event: CodexEvent): void {
 			continue;
 		}
 		if (turn.kind === "user" && !turn.text) {
-			turn.text = event.text || "";
+			turn.text = event.text ?? "";
 			return;
 		}
 	}
 	// If no user turn yet (first message), create one
 	if (state.turnCount === 0) {
-		state.turnCount++;
+		state.turnCount += 1;
 	}
-	state.turns.push(createUserTurn(event.text || "", "", "codex-user-first"));
+	state.turns.push(createUserTurn(event.text ?? "", "", "codex-user-first"));
 }
 
 function handleUsageUpdate(state: TurnBuilderState, event: CodexEvent): void {
@@ -402,24 +403,17 @@ function handleToolOutput(state: TurnBuilderState, event: CodexEvent): void {
 	}
 	const toolCall = state.pendingToolCalls.get(event.callId);
 	if (toolCall) {
-		toolCall.result = event.text || "";
+		toolCall.result = event.text ?? "";
 	}
 }
 
-function handleGenericToolCall(
-	state: TurnBuilderState,
-	event: CodexEvent,
-	model: string,
-	timestamp: string,
-	nextToolUseId: () => string,
-	nextAssistantTurnId: () => string,
-): void {
+function handleGenericToolCall(state: TurnBuilderState, event: CodexEvent, ctx: TurnBuilderContext): void {
 	if (!state.currentAssistant) {
-		state.currentAssistant = createAssistantTurn(model, timestamp, nextAssistantTurnId());
+		state.currentAssistant = createAssistantTurn(ctx.model, ctx.timestamp, ctx.nextAssistantTurnId());
 	}
 	const toolCall: ToolCallWithResult = {
-		toolUseId: event.callId || nextToolUseId(),
-		name: event.toolName || "unknown",
+		toolUseId: event.callId ?? ctx.nextToolUseId(),
+		name: event.toolName ?? "unknown",
 		input: event.toolInput ?? {},
 		result: "",
 		isError: false,
@@ -430,27 +424,19 @@ function handleGenericToolCall(
 	state.currentAssistant.contentBlocks.push({ type: "tool_call", call: toolCall });
 }
 
-function dispatchEvent(
-	state: TurnBuilderState,
-	event: CodexEvent,
-	model: string,
-	timestamp: string,
-	nextToolUseId: () => string,
-	nextUserTurnId: () => string,
-	nextAssistantTurnId: () => string,
-): void {
+function dispatchEvent(state: TurnBuilderState, event: CodexEvent, ctx: TurnBuilderContext): void {
 	switch (event.type) {
 		case "turn.started":
-			handleTurnStarted(state, event, timestamp, nextUserTurnId);
+			handleTurnStarted(state, event, ctx.timestamp, ctx.nextUserTurnId);
 			break;
 		case "turn.completed":
 			handleTurnCompleted(state, event);
 			break;
 		case "item.completed":
 			if (event.toolName) {
-				handleGenericToolCall(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
+				handleGenericToolCall(state, event, ctx);
 			} else {
-				handleItemCompleted(state, event, model, timestamp, nextToolUseId, nextAssistantTurnId);
+				handleItemCompleted(state, event, ctx);
 			}
 			break;
 		case "usage_update":
@@ -471,15 +457,15 @@ function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string)
 	let assistantTurnCounter = 0;
 
 	const nextToolUseId = () => {
-		toolUseCounter++;
+		toolUseCounter += 1;
 		return `codex-tool-${toolUseCounter}`;
 	};
 	const nextUserTurnId = () => {
-		userTurnCounter++;
+		userTurnCounter += 1;
 		return `codex-user-${userTurnCounter}`;
 	};
 	const nextAssistantTurnId = () => {
-		assistantTurnCounter++;
+		assistantTurnCounter += 1;
 		return `codex-assistant-${assistantTurnCounter}`;
 	};
 
@@ -490,8 +476,16 @@ function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string)
 		pendingToolCalls: new Map(),
 	};
 
+	const ctx: TurnBuilderContext = {
+		model: model,
+		timestamp: timestamp,
+		nextToolUseId: nextToolUseId,
+		nextUserTurnId: nextUserTurnId,
+		nextAssistantTurnId: nextAssistantTurnId,
+	};
+
 	for (const event of events) {
-		dispatchEvent(state, event, model, timestamp, nextToolUseId, nextUserTurnId, nextAssistantTurnId);
+		dispatchEvent(state, event, ctx);
 	}
 
 	flushAssistant(state);

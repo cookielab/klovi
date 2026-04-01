@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test";
 import { fireEvent, render } from "@testing-library/react";
 import { useKeyboard } from "./useKeyboard.ts";
 
-// Wrapper component that uses the hook
+// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function KeyboardTestHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }) {
 	useKeyboard(props.handlers, props.active);
 	return <div>Keyboard test</div>;
@@ -101,13 +101,13 @@ describe("useKeyboard", () => {
 	});
 
 	test("missing handlers are safely skipped", () => {
-		render(<KeyboardTestHarness handlers={{}} active={true} />);
+		const { container } = render(<KeyboardTestHarness handlers={{}} active={true} />);
 		// Should not throw when a handler is undefined
 		fireKey("ArrowRight");
 		fireKey("ArrowLeft");
 		fireKey("Escape");
 		fireKey("f");
-		// No error = pass
+		expect(container).toBeTruthy();
 	});
 
 	test("cleans up listener on unmount", () => {

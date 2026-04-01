@@ -77,6 +77,8 @@ function App() {
 		fetchSearchSessions();
 	}, [fetchSearchSessions]);
 
+	const closeSearch = useCallback(() => setSearchOpen(false), []);
+
 	const handleSearchSelect = useCallback(
 		async (encodedPath: string, sessionId: string) => {
 			setSearchOpen(false);
@@ -187,13 +189,9 @@ function App() {
 
 	return (
 		<>
-			{searchOpen && (
-				<PackageSearchModal
-					sessions={searchSessions}
-					onSelect={handleSearchSelect}
-					onClose={() => setSearchOpen(false)}
-				/>
-			)}
+			{searchOpen ? (
+				<PackageSearchModal sessions={searchSessions} onSelect={handleSearchSelect} onClose={closeSearch} />
+			) : null}
 			<Layout
 				sidebar={sidebarContent}
 				hideSidebar={isPresenting}
@@ -351,43 +349,42 @@ function AppGate() {
 	const [screen, setScreen] = useState<"connecting" | "onboarding" | "security-warning" | "none">("onboarding");
 	const isDesktopHost = hostBridge.getCapabilities().desktop;
 
-	const initialize = useCallback(() => {
+	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: initialization state machine with necessary branching
+	const initialize = useCallback(async () => {
 		setAccepted(false);
 		setLoading(true);
 		setScreen("onboarding");
-		client
-			.isFirstLaunch()
-			.then((data) => {
-				if (data.firstLaunch) {
-					setScreen("onboarding");
-					return;
-				}
-				return client.getGeneralSettings().then((settings) => {
-					if (settings.showSecurityWarning) {
-						setScreen("security-warning");
-						return;
-					}
-					setScreen("none");
-					return client
-						.acceptRisks()
-						.then(() => setAccepted(true))
-						.catch((error) => {
-							if (isDesktopHost && isRpcTransportError(error)) {
-								setScreen("connecting");
-								return;
-							}
-							setAccepted(true);
-						});
-				});
-			})
-			.catch((error) => {
+		try {
+			const data = await client.isFirstLaunch();
+			if (data.firstLaunch) {
+				setScreen("onboarding");
+				return;
+			}
+			const settings = await client.getGeneralSettings();
+			if (settings.showSecurityWarning) {
+				setScreen("security-warning");
+				return;
+			}
+			setScreen("none");
+			try {
+				await client.acceptRisks();
+				setAccepted(true);
+			} catch (error) {
 				if (isDesktopHost && isRpcTransportError(error)) {
 					setScreen("connecting");
 					return;
 				}
-				setScreen("onboarding");
-			})
-			.finally(() => setLoading(false));
+				setAccepted(true);
+			}
+		} catch (error) {
+			if (isDesktopHost && isRpcTransportError(error)) {
+				setScreen("connecting");
+				return;
+			}
+			setScreen("onboarding");
+		} finally {
+			setLoading(false);
+		}
 	}, [client, isDesktopHost]);
 
 	useEffect(() => {

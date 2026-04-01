@@ -65,9 +65,11 @@ export function useViewState(): UseViewStateResult {
 			window.location.hash = pendingHash;
 		}
 
-		void restoreFromHash(client).then((nextView) => {
-			applyRestoredView(nextView, true);
-		});
+		restoreFromHash(client)
+			.then((nextView) => {
+				applyRestoredView(nextView, true);
+			})
+			.catch(() => {});
 	}, [applyRestoredView, client]);
 
 	useEffect(() => {
@@ -80,10 +82,12 @@ export function useViewState(): UseViewStateResult {
 	}, [hostBridge]);
 
 	useEffect(() => {
-		void restoreFromHash(client).then((nextView) => {
-			applyRestoredView(nextView, false);
-			setReady(true);
-		});
+		restoreFromHash(client)
+			.then((nextView) => {
+				applyRestoredView(nextView, false);
+				setReady(true);
+			})
+			.catch(() => {});
 	}, [applyRestoredView, client]);
 
 	useEffect(() => {
@@ -98,9 +102,11 @@ export function useViewState(): UseViewStateResult {
 
 	useEffect(() => {
 		const handler = () => {
-			void restoreFromHash(client).then((nextView) => {
-				applyRestoredView(nextView, true);
-			});
+			restoreFromHash(client)
+				.then((nextView) => {
+					applyRestoredView(nextView, true);
+				})
+				.catch(() => {});
 		};
 		window.addEventListener("hashchange", handler);
 		return () => window.removeEventListener("hashchange", handler);

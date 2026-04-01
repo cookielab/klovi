@@ -1,4 +1,4 @@
-import { afterEach, describe, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
 import type { Turn } from "../types/index.ts";
 import { PresentationShell } from "./PresentationShell.tsx";
@@ -27,9 +27,10 @@ afterEach(cleanup);
 
 describe("PresentationShell (package)", () => {
 	test("renders progress information", async () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { findByText } = render(<PresentationShell turns={makeTurns()} onExit={() => {}} />);
 
-		await findByText(STEP_REGEX);
-		await findByText("← → step · ↑ ↓ message · Esc exit · F fullscreen");
+		expect(await findByText(STEP_REGEX)).toBeTruthy();
+		expect(await findByText("← → step · ↑ ↓ message · Esc exit · F fullscreen")).toBeTruthy();
 	});
 });

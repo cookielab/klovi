@@ -42,7 +42,7 @@ const rpcHandler = Effect.gen(function* () {
 		}
 	}
 
-	const handler = services[method] as (params: Record<string, unknown>) => unknown;
+	const handler = services[method] as (args: Record<string, unknown>) => unknown;
 	return yield* Effect.tryPromise({
 		try: async () => {
 			const result = await Promise.resolve(handler(params));

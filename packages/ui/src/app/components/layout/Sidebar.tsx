@@ -1,6 +1,7 @@
 import { SidebarButton } from "@cookielab.io/klovi-design-system";
 import { formatShortcut } from "@cookielab.io/klovi-ui-components/utilities";
 import type React from "react";
+import { useCallback } from "react";
 import faviconUrl from "../../../../favicon.svg";
 import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
 import { useRPC } from "../../hooks/useRpc.ts";
@@ -21,23 +22,35 @@ export function Sidebar({ children, onSearchClick, onSettingsClick }: SidebarPro
 	const hostBridge = useKloviHostBridge();
 	const { data: versionInfo } = useRPC<VersionInfo>(() => client.getVersion(), [client]);
 
+	const handleCookielabClick = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault();
+			hostBridge
+				.openExternal({
+					url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
+				})
+				.catch(() => {});
+		},
+		[hostBridge],
+	);
+
 	return (
 		<div className="sidebar">
 			<div className="sidebar-header">
 				<img src={faviconUrl} alt="" width="28" height="28" />
 				<h1>Klovi</h1>
-				{versionInfo && (
+				{versionInfo ? (
 					<span className="sidebar-version">
 						{versionInfo.version}
 						{versionInfo.commit ? ` (${versionInfo.commit})` : ""}
 					</span>
-				)}
-				{onSearchClick && (
+				) : null}
+				{onSearchClick ? (
 					<SidebarButton onClick={onSearchClick} title={`Search sessions (${formatShortcut("Mod", "K")})`}>
 						Search
 					</SidebarButton>
-				)}
-				{onSettingsClick && (
+				) : null}
+				{onSettingsClick ? (
 					<SidebarButton onClick={onSettingsClick} title={`Settings (${formatShortcut("Mod", ",")})`}>
 						<svg
 							width="14"
@@ -55,20 +68,12 @@ export function Sidebar({ children, onSearchClick, onSettingsClick }: SidebarPro
 							<circle cx="12" cy="12" r="3" />
 						</svg>
 					</SidebarButton>
-				)}
+				) : null}
 			</div>
 			<div className="sidebar-content">{children}</div>
 			<div className="sidebar-footer">
 				Made by{" "}
-				<a
-					href="https://cookielab.io?utm_source=opensource&utm_medium=klovi"
-					onClick={(e) => {
-						e.preventDefault();
-						void hostBridge.openExternal({
-							url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
-						});
-					}}
-				>
+				<a href="https://cookielab.io?utm_source=opensource&utm_medium=klovi" onClick={handleCookielabClick}>
 					cookielab.io
 				</a>
 			</div>

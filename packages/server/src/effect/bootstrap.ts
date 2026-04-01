@@ -76,7 +76,7 @@ async function bootstrapServer(
 
 	const servicesLayer = KloviServicesLive.pipe(Layer.provide(configLayer));
 
-	let resolveAddress!: (url: string) => void;
+	let resolveAddress!: (addr: string) => void;
 	let rejectAddress!: (err: unknown) => void;
 	const addressPromise = new Promise<string>((resolve, reject) => {
 		resolveAddress = resolve;

@@ -48,7 +48,7 @@ describe("SettingsView", () => {
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
-		await findByText("Show security warning on startup");
+		expect(await findByText("Show security warning on startup")).toBeTruthy();
 	});
 
 	test("renders plugin list when activeTab is plugins", async () => {
@@ -64,8 +64,8 @@ describe("SettingsView", () => {
 		const props = defaultProps();
 		props.activeTab = "plugins";
 		const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
-		await findByText("Claude Code");
-		await findByText("Codex CLI");
+		expect(await findByText("Claude Code")).toBeTruthy();
+		expect(await findByText("Codex CLI")).toBeTruthy();
 	});
 
 	test("renders checkbox for each plugin", async () => {
@@ -116,7 +116,7 @@ describe("SettingsView", () => {
 		const props = defaultProps();
 		props.activeTab = "plugins";
 		const { findByDisplayValue } = render(<SettingsView {...props} />, { wrapper: MockProviders });
-		await findByDisplayValue("/custom/path");
+		expect(await findByDisplayValue("/custom/path")).toBeTruthy();
 	});
 
 	test("shows Reset link when path is customized", async () => {
@@ -129,7 +129,7 @@ describe("SettingsView", () => {
 		const props = defaultProps();
 		props.activeTab = "plugins";
 		const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
-		await findByText("Reset");
+		expect(await findByText("Reset")).toBeTruthy();
 	});
 
 	test("does not show Reset link for default path", async () => {
@@ -162,8 +162,8 @@ describe("SettingsView", () => {
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
-		await findByText("Global");
-		await findByText("Presentation");
+		expect(await findByText("Global")).toBeTruthy();
+		expect(await findByText("Presentation")).toBeTruthy();
 	});
 
 	test("General tab shows theme selector with System/Light/Dark options", async () => {
@@ -278,7 +278,7 @@ describe("SettingsView", () => {
 		const props = defaultProps();
 		props.fontSize.size = 20;
 		const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
-		await findByText("20");
+		expect(await findByText("20")).toBeTruthy();
 	});
 
 	test("General tab shows Reset to defaults button", async () => {
@@ -303,8 +303,8 @@ describe("SettingsView", () => {
 			},
 		});
 		const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
-		await findByText("Updates");
-		await findByText("Update Channel");
+		expect(await findByText("Updates")).toBeTruthy();
+		expect(await findByText("Update Channel")).toBeTruthy();
 	});
 
 	test("General tab shows current update channel selection", async () => {
@@ -318,7 +318,7 @@ describe("SettingsView", () => {
 		const { findByDisplayValue } = render(<SettingsView {...defaultProps()} />, {
 			wrapper: MockProviders,
 		});
-		await findByDisplayValue("Beta");
+		expect(await findByDisplayValue("Beta")).toBeTruthy();
 	});
 
 	test("General tab shows Check now button", async () => {
@@ -334,7 +334,7 @@ describe("SettingsView", () => {
 			},
 		});
 		const { findByRole } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
-		await findByRole("button", { name: "Check now" });
+		expect(await findByRole("button", { name: "Check now" })).toBeTruthy();
 	});
 });
 
@@ -342,25 +342,31 @@ describe("SettingsSidebar", () => {
 	afterEach(cleanup);
 
 	test("renders General and Plugins buttons", () => {
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />, {
-			wrapper: MockProviders,
-		});
+		const { getByRole } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
+			<SettingsSidebar activeTab="general" onTabChange={() => {}} />,
+			{ wrapper: MockProviders },
+		);
 		expect(getByRole("button", { name: "General" })).toBeDefined();
 		expect(getByRole("button", { name: "Plugins" })).toBeDefined();
 	});
 
 	test("marks General as active when activeTab is general", () => {
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} />, {
-			wrapper: MockProviders,
-		});
+		const { getByRole } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
+			<SettingsSidebar activeTab="general" onTabChange={() => {}} />,
+			{ wrapper: MockProviders },
+		);
 		expect(getByRole("button", { name: "General" }).classList.contains("active")).toBe(true);
 		expect(getByRole("button", { name: "Plugins" }).classList.contains("active")).toBe(false);
 	});
 
 	test("marks Plugins as active when activeTab is plugins", () => {
-		const { getByRole } = render(<SettingsSidebar activeTab="plugins" onTabChange={() => {}} />, {
-			wrapper: MockProviders,
-		});
+		const { getByRole } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
+			<SettingsSidebar activeTab="plugins" onTabChange={() => {}} />,
+			{ wrapper: MockProviders },
+		);
 		expect(getByRole("button", { name: "General" }).classList.contains("active")).toBe(false);
 		expect(getByRole("button", { name: "Plugins" }).classList.contains("active")).toBe(true);
 	});
@@ -376,17 +382,21 @@ describe("SettingsSidebar", () => {
 
 	test("renders back button when onBack provided", () => {
 		const onBack = mock();
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} onBack={onBack} />, {
-			wrapper: MockProviders,
-		});
+		const { getByRole } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
+			<SettingsSidebar activeTab="general" onTabChange={() => {}} onBack={onBack} />,
+			{ wrapper: MockProviders },
+		);
 		expect(getByRole("button", { name: "Back" })).toBeDefined();
 	});
 
 	test("calls onBack when back button clicked", () => {
 		const onBack = mock();
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => {}} onBack={onBack} />, {
-			wrapper: MockProviders,
-		});
+		const { getByRole } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
+			<SettingsSidebar activeTab="general" onTabChange={() => {}} onBack={onBack} />,
+			{ wrapper: MockProviders },
+		);
 		fireEvent.click(getByRole("button", { name: "Back" }));
 		expect(onBack).toHaveBeenCalledTimes(1);
 	});

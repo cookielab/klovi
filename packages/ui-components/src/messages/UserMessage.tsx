@@ -73,7 +73,7 @@ export function UserMessage({
 	if (turn.bashInput !== undefined || turn.bashStdout !== undefined) {
 		return (
 			// biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role
-			<TurnBox role="user" timestamp={turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : undefined}>
+			<TurnBox role="user" timestamp={turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : null}>
 				<UserBashContent turn={turn} />
 			</TurnBox>
 		);
@@ -101,34 +101,34 @@ export function UserMessage({
 			role={role}
 			timestamp={
 				<>
-					{showPlanLink && (
+					{showPlanLink ? (
 						<SessionLink
 							sessionId={planSessionId}
 							project={project}
 							label="View planning session"
 							onSessionLink={onSessionLink}
 						/>
-					)}
-					{showImplLink && (
+					) : null}
+					{showImplLink ? (
 						<SessionLink
 							sessionId={implSessionId}
 							project={project}
 							label="View implementation session"
 							onSessionLink={onSessionLink}
 						/>
-					)}
-					{turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : undefined}
+					) : null}
+					{turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : null}
 				</>
 			}
 		>
-			{turn.command && (
+			{turn.command ? (
 				<div className={s(styles["commandCall"])}>
 					<span className={s(styles["skillBadge"])}>skill</span>
 					<span className={s(styles["commandCallLabel"])}>{turn.command.name}</span>
 				</div>
-			)}
+			) : null}
 			<MarkdownRenderer content={turn.text} onLinkClick={onLinkClick} />
-			{turn.attachments && turn.attachments.length > 0 && (
+			{turn.attachments && turn.attachments.length > 0 ? (
 				<div className={s(styles["attachments"])}>
 					{turn.attachments.map((a, i) => (
 						// biome-ignore lint/suspicious/noArrayIndexKey: attachments have no unique identifier
@@ -137,7 +137,7 @@ export function UserMessage({
 						</span>
 					))}
 				</div>
-			)}
+			) : null}
 		</TurnBox>
 	);
 }

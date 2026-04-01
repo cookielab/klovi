@@ -131,8 +131,9 @@ describe("design-system components", () => {
 				<Input
 					id="name"
 					value="Jane"
+					// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 					onChange={() => {
-						inputChanges++;
+						inputChanges += 1;
 					}}
 				/>
 
@@ -141,8 +142,9 @@ describe("design-system components", () => {
 				<Select
 					id="theme"
 					value="light"
+					// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 					onChange={() => {
-						selectChanges++;
+						selectChanges += 1;
 					}}
 					options={[
 						{ value: "light", label: "Light" },

@@ -1,5 +1,5 @@
 import { ProjectList as UiProjectList } from "@cookielab.io/klovi-ui-components/sessions";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { Project } from "../../../shared/types.ts";
 import { useRPC } from "../../hooks/useRpc.ts";
@@ -18,6 +18,16 @@ export function PackageProjectList({ onSelect, selected, hiddenIds, onHide, onSh
 	const [filter, setFilter] = useState("");
 	const projects = data?.projects ?? [];
 
+	const handleSelect = useCallback(
+		(encodedPath: string) => {
+			const project = projects.find((entry) => entry.encodedPath === encodedPath);
+			if (project) {
+				onSelect(project);
+			}
+		},
+		[projects, onSelect],
+	);
+
 	return (
 		<UiProjectList
 			projects={projects}
@@ -26,12 +36,7 @@ export function PackageProjectList({ onSelect, selected, hiddenIds, onHide, onSh
 			onRetry={retry}
 			selectedId={selected}
 			hiddenIds={hiddenIds}
-			onSelect={(encodedPath) => {
-				const project = projects.find((entry) => entry.encodedPath === encodedPath);
-				if (project) {
-					onSelect(project);
-				}
-			}}
+			onSelect={handleSelect}
 			onHide={onHide}
 			onShowHidden={onShowHidden}
 			filter={filter}

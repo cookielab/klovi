@@ -11,6 +11,7 @@ const testDir = join(tmpdir(), `klovi-codex-discovery-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 async function writeSession(
 	provider: string,
 	date: string,

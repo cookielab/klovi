@@ -1,10 +1,6 @@
 import { claudeCodeFrontendPlugin } from "@cookielab.io/klovi-plugin-claude-code/frontend";
 import { codexFrontendPlugin } from "@cookielab.io/klovi-plugin-codex/frontend";
-import type {
-	FrontendPlugin,
-	FrontendInputFormatter as InputFormatter,
-	FrontendSummaryExtractor as SummaryExtractor,
-} from "@cookielab.io/klovi-plugin-core";
+import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { openCodeFrontendPlugin } from "@cookielab.io/klovi-plugin-opencode/frontend";
 
 const pluginRegistry = new Map<string, FrontendPlugin>();
@@ -21,5 +17,4 @@ for (const plugin of [claudeCodeFrontendPlugin, codexFrontendPlugin, openCodeFro
 	registerFrontendPlugin(plugin);
 }
 
-export type { FrontendPlugin, InputFormatter, SummaryExtractor };
 export { getFrontendPlugin, registerFrontendPlugin };

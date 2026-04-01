@@ -24,11 +24,11 @@ export function SessionView({ sessionId, project, gitBranch }: SessionViewProps)
 	const session = data.session;
 	return (
 		<>
-			{gitBranch && (
+			{gitBranch ? (
 				<div className="session-branch-bar">
 					<span className="session-branch-icon">⎇</span> {gitBranch}
 				</div>
-			)}
+			) : null}
 			<PackageMessageList
 				turns={session.turns}
 				sessionId={sessionId}

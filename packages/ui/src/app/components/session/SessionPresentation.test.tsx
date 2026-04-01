@@ -37,6 +37,7 @@ describe("SessionPresentation", () => {
 			getSession: () => new Promise(() => {}),
 		});
 		const { container } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);
@@ -50,6 +51,7 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container, findByText } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);
@@ -64,6 +66,7 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container, findByText } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);
@@ -77,6 +80,7 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);

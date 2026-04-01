@@ -87,7 +87,7 @@ function isClaudeModel(model: string): boolean {
 
 function shortModel(model: string): string {
 	// Claude: claude-opus-4-6, claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001
-	const claudeMatch = model.match(CLAUDE_MODEL_REGEX);
+	const claudeMatch = CLAUDE_MODEL_REGEX.exec(model);
 	if (claudeMatch) {
 		const rawFamily = claudeMatch[1] ?? "";
 		const family = rawFamily.charAt(0).toUpperCase() + rawFamily.slice(1);
@@ -97,25 +97,25 @@ function shortModel(model: string): string {
 	}
 
 	// GPT: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
-	const gptMatch = model.match(GPT_MODEL_REGEX);
+	const gptMatch = GPT_MODEL_REGEX.exec(model);
 	if (gptMatch) {
 		return gptMatch[1]?.replace("gpt-", "GPT-") ?? model;
 	}
 
 	// OpenAI reasoning: o1, o3, o3-mini, o4-mini
-	const reasoningMatch = model.match(OPENAI_REASONING_REGEX);
+	const reasoningMatch = OPENAI_REASONING_REGEX.exec(model);
 	if (reasoningMatch) {
 		return reasoningMatch[1] ?? model;
 	}
 
 	// Gemini: gemini-2.0-flash, gemini-1.5-pro, gemini-2.5-pro-preview-05-06
-	const geminiMatch = model.match(GEMINI_MODEL_REGEX);
+	const geminiMatch = GEMINI_MODEL_REGEX.exec(model);
 	if (geminiMatch) {
 		return `Gemini ${geminiMatch[1] ?? ""}`;
 	}
 
 	// Codex: codex-mini-latest, codex-mini
-	const codexMatch = model.match(CODEX_MODEL_REGEX);
+	const codexMatch = CODEX_MODEL_REGEX.exec(model);
 	if (codexMatch) {
 		return `Codex ${codexMatch[1] ?? ""}`;
 	}

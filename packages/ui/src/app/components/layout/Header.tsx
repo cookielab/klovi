@@ -12,6 +12,7 @@ type HeaderProps = {
 	showPresentationToggle: boolean;
 };
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: header renders multiple conditional UI sections
 export function Header({
 	title,
 	breadcrumb,
@@ -45,22 +46,22 @@ export function Header({
 	return (
 		<div className="header">
 			<div className="header-title">
-				{onBack && (
+				{onBack ? (
 					<button type="button" className="back-btn" onClick={onBack}>
 						&larr; Back
 					</button>
-				)}
-				{!onBack && backHref && (
+				) : null}
+				{!onBack && backHref ? (
 					<a className="back-btn" href={backHref}>
 						&larr; Back to session
 					</a>
-				)}
-				{breadcrumb && <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{breadcrumb} /&nbsp;</span>}
+				) : null}
+				{breadcrumb ? <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{breadcrumb} /&nbsp;</span> : null}
 				{title}
-				{sessionType && (
+				{sessionType ? (
 					<span className={`session-type-badge ${sessionType}`}>{sessionType === "plan" ? "Plan" : "Impl"}</span>
-				)}
-				{copyCommand && (
+				) : null}
+				{copyCommand ? (
 					<button
 						type="button"
 						className={`btn-copy-command ${copied ? "copied" : ""}`}
@@ -89,10 +90,10 @@ export function Header({
 							</svg>
 						)}
 					</button>
-				)}
+				) : null}
 			</div>
 			<div className="header-actions">
-				{showPresentationToggle && (
+				{showPresentationToggle ? (
 					<button
 						type="button"
 						className={`btn btn-sm ${presentationActive ? "btn-primary" : ""}`}
@@ -100,7 +101,7 @@ export function Header({
 					>
 						{presentationActive ? "Exit Presentation" : "Present"}
 					</button>
-				)}
+				) : null}
 			</div>
 		</div>
 	);

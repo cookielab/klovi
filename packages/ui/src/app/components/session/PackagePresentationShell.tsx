@@ -1,4 +1,5 @@
 import { PresentationShell as UiPresentationShell } from "@cookielab.io/klovi-ui-components/presentation";
+import { useCallback } from "react";
 import { useKloviHostBridge } from "../../../lib/context.ts";
 import type { Turn } from "../../../shared/types.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";
@@ -21,6 +22,12 @@ export function PackagePresentationShell({
 	isSubAgent,
 }: PackagePresentationShellProps) {
 	const hostBridge = useKloviHostBridge();
+	const handleLinkClick = useCallback(
+		(url: string) => {
+			hostBridge.openExternal({ url: url }).catch(() => {});
+		},
+		[hostBridge],
+	);
 	return (
 		<UiPresentationShell
 			turns={turns}
@@ -29,7 +36,7 @@ export function PackagePresentationShell({
 			project={project}
 			pluginId={pluginId}
 			isSubAgent={isSubAgent}
-			onLinkClick={(url: string) => void hostBridge.openExternal({ url: url })}
+			onLinkClick={handleLinkClick}
 			getFrontendPlugin={getFrontendPlugin}
 		/>
 	);

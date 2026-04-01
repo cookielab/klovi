@@ -37,6 +37,7 @@ describe("SubAgentPresentation", () => {
 			getSubAgent: () => new Promise(() => {}),
 		});
 		const { container } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);
@@ -51,6 +52,7 @@ describe("SubAgentPresentation", () => {
 		});
 
 		const { container, findByText } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);
@@ -65,6 +67,7 @@ describe("SubAgentPresentation", () => {
 		});
 
 		const { container } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);
@@ -80,6 +83,7 @@ describe("SubAgentPresentation", () => {
 		});
 
 		const { container } = render(
+			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
 			{ wrapper: MockProviders },
 		);

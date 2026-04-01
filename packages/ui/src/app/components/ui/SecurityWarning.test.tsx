@@ -9,32 +9,38 @@ describe("SecurityWarning", () => {
 	afterEach(cleanup);
 
 	test("renders Session Data Notice heading", () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { getByText } = render(<SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />);
 		expect(getByText("Session Data Notice")).toBeTruthy();
 	});
 
 	test("renders sensitive information text", () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { getByText } = render(<SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />);
 		expect(getByText(SENSITIVE_INFO_REGEX)).toBeTruthy();
 	});
 
 	test("renders fully local text", () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { getByText } = render(<SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />);
 		expect(getByText(FULLY_LOCAL_REGEX)).toBeTruthy();
 	});
 
 	test("renders Accept & Continue button", () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { getByRole } = render(<SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />);
 		expect(getByRole("button", { name: "Accept & Continue" })).toBeTruthy();
 	});
 
 	test("renders Don't show this again checkbox", () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { getByLabelText } = render(<SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />);
 		expect(getByLabelText("Don't show this again")).toBeTruthy();
 	});
 
 	test("clicking Accept & Continue calls onAccept", () => {
 		const onAccept = mock(() => {});
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { getByRole } = render(<SecurityWarning onAccept={onAccept} onDontShowAgain={() => {}} />);
 		fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
 		expect(onAccept).toHaveBeenCalledTimes(1);
@@ -62,6 +68,7 @@ describe("SecurityWarning", () => {
 	});
 
 	test("renders Klovi logo", () => {
+		// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 		const { container } = render(<SecurityWarning onAccept={() => {}} onDontShowAgain={() => {}} />);
 		expect(container.querySelector(".security-warning-logo")).not.toBeNull();
 	});

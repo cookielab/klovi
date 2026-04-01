@@ -31,6 +31,67 @@ function matchesQuery(result: GlobalSessionResult, query: string): boolean {
 	);
 }
 
+function SearchResultItem({
+	result,
+	index,
+	highlightedIndex,
+	onSelect,
+	onHighlight,
+	pluginDisplayName,
+}: {
+	result: GlobalSessionResult;
+	index: number;
+	highlightedIndex: number;
+	onSelect: (result: GlobalSessionResult) => void;
+	onHighlight: (index: number) => void;
+	pluginDisplayName: (id: string) => string;
+}) {
+	const handleClick = useCallback(() => onSelect(result), [onSelect, result]);
+	const handleMouseEnter = useCallback(() => onHighlight(index), [onHighlight, index]);
+
+	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: keyboard nav handled by input onKeyDown
+		<div
+			key={`${result.encodedPath}-${result.sessionId}`}
+			className={`${s(styles["resultItem"])} ${index === highlightedIndex ? s(styles["resultItemHighlighted"]) : ""}`}
+			data-search-item={true}
+			role="option"
+			tabIndex={-1}
+			aria-selected={index === highlightedIndex}
+			onClick={handleClick}
+			onMouseEnter={handleMouseEnter}
+		>
+			<div className={s(styles["resultTitle"])}>
+				<span>{result.firstMessage}</span>
+				{result.sessionType ? (
+					<span
+						className={`${s(styles["sessionTypeBadge"])} ${
+							result.sessionType === "plan"
+								? s(styles["sessionTypeBadgePlan"])
+								: s(styles["sessionTypeBadgeImplementation"])
+						}`}
+					>
+						{result.sessionType}
+					</span>
+				) : null}
+			</div>
+			<div className={s(styles["resultMeta"])}>
+				{result.projectName}
+				{result.pluginId ? (
+					<>
+						{" "}
+						<span className={s(styles["pluginBadge"])}>{pluginDisplayName(result.pluginId)}</span>
+					</>
+				) : null}{" "}
+				&middot;{" "}
+				<time dateTime={result.timestamp} title={formatFullDateTime(result.timestamp)}>
+					{formatRelativeTime(result.timestamp)}
+				</time>
+			</div>
+		</div>
+	);
+}
+
 function SearchModal({
 	open,
 	onClose,
@@ -108,6 +169,15 @@ function SearchModal({
 		[filtered, highlightedIndex, handleSelect, onClose],
 	);
 
+	const handleModalMouseDown = useCallback((e: React.MouseEvent) => {
+		e.stopPropagation();
+	}, []);
+
+	const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		setQuery(e.target.value);
+		setHighlightedIndex(0);
+	}, []);
+
 	if (!open) {
 		return null;
 	}
@@ -116,7 +186,7 @@ function SearchModal({
 		// biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop dismiss
 		<div className={s(styles["overlay"])} role="presentation" onMouseDown={onClose}>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation on modal body */}
-			<div className={s(styles["modal"])} role="presentation" onMouseDown={(e) => e.stopPropagation()}>
+			<div className={s(styles["modal"])} role="presentation" onMouseDown={handleModalMouseDown}>
 				<div className={s(styles["inputWrapper"])}>
 					<input
 						ref={inputRef}
@@ -124,10 +194,7 @@ function SearchModal({
 						type="text"
 						placeholder="Search sessions..."
 						value={query}
-						onChange={(e) => {
-							setQuery(e.target.value);
-							setHighlightedIndex(0);
-						}}
+						onChange={handleQueryChange}
 						onKeyDown={handleKeyDown}
 					/>
 				</div>
@@ -136,45 +203,15 @@ function SearchModal({
 						<div className={s(styles["empty"])}>No results found</div>
 					) : (
 						filtered.map((result, index) => (
-							// biome-ignore lint/a11y/useKeyWithClickEvents: keyboard nav handled by input onKeyDown
-							<div
+							<SearchResultItem
 								key={`${result.encodedPath}-${result.sessionId}`}
-								className={`${s(styles["resultItem"])} ${index === highlightedIndex ? s(styles["resultItemHighlighted"]) : ""}`}
-								data-search-item={true}
-								role="option"
-								tabIndex={-1}
-								aria-selected={index === highlightedIndex}
-								onClick={() => handleSelect(result)}
-								onMouseEnter={() => setHighlightedIndex(index)}
-							>
-								<div className={s(styles["resultTitle"])}>
-									<span>{result.firstMessage}</span>
-									{result.sessionType && (
-										<span
-											className={`${s(styles["sessionTypeBadge"])} ${
-												result.sessionType === "plan"
-													? s(styles["sessionTypeBadgePlan"])
-													: s(styles["sessionTypeBadgeImplementation"])
-											}`}
-										>
-											{result.sessionType}
-										</span>
-									)}
-								</div>
-								<div className={s(styles["resultMeta"])}>
-									{result.projectName}
-									{result.pluginId && (
-										<>
-											{" "}
-											<span className={s(styles["pluginBadge"])}>{pluginDisplayName(result.pluginId)}</span>
-										</>
-									)}{" "}
-									&middot;{" "}
-									<time dateTime={result.timestamp} title={formatFullDateTime(result.timestamp)}>
-										{formatRelativeTime(result.timestamp)}
-									</time>
-								</div>
-							</div>
+								result={result}
+								index={index}
+								highlightedIndex={highlightedIndex}
+								onSelect={handleSelect}
+								onHighlight={setHighlightedIndex}
+								pluginDisplayName={pluginDisplayName}
+							/>
 						))
 					)}
 				</div>
@@ -194,5 +231,6 @@ function SearchModal({
 	);
 }
 
+// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
 export type { SearchModalProps };
 export { SearchModal };

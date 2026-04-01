@@ -1,4 +1,5 @@
 import { SubAgentView as UiSubAgentView } from "@cookielab.io/klovi-ui-components/messages";
+import { useCallback } from "react";
 import { useKloviHostBridge } from "../../../lib/context.ts";
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";
@@ -13,6 +14,12 @@ export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubA
 	const hostBridge = useKloviHostBridge();
 	const { data, loading, error, retry } = useSubAgentSessionData(sessionId, project, agentId);
 	const turns = data?.session?.turns ?? [];
+	const handleLinkClick = useCallback(
+		(url: string) => {
+			hostBridge.openExternal({ url: url }).catch(() => {});
+		},
+		[hostBridge],
+	);
 
 	return (
 		<UiSubAgentView
@@ -23,7 +30,7 @@ export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubA
 			loading={loading}
 			error={error ?? undefined}
 			onRetry={retry}
-			onLinkClick={(url: string) => void hostBridge.openExternal({ url: url })}
+			onLinkClick={handleLinkClick}
 			getFrontendPlugin={getFrontendPlugin}
 		/>
 	);

@@ -26,7 +26,7 @@ export function Toggle({ checked, onChange, label, disabled }: ToggleProps) {
 				onChange={handleChange}
 				disabled={disabled}
 			/>
-			{label && <span className={s(styles["toggleLabel"])}>{label}</span>}
+			{label ? <span className={s(styles["toggleLabel"])}>{label}</span> : null}
 		</label>
 	);
 }

@@ -27,11 +27,11 @@ function parseArgs(): { version: string | undefined; commit: string | undefined 
 	for (let i = 0; i < args.length; i++) {
 		if (args[i] === "--version" && args[i + 1]) {
 			result.version = args[i + 1];
-			i++;
+			i += 1;
 		}
 		if (args[i] === "--commit" && args[i + 1]) {
 			result.commit = args[i + 1];
-			i++;
+			i += 1;
 		}
 	}
 	return result;

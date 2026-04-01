@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import "./SettingsView.css";
 
 type SettingsTab = "general" | "plugins";
@@ -9,24 +10,27 @@ type SettingsSidebarProps = {
 };
 
 function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProps) {
+	const handleGeneralClick = useCallback(() => onTabChange("general"), [onTabChange]);
+	const handlePluginsClick = useCallback(() => onTabChange("plugins"), [onTabChange]);
+
 	return (
 		<nav className="settings-nav">
-			{onBack && (
+			{onBack ? (
 				<button type="button" className="settings-nav-back" onClick={onBack}>
 					<span aria-hidden="true">&larr; </span>Back
 				</button>
-			)}
+			) : null}
 			<button
 				type="button"
 				className={`settings-nav-item ${activeTab === "general" ? "active" : ""}`}
-				onClick={() => onTabChange("general")}
+				onClick={handleGeneralClick}
 			>
 				General
 			</button>
 			<button
 				type="button"
 				className={`settings-nav-item ${activeTab === "plugins" ? "active" : ""}`}
-				onClick={() => onTabChange("plugins")}
+				onClick={handlePluginsClick}
 			>
 				Plugins
 			</button>
@@ -34,5 +38,6 @@ function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProp
 	);
 }
 
+// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for tab discriminant
 export type { SettingsTab };
 export { SettingsSidebar };

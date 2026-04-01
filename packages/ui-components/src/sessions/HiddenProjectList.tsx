@@ -1,4 +1,5 @@
 import { Button } from "@cookielab.io/klovi-design-system";
+import { useCallback } from "react";
 import type { Project } from "../types/index.ts";
 import { FetchError } from "../utilities/FetchError.tsx";
 import styles from "./HiddenProjectList.module.css";
@@ -6,6 +7,23 @@ import { projectDisplayName } from "./ProjectList.tsx";
 
 function s(name: string | undefined): string {
 	return name ?? "";
+}
+
+function HiddenProjectItem({ project, onUnhide }: { project: Project; onUnhide: (encodedPath: string) => void }) {
+	const handleUnhide = useCallback(() => onUnhide(project.encodedPath), [onUnhide, project.encodedPath]);
+	return (
+		<div className={s(styles["listItem"])}>
+			<div className={s(styles["listItemContent"])}>
+				<div className={s(styles["listItemTitle"])}>{projectDisplayName(project)}</div>
+				<div className={s(styles["listItemMeta"])}>
+					{project.sessionCount} session{project.sessionCount === 1 ? "" : "s"}
+				</div>
+			</div>
+			<Button size="sm" onClick={handleUnhide}>
+				Unhide
+			</Button>
+		</div>
+	);
 }
 
 export type HiddenProjectListProps = {
@@ -48,19 +66,7 @@ export function HiddenProjectList({
 					<p>Projects you hide will appear here</p>
 				</div>
 			) : (
-				hidden.map((project) => (
-					<div key={project.encodedPath} className={s(styles["listItem"])}>
-						<div className={s(styles["listItemContent"])}>
-							<div className={s(styles["listItemTitle"])}>{projectDisplayName(project)}</div>
-							<div className={s(styles["listItemMeta"])}>
-								{project.sessionCount} session{project.sessionCount === 1 ? "" : "s"}
-							</div>
-						</div>
-						<Button size="sm" onClick={() => onUnhide(project.encodedPath)}>
-							Unhide
-						</Button>
-					</div>
-				))
+				hidden.map((project) => <HiddenProjectItem key={project.encodedPath} project={project} onUnhide={onUnhide} />)
 			)}
 		</div>
 	);

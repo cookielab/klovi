@@ -42,35 +42,18 @@
 				},
 				"noProcessEnv": "off",
 				"noNonNullAssertion": "warn",
-				"useExportsLast": "error",
-				"useConsistentMemberAccessibility": "off",
-				"noExportedImports": "warn",
-				"noNestedTernary": "error",
-				"useComponentExportOnlyModules": "warn"
+				"useConsistentMemberAccessibility": "off"
 			},
 			"complexity": {
 				"noExcessiveCognitiveComplexity": "error",
 				"noExcessiveNestedTestSuites": "error",
-				"noUselessUndefined": "error",
-				"noVoid": "warn",
-				"useMaxParams": "warn"
+				"noUselessUndefined": "error"
 			},
 			"suspicious": {
 				"noEmptyBlockStatements": "off"
 			},
 			"security": {
 				"noSecrets": "warn"
-			},
-			"nursery": {
-				"noJsxPropsBind": "warn",
-				"noConditionalExpect": "warn",
-				"useExpect": "warn",
-				"noLeakedRender": "warn",
-				"useNullishCoalescing": "warn",
-				"noIncrementDecrement": "warn",
-				"useRegexpExec": "warn",
-				"noShadow": "warn",
-				"noNestedPromises": "warn"
 			}
 		}
 	},

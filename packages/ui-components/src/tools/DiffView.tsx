@@ -13,6 +13,7 @@ type DiffViewProps = {
 	newString: string;
 };
 
+// biome-ignore lint/style/useComponentExportOnlyModules: co-located diff formatting utility used alongside the component
 export function formatDiff(oldString: string, newString: string): string {
 	const lines: string[] = [];
 

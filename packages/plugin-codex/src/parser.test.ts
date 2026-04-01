@@ -84,9 +84,11 @@ describe("buildCodexTurns", () => {
 		expect(assistant.model).toBe("o4-mini");
 		expect(assistant.contentBlocks).toHaveLength(1);
 		expect(assistant.contentBlocks[0]?.type).toBe("text");
-		if (assistant.contentBlocks[0]?.type === "text") {
-			expect(assistant.contentBlocks[0]?.text).toBe("Hello, I can help!");
-		}
+		const textBlock0 = assistant.contentBlocks[0] as Extract<
+			(typeof assistant.contentBlocks)[number],
+			{ type: "text" }
+		>;
+		expect(textBlock0.text).toBe("Hello, I can help!");
 		expect(assistant.usage).toEqual({
 			inputTokens: 100,
 			outputTokens: 50,
@@ -108,9 +110,11 @@ describe("buildCodexTurns", () => {
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.contentBlocks).toHaveLength(2);
 		expect(assistant.contentBlocks[0]?.type).toBe("thinking");
-		if (assistant.contentBlocks[0]?.type === "thinking") {
-			expect(assistant.contentBlocks[0]?.block.text).toBe("Let me think about this...");
-		}
+		const thinkBlock = assistant.contentBlocks[0] as Extract<
+			(typeof assistant.contentBlocks)[number],
+			{ type: "thinking" }
+		>;
+		expect(thinkBlock.block.text).toBe("Let me think about this...");
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 	});
 
@@ -136,12 +140,11 @@ describe("buildCodexTurns", () => {
 		expect(assistant.contentBlocks).toHaveLength(1);
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.name).toBe("command_execution");
-			expect(block.call.input).toEqual({ command: "ls -la" });
-			expect(block.call.result).toContain("total 42");
-			expect(block.call.isError).toBe(false);
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.name).toBe("command_execution");
+		expect(toolBlock.call.input).toEqual({ command: "ls -la" });
+		expect(toolBlock.call.result).toContain("total 42");
+		expect(toolBlock.call.isError).toBe(false);
 	});
 
 	test("marks failed command_execution as error", () => {
@@ -163,9 +166,9 @@ describe("buildCodexTurns", () => {
 
 		const assistant = turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
-		if (block?.type === "tool_call") {
-			expect(block.call.isError).toBe(true);
-		}
+		expect(block?.type).toBe("tool_call");
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.isError).toBe(true);
 	});
 
 	test("builds tool call from file_change", () => {
@@ -189,16 +192,15 @@ describe("buildCodexTurns", () => {
 		const assistant = turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.name).toBe("file_change");
-			expect(block.call.input).toEqual({
-				changes: [
-					{ path: "src/main.ts", kind: "edit" },
-					{ path: "src/utils.ts", kind: "create" },
-				],
-			});
-			expect(block.call.isError).toBe(false);
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.name).toBe("file_change");
+		expect(toolBlock.call.input).toEqual({
+			changes: [
+				{ path: "src/main.ts", kind: "edit" },
+				{ path: "src/utils.ts", kind: "create" },
+			],
+		});
+		expect(toolBlock.call.isError).toBe(false);
 	});
 
 	test("builds tool call from mcp_tool_call", () => {
@@ -222,11 +224,10 @@ describe("buildCodexTurns", () => {
 		const assistant = turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.name).toBe("search_docs");
-			expect(block.call.input).toEqual({ query: "authentication" });
-			expect(block.call.result).toBe("Found 3 results");
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.name).toBe("search_docs");
+		expect(toolBlock.call.input).toEqual({ query: "authentication" });
+		expect(toolBlock.call.result).toBe("Found 3 results");
 	});
 
 	test("builds tool call from web_search", () => {
@@ -244,10 +245,9 @@ describe("buildCodexTurns", () => {
 		const assistant = turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.name).toBe("web_search");
-			expect(block.call.input).toEqual({ query: "how to use bun test" });
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.name).toBe("web_search");
+		expect(toolBlock.call.input).toEqual({ query: "how to use bun test" });
 	});
 
 	test("uses deterministic generated UUIDs per parsed session", () => {
@@ -288,9 +288,8 @@ describe("buildCodexTurns", () => {
 
 		const first = turns[0] as AssistantTurn;
 		expect(first.contentBlocks[0]?.type).toBe("text");
-		if (first.contentBlocks[0]?.type === "text") {
-			expect(first.contentBlocks[0]?.text).toBe("First response");
-		}
+		const textBlock = first.contentBlocks[0] as Extract<(typeof first.contentBlocks)[number], { type: "text" }>;
+		expect(textBlock.text).toBe("First response");
 	});
 
 	test("captures usage from turn.completed with cached tokens", () => {
@@ -415,9 +414,8 @@ describe("loadCodexSession", () => {
 		const assistant = session.turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
 		expect(block?.type).toBe("tool_call");
-		if (block?.type === "tool_call") {
-			expect(block.call.name).toBe("file_change");
-		}
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.name).toBe("file_change");
 	});
 
 	test("loads session with mcp_tool_call events", async () => {
@@ -442,11 +440,11 @@ describe("loadCodexSession", () => {
 
 		const assistant = session.turns[0] as AssistantTurn;
 		const block = assistant.contentBlocks[0];
-		if (block?.type === "tool_call") {
-			expect(block.call.name).toBe("search");
-			expect(block.call.input).toEqual({ q: "test" });
-			expect(block.call.result).toBe("Found results");
-		}
+		expect(block?.type).toBe("tool_call");
+		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+		expect(toolBlock.call.name).toBe("search");
+		expect(toolBlock.call.input).toEqual({ q: "test" });
+		expect(toolBlock.call.result).toBe("Found results");
 	});
 
 	test("handles usage tracking across turns", async () => {
@@ -517,22 +515,25 @@ describe("new envelope format", () => {
 			// First turn: user message, then assistant response
 			expect(session.turns).toHaveLength(2);
 			expect(session.turns[0]?.kind).toBe("user");
-			if (session.turns[0]?.kind === "user") {
-				expect(session.turns[0]?.text).toBe("Fix the bug");
-			}
+			const userTurn = session.turns[0] as Extract<(typeof session.turns)[number], { kind: "user" }>;
+			expect(userTurn.text).toBe("Fix the bug");
 
 			const assistant = session.turns[1] as AssistantTurn;
 			expect(assistant.kind).toBe("assistant");
 			expect(assistant.model).toBe("o4-mini");
 			expect(assistant.contentBlocks).toHaveLength(2);
 			expect(assistant.contentBlocks[0]?.type).toBe("thinking");
-			if (assistant.contentBlocks[0]?.type === "thinking") {
-				expect(assistant.contentBlocks[0]?.block.text).toBe("Let me think...");
-			}
+			const thinkBlock = assistant.contentBlocks[0] as Extract<
+				(typeof assistant.contentBlocks)[number],
+				{ type: "thinking" }
+			>;
+			expect(thinkBlock.block.text).toBe("Let me think...");
 			expect(assistant.contentBlocks[1]?.type).toBe("text");
-			if (assistant.contentBlocks[1]?.type === "text") {
-				expect(assistant.contentBlocks[1]?.text).toBe("I found the issue.");
-			}
+			const textBlock = assistant.contentBlocks[1] as Extract<
+				(typeof assistant.contentBlocks)[number],
+				{ type: "text" }
+			>;
+			expect(textBlock.text).toBe("I found the issue.");
 			expect(assistant.usage).toEqual({
 				inputTokens: 200,
 				outputTokens: 80,
@@ -587,12 +588,11 @@ describe("new envelope format", () => {
 			expect(assistant.contentBlocks).toHaveLength(1);
 			const block = assistant.contentBlocks[0];
 			expect(block?.type).toBe("tool_call");
-			if (block?.type === "tool_call") {
-				expect(block.call.name).toBe("exec_command");
-				expect(block.call.input).toEqual({ cmd: "ls -la", workdir: "/tmp" });
-				expect(block.call.result).toBe("file1.ts\nfile2.ts");
-				expect(block.call.isError).toBe(false);
-			}
+			const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
+			expect(toolBlock.call.name).toBe("exec_command");
+			expect(toolBlock.call.input).toEqual({ cmd: "ls -la", workdir: "/tmp" });
+			expect(toolBlock.call.result).toBe("file1.ts\nfile2.ts");
+			expect(toolBlock.call.isError).toBe(false);
 		});
 
 		test("finds new-format file by session ID with rollout prefix", async () => {

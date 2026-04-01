@@ -23,7 +23,7 @@ function compactNumber(n: number): string {
 }
 
 function simplifyModelName(model: string): string {
-	const match = model.match(CLAUDE_MODEL_NAME_REGEX);
+	const match = CLAUDE_MODEL_NAME_REGEX.exec(model);
 	return match?.[1] ?? model;
 }
 

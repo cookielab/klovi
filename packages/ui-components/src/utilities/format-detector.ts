@@ -68,7 +68,7 @@ function isDiff(text: string): boolean {
 	let diffLineCount = 0;
 	for (const line of lines) {
 		if (line.startsWith("+") || line.startsWith("-") || line.startsWith("@@")) {
-			diffLineCount++;
+			diffLineCount += 1;
 		}
 	}
 	return diffLineCount >= 3 && diffLineCount / lines.length > 0.3;

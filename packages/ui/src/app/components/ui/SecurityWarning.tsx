@@ -1,4 +1,5 @@
-import { useState } from "react";
+import type React from "react";
+import { useCallback, useState } from "react";
 import faviconUrl from "../../../../favicon.svg";
 import "./SecurityWarning.css";
 
@@ -11,12 +12,17 @@ type SecurityNoticeContentProps = {
 function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: SecurityNoticeContentProps) {
 	const [dontShow, setDontShow] = useState(false);
 
-	const handleAccept = () => {
+	const handleAccept = useCallback(() => {
 		if (dontShow && onDontShowAgain) {
 			onDontShowAgain();
 		}
 		onAccept();
-	};
+	}, [dontShow, onDontShowAgain, onAccept]);
+
+	const handleDontShowChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => setDontShow(e.target.checked),
+		[],
+	);
 
 	return (
 		<>
@@ -34,12 +40,7 @@ function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: Securit
 			</p>
 			<p className="security-warning-muted">Be mindful when screen sharing or using Klovi in public settings.</p>
 			<label className="security-warning-muted" style={{ display: "block", marginTop: "16px" }}>
-				<input
-					type="checkbox"
-					className="custom-checkbox"
-					checked={dontShow}
-					onChange={(e) => setDontShow(e.target.checked)}
-				/>
+				<input type="checkbox" className="custom-checkbox" checked={dontShow} onChange={handleDontShowChange} />
 				{" Don't show this again"}
 			</label>
 			<button type="button" className="security-warning-button" onClick={handleAccept}>

@@ -37,6 +37,7 @@ export const SelectStory: Story = {
 	),
 };
 
+// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function ToggleDemo() {
 	const [checked, setChecked] = useState(false);
 	return (
@@ -51,6 +52,7 @@ export const ToggleStory: Story = {
 	render: () => <ToggleDemo />,
 };
 
+// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function SegmentedDemo() {
 	const [value, setValue] = useState<"system" | "light" | "dark">("system");
 	return (

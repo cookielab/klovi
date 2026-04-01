@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useKloviHostBridge } from "../../lib/context.ts";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
 import "./UpdateNotification.css";
@@ -71,7 +71,7 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 	const [applying, setApplying] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const handleApply = async () => {
+	const handleApply = useCallback(async () => {
 		setApplying(true);
 		setError(null);
 		try {
@@ -84,7 +84,7 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 			setError("Update failed");
 			setApplying(false);
 		}
-	};
+	}, [hostBridge]);
 
 	return (
 		<div className="update-notification">

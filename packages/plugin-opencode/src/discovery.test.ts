@@ -97,14 +97,15 @@ function insertSession(
 			id,
 			projectId,
 			id,
-			opts.directory || "/Users/dev/project",
-			opts.title || "",
-			opts.timeCreated || now,
-			opts.timeCreated || now,
+			opts.directory ?? "/Users/dev/project",
+			opts.title ?? "",
+			opts.timeCreated ?? now,
+			opts.timeCreated ?? now,
 		],
 	);
 }
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertMessage(
 	db: Database,
 	id: string,
@@ -112,7 +113,7 @@ function insertMessage(
 	data: Record<string, unknown>,
 	timeCreated?: number,
 ): void {
-	const now = timeCreated || Date.now();
+	const now = timeCreated ?? Date.now();
 	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
 		id,
 		sessionId,
@@ -122,6 +123,7 @@ function insertMessage(
 	]);
 }
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertPart(
 	db: Database,
 	id: string,

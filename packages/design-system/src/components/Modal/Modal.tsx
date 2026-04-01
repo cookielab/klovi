@@ -13,6 +13,10 @@ function s(name: string | undefined): string {
 	return name ?? "";
 }
 
+function stopPropagation(e: React.MouseEvent): void {
+	e.stopPropagation();
+}
+
 export function Modal({ open, onClose, width = 560, children }: ModalProps) {
 	const handleKeyDown = useCallback(
 		(e: KeyboardEvent) => {
@@ -43,7 +47,7 @@ export function Modal({ open, onClose, width = 560, children }: ModalProps) {
 		<div className={s(styles["overlay"])} onClick={onClose}>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: inner click stop propagation */}
 			{/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: dialog stops click propagation */}
-			<div className={s(styles["modal"])} role="dialog" style={{ width: width }} onClick={(e) => e.stopPropagation()}>
+			<div className={s(styles["modal"])} role="dialog" style={{ width: width }} onClick={stopPropagation}>
 				{children}
 			</div>
 		</div>

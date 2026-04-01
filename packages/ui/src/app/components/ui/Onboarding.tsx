@@ -77,6 +77,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 		[client],
 	);
 
+	const handleAcceptStep1 = useCallback(() => setStep(2), []);
+	const handleDontShowAgain = useCallback(() => {
+		client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
+	}, [client]);
+	const handleBackToStep1 = useCallback(() => setStep(1), []);
+
 	return (
 		<section className="onboarding" aria-labelledby="onboarding-heading">
 			<div className="onboarding-content">
@@ -89,10 +95,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 				{step === 1 && (
 					<SecurityNoticeContent
 						headingId="onboarding-heading"
-						onAccept={() => setStep(2)}
-						onDontShowAgain={() => {
-							client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
-						}}
+						onAccept={handleAcceptStep1}
+						onDontShowAgain={handleDontShowAgain}
 					/>
 				)}
 
@@ -123,7 +127,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 						<button type="button" className="onboarding-button" onClick={onComplete}>
 							Get Started
 						</button>
-						<button type="button" className="onboarding-back" onClick={() => setStep(1)}>
+						<button type="button" className="onboarding-back" onClick={handleBackToStep1}>
 							Back
 						</button>
 					</>

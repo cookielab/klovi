@@ -14,9 +14,9 @@ function s(name: string | undefined): string {
 export function Sidebar({ header, footer, children }: SidebarProps) {
 	return (
 		<div className={s(styles["sidebar"])}>
-			{header && <div className={s(styles["sidebarHeader"])}>{header}</div>}
+			{header ? <div className={s(styles["sidebarHeader"])}>{header}</div> : null}
 			<div className={s(styles["sidebarContent"])}>{children}</div>
-			{footer && <div className={s(styles["sidebarFooter"])}>{footer}</div>}
+			{footer ? <div className={s(styles["sidebarFooter"])}>{footer}</div> : null}
 		</div>
 	);
 }

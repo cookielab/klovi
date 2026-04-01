@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import styles from "./FormControls.module.css";
 
 type SegmentedControlProps<T extends string> = {
@@ -11,19 +12,41 @@ function s(name: string | undefined): string {
 	return name ?? "";
 }
 
+function SegmentedOption<T extends string>({
+	opt,
+	isActive,
+	disabled,
+	onChange,
+}: {
+	opt: { value: T; label: string };
+	isActive: boolean;
+	disabled: boolean | undefined;
+	onChange: (value: T) => void;
+}) {
+	const handleClick = useCallback(() => onChange(opt.value), [onChange, opt.value]);
+	return (
+		<button
+			type="button"
+			className={`${s(styles["segmentedOption"])} ${isActive ? s(styles["segmentedOptionActive"]) : ""}`}
+			disabled={disabled}
+			onClick={handleClick}
+		>
+			{opt.label}
+		</button>
+	);
+}
+
 export function SegmentedControl<T extends string>({ value, onChange, options, disabled }: SegmentedControlProps<T>) {
 	return (
 		<div className={`${s(styles["segmented"])} ${disabled ? s(styles["segmentedDisabled"]) : ""}`}>
 			{options.map((opt) => (
-				<button
+				<SegmentedOption
 					key={opt.value}
-					type="button"
-					className={`${s(styles["segmentedOption"])} ${value === opt.value ? s(styles["segmentedOptionActive"]) : ""}`}
+					opt={opt}
+					isActive={value === opt.value}
 					disabled={disabled}
-					onClick={() => onChange(opt.value)}
-				>
-					{opt.label}
-				</button>
+					onChange={onChange}
+				/>
 			))}
 		</div>
 	);

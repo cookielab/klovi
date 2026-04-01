@@ -209,22 +209,22 @@ function createUserTurn(text: string, timestamp: string, uuid: string): UserTurn
 	};
 }
 
-function createAssistantTurn(
-	model: string,
-	timestamp: string,
-	uuid: string,
-	contentBlocks: ContentBlock[],
-	usage?: TokenUsage,
-	stopReason?: string,
-): AssistantTurn {
+function createAssistantTurn(options: {
+	model: string;
+	timestamp: string;
+	uuid: string;
+	contentBlocks: ContentBlock[];
+	usage?: TokenUsage;
+	stopReason?: string;
+}): AssistantTurn {
 	return {
 		kind: "assistant",
-		uuid: uuid,
-		timestamp: timestamp,
-		model: model,
-		contentBlocks: contentBlocks,
-		usage: usage,
-		stopReason: stopReason,
+		uuid: options.uuid,
+		timestamp: options.timestamp,
+		model: options.model,
+		contentBlocks: options.contentBlocks,
+		usage: options.usage,
+		stopReason: options.stopReason,
 	};
 }
 
@@ -299,13 +299,20 @@ function buildAssistantTurnFromMsg(
 	const model = data.modelID || "unknown";
 	const contentBlocks = collectContentBlocks(msg.parts, nextToolUseId);
 	const usage = tokensToUsage(data.tokens) ?? extractStepFinishUsage(msg.parts);
-	return createAssistantTurn(model, timestamp, msg.id, contentBlocks, usage, data.finish);
+	return createAssistantTurn({
+		model: model,
+		timestamp: timestamp,
+		uuid: msg.id,
+		contentBlocks: contentBlocks,
+		...(usage === undefined ? {} : { usage: usage }),
+		...(data.finish === undefined ? {} : { stopReason: data.finish }),
+	});
 }
 
 function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
 	let toolUseCounter = 0;
 	const nextToolUseId = () => {
-		toolUseCounter++;
+		toolUseCounter += 1;
 		return `opencode-tool-${toolUseCounter}`;
 	};
 

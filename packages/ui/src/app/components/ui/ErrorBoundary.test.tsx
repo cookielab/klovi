@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 
+// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function ThrowingComponent({ message }: { message: string }): never {
 	throw new Error(message);
 }
 
+// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function SafeComponent() {
 	return <div>Safe content</div>;
 }

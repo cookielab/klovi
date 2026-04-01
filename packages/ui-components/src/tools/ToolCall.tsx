@@ -1,5 +1,6 @@
 import { CodeBox, Collapsible } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
+import type React from "react";
 import type { ToolCallWithResult } from "../types/index.ts";
 import { BashToolContent } from "./BashToolContent.tsx";
 import { DiffView } from "./DiffView.tsx";
@@ -9,6 +10,10 @@ import { formatToolInput, getToolSummary, hasInputFormatter } from "./ToolCallDe
 
 function s(name: string | undefined): string {
 	return name ?? "";
+}
+
+function stopPropagation(e: React.MouseEvent): void {
+	e.stopPropagation();
 }
 
 type ToolCallProps = {
@@ -111,20 +116,20 @@ export function ToolCall({
 			<Collapsible
 				title={
 					<span>
-						{mcpServer && <span className={s(styles["toolMcpServer"])}>{mcpServer}</span>}
-						{skillName && <span className={s(styles["toolSkillBadge"])}>skill</span>}
+						{mcpServer ? <span className={s(styles["toolMcpServer"])}>{mcpServer}</span> : null}
+						{skillName ? <span className={s(styles["toolSkillBadge"])}>skill</span> : null}
 						<span className={s(styles["toolCallName"])}>{displayName}</span>
-						{summary && !skillName && <span className={s(styles["toolCallSummary"])}> — {summary}</span>}
-						{call.isError && <span className={s(styles["toolCallError"])}> (error)</span>}
-						{hasSubAgent && (
+						{summary && !skillName ? <span className={s(styles["toolCallSummary"])}> — {summary}</span> : null}
+						{call.isError ? <span className={s(styles["toolCallError"])}> (error)</span> : null}
+						{hasSubAgent ? (
 							<a
 								className={s(styles["subagentLink"])}
 								href={`#/${project}/${sessionId}/subagent/${call.subAgentId}`}
-								onClick={(e) => e.stopPropagation()}
+								onClick={stopPropagation}
 							>
 								Open conversation
 							</a>
-						)}
+						) : null}
 					</span>
 				}
 				defaultOpen={defaultOpen}

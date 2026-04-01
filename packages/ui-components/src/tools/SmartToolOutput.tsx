@@ -16,6 +16,25 @@ type SmartToolOutputProps = {
 	resultImages?: ToolResultImage[] | undefined;
 };
 
+function ToolResultImageButton({
+	img,
+	index,
+	onSelect,
+}: {
+	img: ToolResultImage;
+	index: number;
+	onSelect: (src: string) => void;
+}) {
+	const src = `data:${img.mediaType};base64,${img.data}`;
+	const handleClick = useCallback(() => onSelect(src), [onSelect, src]);
+
+	return (
+		<button type="button" className={s(styles["toolResultImageBtn"])} onClick={handleClick}>
+			<img className={s(styles["toolResultImage"])} src={src} alt={`Tool result ${index + 1}`} />
+		</button>
+	);
+}
+
 export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutputProps) {
 	const truncated = truncateOutput(output);
 	const wasTruncated = output.length > MAX_OUTPUT_LENGTH;
@@ -31,35 +50,25 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 	return (
 		<div>
 			<div className={s(styles["toolSectionLabel"])}>Output</div>
-			{output &&
-				(detectedLang && !isError ? (
-					<CodeBox language={detectedLang}>{truncated}</CodeBox>
-				) : (
-					<div className={`${s(styles["toolCallOutput"])} ${isError ? s(styles["toolCallError"]) : ""}`}>
-						{truncated}
-					</div>
-				))}
+			{output && detectedLang && !isError ? <CodeBox language={detectedLang}>{truncated}</CodeBox> : null}
+			{output && !(detectedLang && !isError) ? (
+				<div className={`${s(styles["toolCallOutput"])} ${isError ? s(styles["toolCallError"]) : ""}`}>{truncated}</div>
+			) : null}
 			{wasTruncated && <div className={s(styles["toolCallTruncated"])}>... (truncated)</div>}
 			{resultImages && resultImages.length > 0 && (
 				<div className={s(styles["toolResultImages"])}>
 					{resultImages.map((img, i) => (
-						<button
+						<ToolResultImageButton
 							// biome-ignore lint/suspicious/noArrayIndexKey: images have no stable unique identifier
 							key={i}
-							type="button"
-							className={s(styles["toolResultImageBtn"])}
-							onClick={() => setLightboxSrc(`data:${img.mediaType};base64,${img.data}`)}
-						>
-							<img
-								className={s(styles["toolResultImage"])}
-								src={`data:${img.mediaType};base64,${img.data}`}
-								alt={`Tool result ${i + 1}`}
-							/>
-						</button>
+							img={img}
+							index={i}
+							onSelect={setLightboxSrc}
+						/>
 					))}
 				</div>
 			)}
-			{lightboxSrc && <ImageLightbox src={lightboxSrc} onClose={closeLightbox} />}
+			{lightboxSrc ? <ImageLightbox src={lightboxSrc} onClose={closeLightbox} /> : null}
 		</div>
 	);
 }

@@ -57,10 +57,10 @@ function countRecentSessions(sessions: SessionSummary[]): {
 		}
 		const sessionDay = toDateString(d);
 		if (sessionDay === today) {
-			todaySessions++;
+			todaySessions += 1;
 		}
 		if (sessionDay >= weekAgoStr) {
-			thisWeekSessions++;
+			thisWeekSessions += 1;
 		}
 	}
 

@@ -132,11 +132,10 @@ describe("buildTurns", () => {
 		expect(turn.contentBlocks).toHaveLength(1);
 		const call = turn.contentBlocks[0];
 		expect(call?.type).toBe("tool_call");
-		if (call?.type === "tool_call") {
-			expect(call.call.name).toBe("Read");
-			expect(call.call.result).toBe("file contents here");
-			expect(call.call.isError).toBe(false);
-		}
+		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
+		expect(toolCall.call.name).toBe("Read");
+		expect(toolCall.call.result).toBe("file contents here");
+		expect(toolCall.call.isError).toBe(false);
 	});
 
 	test("tool result is_error: true → isError: true", () => {
@@ -175,10 +174,9 @@ describe("buildTurns", () => {
 		const turn = turns[0] as AssistantTurn;
 		const call = turn.contentBlocks[0];
 		expect(call?.type).toBe("tool_call");
-		if (call?.type === "tool_call") {
-			expect(call.call.isError).toBe(true);
-			expect(call.call.result).toBe("command failed");
-		}
+		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
+		expect(toolCall.call.isError).toBe(true);
+		expect(toolCall.call.result).toBe("command failed");
 	});
 
 	test("image attachment in user message → Attachment", () => {
@@ -679,12 +677,11 @@ describe("buildTurns", () => {
 		const turn = turns[0] as AssistantTurn;
 		const call = turn.contentBlocks[0];
 		expect(call?.type).toBe("tool_call");
-		if (call?.type === "tool_call") {
-			expect(call.call.result).toBe("Image read successfully");
-			expect(call.call.resultImages).toHaveLength(1);
-			expect(call.call.resultImages?.[0]?.mediaType).toBe("image/png");
-			expect(call.call.resultImages?.[0]?.data).toBe("AAAA");
-		}
+		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
+		expect(toolCall.call.result).toBe("Image read successfully");
+		expect(toolCall.call.resultImages).toHaveLength(1);
+		expect(toolCall.call.resultImages?.[0]?.mediaType).toBe("image/png");
+		expect(toolCall.call.resultImages?.[0]?.data).toBe("AAAA");
 	});
 
 	test("multiple assistant lines merge into one turn", () => {

@@ -32,30 +32,32 @@ function contentBlockKey(block: ContentBlock, index: number): string {
 	return `text-${index}`;
 }
 
-function renderGroup(
-	group: ContentBlock[],
-	sessionId: string | undefined,
-	project: string | undefined,
-	pluginId: string | undefined,
-	onLinkClick: ((url: string) => void) | undefined,
-	getFrontendPlugin: ((id: string) => FrontendPlugin | undefined) | undefined,
-) {
-	return group.map((block, i) => {
+type RenderGroupOptions = {
+	group: ContentBlock[];
+	sessionId: string | undefined;
+	project: string | undefined;
+	pluginId: string | undefined;
+	onLinkClick: ((url: string) => void) | undefined;
+	getFrontendPlugin: ((id: string) => FrontendPlugin | undefined) | undefined;
+};
+
+function renderGroup(options: RenderGroupOptions) {
+	return options.group.map((block, i) => {
 		const key = contentBlockKey(block, i);
 		if (block.type === "thinking") {
-			return <ThinkingBlock key={key} block={block.block} onLinkClick={onLinkClick} />;
+			return <ThinkingBlock key={key} block={block.block} onLinkClick={options.onLinkClick} />;
 		}
 		if (block.type === "text") {
-			return <MarkdownRenderer key={key} content={block.text} onLinkClick={onLinkClick} />;
+			return <MarkdownRenderer key={key} content={block.text} onLinkClick={options.onLinkClick} />;
 		}
 		return (
 			<ToolCall
 				key={key}
 				call={block.call}
-				sessionId={sessionId}
-				project={project}
-				pluginId={pluginId}
-				getFrontendPlugin={getFrontendPlugin}
+				sessionId={options.sessionId}
+				project={options.project}
+				pluginId={options.pluginId}
+				getFrontendPlugin={options.getFrontendPlugin}
 			/>
 		);
 	});
@@ -121,11 +123,18 @@ export function AssistantMessage({
 					}
 				: {})}
 		>
-			{introGroup && (
+			{introGroup ? (
 				<div className={isPresentation && treeGroups.length === 0 ? s(styles["stepEnter"]) : ""}>
-					{renderGroup(introGroup, sessionId, project, pluginId, onLinkClick, getFrontendPlugin)}
+					{renderGroup({
+						group: introGroup,
+						sessionId: sessionId,
+						project: project,
+						pluginId: pluginId,
+						onLinkClick: onLinkClick,
+						getFrontendPlugin: getFrontendPlugin,
+					})}
 				</div>
-			)}
+			) : null}
 			{treeGroups.length > 0 && (
 				<div className={s(styles["execTree"])}>
 					{treeGroups.map((group, i) => (
@@ -134,7 +143,14 @@ export function AssistantMessage({
 							key={`tree-${i}`}
 							className={`${s(styles["treeNode"])}${isPresentation && i === treeGroups.length - 1 ? ` ${s(styles["stepEnter"])}` : ""}`}
 						>
-							{renderGroup(group, sessionId, project, pluginId, onLinkClick, getFrontendPlugin)}
+							{renderGroup({
+								group: group,
+								sessionId: sessionId,
+								project: project,
+								pluginId: pluginId,
+								onLinkClick: onLinkClick,
+								getFrontendPlugin: getFrontendPlugin,
+							})}
 						</div>
 					))}
 				</div>
@@ -145,10 +161,17 @@ export function AssistantMessage({
 					key={`flat-${i}`}
 					className={isPresentation && i === flatGroups.length - 1 ? s(styles["stepEnter"]) : ""}
 				>
-					{renderGroup(group, sessionId, project, pluginId, onLinkClick, getFrontendPlugin)}
+					{renderGroup({
+						group: group,
+						sessionId: sessionId,
+						project: project,
+						pluginId: pluginId,
+						onLinkClick: onLinkClick,
+						getFrontendPlugin: getFrontendPlugin,
+					})}
 				</div>
 			))}
-			{turn.usage && <UsageFooter usage={turn.usage} />}
+			{turn.usage ? <UsageFooter usage={turn.usage} /> : null}
 		</TurnBox>
 	);
 }

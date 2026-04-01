@@ -18,6 +18,7 @@ const TOKEN_GROUPS = {
 	Status: ["error", "success"],
 };
 
+// biome-ignore lint/style/useComponentExportOnlyModules: story-local helper component
 function Swatch({ name }: { name: string }) {
 	return (
 		<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -34,6 +35,7 @@ function Swatch({ name }: { name: string }) {
 	);
 }
 
+// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function TokenPalette() {
 	return (
 		<div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 32 }}>

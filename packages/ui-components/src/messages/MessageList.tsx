@@ -25,35 +25,37 @@ type MessageListProps = {
 	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
-function renderTurn(
-	turn: Turn,
-	index: number,
-	isActive: boolean,
-	visibleSubSteps: Map<number, number> | undefined,
-	sessionId: string | undefined,
-	project: string | undefined,
-	pluginId: string | undefined,
-	isSubAgent: boolean | undefined,
-	planSessionId: string | undefined,
-	implSessionId: string | undefined,
-	onSessionLink: ((sessionId: string) => void) | undefined,
-	onLinkClick: ((url: string) => void) | undefined,
-	getFrontendPlugin: ((id: string) => FrontendPlugin | undefined) | undefined,
-) {
-	const activeClass = isActive ? s(styles["activeMessage"]) : "";
+type RenderTurnOptions = {
+	turn: Turn;
+	index: number;
+	isActive: boolean;
+	visibleSubSteps: Map<number, number> | undefined;
+	sessionId: string | undefined;
+	project: string | undefined;
+	pluginId: string | undefined;
+	isSubAgent: boolean | undefined;
+	planSessionId: string | undefined;
+	implSessionId: string | undefined;
+	onSessionLink: ((targetSessionId: string) => void) | undefined;
+	onLinkClick: ((url: string) => void) | undefined;
+	getFrontendPlugin: ((id: string) => FrontendPlugin | undefined) | undefined;
+};
 
-	switch (turn.kind) {
+function renderTurn(options: RenderTurnOptions) {
+	const activeClass = options.isActive ? s(styles["activeMessage"]) : "";
+
+	switch (options.turn.kind) {
 		case "user":
 			return (
-				<div className={isActive ? `${s(styles["activeMessage"])} ${s(styles["stepEnter"])}` : ""}>
+				<div className={options.isActive ? `${s(styles["activeMessage"])} ${s(styles["stepEnter"])}` : ""}>
 					<UserMessage
-						turn={turn}
-						isSubAgent={isSubAgent}
-						planSessionId={planSessionId}
-						implSessionId={implSessionId}
-						project={project}
-						onSessionLink={onSessionLink}
-						onLinkClick={onLinkClick}
+						turn={options.turn}
+						isSubAgent={options.isSubAgent}
+						planSessionId={options.planSessionId}
+						implSessionId={options.implSessionId}
+						project={options.project}
+						onSessionLink={options.onSessionLink}
+						onLinkClick={options.onLinkClick}
 					/>
 				</div>
 			);
@@ -61,13 +63,13 @@ function renderTurn(
 			return (
 				<div className={activeClass}>
 					<AssistantMessage
-						turn={turn}
-						visibleSubSteps={visibleSubSteps?.get(index)}
-						sessionId={sessionId}
-						project={project}
-						pluginId={pluginId}
-						onLinkClick={onLinkClick}
-						getFrontendPlugin={getFrontendPlugin}
+						turn={options.turn}
+						visibleSubSteps={options.visibleSubSteps?.get(options.index)}
+						sessionId={options.sessionId}
+						project={options.project}
+						pluginId={options.pluginId}
+						onLinkClick={options.onLinkClick}
+						getFrontendPlugin={options.getFrontendPlugin}
 					/>
 				</div>
 			);
@@ -78,14 +80,14 @@ function renderTurn(
 					<TurnBox
 						role="system"
 						timestamp={
-							turn.timestamp ? (
-								<time dateTime={turn.timestamp} data-tooltip={formatFullDateTime(turn.timestamp)}>
-									{formatTimestamp(turn.timestamp)}
+							options.turn.timestamp ? (
+								<time dateTime={options.turn.timestamp} data-tooltip={formatFullDateTime(options.turn.timestamp)}>
+									{formatTimestamp(options.turn.timestamp)}
 								</time>
 							) : undefined
 						}
 					>
-						<MarkdownRenderer content={turn.text} onLinkClick={onLinkClick} />
+						<MarkdownRenderer content={options.turn.text} onLinkClick={options.onLinkClick} />
 					</TurnBox>
 				</div>
 			);
@@ -97,18 +99,20 @@ function renderTurn(
 						role="error"
 						badge="Parse Error"
 						timestamp={
-							turn.lineNumber > 0 ? (
-								<span className={s(styles["parseErrorLine"])}>line {turn.lineNumber}</span>
+							options.turn.lineNumber > 0 ? (
+								<span className={s(styles["parseErrorLine"])}>line {options.turn.lineNumber}</span>
 							) : undefined
 						}
 					>
 						<div className={s(styles["parseErrorType"])}>
-							{turn.errorType === "json_parse" ? "Invalid JSON" : "Invalid Structure"}
+							{options.turn.errorType === "json_parse" ? "Invalid JSON" : "Invalid Structure"}
 						</div>
-						{turn.errorDetails && <div className={s(styles["parseErrorDetails"])}>{turn.errorDetails}</div>}
+						{options.turn.errorDetails ? (
+							<div className={s(styles["parseErrorDetails"])}>{options.turn.errorDetails}</div>
+						) : null}
 						<details className={s(styles["parseErrorRaw"])}>
 							<summary>Raw content</summary>
-							<pre>{turn.rawLine}</pre>
+							<pre>{options.turn.rawLine}</pre>
 						</details>
 					</TurnBox>
 				</div>
@@ -146,21 +150,21 @@ export function MessageList({
 				const isActive = visibleSubSteps ? index === turns.length - 1 : false;
 				return (
 					<ErrorBoundary key={turn.uuid || index} inline={true}>
-						{renderTurn(
-							turn,
-							index,
-							isActive,
-							visibleSubSteps,
-							sessionId,
-							project,
-							pluginId,
-							isSubAgent,
-							planSessionId,
-							index === firstUserTurnIndex ? implSessionId : undefined,
-							onSessionLink,
-							onLinkClick,
-							getFrontendPlugin,
-						)}
+						{renderTurn({
+							turn: turn,
+							index: index,
+							isActive: isActive,
+							visibleSubSteps: visibleSubSteps,
+							sessionId: sessionId,
+							project: project,
+							pluginId: pluginId,
+							isSubAgent: isSubAgent,
+							planSessionId: planSessionId,
+							implSessionId: index === firstUserTurnIndex ? implSessionId : undefined,
+							onSessionLink: onSessionLink,
+							onLinkClick: onLinkClick,
+							getFrontendPlugin: getFrontendPlugin,
+						})}
 					</ErrorBoundary>
 				);
 			})}

@@ -17,17 +17,17 @@ function s(name: string | undefined): string {
 
 export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps) {
 	const { resolved: theme } = useTheme();
-	const lang = language || "text";
+	const lang = language ?? "text";
 	const style = theme === "dark" ? oneDark : oneLight;
 	const lineNumbers = showLineNumbers ?? children.split("\n").length > 3;
 
 	return (
 		<div className={s(styles["wrapper"])}>
-			{language && (
+			{language ? (
 				<div className={s(styles["header"])}>
 					<span>{language}</span>
 				</div>
-			)}
+			) : null}
 			<div className={s(styles["content"])}>
 				<SyntaxHighlighter
 					language={lang}

@@ -75,6 +75,7 @@ function makeRelease(tag: string, prerelease: boolean): GitHubRelease {
 	};
 }
 
+// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function makeReleaseWithAssets(
 	tag: string,
 	prerelease: boolean,
@@ -473,7 +474,13 @@ describe("findLatestUsableRelease", () => {
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
 		];
 
-		const result = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+		const result = findLatestUsableRelease({
+			releases: releases,
+			channel: "stable",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(result?.tag_name).toBe("2.1.0");
 	});
 
@@ -483,7 +490,13 @@ describe("findLatestUsableRelease", () => {
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
 		];
 
-		const result = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+		const result = findLatestUsableRelease({
+			releases: releases,
+			channel: "stable",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(result?.tag_name).toBe("2.0.0");
 	});
 
@@ -491,13 +504,25 @@ describe("findLatestUsableRelease", () => {
 		const releases: GitHubRelease[] = [
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64", { missingUpdateJson: true }),
 		];
-		const result = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+		const result = findLatestUsableRelease({
+			releases: releases,
+			channel: "stable",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(result).toBeNull();
 	});
 
 	test("returns null when current is latest", () => {
 		const releases: GitHubRelease[] = [makeReleaseWithAssets("2.0.0", false, "macos", "arm64")];
-		const result = findLatestUsableRelease(releases, "stable", "2.0.0", "macos", "arm64");
+		const result = findLatestUsableRelease({
+			releases: releases,
+			channel: "stable",
+			currentVersion: "2.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(result).toBeNull();
 	});
 
@@ -512,7 +537,13 @@ describe("findLatestUsableRelease", () => {
 				},
 			],
 		};
-		const result = findLatestUsableRelease([release], "stable", "1.0.0", "macos", "arm64");
+		const result = findLatestUsableRelease({
+			releases: [release],
+			channel: "stable",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(result).toBeNull();
 	});
 
@@ -522,11 +553,23 @@ describe("findLatestUsableRelease", () => {
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
 		];
 		// Stable channel should not see beta
-		const stable = findLatestUsableRelease(releases, "stable", "1.0.0", "macos", "arm64");
+		const stable = findLatestUsableRelease({
+			releases: releases,
+			channel: "stable",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(stable?.tag_name).toBe("2.0.0");
 
 		// Beta channel should see both, pick newest
-		const beta = findLatestUsableRelease(releases, "beta", "1.0.0", "macos", "arm64");
+		const beta = findLatestUsableRelease({
+			releases: releases,
+			channel: "beta",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(beta?.tag_name).toBe("2.1.0-beta.1");
 	});
 
@@ -545,7 +588,13 @@ describe("findLatestUsableRelease", () => {
 			],
 		};
 
-		const result = findLatestUsableRelease([legacyBetaRelease], "beta", "1.0.0", "macos", "arm64");
+		const result = findLatestUsableRelease({
+			releases: [legacyBetaRelease],
+			channel: "beta",
+			currentVersion: "1.0.0",
+			platform: "macos",
+			arch: "arm64",
+		});
 		expect(result).toBeNull();
 	});
 });

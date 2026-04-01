@@ -48,8 +48,8 @@ export function TurnBox({ role, badge, model, timestamp, children }: TurnBoxProp
 		<div className={s(styles["turn"])}>
 			<div className={s(styles["turnHeader"])}>
 				<span className={`${s(styles["turnBadge"])} ${BADGE_STYLES[role]}`}>{label}</span>
-				{model && <span className={`${s(styles["turnBadge"])} ${s(styles["turnBadgeModel"])}`}>{model}</span>}
-				{timestamp && <span className={s(styles["turnTimestamp"])}>{timestamp}</span>}
+				{model ? <span className={`${s(styles["turnBadge"])} ${s(styles["turnBadgeModel"])}`}>{model}</span> : null}
+				{timestamp ? <span className={s(styles["turnTimestamp"])}>{timestamp}</span> : null}
 			</div>
 			<div className={`${s(styles["message"])} ${MESSAGE_STYLES[role]}`}>{children}</div>
 		</div>

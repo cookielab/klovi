@@ -2,6 +2,7 @@ import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { useKeyboard } from "./useKeyboard.ts";
 
+// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }) {
 	useKeyboard(props.handlers, props.active);
 	return <div>keyboard harness</div>;
