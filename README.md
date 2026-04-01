@@ -19,7 +19,13 @@ share the same backend, plugin, and UI packages:
 
 ### Desktop app
 
-Download the latest release for your platform from the
+**macOS (Apple Silicon)** via [Homebrew](https://brew.sh):
+
+```bash
+brew install --cask cookielab/tap/klovi
+```
+
+Or download the latest release for your platform from the
 [Releases page](https://github.com/cookielab/klovi/releases).
 
 ### Browser-served npm package

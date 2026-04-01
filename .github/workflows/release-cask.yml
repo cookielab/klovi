@@ -1,0 +1,88 @@
+name: Release - Homebrew Cask
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to update in Homebrew Cask (e.g. 1.2.3)"
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to update in Homebrew Cask"
+        required: true
+        type: string
+
+jobs:
+  update-cask:
+    runs-on: ubuntu-latest
+    environment: homebrew
+    steps:
+      - name: Download macOS DMG from GitHub release
+        env:
+          VERSION: ${{ inputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          DMG_NAME="Klovi-${VERSION}-macos-arm64.dmg"
+          curl -fL --retry 3 --retry-delay 10 -o "$DMG_NAME" \
+            "https://github.com/${REPO}/releases/download/${VERSION}/${DMG_NAME}"
+
+      - name: Compute SHA256
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          DMG_NAME="Klovi-${VERSION}-macos-arm64.dmg"
+          SHA256=$(sha256sum "$DMG_NAME" | cut -d' ' -f1)
+          echo "SHA256=$SHA256" >> "$GITHUB_ENV"
+
+      - name: Update Homebrew tap
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/cookielab/homebrew-tap.git"
+          cd homebrew-tap
+
+          # Remove legacy Formula from CLI era if present
+          rm -f Formula/klovi.rb
+
+          mkdir -p Casks
+          cat > Casks/klovi.rb << CASK
+          cask "klovi" do
+            version "${VERSION}"
+            sha256 "${SHA256}"
+
+            url "https://github.com/${REPO}/releases/download/#{version}/Klovi-#{version}-macos-arm64.dmg"
+            name "Klovi"
+            desc "Browse, search, and present AI coding session history"
+            homepage "https://github.com/${REPO}"
+
+            depends_on arch: :arm64
+
+            app "Klovi.app"
+
+            zap trash: [
+              "~/Library/Application Support/io.cookielab.klovi",
+              "~/Library/Preferences/io.cookielab.klovi.plist",
+              "~/Library/Caches/io.cookielab.klovi",
+            ]
+          end
+          CASK
+
+          # Remove leading whitespace from heredoc indentation
+          sed -i 's/^          //' Casks/klovi.rb
+
+          if git diff --exit-code Casks/klovi.rb > /dev/null 2>&1; then
+            echo "Cask already up to date for ${VERSION}, skipping."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Update klovi cask to ${VERSION}"
+          git push
