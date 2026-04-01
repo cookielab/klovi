@@ -76,13 +76,13 @@ jobs:
           # Remove leading whitespace from heredoc indentation
           sed -i 's/^          //' Casks/klovi.rb
 
-          if git diff --exit-code Casks/klovi.rb > /dev/null 2>&1; then
+          git add -A
+          if git diff --cached --exit-code > /dev/null 2>&1; then
             echo "Cask already up to date for ${VERSION}, skipping."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
           git commit -m "Update klovi cask to ${VERSION}"
           git push
