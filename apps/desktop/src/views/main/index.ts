@@ -16,9 +16,6 @@ import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types.ts";
 // Import design system globals (tokens, reset, fonts) via klovi-ui
 import "@cookielab.io/klovi-ui/styles";
 
-// Import app-specific styles
-import "@cookielab.io/klovi-ui/app/App.css";
-
 type MenuAction = "cycleTheme" | "increaseFontSize" | "decreaseFontSize" | "togglePresentation" | "openSettings";
 
 const menuActionListeners = new Set<(action: MenuAction) => void>();

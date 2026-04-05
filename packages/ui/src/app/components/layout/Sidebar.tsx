@@ -13,11 +13,22 @@ type VersionInfo = {
 
 type SidebarProps = {
 	children: React.ReactNode;
+	hidden?: boolean | undefined;
 	onSearchClick?: (() => void) | undefined;
 	onSettingsClick?: (() => void) | undefined;
 };
 
-export function Sidebar({ children, onSearchClick, onSettingsClick }: SidebarProps) {
+const SIDEBAR_BASE_CLASSES =
+	"fixed top-0 left-0 z-10 flex h-screen w-sidebar flex-col overflow-hidden border-border border-r bg-surface-muted transition-transform duration-200 ease-[ease]";
+const SIDEBAR_HIDDEN_CLASSES = "-translate-x-full";
+const HEADER_CLASSES = "flex h-header flex-shrink-0 items-center gap-3 border-border border-b px-4";
+const TITLE_CLASSES = "text-[1.1rem] font-bold text-foreground";
+const VERSION_CLASSES = "text-[0.7rem] font-normal text-foreground-subtle";
+const CONTENT_CLASSES = "flex-1 overflow-y-auto p-2";
+const FOOTER_CLASSES =
+	"sidebar-footer flex-shrink-0 border-border-muted border-t px-4 py-[10px] text-center text-[0.7rem] text-foreground-subtle [&_a]:text-foreground-subtle [&_a]:no-underline [&_a:hover]:text-accent";
+
+export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: SidebarProps) {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
 	const { data: versionInfo } = useRPC<VersionInfo>(() => client.getVersion(), [client]);
@@ -35,12 +46,12 @@ export function Sidebar({ children, onSearchClick, onSettingsClick }: SidebarPro
 	);
 
 	return (
-		<div className="sidebar">
-			<div className="sidebar-header">
+		<div className={`${SIDEBAR_BASE_CLASSES} ${hidden ? SIDEBAR_HIDDEN_CLASSES : ""}`}>
+			<div className={HEADER_CLASSES}>
 				<img src={faviconUrl} alt="" width="28" height="28" />
-				<h1>Klovi</h1>
+				<h1 className={TITLE_CLASSES}>Klovi</h1>
 				{versionInfo ? (
-					<span className="sidebar-version">
+					<span className={VERSION_CLASSES}>
 						{versionInfo.version}
 						{versionInfo.commit ? ` (${versionInfo.commit})` : ""}
 					</span>
@@ -70,8 +81,8 @@ export function Sidebar({ children, onSearchClick, onSettingsClick }: SidebarPro
 					</SidebarButton>
 				) : null}
 			</div>
-			<div className="sidebar-content">{children}</div>
-			<div className="sidebar-footer">
+			<div className={CONTENT_CLASSES}>{children}</div>
+			<div className={FOOTER_CLASSES}>
 				Made by{" "}
 				<a href="https://cookielab.io?utm_source=opensource&utm_medium=klovi" onClick={handleCookielabClick}>
 					cookielab.io

@@ -121,3 +121,70 @@
 	--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
 	--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.55);
 }
+
+/* Global tooltip utility: any element with a non-empty data-tooltip attribute shows the
+   attribute text as a tooltip on hover. Kept as plain CSS because it uses attr() in
+   ::after content, which has no direct Tailwind utility. */
+[data-tooltip] {
+	position: relative;
+	cursor: default;
+}
+
+[data-tooltip]:hover::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	bottom: calc(100% + 6px);
+	right: 0;
+	padding: 4px 8px;
+	font-size: 0.72rem;
+	line-height: 1.4;
+	white-space: nowrap;
+	color: var(--color-foreground);
+	background: var(--color-surface-raised);
+	border: 1px solid var(--color-border);
+	box-shadow: var(--shadow-md);
+	z-index: 50;
+	pointer-events: none;
+}
+
+[data-tooltip=""]:hover::after {
+	display: none;
+}
+
+/* Custom checkbox: kept as a plain CSS class because the check-mark uses a rotated ::after
+   border trick that is awkward to express with Tailwind variants. */
+.custom-checkbox {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 1.5px solid var(--color-border);
+	background: var(--color-surface-raised);
+	cursor: pointer;
+	flex-shrink: 0;
+	position: relative;
+	transition:
+		background 0.15s,
+		border-color 0.15s;
+}
+
+.custom-checkbox:checked {
+	background: var(--color-accent);
+	border-color: var(--color-accent);
+}
+
+.custom-checkbox:checked::after {
+	content: "";
+	position: absolute;
+	left: 4.5px;
+	top: 1.5px;
+	width: 5px;
+	height: 9px;
+	border: solid var(--color-foreground-inverse);
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.custom-checkbox:hover:not(:checked) {
+	border-color: var(--color-foreground-subtle);
+}

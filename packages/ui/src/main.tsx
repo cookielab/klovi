@@ -1,5 +1,4 @@
 import "@cookielab.io/klovi-design-system/globals";
-import "./app/App.css";
 import { mountKloviApp } from "./bootstrap.tsx";
 import { browserHostBridge } from "./lib/browser-host-bridge.ts";
 import { createHttpClient } from "./lib/http-client.ts";

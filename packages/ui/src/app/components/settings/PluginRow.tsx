@@ -21,6 +21,8 @@ const PATH_INPUT_CLASSES =
 	"flex-1 border border-border bg-surface-muted px-2 py-[6px] font-mono text-[0.85rem] text-foreground outline-none focus:border-accent disabled:opacity-50";
 const RESET_LINK_CLASSES =
 	"cursor-pointer whitespace-nowrap appearance-none border-0 bg-transparent p-0 text-[0.85rem] text-accent hover:underline disabled:cursor-default disabled:opacity-50";
+const BROWSE_BTN_CLASSES =
+	"inline-flex h-7 cursor-pointer items-center gap-[6px] border border-border bg-surface px-2 py-1 text-[0.8rem] text-foreground transition-colors duration-150 enabled:hover:border-foreground-subtle enabled:hover:bg-surface-muted disabled:cursor-default disabled:opacity-50";
 
 function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps) {
 	const customPath = plugin.isCustomDir ? plugin.dataDir : "";
@@ -83,7 +85,7 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrows
 					disabled={!plugin.enabled}
 				/>
 				{canBrowse ? (
-					<button type="button" className="btn btn-sm" onClick={handleBrowse} disabled={!plugin.enabled}>
+					<button type="button" className={BROWSE_BTN_CLASSES} onClick={handleBrowse} disabled={!plugin.enabled}>
 						Browse
 					</button>
 				) : null}

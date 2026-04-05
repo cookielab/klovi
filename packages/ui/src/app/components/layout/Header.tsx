@@ -12,6 +12,26 @@ type HeaderProps = {
 	showPresentationToggle: boolean;
 };
 
+const HEADER_CLASSES =
+	"sticky top-0 z-[5] flex h-header flex-shrink-0 items-center justify-between border-border border-b bg-surface px-5";
+const TITLE_CLASSES = "header-title flex items-center gap-2 text-[0.95rem] font-semibold text-foreground";
+const ACTIONS_CLASSES = "flex items-center gap-2";
+const BACK_BTN_CLASSES =
+	"back-btn flex cursor-pointer items-center gap-[6px] border-0 bg-transparent px-3 py-2 font-[inherit] text-[0.85rem] text-accent hover:underline";
+const BREADCRUMB_CLASSES = "font-normal text-foreground-subtle";
+const BADGE_BASE_CLASSES =
+	"session-type-badge inline-block px-[6px] py-px align-middle text-[0.65rem] font-semibold leading-[1.4] tracking-[0.02em]";
+const BADGE_PLAN_CLASSES = "bg-plan-subtle text-plan";
+const BADGE_IMPL_CLASSES = "bg-impl-subtle text-impl";
+const COPY_BTN_BASE_CLASSES =
+	"btn-copy-command inline-flex h-6 w-6 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-foreground-subtle transition-colors duration-150 hover:bg-surface-sunken hover:text-foreground";
+const COPY_BTN_COPIED_CLASSES = "copied text-success!";
+const BTN_CLASSES =
+	"inline-flex cursor-pointer items-center gap-[6px] border border-border bg-surface px-3 py-[6px] text-[0.85rem] text-foreground transition-colors duration-150 hover:border-foreground-subtle hover:bg-surface-muted";
+const BTN_SM_CLASSES = "h-7 px-2 py-1 text-[0.8rem]";
+const BTN_PRIMARY_CLASSES =
+	"border-accent! bg-accent! text-foreground-inverse! hover:border-accent-hover! hover:bg-accent-hover!";
+
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: header renders multiple conditional UI sections
 export function Header({
 	title,
@@ -44,27 +64,31 @@ export function Header({
 	}, [copied]);
 
 	return (
-		<div className="header">
-			<div className="header-title">
+		<div className={HEADER_CLASSES}>
+			<div className={TITLE_CLASSES}>
 				{onBack ? (
-					<button type="button" className="back-btn" onClick={onBack}>
+					<button type="button" className={BACK_BTN_CLASSES} onClick={onBack}>
 						&larr; Back
 					</button>
 				) : null}
 				{!onBack && backHref ? (
-					<a className="back-btn" href={backHref}>
+					<a className={BACK_BTN_CLASSES} href={backHref}>
 						&larr; Back to session
 					</a>
 				) : null}
-				{breadcrumb ? <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{breadcrumb} /&nbsp;</span> : null}
+				{breadcrumb ? <span className={BREADCRUMB_CLASSES}>{breadcrumb} /&nbsp;</span> : null}
 				{title}
 				{sessionType ? (
-					<span className={`session-type-badge ${sessionType}`}>{sessionType === "plan" ? "Plan" : "Impl"}</span>
+					<span
+						className={`${BADGE_BASE_CLASSES} ${sessionType} ${sessionType === "plan" ? BADGE_PLAN_CLASSES : BADGE_IMPL_CLASSES}`}
+					>
+						{sessionType === "plan" ? "Plan" : "Impl"}
+					</span>
 				) : null}
 				{copyCommand ? (
 					<button
 						type="button"
-						className={`btn-copy-command ${copied ? "copied" : ""}`}
+						className={`${COPY_BTN_BASE_CLASSES} ${copied ? COPY_BTN_COPIED_CLASSES : ""}`}
 						onClick={handleCopy}
 						title={copied ? "Copied!" : "Copy resume command"}
 					>
@@ -92,11 +116,11 @@ export function Header({
 					</button>
 				) : null}
 			</div>
-			<div className="header-actions">
+			<div className={ACTIONS_CLASSES}>
 				{showPresentationToggle ? (
 					<button
 						type="button"
-						className={`btn btn-sm ${presentationActive ? "btn-primary" : ""}`}
+						className={`${BTN_CLASSES} ${BTN_SM_CLASSES} ${presentationActive ? BTN_PRIMARY_CLASSES : ""}`}
 						onClick={onTogglePresentation}
 					>
 						{presentationActive ? "Exit Presentation" : "Present"}

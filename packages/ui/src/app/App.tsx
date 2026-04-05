@@ -33,6 +33,14 @@ import { useViewState } from "./hooks/useViewState.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./view-state.ts";
 
+const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
+const EMPTY_STATE_CLASSES =
+	"empty-state flex flex-col items-center justify-center px-5 py-[60px] text-center text-foreground-subtle";
+const EMPTY_STATE_LOGO_CLASSES = "empty-state-logo mb-4 opacity-70";
+const EMPTY_STATE_TITLE_CLASSES = "empty-state-title mb-2 text-[1.2rem] font-semibold text-foreground-muted";
+const HOST_RECONNECT_BUTTON_CLASSES =
+	"mt-6 cursor-pointer border-0 bg-accent px-8 py-[10px] font-sans text-[0.95rem] font-medium text-foreground-inverse transition-[background] duration-150 hover:bg-accent-hover";
+
 function App() {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
@@ -184,7 +192,7 @@ function App() {
 	]);
 
 	if (!ready) {
-		return <div className="loading">Loading...</div>;
+		return <div className={LOADING_CLASSES}>Loading...</div>;
 	}
 
 	return (
@@ -285,9 +293,9 @@ function AppMainContent({
 			)}
 			{view.kind === "home" && (
 				<>
-					<div className="empty-state">
-						<img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
-						<div className="empty-state-title">Welcome to Klovi</div>
+					<div className={EMPTY_STATE_CLASSES}>
+						<img src={faviconUrl} alt="" width="64" height="64" className={EMPTY_STATE_LOGO_CLASSES} />
+						<div className={EMPTY_STATE_TITLE_CLASSES}>Welcome to Klovi</div>
 						<p>Select a project from the sidebar to browse your AI coding sessions</p>
 					</div>
 					<PackageDashboardStats />
@@ -305,8 +313,8 @@ function AppMainContent({
 				/>
 			)}
 			{view.kind === "project" && (
-				<div className="empty-state">
-					<div className="empty-state-title">Select a session</div>
+				<div className={EMPTY_STATE_CLASSES}>
+					<div className={EMPTY_STATE_TITLE_CLASSES}>Select a session</div>
 					<p>Choose a conversation from the sidebar</p>
 				</div>
 			)}
@@ -469,11 +477,11 @@ type DesktopHostReconnectPanelProps = {
 
 function DesktopHostReconnectPanel({ title, description, actionLabel, onAction }: DesktopHostReconnectPanelProps) {
 	return (
-		<section className="empty-state">
-			<img src={faviconUrl} alt="" width="64" height="64" className="empty-state-logo" />
-			<div className="empty-state-title">{title}</div>
+		<section className={EMPTY_STATE_CLASSES}>
+			<img src={faviconUrl} alt="" width="64" height="64" className={EMPTY_STATE_LOGO_CLASSES} />
+			<div className={EMPTY_STATE_TITLE_CLASSES}>{title}</div>
 			<p>{description}</p>
-			<button type="button" className="security-warning-button" onClick={onAction}>
+			<button type="button" className={HOST_RECONNECT_BUTTON_CLASSES} onClick={onAction}>
 				{actionLabel}
 			</button>
 		</section>

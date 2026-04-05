@@ -42,7 +42,7 @@ export function getSidebarContent(view: ViewState, hiddenIds: Set<string>, actio
 
 	if (view.kind === "restoring") {
 		return (
-			<div className="loading">
+			<div className="loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle">
 				{actions.hostConnectionState === "connected" ? "Restoring selection..." : "Reconnecting to desktop host..."}
 			</div>
 		);
