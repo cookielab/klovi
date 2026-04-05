@@ -1,6 +1,5 @@
 import type React from "react";
 import { useCallback, useEffect } from "react";
-import styles from "./Modal.module.css";
 
 type ModalProps = {
 	open: boolean;
@@ -8,10 +7,6 @@ type ModalProps = {
 	width?: number;
 	children: React.ReactNode;
 };
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 function stopPropagation(e: React.MouseEvent): void {
 	e.stopPropagation();
@@ -44,10 +39,15 @@ export function Modal({ open, onClose, width = 560, children }: ModalProps) {
 		// biome-ignore lint/a11y/useKeyWithClickEvents: overlay click handled via keyboard Escape
 		// biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop
 		// biome-ignore lint/a11y/noNoninteractiveElementInteractions: overlay backdrop dismisses modal
-		<div className={s(styles["overlay"])} onClick={onClose}>
+		<div className="fixed inset-0 z-[200] flex justify-center bg-black/40 pt-[15vh]" onClick={onClose}>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: inner click stop propagation */}
 			{/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: dialog stops click propagation */}
-			<div className={s(styles["modal"])} role="dialog" style={{ width: width }} onClick={stopPropagation}>
+			<div
+				className="flex max-h-[480px] flex-col overflow-hidden border border-border bg-surface shadow-lg"
+				role="dialog"
+				style={{ width: width }}
+				onClick={stopPropagation}
+			>
 				{children}
 			</div>
 		</div>
