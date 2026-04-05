@@ -2,11 +2,6 @@ import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type { Turn } from "../types/index.ts";
 import { FetchError } from "../utilities/index.ts";
 import { MessageList } from "./MessageList.tsx";
-import styles from "./SubAgentView.module.css";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 type SubAgentViewProps = {
 	turns: Turn[];
@@ -20,6 +15,9 @@ type SubAgentViewProps = {
 	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
+const LOADING_CLASSES = "flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
+const EMPTY_CLASSES = "py-2 text-[0.82rem] text-foreground-subtle italic";
+
 export function SubAgentView({
 	turns,
 	sessionId,
@@ -32,13 +30,13 @@ export function SubAgentView({
 	getFrontendPlugin,
 }: SubAgentViewProps) {
 	if (loading) {
-		return <div className={s(styles["loading"])}>Loading sub-agent conversation...</div>;
+		return <div className={LOADING_CLASSES}>Loading sub-agent conversation...</div>;
 	}
 	if (error) {
 		return <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} showPrefix={true} />;
 	}
 	if (turns.length === 0) {
-		return <div className={s(styles["empty"])}>No sub-agent conversation data available.</div>;
+		return <div className={EMPTY_CLASSES}>No sub-agent conversation data available.</div>;
 	}
 
 	return (

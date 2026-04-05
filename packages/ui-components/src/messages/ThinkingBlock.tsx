@@ -2,40 +2,31 @@ import { Collapsible } from "@cookielab.io/klovi-design-system";
 import { MAX_THINKING_PREVIEW } from "../tools/index.ts";
 import type { ThinkingBlock as ThinkingBlockType } from "../types/index.ts";
 import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
-import styles from "./ThinkingBlock.module.css";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 type ThinkingBlockProps = {
 	block: ThinkingBlockType;
 	onLinkClick?: ((url: string) => void) | undefined;
 };
 
+const THINKING_CONTENT_CLASSES =
+	"text-[0.85rem] leading-[1.6] text-foreground-muted italic whitespace-pre-wrap break-words";
+
+const PREVIEW_CLASSES = "text-[0.78rem] text-foreground-subtle font-mono";
+
 export function ThinkingBlock({ block, onLinkClick }: ThinkingBlockProps) {
 	const preview =
 		block.text.length > MAX_THINKING_PREVIEW ? `${block.text.slice(0, MAX_THINKING_PREVIEW)}...` : block.text;
 
 	return (
-		<div className={s(styles["thinkingBlock"])}>
+		<div className="my-[2px]">
 			<Collapsible
 				title={
 					<span>
-						<span style={{ color: "var(--text-muted)" }}>Thinking:</span>{" "}
-						<span
-							style={{
-								fontSize: "0.78rem",
-								color: "var(--text-muted)",
-								fontFamily: "var(--font-mono)",
-							}}
-						>
-							{preview}
-						</span>
+						<span className="text-foreground-subtle">Thinking:</span> <span className={PREVIEW_CLASSES}>{preview}</span>
 					</span>
 				}
 			>
-				<div className={s(styles["thinkingContent"])}>
+				<div className={THINKING_CONTENT_CLASSES}>
 					<MarkdownRenderer content={block.text} onLinkClick={onLinkClick} />
 				</div>
 			</Collapsible>

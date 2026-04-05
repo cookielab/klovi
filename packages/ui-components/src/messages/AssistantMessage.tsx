@@ -4,13 +4,16 @@ import { ToolCall } from "../tools/index.ts";
 import type { AssistantTurn, ContentBlock, TokenUsage } from "../types/index.ts";
 import { groupContentBlocks } from "../types/index.ts";
 import { formatFullDateTime, formatTimestamp, shortModel } from "../utilities/index.ts";
-import styles from "./AssistantMessage.module.css";
 import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
 import { ThinkingBlock } from "./ThinkingBlock.tsx";
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const EXEC_TREE_CLASSES =
+	"relative mt-3 pl-5 before:content-[''] before:absolute before:left-[7px] before:top-0 before:bottom-0 before:w-px before:bg-tree-line";
+const TREE_NODE_CLASSES =
+	"relative py-[5px] before:content-[''] before:absolute before:-left-[13px] before:top-[17px] before:w-[11px] before:h-px before:bg-tree-line last:after:content-[''] last:after:absolute last:after:-left-[14px] last:after:top-[17px] last:after:bottom-0 last:after:w-[2px] last:after:bg-surface-card";
+const TOKEN_USAGE_CLASSES =
+	"mt-3 pt-[10px] border-t border-border-muted font-mono text-[0.65rem] text-foreground-subtle text-right";
+const STEP_ENTER_CLASSES = "animate-[stepFadeIn_0.3s_ease_forwards]";
 
 type AssistantMessageProps = {
 	turn: AssistantTurn;
@@ -65,7 +68,7 @@ function renderGroup(options: RenderGroupOptions) {
 
 function UsageFooter({ usage }: { usage: TokenUsage }) {
 	return (
-		<div className={s(styles["tokenUsage"])}>
+		<div className={TOKEN_USAGE_CLASSES}>
 			{usage.inputTokens.toLocaleString()} in / {usage.outputTokens.toLocaleString()} out
 			{usage.cacheReadTokens && usage.cacheReadTokens > 0 && (
 				<span> · {usage.cacheReadTokens.toLocaleString()} cache read</span>
@@ -124,7 +127,7 @@ export function AssistantMessage({
 				: {})}
 		>
 			{introGroup ? (
-				<div className={isPresentation && treeGroups.length === 0 ? s(styles["stepEnter"]) : ""}>
+				<div className={isPresentation && treeGroups.length === 0 ? STEP_ENTER_CLASSES : ""}>
 					{renderGroup({
 						group: introGroup,
 						sessionId: sessionId,
@@ -136,12 +139,12 @@ export function AssistantMessage({
 				</div>
 			) : null}
 			{treeGroups.length > 0 && (
-				<div className={s(styles["execTree"])}>
+				<div className={EXEC_TREE_CLASSES}>
 					{treeGroups.map((group, i) => (
 						<div
 							// biome-ignore lint/suspicious/noArrayIndexKey: positional groups are never reordered
 							key={`tree-${i}`}
-							className={`${s(styles["treeNode"])}${isPresentation && i === treeGroups.length - 1 ? ` ${s(styles["stepEnter"])}` : ""}`}
+							className={`${TREE_NODE_CLASSES}${isPresentation && i === treeGroups.length - 1 ? ` ${STEP_ENTER_CLASSES}` : ""}`}
 						>
 							{renderGroup({
 								group: group,
@@ -159,7 +162,7 @@ export function AssistantMessage({
 				<div
 					// biome-ignore lint/suspicious/noArrayIndexKey: positional groups are never reordered
 					key={`flat-${i}`}
-					className={isPresentation && i === flatGroups.length - 1 ? s(styles["stepEnter"]) : ""}
+					className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}
 				>
 					{renderGroup({
 						group: group,

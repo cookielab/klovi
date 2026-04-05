@@ -4,12 +4,18 @@ import type { Turn } from "../types/index.ts";
 import { ErrorBoundary, formatFullDateTime, formatTimestamp } from "../utilities/index.ts";
 import { AssistantMessage } from "./AssistantMessage.tsx";
 import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
-import styles from "./MessageList.module.css";
 import { UserMessage } from "./UserMessage.tsx";
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const STEP_FADE_IN_KEYFRAMES =
+	"@keyframes stepFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }";
+
+const MESSAGE_LIST_CLASSES = "mx-auto w-full max-w-[900px] p-5";
+const STEP_ENTER_CLASSES = "animate-[stepFadeIn_0.3s_ease_forwards]";
+const PARSE_ERROR_LINE_CLASSES = "ml-2 text-[0.8em] font-normal text-foreground-muted";
+const PARSE_ERROR_TYPE_CLASSES = "inline-block mb-1 text-[0.8em] font-semibold text-error";
+const PARSE_ERROR_DETAILS_CLASSES = "mb-1 text-[0.85em] text-foreground-muted font-mono";
+const PARSE_ERROR_RAW_CLASSES =
+	"mt-2 [&>summary]:text-[0.8em] [&>summary]:text-foreground-subtle [&>summary]:cursor-pointer [&>summary]:select-none [&>pre]:mt-1 [&>pre]:p-2 [&>pre]:bg-surface-sunken [&>pre]:text-[0.8em] [&>pre]:overflow-x-auto [&>pre]:whitespace-pre-wrap [&>pre]:break-all";
 
 type MessageListProps = {
 	turns: Turn[];
@@ -42,12 +48,12 @@ type RenderTurnOptions = {
 };
 
 function renderTurn(options: RenderTurnOptions) {
-	const activeClass = options.isActive ? s(styles["activeMessage"]) : "";
+	const activeClass = options.isActive ? "active-message" : "";
 
 	switch (options.turn.kind) {
 		case "user":
 			return (
-				<div className={options.isActive ? `${s(styles["activeMessage"])} ${s(styles["stepEnter"])}` : ""}>
+				<div className={options.isActive ? `active-message ${STEP_ENTER_CLASSES}` : ""}>
 					<UserMessage
 						turn={options.turn}
 						isSubAgent={options.isSubAgent}
@@ -100,17 +106,17 @@ function renderTurn(options: RenderTurnOptions) {
 						badge="Parse Error"
 						timestamp={
 							options.turn.lineNumber > 0 ? (
-								<span className={s(styles["parseErrorLine"])}>line {options.turn.lineNumber}</span>
+								<span className={PARSE_ERROR_LINE_CLASSES}>line {options.turn.lineNumber}</span>
 							) : undefined
 						}
 					>
-						<div className={s(styles["parseErrorType"])}>
+						<div className={PARSE_ERROR_TYPE_CLASSES}>
 							{options.turn.errorType === "json_parse" ? "Invalid JSON" : "Invalid Structure"}
 						</div>
 						{options.turn.errorDetails ? (
-							<div className={s(styles["parseErrorDetails"])}>{options.turn.errorDetails}</div>
+							<div className={PARSE_ERROR_DETAILS_CLASSES}>{options.turn.errorDetails}</div>
 						) : null}
-						<details className={s(styles["parseErrorRaw"])}>
+						<details className={PARSE_ERROR_RAW_CLASSES}>
 							<summary>Raw content</summary>
 							<pre>{options.turn.rawLine}</pre>
 						</details>
@@ -145,7 +151,8 @@ export function MessageList({
 	});
 
 	return (
-		<div className={s(styles["messageList"])}>
+		<div className={MESSAGE_LIST_CLASSES}>
+			<style>{STEP_FADE_IN_KEYFRAMES}</style>
 			{turns.map((turn, index) => {
 				const isActive = visibleSubSteps ? index === turns.length - 1 : false;
 				return (

@@ -4,15 +4,23 @@ import type { UserTurn } from "../types/index.ts";
 import { formatFullDateTime, formatTimestamp } from "../utilities/index.ts";
 import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
 import { UserBashContent } from "./UserBashContent.tsx";
-import styles from "./UserMessage.module.css";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 const IMAGE_MEDIA_TYPE_PREFIX_REGEX = /^image\//u;
 const STATUS_RE = /^\[.+\]$/u;
 const PLAN_PREFIX = "Implement the following plan";
+
+const STATUS_NOTICE_CLASSES = "py-1 mb-4 text-center text-[0.75rem] text-foreground-subtle italic";
+const IDE_OPENED_FILE_NOTICE_CLASSES = `${STATUS_NOTICE_CLASSES} not-italic`;
+const IDE_OPENED_FILE_PATH_CLASSES = "bg-transparent p-0 text-[0.75rem] text-foreground-muted font-mono";
+const COMMAND_CALL_CLASSES = "flex items-baseline gap-[6px] mb-1 text-[0.8rem] text-foreground-subtle";
+const COMMAND_CALL_LABEL_CLASSES = "font-semibold text-accent";
+const SKILL_BADGE_CLASSES =
+	"inline-block px-[6px] py-[1px] mr-[6px] bg-accent/15 text-[0.7rem] font-semibold text-accent uppercase tracking-[0.03em]";
+const ATTACHMENTS_CLASSES = "flex flex-wrap gap-[6px] mt-[10px]";
+const ATTACHMENT_BADGE_CLASSES =
+	"inline-block px-[10px] py-[3px] border border-accent bg-accent-subtle text-[0.75rem] font-semibold text-accent";
+const SESSION_LINK_CLASSES =
+	"ml-[10px] text-[0.75rem] font-[inherit] font-medium text-accent no-underline opacity-80 hover:underline hover:opacity-100";
 
 type UserMessageProps = {
 	turn: UserTurn;
@@ -45,7 +53,7 @@ function SessionLink({
 }) {
 	return (
 		<a
-			className={s(styles["sessionLink"])}
+			className={SESSION_LINK_CLASSES}
 			href={`#/${project}/${sessionId}`}
 			onClick={
 				onSessionLink
@@ -81,14 +89,14 @@ export function UserMessage({
 
 	if (turn.ideOpenedFile !== undefined) {
 		return (
-			<div className={`${s(styles["statusNotice"])} ${s(styles["ideOpenedFileNotice"])}`}>
-				Opened <code className={s(styles["ideOpenedFilePath"])}>{turn.ideOpenedFile}</code>
+			<div className={IDE_OPENED_FILE_NOTICE_CLASSES}>
+				Opened <code className={IDE_OPENED_FILE_PATH_CLASSES}>{turn.ideOpenedFile}</code>
 			</div>
 		);
 	}
 
 	if (STATUS_RE.test(turn.text.trim())) {
-		return <div className={s(styles["statusNotice"])}>{turn.text}</div>;
+		return <div className={STATUS_NOTICE_CLASSES}>{turn.text}</div>;
 	}
 
 	const isPlanMessage = turn.text.startsWith(PLAN_PREFIX);
@@ -122,17 +130,17 @@ export function UserMessage({
 			}
 		>
 			{turn.command ? (
-				<div className={s(styles["commandCall"])}>
-					<span className={s(styles["skillBadge"])}>skill</span>
-					<span className={s(styles["commandCallLabel"])}>{turn.command.name}</span>
+				<div className={COMMAND_CALL_CLASSES}>
+					<span className={SKILL_BADGE_CLASSES}>skill</span>
+					<span className={COMMAND_CALL_LABEL_CLASSES}>{turn.command.name}</span>
 				</div>
 			) : null}
 			<MarkdownRenderer content={turn.text} onLinkClick={onLinkClick} />
 			{turn.attachments && turn.attachments.length > 0 ? (
-				<div className={s(styles["attachments"])}>
+				<div className={ATTACHMENTS_CLASSES}>
 					{turn.attachments.map((a, i) => (
 						// biome-ignore lint/suspicious/noArrayIndexKey: attachments have no unique identifier
-						<span key={i} className={s(styles["attachmentBadge"])}>
+						<span key={i} className={ATTACHMENT_BADGE_CLASSES}>
 							image/{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
 						</span>
 					))}
