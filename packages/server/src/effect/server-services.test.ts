@@ -15,31 +15,30 @@ function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffe
 	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
 }
 
-async function runService<A, E>(
-	effect: Effect.Effect<A, E, RegistryRequirements | FileSystem.FileSystem>,
-): Promise<A> {
-	const exit = await Effect.runPromiseExit(effect.pipe(Effect.provide(BunPluginLayer)));
-	if (exit._tag === "Success") {
-		return exit.value;
+type CauseNode = {
+	_tag?: string;
+	error?: unknown;
+	defect?: unknown;
+	left?: unknown;
+	right?: unknown;
+};
+
+function failureToError(failure: { _tag?: string; pluginId?: string }): Error {
+	if (failure._tag === "UnknownPluginError") {
+		return new Error(`Unknown plugin: ${failure.pluginId}`);
 	}
-	const stack: unknown[] = [exit.cause];
+	return failure instanceof Error ? failure : new Error(String(failure));
+}
+
+function causeToError(cause: unknown): Error {
+	const stack: unknown[] = [cause];
 	while (stack.length > 0) {
-		const node = stack.pop() as {
-			_tag?: string;
-			error?: unknown;
-			defect?: unknown;
-			left?: unknown;
-			right?: unknown;
-		};
+		const node = stack.pop() as CauseNode;
 		if (node._tag === "Fail") {
-			const failure = node.error as { _tag?: string; pluginId?: string };
-			if (failure._tag === "UnknownPluginError") {
-				throw new Error(`Unknown plugin: ${failure.pluginId}`);
-			}
-			throw failure instanceof Error ? failure : new Error(String(failure));
+			return failureToError(node.error as { _tag?: string; pluginId?: string });
 		}
 		if (node._tag === "Die") {
-			throw node.defect instanceof Error ? node.defect : new Error(String(node.defect));
+			return node.defect instanceof Error ? node.defect : new Error(String(node.defect));
 		}
 		if (node.left !== undefined) {
 			stack.push(node.left);
@@ -48,7 +47,15 @@ async function runService<A, E>(
 			stack.push(node.right);
 		}
 	}
-	throw new Error(String(exit.cause));
+	return new Error(String(cause));
+}
+
+async function runService<A, E>(effect: Effect.Effect<A, E, RegistryRequirements | FileSystem.FileSystem>): Promise<A> {
+	const exit = await Effect.runPromiseExit(effect.pipe(Effect.provide(BunPluginLayer)));
+	if (exit._tag === "Success") {
+		return exit.value;
+	}
+	throw causeToError(exit.cause);
 }
 
 const testDir = join(tmpdir(), `klovi-services-test-${Date.now()}`);
