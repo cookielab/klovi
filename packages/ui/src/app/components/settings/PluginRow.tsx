@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
 
-export type PluginRowProps = {
+type PluginRowProps = {
 	plugin: PluginSettingInfo;
 	onToggle: (pluginId: string, enabled: boolean) => void;
 	onBrowse: (pluginId: string, currentDir: string) => void;
@@ -11,7 +11,18 @@ export type PluginRowProps = {
 	canBrowse?: boolean;
 };
 
-export function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps) {
+const ROW_BASE_CLASSES = "border border-border-muted bg-surface p-3";
+const ROW_DISABLED_CLASSES = "opacity-60";
+const HEADER_CLASSES = "mb-2";
+const LABEL_CLASSES = "flex cursor-pointer items-center gap-2";
+const NAME_CLASSES = "font-medium text-foreground";
+const PATH_CLASSES = "flex items-center gap-2";
+const PATH_INPUT_CLASSES =
+	"flex-1 border border-border bg-surface-muted px-2 py-[6px] font-mono text-[0.85rem] text-foreground outline-none focus:border-accent disabled:opacity-50";
+const RESET_LINK_CLASSES =
+	"cursor-pointer whitespace-nowrap appearance-none border-0 bg-transparent p-0 text-[0.85rem] text-accent hover:underline disabled:cursor-default disabled:opacity-50";
+
+function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps) {
 	const customPath = plugin.isCustomDir ? plugin.dataDir : "";
 	const [editingPath, setEditingPath] = useState(customPath);
 
@@ -53,17 +64,17 @@ export function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, c
 	const handleReset = useCallback(() => onReset(plugin.id), [onReset, plugin.id]);
 
 	return (
-		<div className={`settings-plugin-row ${plugin.enabled ? "" : "disabled"}`}>
-			<div className="settings-plugin-header">
-				<label className="settings-plugin-label">
+		<div className={`${ROW_BASE_CLASSES} ${plugin.enabled ? "" : ROW_DISABLED_CLASSES}`}>
+			<div className={HEADER_CLASSES}>
+				<label className={LABEL_CLASSES}>
 					<input type="checkbox" className="custom-checkbox" checked={plugin.enabled} onChange={handleToggle} />
-					<span className="settings-plugin-name">{plugin.displayName}</span>
+					<span className={NAME_CLASSES}>{plugin.displayName}</span>
 				</label>
 			</div>
-			<div className="settings-plugin-path">
+			<div className={PATH_CLASSES}>
 				<input
 					type="text"
-					className="settings-path-input"
+					className={PATH_INPUT_CLASSES}
 					value={editingPath}
 					placeholder={plugin.defaultDataDir}
 					onChange={handlePathInputChange}
@@ -77,7 +88,7 @@ export function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, c
 					</button>
 				) : null}
 				{plugin.isCustomDir ? (
-					<button type="button" className="settings-reset-link" onClick={handleReset} disabled={!plugin.enabled}>
+					<button type="button" className={RESET_LINK_CLASSES} onClick={handleReset} disabled={!plugin.enabled}>
 						Reset
 					</button>
 				) : null}
@@ -85,3 +96,7 @@ export function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, c
 		</div>
 	);
 }
+
+// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
+export type { PluginRowProps };
+export { PluginRow };

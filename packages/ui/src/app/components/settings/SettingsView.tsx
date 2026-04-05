@@ -5,7 +5,6 @@ import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus
 import type { ThemeSetting } from "../../hooks/useTheme.ts";
 import { PluginRow } from "./PluginRow.tsx";
 import type { SettingsTab } from "./SettingsSidebar.tsx";
-import "./SettingsView.css";
 
 type ThemeProps = {
 	setting: ThemeSetting;
@@ -44,6 +43,43 @@ type SettingsViewProps = {
 	presentationFontSize: PresentationFontSizeProps;
 };
 
+const VIEW_CLASSES = "flex flex-1 flex-col overflow-hidden";
+const CONTENT_CLASSES = "max-w-[800px] flex-1 overflow-y-auto px-8 py-6";
+const SECTION_TITLE_CLASSES = "mx-0 mt-0 mb-4 text-[0.95rem] font-semibold text-foreground";
+const SUBSECTION_TITLE_CLASSES =
+	"mx-0 mt-5 mb-3 text-[0.85rem] font-semibold uppercase tracking-[0.03em] text-foreground-subtle";
+const LOADING_CLASSES = "px-0 py-5 text-foreground-muted";
+const PLUGIN_LIST_CLASSES = "flex flex-col gap-4";
+const CONTROL_ROW_CLASSES = "flex min-h-9 items-start gap-3 px-3 py-2";
+const CONTROL_LABEL_CLASSES = "min-w-20 pt-[6px] text-[0.9rem] font-medium text-foreground";
+const CONTROL_GROUP_CLASSES = "flex flex-col gap-[6px]";
+const GENERAL_HINT_CLASSES = "m-0 pl-[22px] text-[0.8rem] text-foreground-muted";
+const SAME_AS_GLOBAL_CLASSES = "flex cursor-pointer items-center gap-[6px] text-[0.85rem] text-foreground-subtle";
+const THEME_SELECTOR_BASE_CLASSES = "settings-theme-selector inline-flex overflow-hidden border border-border";
+const THEME_SELECTOR_DISABLED_CLASSES = "disabled pointer-events-none opacity-50";
+const THEME_OPTION_BASE_CLASSES =
+	"cursor-pointer border-0 border-border border-r bg-surface px-[14px] py-[5px] text-[0.85rem] text-foreground-subtle last:border-r-0 enabled:hover:bg-surface-muted disabled:cursor-default";
+const THEME_OPTION_ACTIVE_CLASSES = "bg-accent-subtle font-medium text-accent";
+const FONT_SIZE_CONTROL_BASE_CLASSES = "settings-font-size-control inline-flex items-center gap-2";
+const FONT_SIZE_CONTROL_DISABLED_CLASSES = "disabled pointer-events-none opacity-50";
+const FONT_SIZE_BUTTON_CLASSES =
+	"cursor-pointer border border-border bg-surface px-[10px] py-1 text-[0.85rem] text-foreground-subtle enabled:hover:bg-surface-muted disabled:cursor-default disabled:opacity-40";
+const FONT_SIZE_VALUE_CLASSES = "min-w-7 text-center text-[0.9rem] font-medium text-foreground";
+const SELECT_CLASSES =
+	"cursor-pointer border border-border bg-surface px-[10px] py-[5px] text-[0.85rem] text-foreground outline-none focus:border-accent";
+const UPDATE_STATUS_ROW_CLASSES = "flex items-center gap-2";
+const UPDATE_STATUS_CLASSES = "text-[0.9rem] text-foreground-subtle";
+const UPDATE_APPLY_BTN_CLASSES =
+	"cursor-pointer border-0 bg-accent px-3 py-1 text-[0.8rem] text-white enabled:hover:opacity-90 disabled:cursor-default disabled:opacity-60";
+const RESET_TO_DEFAULTS_BTN_CLASSES =
+	"cursor-pointer border border-border bg-surface px-[14px] py-[6px] text-[0.85rem] text-foreground-subtle enabled:hover:bg-surface-muted disabled:cursor-default disabled:opacity-50";
+const RESET_CONFIRM_TEXT_CLASSES = "mx-0 mt-0 mb-2 text-[0.85rem] font-medium text-foreground";
+const RESET_CONFIRM_ACTIONS_CLASSES = "flex gap-2";
+const RESET_CONFIRM_BTN_CLASSES =
+	"cursor-pointer border border-transparent bg-error px-[14px] py-[6px] text-[0.85rem] text-white enabled:hover:opacity-90 disabled:cursor-default disabled:opacity-50";
+const RESET_CANCEL_BTN_CLASSES =
+	"cursor-pointer border border-border bg-surface px-[14px] py-[6px] text-[0.85rem] text-foreground-subtle enabled:hover:bg-surface-muted disabled:cursor-default";
+
 const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
 	{ value: "system", label: "System" },
 	{ value: "light", label: "Light" },
@@ -65,7 +101,7 @@ function ThemeOption({
 	return (
 		<button
 			type="button"
-			className={`settings-theme-option ${isActive ? "active" : ""}`}
+			className={`${THEME_OPTION_BASE_CLASSES} ${isActive ? `active ${THEME_OPTION_ACTIVE_CLASSES}` : ""}`}
 			disabled={disabled}
 			onClick={handleClick}
 		>
@@ -84,7 +120,7 @@ function ThemeSelector({
 	disabled?: boolean;
 }) {
 	return (
-		<div className={`settings-theme-selector ${disabled ? "disabled" : ""}`}>
+		<div className={`${THEME_SELECTOR_BASE_CLASSES} ${disabled ? THEME_SELECTOR_DISABLED_CLASSES : ""}`}>
 			{THEME_OPTIONS.map((opt) => (
 				<ThemeOption key={opt.value} opt={opt} isActive={value === opt.value} disabled={disabled} onChange={onChange} />
 			))}
@@ -104,14 +140,14 @@ function FontSizeControl({
 	disabled?: boolean;
 }) {
 	return (
-		<div className={`settings-font-size-control ${disabled ? "disabled" : ""}`}>
+		<div className={`${FONT_SIZE_CONTROL_BASE_CLASSES} ${disabled ? FONT_SIZE_CONTROL_DISABLED_CLASSES : ""}`}>
 			{/* biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy */}
-			<button type="button" disabled={disabled || size <= 10} onClick={onDecrease}>
+			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size <= 10} onClick={onDecrease}>
 				A-
 			</button>
-			<span className="settings-font-size-value">{size}</span>
+			<span className={FONT_SIZE_VALUE_CLASSES}>{size}</span>
 			{/* biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy */}
-			<button type="button" disabled={disabled || size >= 28} onClick={onIncrease}>
+			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size >= 28} onClick={onIncrease}>
 				A+
 			</button>
 		</div>
@@ -216,25 +252,25 @@ function UpdatesTab({
 
 	return (
 		<>
-			<h4 className="settings-subsection-title">Updates</h4>
+			<h4 className={SUBSECTION_TITLE_CLASSES}>Updates</h4>
 			{loading ? (
-				<div className="settings-loading">Loading...</div>
+				<div className={LOADING_CLASSES}>Loading...</div>
 			) : (
 				updateSettings && (
 					<>
-						<div className="settings-control-row">
-							<span className="settings-control-label">Update Channel</span>
-							<select className="settings-select" value={updateSettings.channel} onChange={handleChannelChange}>
+						<div className={CONTROL_ROW_CLASSES}>
+							<span className={CONTROL_LABEL_CLASSES}>Update Channel</span>
+							<select className={SELECT_CLASSES} value={updateSettings.channel} onChange={handleChannelChange}>
 								<option value="stable">Stable</option>
 								<option value="candidate">Release Candidate</option>
 								<option value="beta">Beta</option>
 							</select>
 						</div>
 
-						<div className="settings-control-row">
-							<span className="settings-control-label">Check Interval</span>
+						<div className={CONTROL_ROW_CLASSES}>
+							<span className={CONTROL_LABEL_CLASSES}>Check Interval</span>
 							<select
-								className="settings-select"
+								className={SELECT_CLASSES}
 								value={updateSettings.checkIntervalHours}
 								onChange={handleIntervalChange}
 							>
@@ -246,9 +282,9 @@ function UpdatesTab({
 							</select>
 						</div>
 
-						<div className="settings-control-row">
-							<div className="settings-control-group">
-								<label className="settings-same-as-global">
+						<div className={CONTROL_ROW_CLASSES}>
+							<div className={CONTROL_GROUP_CLASSES}>
+								<label className={SAME_AS_GLOBAL_CLASSES}>
 									<input
 										type="checkbox"
 										className="custom-checkbox"
@@ -257,25 +293,25 @@ function UpdatesTab({
 									/>
 									Auto-download updates
 								</label>
-								<p className="settings-general-hint">
+								<p className={GENERAL_HINT_CLASSES}>
 									When enabled, updates are downloaded in the background automatically.
 								</p>
 							</div>
 						</div>
 
-						<div className="settings-control-row">
-							<div className="settings-update-status-row">
-								<span className="settings-update-status">{statusText}</span>
+						<div className={CONTROL_ROW_CLASSES}>
+							<div className={UPDATE_STATUS_ROW_CLASSES}>
+								<span className={UPDATE_STATUS_CLASSES}>{statusText}</span>
 								<button
 									type="button"
-									className="settings-reset-to-defaults-btn"
+									className={RESET_TO_DEFAULTS_BTN_CLASSES}
 									disabled={checking}
 									onClick={handleCheckNow}
 								>
 									{checking ? "Checking..." : "Check now"}
 								</button>
 								{updateStatus?.status === "ready" && (
-									<button type="button" className="settings-update-apply-btn" disabled={applying} onClick={handleApply}>
+									<button type="button" className={UPDATE_APPLY_BTN_CLASSES} disabled={applying} onClick={handleApply}>
 										{applying ? "Restarting…" : "Restart to update"}
 									</button>
 								)}
@@ -457,15 +493,15 @@ export function SettingsView({
 	}, [client]);
 
 	return (
-		<div className="settings-view">
-			<div className="settings-content">
+		<div className={VIEW_CLASSES}>
+			<div className={CONTENT_CLASSES}>
 				{activeTab === "plugins" && (
 					<>
-						<h3 className="settings-section-title">Plugins</h3>
+						<h3 className={SECTION_TITLE_CLASSES}>Plugins</h3>
 						{loading ? (
-							<div className="settings-loading">Loading...</div>
+							<div className={LOADING_CLASSES}>Loading...</div>
 						) : (
-							<div className="settings-plugin-list">
+							<div className={PLUGIN_LIST_CLASSES}>
 								{plugins.map((plugin) => (
 									<PluginRow
 										key={plugin.id}
@@ -483,14 +519,14 @@ export function SettingsView({
 				)}
 				{activeTab === "general" && (
 					<>
-						<h3 className="settings-section-title">General</h3>
+						<h3 className={SECTION_TITLE_CLASSES}>General</h3>
 						{loading ? (
-							<div className="settings-loading">Loading...</div>
+							<div className={LOADING_CLASSES}>Loading...</div>
 						) : (
 							<>
-								<div className="settings-control-row">
-									<div className="settings-control-group">
-										<label className="settings-same-as-global">
+								<div className={CONTROL_ROW_CLASSES}>
+									<div className={CONTROL_GROUP_CLASSES}>
+										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
 												type="checkbox"
 												className="custom-checkbox"
@@ -499,30 +535,30 @@ export function SettingsView({
 											/>
 											Show security warning on startup
 										</label>
-										<p className="settings-general-hint">
+										<p className={GENERAL_HINT_CLASSES}>
 											When enabled, the security warning is shown each time Klovi launches.
 										</p>
 									</div>
 								</div>
 
-								<h4 className="settings-subsection-title">Global</h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}>Global</h4>
 
-								<div className="settings-control-row">
-									<span className="settings-control-label">Theme</span>
+								<div className={CONTROL_ROW_CLASSES}>
+									<span className={CONTROL_LABEL_CLASSES}>Theme</span>
 									<ThemeSelector value={theme.setting} onChange={theme.set} />
 								</div>
 
-								<div className="settings-control-row">
-									<span className="settings-control-label">Font Size</span>
+								<div className={CONTROL_ROW_CLASSES}>
+									<span className={CONTROL_LABEL_CLASSES}>Font Size</span>
 									<FontSizeControl size={fontSize.size} onIncrease={fontSize.increase} onDecrease={fontSize.decrease} />
 								</div>
 
-								<h4 className="settings-subsection-title">Presentation</h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}>Presentation</h4>
 
-								<div className="settings-control-row">
-									<span className="settings-control-label">Theme</span>
-									<div className="settings-control-group">
-										<label className="settings-same-as-global">
+								<div className={CONTROL_ROW_CLASSES}>
+									<span className={CONTROL_LABEL_CLASSES}>Theme</span>
+									<div className={CONTROL_GROUP_CLASSES}>
+										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
 												type="checkbox"
 												className="custom-checkbox"
@@ -539,10 +575,10 @@ export function SettingsView({
 									</div>
 								</div>
 
-								<div className="settings-control-row">
-									<span className="settings-control-label">Font Size</span>
-									<div className="settings-control-group">
-										<label className="settings-same-as-global">
+								<div className={CONTROL_ROW_CLASSES}>
+									<span className={CONTROL_LABEL_CLASSES}>Font Size</span>
+									<div className={CONTROL_GROUP_CLASSES}>
+										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
 												type="checkbox"
 												className="custom-checkbox"
@@ -569,17 +605,17 @@ export function SettingsView({
 									/>
 								) : null}
 
-								<h4 className="settings-subsection-title">Reset</h4>
-								<div className="settings-control-row">
+								<h4 className={SUBSECTION_TITLE_CLASSES}>Reset</h4>
+								<div className={CONTROL_ROW_CLASSES}>
 									{confirmingReset ? (
-										<div className="settings-control-group">
-											<p className="settings-reset-confirm-text">
+										<div className={CONTROL_GROUP_CLASSES}>
+											<p className={RESET_CONFIRM_TEXT_CLASSES}>
 												Reset all settings to defaults? This cannot be undone.
 											</p>
-											<div className="settings-reset-confirm-actions">
+											<div className={RESET_CONFIRM_ACTIONS_CLASSES}>
 												<button
 													type="button"
-													className="settings-reset-confirm-btn"
+													className={RESET_CONFIRM_BTN_CLASSES}
 													disabled={resetting}
 													onClick={handleResetToDefaults}
 												>
@@ -587,7 +623,7 @@ export function SettingsView({
 												</button>
 												<button
 													type="button"
-													className="settings-reset-cancel-btn"
+													className={RESET_CANCEL_BTN_CLASSES}
 													disabled={resetting}
 													onClick={cancelReset}
 												>
@@ -596,16 +632,16 @@ export function SettingsView({
 											</div>
 										</div>
 									) : (
-										<div className="settings-control-group">
+										<div className={CONTROL_GROUP_CLASSES}>
 											<button
 												type="button"
-												className="settings-reset-to-defaults-btn"
+												className={RESET_TO_DEFAULTS_BTN_CLASSES}
 												disabled={resetting}
 												onClick={startReset}
 											>
 												Reset to defaults
 											</button>
-											<p className="settings-general-hint">Deletes all settings and returns to the home screen.</p>
+											<p className={GENERAL_HINT_CLASSES}>Deletes all settings and returns to the home screen.</p>
 										</div>
 									)}
 								</div>
