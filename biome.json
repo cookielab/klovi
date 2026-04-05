@@ -1,6 +1,6 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
-	"extends": ["@cookielab.io/biome-config/react"],
+	"extends": ["@cookielab.io/biome-config/base", "./biome.shared.json"],
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -19,105 +19,5 @@
 			"!bun.lock",
 			"!scripts"
 		]
-	},
-	"javascript": {
-		"globals": ["Bun"]
-	},
-	"linter": {
-		"rules": {
-			"correctness": {
-				"noNodejsModules": "off",
-				"noProcessGlobal": "off",
-				"noGlobalDirnameFilename": "error",
-				"noUnresolvedImports": "off"
-			},
-			"style": {
-				"noCommonJs": "error",
-				"useFilenamingConvention": {
-					"level": "error",
-					"options": {
-						"requireAscii": true,
-						"filenameCases": ["camelCase", "PascalCase", "kebab-case"]
-					}
-				},
-				"noProcessEnv": "off",
-				"noNonNullAssertion": "warn",
-				"useConsistentMemberAccessibility": "off"
-			},
-			"complexity": {
-				"noExcessiveCognitiveComplexity": "error",
-				"noExcessiveNestedTestSuites": "error",
-				"noUselessUndefined": "error"
-			},
-			"suspicious": {
-				"noEmptyBlockStatements": "off"
-			},
-			"security": {
-				"noSecrets": "warn"
-			}
-		}
-	},
-	"overrides": [
-		{
-			"includes": ["**/*.stories.tsx", "**/*.stories.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"noDefaultExport": "off",
-						"useExportsLast": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["**/.storybook/**"],
-			"linter": {
-				"rules": {
-					"style": {
-						"noDefaultExport": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["apps/desktop/scripts/**"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noConsole": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["apps/package/scripts/**"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noConsole": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["**/electrobun.config.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"noDefaultExport": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["**/*.d.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"noDefaultExport": "off"
-					}
-				}
-			}
-		}
-	]
+	}
 }
