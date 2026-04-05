@@ -102,7 +102,7 @@ All current CSS custom properties map into Tailwind v4's `@theme` block in `tail
 | `--shadow-lg` | `--shadow-lg` | `shadow-lg` |
 | `--font-body` | `--font-sans` | `font-sans` |
 | `--font-mono` | `--font-mono` | `font-mono` |
-| `--font-size-base` | Tailwind `text-base` override | `text-base` |
+| `--font-size-base` | **Kept as CSS custom property** (user-runtime-mutable) | N/A — set by `useFontSize` hook |
 | `--radius-sm` / `-md` / `-lg` | `--radius-*: initial` (clears Tailwind defaults so all radii stay 0) | — |
 | `--sidebar-width` | `--spacing-sidebar: 320px` | `w-sidebar` |
 | `--header-height` | `--spacing-header: 52px` | `h-header` |
@@ -232,7 +232,7 @@ The migration is complete when all of the following hold:
 - [ ] Zero `.module.css` files exist in `packages/*/src/**`.
 - [ ] Zero `.css` files exist in `packages/ui/src/app/**`.
 - [ ] `tokens.css` is deleted.
-- [ ] No `var(--bg-*)`, `var(--text-*)`, `var(--border*)`, `var(--role-*)`, `var(--accent*)`, `var(--shadow-*)`, `var(--sidebar-width)`, or `var(--header-height)` references remain in the codebase.
+- [ ] No `var(--bg-*)`, `var(--text-*)`, `var(--border*)`, `var(--role-*)`, `var(--accent*)`, `var(--shadow-*)`, `var(--sidebar-width)`, or `var(--header-height)` references remain in the codebase. (Exception: `var(--font-size-base)` is kept — it is a user-runtime-mutable property set by `useFontSize` and consumed by `reset.css`.)
 - [ ] `tailwind.css` is the single source of truth for theme tokens.
 - [ ] `bun run check && bun run typecheck && bun test` all pass.
 - [ ] `bun run build` produces a working desktop app with both light and dark themes rendering correctly.
