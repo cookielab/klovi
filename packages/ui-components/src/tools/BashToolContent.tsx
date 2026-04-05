@@ -1,11 +1,8 @@
 import { CodeBox } from "@cookielab.io/klovi-design-system";
 import type { ToolCallWithResult } from "../types/index.ts";
-import styles from "./SmartToolOutput.module.css";
 import { SmartToolOutput } from "./SmartToolOutput.tsx";
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
 
 type BashToolContentProps = {
 	call: ToolCallWithResult;
@@ -16,8 +13,8 @@ export function BashToolContent({ call }: BashToolContentProps) {
 
 	return (
 		<>
-			<div style={{ marginBottom: 8 }}>
-				<div className={s(styles["toolSectionLabel"])}>Command</div>
+			<div className="mb-2">
+				<div className={SECTION_LABEL_CLASSES}>Command</div>
 				<CodeBox language="bash">{command}</CodeBox>
 			</div>
 			<SmartToolOutput output={call.result} isError={call.isError} resultImages={call.resultImages} />

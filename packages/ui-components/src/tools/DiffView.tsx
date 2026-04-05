@@ -1,11 +1,9 @@
 import { useTheme } from "@cookielab.io/klovi-design-system";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import styles from "./DiffView.module.css";
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const HEADER_CLASSES =
+	"flex items-center px-3 py-[6px] bg-surface-code text-[0.75rem] text-foreground-subtle font-mono";
 
 type DiffViewProps = {
 	filePath: string;
@@ -37,11 +35,11 @@ export function DiffView({ filePath, oldString, newString }: DiffViewProps) {
 	const style = theme === "dark" ? oneDark : oneLight;
 
 	return (
-		<div className={s(styles["diffViewWrapper"])}>
-			<div className={s(styles["diffViewHeader"])}>
+		<div className="relative">
+			<div className={HEADER_CLASSES}>
 				<span>{filePath}</span>
 			</div>
-			<div className={s(styles["diffViewContent"])}>
+			<div className="overflow-x-auto [&_pre]:m-0 [&_pre]:bg-surface-code">
 				<SyntaxHighlighter
 					language="diff"
 					style={style}

@@ -3,12 +3,13 @@ import { useCallback, useState } from "react";
 import type { ToolResultImage } from "../types/index.ts";
 import { detectOutputFormat } from "../utilities/format-detector.ts";
 import { ImageLightbox } from "../utilities/ImageLightbox.tsx";
-import styles from "./SmartToolOutput.module.css";
 import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults.ts";
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
+const OUTPUT_BASE_CLASSES =
+	"font-mono text-[0.78rem] leading-[1.5] whitespace-pre-wrap break-words text-foreground-muted";
+const IMAGE_CLASSES =
+	"max-h-[200px] object-contain border border-border-muted transition-colors duration-150 group-hover:border-accent";
 
 type SmartToolOutputProps = {
 	output: string;
@@ -29,8 +30,8 @@ function ToolResultImageButton({
 	const handleClick = useCallback(() => onSelect(src), [onSelect, src]);
 
 	return (
-		<button type="button" className={s(styles["toolResultImageBtn"])} onClick={handleClick}>
-			<img className={s(styles["toolResultImage"])} src={src} alt={`Tool result ${index + 1}`} />
+		<button type="button" className="group inline-block cursor-pointer [all:unset]" onClick={handleClick}>
+			<img className={IMAGE_CLASSES} src={src} alt={`Tool result ${index + 1}`} />
 		</button>
 	);
 }
@@ -49,14 +50,14 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 
 	return (
 		<div>
-			<div className={s(styles["toolSectionLabel"])}>Output</div>
+			<div className={SECTION_LABEL_CLASSES}>Output</div>
 			{output && detectedLang && !isError ? <CodeBox language={detectedLang}>{truncated}</CodeBox> : null}
 			{output && !(detectedLang && !isError) ? (
-				<div className={`${s(styles["toolCallOutput"])} ${isError ? s(styles["toolCallError"]) : ""}`}>{truncated}</div>
+				<div className={`${OUTPUT_BASE_CLASSES}${isError ? "text-error" : ""}`}>{truncated}</div>
 			) : null}
-			{wasTruncated && <div className={s(styles["toolCallTruncated"])}>... (truncated)</div>}
+			{wasTruncated && <div className="py-1 text-[0.75rem] text-foreground-subtle italic">... (truncated)</div>}
 			{resultImages && resultImages.length > 0 && (
-				<div className={s(styles["toolResultImages"])}>
+				<div className="mt-2 flex flex-wrap gap-2">
 					{resultImages.map((img, i) => (
 						<ToolResultImageButton
 							// biome-ignore lint/suspicious/noArrayIndexKey: images have no stable unique identifier

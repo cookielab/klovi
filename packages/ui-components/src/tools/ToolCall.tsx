@@ -5,12 +5,18 @@ import type { ToolCallWithResult } from "../types/index.ts";
 import { BashToolContent } from "./BashToolContent.tsx";
 import { DiffView } from "./DiffView.tsx";
 import { SmartToolOutput } from "./SmartToolOutput.tsx";
-import styles from "./ToolCall.module.css";
 import { formatToolInput, getToolSummary, hasInputFormatter } from "./ToolCallDefaults.ts";
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
+const INPUT_CLASSES = "font-mono text-[0.78rem] leading-[1.5] whitespace-pre-wrap break-words text-foreground-muted";
+const MCP_BADGE_CLASSES =
+	"mr-[6px] inline-block px-[6px] py-px bg-surface-sunken text-[0.7rem] font-semibold text-foreground-subtle uppercase tracking-[0.03em]";
+const SKILL_BADGE_CLASSES =
+	"mr-[6px] inline-block px-[6px] py-px bg-accent-subtle text-[0.7rem] font-semibold text-accent uppercase tracking-[0.03em]";
+const TOOL_NAME_CLASSES = "font-semibold text-role-tool text-[0.82rem]";
+const TOOL_SUMMARY_CLASSES = "font-mono text-[0.78rem] text-foreground-subtle";
+const SUBAGENT_LINK_CLASSES =
+	"ml-[10px] font-[inherit] text-[0.75rem] font-medium text-accent no-underline opacity-80 hover:underline hover:opacity-100";
 
 function stopPropagation(e: React.MouseEvent): void {
 	e.stopPropagation();
@@ -45,12 +51,12 @@ function DefaultToolContent({
 
 	return (
 		<>
-			<div style={{ marginBottom: 8 }}>
-				<div className={s(styles["toolSectionLabel"])}>Input</div>
+			<div className="mb-2">
+				<div className={SECTION_LABEL_CLASSES}>Input</div>
 				{jsonInput ? (
 					<CodeBox language="json">{formattedInput}</CodeBox>
 				) : (
-					<div className={s(styles["toolCallInput"])}>{formattedInput}</div>
+					<div className={INPUT_CLASSES}>{formattedInput}</div>
 				)}
 			</div>
 			<SmartToolOutput output={call.result} isError={call.isError} resultImages={call.resultImages} />
@@ -112,18 +118,18 @@ export function ToolCall({
 	})();
 
 	return (
-		<div className={s(styles["toolCall"])}>
+		<div className="my-[2px]">
 			<Collapsible
 				title={
 					<span>
-						{mcpServer ? <span className={s(styles["toolMcpServer"])}>{mcpServer}</span> : null}
-						{skillName ? <span className={s(styles["toolSkillBadge"])}>skill</span> : null}
-						<span className={s(styles["toolCallName"])}>{displayName}</span>
-						{summary && !skillName ? <span className={s(styles["toolCallSummary"])}> — {summary}</span> : null}
-						{call.isError ? <span className={s(styles["toolCallError"])}> (error)</span> : null}
+						{mcpServer ? <span className={MCP_BADGE_CLASSES}>{mcpServer}</span> : null}
+						{skillName ? <span className={SKILL_BADGE_CLASSES}>skill</span> : null}
+						<span className={TOOL_NAME_CLASSES}>{displayName}</span>
+						{summary && !skillName ? <span className={TOOL_SUMMARY_CLASSES}> — {summary}</span> : null}
+						{call.isError ? <span className="text-error"> (error)</span> : null}
 						{hasSubAgent ? (
 							<a
-								className={s(styles["subagentLink"])}
+								className={SUBAGENT_LINK_CLASSES}
 								href={`#/${project}/${sessionId}/subagent/${call.subAgentId}`}
 								onClick={stopPropagation}
 							>
