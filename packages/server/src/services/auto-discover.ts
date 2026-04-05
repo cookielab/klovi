@@ -1,27 +1,35 @@
-import { runPluginEffect } from "../effect/plugin-runtime.ts";
+import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
+import { makePluginConfigLayer } from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
 import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
 import { PluginRegistry } from "./registry.ts";
 import type { PluginSettings } from "./settings.ts";
 
-export async function createRegistry(settings?: PluginSettings): Promise<PluginRegistry> {
-	const registry = new PluginRegistry();
+export function createRegistry(settings?: PluginSettings): Effect.Effect<PluginRegistry, never, RegistryRequirements> {
+	return Effect.gen(function* () {
+		const registry = new PluginRegistry();
 
-	for (const { plugin, defaultDir } of BUILTIN_PLUGIN_DESCRIPTORS) {
-		const pluginSettings = settings?.plugins[plugin.id];
+		for (const { plugin, defaultDir } of BUILTIN_PLUGIN_DESCRIPTORS) {
+			const pluginSettings = settings?.plugins[plugin.id];
 
-		// If settings exist and plugin is disabled, skip it
-		if (pluginSettings && !pluginSettings.enabled) {
-			continue;
+			// If settings exist and plugin is disabled, skip it
+			if (pluginSettings && !pluginSettings.enabled) {
+				continue;
+			}
+
+			const dataDir = pluginSettings?.dataDir ?? defaultDir;
+			const configLayer = makePluginConfigLayer({ dataDir: dataDir });
+
+			const available = yield* plugin.isDataAvailable.pipe(
+				Effect.provide(configLayer),
+				Effect.catchAll(() => Effect.succeed(false)),
+			);
+
+			if (available) {
+				registry.register(plugin, { dataDir: dataDir });
+			}
 		}
 
-		const dataDir = pluginSettings?.dataDir ?? defaultDir;
-
-		const available = await runPluginEffect(plugin.isDataAvailable, { dataDir: dataDir }).catch(() => false);
-
-		if (available) {
-			registry.register(plugin, { dataDir: dataDir });
-		}
-	}
-
-	return registry;
+		return registry;
+	});
 }

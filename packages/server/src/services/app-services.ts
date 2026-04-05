@@ -8,6 +8,7 @@ import {
 import { BunContext } from "@effect/platform-bun";
 import { Effect } from "effect";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
+import { createRegistry as createRegistryEffect } from "./auto-discover.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
 import type { PluginRegistry } from "./registry.ts";
 import {
@@ -27,6 +28,10 @@ function loadSettings(path: string): Promise<PluginSettings> {
 
 function saveSettings(path: string, settings: PluginSettings): Promise<void> {
 	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
+}
+
+function createRegistry(settings?: PluginSettings): Promise<PluginRegistry> {
+	return runRegistryEffect(createRegistryEffect(settings));
 }
 
 type VersionInfo = {
@@ -293,6 +298,7 @@ async function updateUpdateSettings(
 export type { PluginSettingInfo, UpdateSettingsInfo, VersionInfo };
 export {
 	completeOnboarding,
+	createRegistry,
 	getGeneralSettings,
 	getPluginSettings,
 	getProjects,

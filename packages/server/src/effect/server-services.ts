@@ -26,6 +26,7 @@ import type { MergedProject } from "../services/plugin-types.ts";
 import type { PluginRegistry } from "../services/registry.ts";
 import type { UpdateChannel } from "../services/settings.ts";
 import { loadSettings } from "../services/settings.ts";
+import { BunPluginLayer } from "./platform-bun.ts";
 import { ServerConfig } from "./server-config.ts";
 
 export type KloviServicesShape = {
@@ -72,12 +73,12 @@ export const KloviServicesLive = Layer.effect(
 		const { settingsPath } = config;
 		const version = config.version === "0.0.0" ? "dev" : config.version;
 		const settings = yield* loadSettings(settingsPath).pipe(Effect.provide(BunContext.layer));
-		let registry: PluginRegistry = yield* Effect.promise(() => createRegistry(settings));
+		let registry: PluginRegistry = yield* createRegistry(settings).pipe(Effect.provide(BunPluginLayer));
 
 		const refreshRegistry = (): Effect.Effect<void, never, never> =>
 			Effect.gen(function* () {
 				const freshSettings = yield* loadSettings(settingsPath).pipe(Effect.provide(BunContext.layer));
-				registry = yield* Effect.promise(() => createRegistry(freshSettings));
+				registry = yield* createRegistry(freshSettings).pipe(Effect.provide(BunPluginLayer));
 			});
 
 		return {

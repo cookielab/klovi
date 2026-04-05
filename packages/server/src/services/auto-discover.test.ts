@@ -4,10 +4,21 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getClaudeCodeDir, setClaudeCodeDir } from "@cookielab.io/klovi-plugin-claude-code";
 import { getCodexCliDir, setCodexCliDir } from "@cookielab.io/klovi-plugin-codex";
+import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
+import { SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { getOpenCodeDir, setOpenCodeDir } from "@cookielab.io/klovi-plugin-opencode";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import { createRegistry } from "./auto-discover.ts";
 import type { PluginSettings } from "./settings.ts";
 import { getDefaultSettings } from "./settings.ts";
+
+const testLayer = Layer.merge(
+	NodeFileSystem.layer,
+	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
+);
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 const testDir = join(tmpdir(), `klovi-registry-test-${Date.now()}`);
 
@@ -43,7 +54,7 @@ describe("createRegistry with settings", () => {
 			},
 		};
 
-		const registry = await createRegistry(settings);
+		const registry = await runEffect(createRegistry(settings));
 		expect(registry.getAllPlugins().find((p) => p.id === "claude-code")).toBeUndefined();
 	});
 
@@ -59,13 +70,13 @@ describe("createRegistry with settings", () => {
 			},
 		};
 
-		const registry = await createRegistry(settings);
+		const registry = await runEffect(createRegistry(settings));
 		const plugin = registry.getAllPlugins().find((p) => p.id === "claude-code");
 		expect(plugin).toBeDefined();
 	});
 
 	test("without settings argument, behaves as before (all enabled, default dirs)", async () => {
-		const registry = await createRegistry();
+		const registry = await runEffect(createRegistry());
 		expect(registry).toBeDefined();
 	});
 });

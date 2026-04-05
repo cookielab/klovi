@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import {
 	completeOnboarding,
+	createRegistry,
 	getGeneralSettings,
 	getPluginSettings,
 	getProjects,
@@ -19,7 +20,6 @@ import {
 	updatePluginSetting,
 	updateUpdateSettings,
 } from "@cookielab.io/klovi-server/services/app-services";
-import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
 import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
