@@ -1,11 +1,6 @@
 import { Button } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import { Component } from "react";
-import styles from "./ErrorBoundary.module.css";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 type ErrorBoundaryProps = {
 	children: React.ReactNode;
@@ -37,25 +32,27 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 		if (this.props.inline) {
 			return (
-				<div className={s(styles["errorCard"])}>
-					<div className={s(styles["errorCardHeader"])}>
-						<span className={s(styles["errorCardTitle"])}>Failed to render</span>
+				<div className="my-2 border border-error border-l-4 bg-surface px-4 py-3 text-[0.85rem]">
+					<div className="flex items-center justify-between gap-2">
+						<span className="font-semibold text-error">Failed to render</span>
 						<Button size="sm" onClick={this.retry}>
 							Retry
 						</Button>
 					</div>
-					<details className={s(styles["errorCardDetails"])}>
-						<summary>Error details</summary>
-						<pre>{error.stack || error.message}</pre>
+					<details className="mt-2">
+						<summary className="cursor-pointer select-none text-[0.8em] text-foreground-subtle">Error details</summary>
+						<pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all bg-surface-sunken p-2 text-[0.8em]">
+							{error.stack || error.message}
+						</pre>
 					</details>
 				</div>
 			);
 		}
 
 		return (
-			<div className={s(styles["errorView"])}>
-				<div className={s(styles["errorViewTitle"])}>Something went wrong</div>
-				<div className={s(styles["errorViewMessage"])}>{error.message}</div>
+			<div className="flex flex-col items-center justify-center p-10 text-center">
+				<div className="mb-2 font-semibold text-[1.1rem] text-error">Something went wrong</div>
+				<div className="mb-4 text-[0.9rem] text-foreground-muted">{error.message}</div>
 				<Button variant="primary" onClick={this.retry}>
 					Try Again
 				</Button>

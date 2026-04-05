@@ -1,9 +1,4 @@
 import { Button } from "@cookielab.io/klovi-design-system";
-import styles from "./FetchError.module.css";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 type FetchErrorProps = {
 	error: string;
@@ -13,9 +8,9 @@ type FetchErrorProps = {
 
 export function FetchError({ error, onRetry, showPrefix = false }: FetchErrorProps) {
 	return (
-		<div className={s(styles["fetchError"])}>
+		<div className="flex flex-col items-center justify-center gap-3 p-10 text-[0.9rem] text-foreground-muted">
 			{/* biome-ignore lint/nursery/noLeakedRender: error is always a non-empty string prop */}
-			<span className={s(styles["fetchErrorMessage"])}>{showPrefix ? `Error: ${error}` : error}</span>
+			<span className="text-error">{showPrefix ? `Error: ${error}` : error}</span>
 			{onRetry ? (
 				<Button size="sm" onClick={onRetry}>
 					Retry
