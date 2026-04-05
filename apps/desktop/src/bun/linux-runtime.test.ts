@@ -2,12 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
 import {
 	detectLinuxSystemTheme,
 	ensureDesktopRuntimeDirs,
 	getDesktopRuntimeDirs,
 	resolveLinuxRenderer,
 } from "./linux-runtime.ts";
+
+const runDetect = (platform: NodeJS.Platform, env: Record<string, string | undefined>) =>
+	Effect.runPromise(detectLinuxSystemTheme(platform, env).pipe(Effect.provide(BunContext.layer)));
 
 describe("resolveLinuxRenderer", () => {
 	test("defaults to native on Linux", () => {
@@ -22,20 +27,20 @@ describe("resolveLinuxRenderer", () => {
 
 describe("detectLinuxSystemTheme", () => {
 	test("returns null on non-Linux platforms", async () => {
-		expect(await detectLinuxSystemTheme("darwin", {})).toBeNull();
-		expect(await detectLinuxSystemTheme("win32", {})).toBeNull();
+		expect(await runDetect("darwin", {})).toBeNull();
+		expect(await runDetect("win32", {})).toBeNull();
 	});
 
 	test("detects dark from GTK_THEME with -dark suffix", async () => {
-		expect(await detectLinuxSystemTheme("linux", { GTK_THEME: "Adwaita-dark" })).toBe("dark");
+		expect(await runDetect("linux", { GTK_THEME: "Adwaita-dark" })).toBe("dark");
 	});
 
 	test("detects dark from GTK_THEME with :dark variant", async () => {
-		expect(await detectLinuxSystemTheme("linux", { GTK_THEME: "Adwaita:dark" })).toBe("dark");
+		expect(await runDetect("linux", { GTK_THEME: "Adwaita:dark" })).toBe("dark");
 	});
 
 	test("detects light from GTK_THEME without dark", async () => {
-		expect(await detectLinuxSystemTheme("linux", { GTK_THEME: "Adwaita" })).toBe("light");
+		expect(await runDetect("linux", { GTK_THEME: "Adwaita" })).toBe("light");
 	});
 });
 
