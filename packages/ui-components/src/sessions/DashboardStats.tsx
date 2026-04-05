@@ -1,13 +1,24 @@
 import type { ModelTokenUsage, DashboardStats as Stats } from "../types/index.ts";
 import { FetchError } from "../utilities/FetchError.tsx";
-import styles from "./DashboardStats.module.css";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 const fmt = new Intl.NumberFormat();
 const CLAUDE_MODEL_NAME_REGEX = /claude-(\w+-[\d-]+?)(?:-\d{8})?$/u;
+
+const DASHBOARD_STATS_CLASSES = "mx-auto flex w-full max-w-[700px] flex-col gap-[12px] px-[40px] pb-[40px]";
+const STATS_ROW_CLASSES = "grid gap-[12px]";
+const STATS_ROW_3_CLASSES = "grid-cols-3";
+const STATS_ROW_4_CLASSES = "grid-cols-4";
+const STAT_CARD_CLASSES = "border border-border-muted bg-surface-muted px-[18px] py-[14px]";
+const STAT_CARD_SKELETON_CLASSES = "h-[64px] opacity-40";
+const STAT_VALUE_CLASSES = "text-[1.3rem] font-bold leading-[1.2] whitespace-nowrap text-foreground";
+const STAT_LABEL_CLASSES =
+	"mt-[2px] text-[0.7rem] font-semibold uppercase tracking-[0.04em] whitespace-nowrap text-foreground-subtle";
+const STAT_SUBLABEL_CLASSES = "mt-[2px] text-[0.68rem] whitespace-nowrap text-foreground-subtle";
+const TOKEN_ROW_CLASSES = "mt-[8px]";
+const MODEL_LIST_CLASSES = "mt-[6px] mb-0 list-none p-0";
+const MODEL_LIST_ITEM_CLASSES = "flex items-center justify-between py-[2px] text-[0.8rem]";
+const MODEL_NAME_CLASSES = "font-mono text-[0.78rem] text-foreground-muted";
+const MODEL_COUNT_CLASSES = "text-[0.75rem] text-foreground-subtle";
 
 function compactNumber(n: number): string {
 	if (n >= 1_000_000_000) {
@@ -41,10 +52,10 @@ export type DashboardStatsProps = {
 export function DashboardStats({ stats, loading, error, onRetry }: DashboardStatsProps) {
 	if (loading) {
 		return (
-			<div className={s(styles["dashboardStats"])}>
-				<div className={`${s(styles["statsRow"])} ${s(styles["statsRow3"])}`}>
+			<div className={DASHBOARD_STATS_CLASSES}>
+				<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
 					{["skeleton-0", "skeleton-1", "skeleton-2"].map((key) => (
-						<div key={key} className={`${s(styles["statCard"])} ${s(styles["statCardSkeleton"])}`} />
+						<div key={key} className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`} />
 					))}
 				</div>
 			</div>
@@ -62,67 +73,67 @@ export function DashboardStats({ stats, loading, error, onRetry }: DashboardStat
 	const sortedModels = Object.entries(stats.models).sort((a, b) => totalTokens(b[1]) - totalTokens(a[1]));
 
 	return (
-		<div className={s(styles["dashboardStats"])}>
-			<div className={`${s(styles["statsRow"])} ${s(styles["statsRow3"])}`}>
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statValue"])}>{fmt.format(stats.projects)}</div>
-					<div className={s(styles["statLabel"])}>Projects</div>
+		<div className={DASHBOARD_STATS_CLASSES}>
+			<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.projects)}</div>
+					<div className={STAT_LABEL_CLASSES}>Projects</div>
 				</div>
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statValue"])}>{fmt.format(stats.sessions)}</div>
-					<div className={s(styles["statLabel"])}>Sessions</div>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.sessions)}</div>
+					<div className={STAT_LABEL_CLASSES}>Sessions</div>
 				</div>
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statValue"])}>{fmt.format(stats.messages)}</div>
-					<div className={s(styles["statLabel"])}>Messages</div>
-				</div>
-			</div>
-
-			<div className={`${s(styles["statsRow"])} ${s(styles["statsRow3"])}`}>
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statValue"])}>{fmt.format(stats.todaySessions)}</div>
-					<div className={s(styles["statLabel"])}>Today Sessions</div>
-				</div>
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statValue"])}>{fmt.format(stats.thisWeekSessions)}</div>
-					<div className={s(styles["statLabel"])}>This Week</div>
-				</div>
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statValue"])}>{fmt.format(stats.toolCalls)}</div>
-					<div className={s(styles["statLabel"])}>Tool Calls</div>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.messages)}</div>
+					<div className={STAT_LABEL_CLASSES}>Messages</div>
 				</div>
 			</div>
 
-			<div className={s(styles["statCard"])}>
-				<div className={s(styles["statLabel"])}>Tokens</div>
-				<div className={`${s(styles["statsRow"])} ${s(styles["statsRow4"])} ${s(styles["tokenRow"])}`}>
+			<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.todaySessions)}</div>
+					<div className={STAT_LABEL_CLASSES}>Today Sessions</div>
+				</div>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.thisWeekSessions)}</div>
+					<div className={STAT_LABEL_CLASSES}>This Week</div>
+				</div>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.toolCalls)}</div>
+					<div className={STAT_LABEL_CLASSES}>Tool Calls</div>
+				</div>
+			</div>
+
+			<div className={STAT_CARD_CLASSES}>
+				<div className={STAT_LABEL_CLASSES}>Tokens</div>
+				<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_4_CLASSES} ${TOKEN_ROW_CLASSES}`}>
 					<div title={fmt.format(stats.inputTokens)}>
-						<div className={s(styles["statValue"])}>{compactNumber(stats.inputTokens)}</div>
-						<div className={s(styles["statSublabel"])}>Input</div>
+						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.inputTokens)}</div>
+						<div className={STAT_SUBLABEL_CLASSES}>Input</div>
 					</div>
 					<div title={fmt.format(stats.outputTokens)}>
-						<div className={s(styles["statValue"])}>{compactNumber(stats.outputTokens)}</div>
-						<div className={s(styles["statSublabel"])}>Output</div>
+						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.outputTokens)}</div>
+						<div className={STAT_SUBLABEL_CLASSES}>Output</div>
 					</div>
 					<div title={fmt.format(stats.cacheReadTokens)}>
-						<div className={s(styles["statValue"])}>{compactNumber(stats.cacheReadTokens)}</div>
-						<div className={s(styles["statSublabel"])}>Cache Read</div>
+						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.cacheReadTokens)}</div>
+						<div className={STAT_SUBLABEL_CLASSES}>Cache Read</div>
 					</div>
 					<div title={fmt.format(stats.cacheCreationTokens)}>
-						<div className={s(styles["statValue"])}>{compactNumber(stats.cacheCreationTokens)}</div>
-						<div className={s(styles["statSublabel"])}>Cache Creation</div>
+						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.cacheCreationTokens)}</div>
+						<div className={STAT_SUBLABEL_CLASSES}>Cache Creation</div>
 					</div>
 				</div>
 			</div>
 
 			{sortedModels.length > 0 && (
-				<div className={s(styles["statCard"])}>
-					<div className={s(styles["statLabel"])}>Models</div>
-					<ul className={s(styles["modelList"])}>
+				<div className={STAT_CARD_CLASSES}>
+					<div className={STAT_LABEL_CLASSES}>Models</div>
+					<ul className={MODEL_LIST_CLASSES}>
 						{sortedModels.map(([model, usage]) => (
-							<li key={model} className={s(styles["modelListItem"])}>
-								<span className={s(styles["modelName"])}>{simplifyModelName(model)}</span>
-								<span className={s(styles["modelCount"])}>{compactNumber(totalTokens(usage))} tokens</span>
+							<li key={model} className={MODEL_LIST_ITEM_CLASSES}>
+								<span className={MODEL_NAME_CLASSES}>{simplifyModelName(model)}</span>
+								<span className={MODEL_COUNT_CLASSES}>{compactNumber(totalTokens(usage))} tokens</span>
 							</li>
 						))}
 					</ul>
