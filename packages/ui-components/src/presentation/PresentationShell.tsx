@@ -2,13 +2,8 @@ import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useEffect, useRef } from "react";
 import { MessageList } from "../messages/index.ts";
 import type { Turn } from "../types/index.ts";
-import styles from "./PresentationShell.module.css";
 import { useKeyboard } from "./useKeyboard.ts";
 import { usePresentationMode } from "./usePresentationMode.ts";
-
-function s(name: string | undefined): string {
-	return name ?? "";
-}
 
 type PresentationShellProps = {
 	turns: Turn[];
@@ -23,6 +18,14 @@ type PresentationShellProps = {
 	theme?: string | undefined;
 	fontSize?: number | undefined;
 };
+
+const SHELL_CLASSES = "overflow-y-auto h-[calc(100vh-92px)]";
+const FULLSCREEN_CLASSES = "fixed inset-0 z-[100] overflow-y-auto bg-surface";
+const PROGRESS_CLASSES =
+	"fixed right-0 bottom-0 left-0 z-20 flex h-10 items-center justify-center gap-4 border-border border-t bg-surface-muted text-[0.85rem] text-foreground-muted";
+const PROGRESS_BAR_CLASSES = "h-1 w-[200px] overflow-hidden bg-surface-sunken";
+const PROGRESS_FILL_CLASSES = "h-full bg-accent transition-[width] duration-200 ease-[ease]";
+const HINT_CLASSES = "text-[0.75rem]";
 
 export function PresentationShell({
 	turns,
@@ -66,12 +69,10 @@ export function PresentationShell({
 
 	const progress = presentation.totalSteps > 0 ? ((presentation.currentStep + 1) / presentation.totalSteps) * 100 : 0;
 
-	const className = [s(styles["presentationMode"]), presentation.fullscreen ? s(styles["fullscreen"]) : ""]
-		.filter(Boolean)
-		.join(" ");
+	const className = presentation.fullscreen ? FULLSCREEN_CLASSES : SHELL_CLASSES;
 
 	return (
-		<div className={className} ref={scrollRef} style={{ overflowY: "auto", height: "calc(100vh - 92px)" }}>
+		<div className={className} ref={scrollRef}>
 			<MessageList
 				turns={presentation.visibleTurns}
 				visibleSubSteps={presentation.visibleSubSteps}
@@ -82,14 +83,14 @@ export function PresentationShell({
 				onLinkClick={onLinkClick}
 				getFrontendPlugin={getFrontendPlugin}
 			/>
-			<div className={s(styles["progress"])}>
+			<div className={PROGRESS_CLASSES}>
 				<span>
 					Step {presentation.currentStep + 1} / {presentation.totalSteps}
 				</span>
-				<div className={s(styles["progressBar"])}>
-					<div className={s(styles["progressFill"])} style={{ width: `${progress}%` }} />
+				<div className={PROGRESS_BAR_CLASSES}>
+					<div className={PROGRESS_FILL_CLASSES} style={{ width: `${progress}%` }} />
 				</div>
-				<span style={{ fontSize: "0.75rem" }}>← → step · ↑ ↓ message · Esc exit · F fullscreen</span>
+				<span className={HINT_CLASSES}>← → step · ↑ ↓ message · Esc exit · F fullscreen</span>
 			</div>
 		</div>
 	);
