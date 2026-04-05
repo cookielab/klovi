@@ -10,8 +10,8 @@
 		"./app/*": "./src/app/*"
 	},
 	"scripts": {
-		"dev": "bun build src/index.html --outdir dist --watch",
-		"build": "bun build src/index.html --outdir dist --minify",
+		"dev": "bun run build.ts --watch",
+		"build": "bun run build.ts --minify",
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {
