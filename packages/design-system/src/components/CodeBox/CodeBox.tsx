@@ -1,7 +1,6 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useTheme } from "../../hooks/useTheme.ts";
-import styles from "./CodeBox.module.css";
 
 const TRAILING_NEWLINE_REGEX = /\n$/u;
 
@@ -11,9 +10,13 @@ type CodeBoxProps = {
 	showLineNumbers?: boolean;
 };
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const CUSTOM_STYLE = {
+	margin: 0,
+	padding: "12px 16px",
+	background: "var(--color-surface-code)",
+	fontSize: "0.85em",
+	lineHeight: 1.5,
+};
 
 export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps) {
 	const { resolved: theme } = useTheme();
@@ -22,23 +25,14 @@ export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps) {
 	const lineNumbers = showLineNumbers ?? children.split("\n").length > 3;
 
 	return (
-		<div className={s(styles["wrapper"])}>
+		<div className="relative my-3">
 			{language ? (
-				<div className={s(styles["header"])}>
+				<div className="flex items-center justify-between bg-surface-code px-3 py-1.5 text-[0.75rem] text-foreground-subtle">
 					<span>{language}</span>
 				</div>
 			) : null}
-			<div className={s(styles["content"])}>
-				<SyntaxHighlighter
-					language={lang}
-					style={style}
-					customStyle={{
-						margin: 0,
-						fontSize: "0.85em",
-						lineHeight: 1.5,
-					}}
-					showLineNumbers={lineNumbers}
-				>
+			<div className="overflow-x-auto">
+				<SyntaxHighlighter language={lang} style={style} customStyle={CUSTOM_STYLE} showLineNumbers={lineNumbers}>
 					{children.replace(TRAILING_NEWLINE_REGEX, "")}
 				</SyntaxHighlighter>
 			</div>
