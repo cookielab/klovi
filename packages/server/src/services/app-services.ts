@@ -1,8 +1,8 @@
+import type { FileSystem } from "@effect/platform";
 import { BunContext } from "@effect/platform-bun";
 import { Effect } from "effect";
 import { runRegistryEffect } from "../effect/plugin-runtime.ts";
 import { createRegistry as createRegistryEffect } from "./auto-discover.ts";
-import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
 import type { PluginRegistry } from "./registry.ts";
 import {
 	getProjects as getProjectsEffect,
@@ -20,7 +20,21 @@ import {
 	settingsFileExists,
 	type UpdateChannel,
 } from "./settings.ts";
+import {
+	getGeneralSettings as getGeneralSettingsEffect,
+	getPluginSettings as getPluginSettingsEffect,
+	getUpdateSettings as getUpdateSettingsEffect,
+	type PluginSettingInfo,
+	type UpdateSettingsInfo,
+	updateGeneralSettings as updateGeneralSettingsEffect,
+	updatePluginSetting as updatePluginSettingEffect,
+	updateUpdateSettings as updateUpdateSettingsEffect,
+} from "./settings-service.ts";
 import { scanStats } from "./stats.ts";
+
+function runSettingsEffect<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
+	return Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
+}
 
 function loadSettings(path: string): Promise<PluginSettings> {
 	return Effect.runPromise(loadSettingsEffect(path).pipe(Effect.provide(BunContext.layer)));
@@ -37,21 +51,6 @@ function createRegistry(settings?: PluginSettings): Promise<PluginRegistry> {
 type VersionInfo = {
 	version: string;
 	commit: string;
-};
-
-type PluginSettingInfo = {
-	id: string;
-	displayName: string;
-	enabled: boolean;
-	dataDir: string;
-	defaultDataDir: string;
-	isCustomDir: boolean;
-};
-
-type UpdateSettingsInfo = {
-	channel: UpdateChannel;
-	checkIntervalHours: number;
-	autoDownload: boolean;
 };
 
 let _version = "dev";
@@ -111,33 +110,12 @@ function searchSessions(registry: PluginRegistry) {
 	return runRegistryEffect(searchSessionsEffect(registry));
 }
 
-async function buildPluginSettingsResponse(settingsPath: string): Promise<{ plugins: PluginSettingInfo[] }> {
-	const settings = await loadSettings(settingsPath);
-	const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir }) => {
-		const id = plugin.id;
-		const displayName = plugin.displayName;
-		const pluginConf = settings.plugins[id] ?? { enabled: true, dataDir: null };
-		const defaultDataDir = defaultDir;
-		const isCustomDir = pluginConf.dataDir !== null;
-		return {
-			id: id,
-			displayName: displayName,
-			enabled: pluginConf.enabled,
-			dataDir: pluginConf.dataDir ?? defaultDataDir,
-			defaultDataDir: defaultDataDir,
-			isCustomDir: isCustomDir,
-		};
-	});
-	return { plugins: plugins };
-}
-
 function getPluginSettings(settingsPath: string): Promise<{ plugins: PluginSettingInfo[] }> {
-	return buildPluginSettingsResponse(settingsPath);
+	return runSettingsEffect(getPluginSettingsEffect(settingsPath));
 }
 
-async function getGeneralSettings(settingsPath: string): Promise<{ showSecurityWarning: boolean }> {
-	const settings = await loadSettings(settingsPath);
-	return { showSecurityWarning: settings.general?.showSecurityWarning ?? true };
+function getGeneralSettings(settingsPath: string): Promise<{ showSecurityWarning: boolean }> {
+	return runSettingsEffect(getGeneralSettingsEffect(settingsPath));
 }
 
 async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch: boolean }> {
@@ -158,79 +136,48 @@ async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
 	return { ok: true };
 }
 
-async function updateGeneralSettings(
+function updateGeneralSettings(
 	settingsPath: string,
 	params: { showSecurityWarning?: boolean },
 ): Promise<{ showSecurityWarning: boolean }> {
-	const settings = await loadSettings(settingsPath);
-	if (!settings.general) {
-		settings.general = {};
-	}
-	if (params.showSecurityWarning !== undefined) {
-		settings.general.showSecurityWarning = params.showSecurityWarning;
-	}
-	await saveSettings(settingsPath, settings);
-	return { showSecurityWarning: settings.general.showSecurityWarning ?? true };
+	return runSettingsEffect(
+		updateGeneralSettingsEffect(settingsPath, params).pipe(
+			Effect.catchTag("SettingsWriteError", (e) => Effect.die(e.cause)),
+		),
+	);
 }
 
-async function updatePluginSetting(
+function updatePluginSetting(
 	settingsPath: string,
 	params: { pluginId: string; enabled?: boolean; dataDir?: string | null },
 ): Promise<{ plugins: PluginSettingInfo[] }> {
-	if (!BUILTIN_PLUGIN_ID_SET.has(params.pluginId)) {
-		throw new Error(`Unknown plugin: ${params.pluginId}`);
-	}
-	const settings = await loadSettings(settingsPath);
-	const existing = settings.plugins[params.pluginId] ?? { enabled: true, dataDir: null };
-
-	if (params.enabled !== undefined) {
-		existing.enabled = params.enabled;
-	}
-	if (params.dataDir !== undefined) {
-		existing.dataDir = params.dataDir;
-	}
-
-	settings.plugins[params.pluginId] = existing;
-	await saveSettings(settingsPath, settings);
-	return buildPluginSettingsResponse(settingsPath);
+	return runSettingsEffect(
+		updatePluginSettingEffect(settingsPath, params).pipe(
+			Effect.catchTags({
+				UnknownPluginError: (e) => Effect.die(new Error(`Unknown plugin: ${e.pluginId}`)),
+				SettingsWriteError: (e) => Effect.die(e.cause),
+			}),
+		),
+	);
 }
 
-async function getUpdateSettings(settingsPath: string): Promise<UpdateSettingsInfo> {
-	const settings = await loadSettings(settingsPath);
-	return {
-		channel: settings.updates?.channel ?? "stable",
-		checkIntervalHours: settings.updates?.checkIntervalHours ?? 6,
-		autoDownload: settings.updates?.autoDownload ?? true,
-	};
+function getUpdateSettings(settingsPath: string): Promise<UpdateSettingsInfo> {
+	return runSettingsEffect(getUpdateSettingsEffect(settingsPath));
 }
 
-async function updateUpdateSettings(
+function updateUpdateSettings(
 	settingsPath: string,
 	params: { channel?: UpdateChannel; checkIntervalHours?: number; autoDownload?: boolean },
 ): Promise<UpdateSettingsInfo> {
-	const settings = await loadSettings(settingsPath);
-	if (!settings.updates) {
-		settings.updates = { channel: "stable", checkIntervalHours: 6, autoDownload: true };
-	}
-	if (params.channel !== undefined) {
-		settings.updates.channel = params.channel;
-	}
-	if (params.checkIntervalHours !== undefined) {
-		const clamped = Math.max(1, Math.min(24, Math.round(params.checkIntervalHours)));
-		settings.updates.checkIntervalHours = clamped;
-	}
-	if (params.autoDownload !== undefined) {
-		settings.updates.autoDownload = params.autoDownload;
-	}
-	await saveSettings(settingsPath, settings);
-	return {
-		channel: settings.updates.channel,
-		checkIntervalHours: settings.updates.checkIntervalHours,
-		autoDownload: settings.updates.autoDownload,
-	};
+	return runSettingsEffect(
+		updateUpdateSettingsEffect(settingsPath, params).pipe(
+			Effect.catchTag("SettingsWriteError", (e) => Effect.die(e.cause)),
+		),
+	);
 }
 
-export type { PluginSettingInfo, UpdateSettingsInfo, VersionInfo };
+export type { PluginSettingInfo, UpdateSettingsInfo } from "./settings-service.ts";
+export type { VersionInfo };
 export {
 	completeOnboarding,
 	createRegistry,
