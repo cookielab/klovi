@@ -23,8 +23,12 @@
       "name": "@cookielab.io/klovi-desktop",
       "version": "0.0.0",
       "dependencies": {
+        "@cookielab.io/klovi-plugin-core": "workspace:*",
         "@cookielab.io/klovi-server": "workspace:*",
         "@cookielab.io/klovi-ui": "workspace:*",
+        "@effect/platform": "*",
+        "@effect/platform-bun": "*",
+        "effect": "*",
         "electrobun": "^1.16.0",
       },
     },

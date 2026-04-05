@@ -2,29 +2,64 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { FileSystem } from "@effect/platform";
 import { BunContext } from "@effect/platform-bun";
 import { Effect } from "effect";
 import {
-	completeOnboarding,
-	getGeneralSettings,
-	getPluginSettings,
-	isFirstLaunch,
-	resetSettings,
-	updateGeneralSettings,
-	updatePluginSetting,
-} from "./app-services.ts";
+	completeOnboarding as completeOnboardingEffect,
+	isFirstLaunch as isFirstLaunchEffect,
+	resetSettings as resetSettingsEffect,
+} from "./onboarding-service.ts";
 import {
 	getDefaultSettings,
 	loadSettings as loadSettingsEffect,
 	saveSettings as saveSettingsEffect,
 } from "./settings.ts";
+import {
+	getGeneralSettings as getGeneralSettingsEffect,
+	getPluginSettings as getPluginSettingsEffect,
+	updateGeneralSettings as updateGeneralSettingsEffect,
+	updatePluginSetting as updatePluginSettingEffect,
+} from "./settings-service.ts";
+
+function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
+	return Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
+}
 
 function loadSettings(path: string) {
-	return Effect.runPromise(loadSettingsEffect(path).pipe(Effect.provide(BunContext.layer)));
+	return runFs(loadSettingsEffect(path));
 }
 
 function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]) {
-	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
+	return runFs(saveSettingsEffect(path, settings));
+}
+
+function getPluginSettings(path: string) {
+	return runFs(getPluginSettingsEffect(path));
+}
+
+function updatePluginSetting(path: string, params: Parameters<typeof updatePluginSettingEffect>[1]) {
+	return runFs(updatePluginSettingEffect(path, params));
+}
+
+function getGeneralSettings(path: string) {
+	return runFs(getGeneralSettingsEffect(path));
+}
+
+function updateGeneralSettings(path: string, params: Parameters<typeof updateGeneralSettingsEffect>[1]) {
+	return runFs(updateGeneralSettingsEffect(path, params));
+}
+
+function isFirstLaunch(path: string) {
+	return runFs(isFirstLaunchEffect(path));
+}
+
+function resetSettings(path: string) {
+	return runFs(resetSettingsEffect(path));
+}
+
+function completeOnboarding(path: string) {
+	return runFs(completeOnboardingEffect(path));
 }
 
 const testDir = join(tmpdir(), `klovi-handlers-test-${Date.now()}`);

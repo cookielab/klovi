@@ -17,10 +17,16 @@
 		"./server": "./src/server.ts",
 		"./effect/bootstrap": "./src/effect/bootstrap.ts",
 		"./effect/http-app": "./src/effect/http-app.ts",
-		"./services/app-services": "./src/services/app-services.ts",
+		"./effect/platform-bun": "./src/effect/platform-bun.ts",
+		"./effect/plugin-runtime": "./src/effect/plugin-runtime.ts",
 		"./services/auto-discover": "./src/services/auto-discover.ts",
+		"./services/onboarding-service": "./src/services/onboarding-service.ts",
 		"./services/registry": "./src/services/registry.ts",
-		"./services/settings": "./src/services/settings.ts"
+		"./services/sessions-service": "./src/services/sessions-service.ts",
+		"./services/settings": "./src/services/settings.ts",
+		"./services/settings-service": "./src/services/settings-service.ts",
+		"./services/stats-service": "./src/services/stats-service.ts",
+		"./services/version-service": "./src/services/version-service.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit -p tsconfig.json"

@@ -1,26 +1,33 @@
 import { join } from "node:path";
+import { BunPluginLayer } from "@cookielab.io/klovi-server/effect/platform-bun";
+import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
 import {
-	completeOnboarding,
-	createRegistry,
-	getGeneralSettings,
-	getPluginSettings,
-	getProjects,
-	getSession,
-	getSessions,
-	getStats,
-	getSubAgent,
-	getUpdateSettings,
-	getVersion,
-	isFirstLaunch,
-	loadSettings,
-	resetSettings,
-	searchSessions,
-	setVersion,
-	updateGeneralSettings,
-	updatePluginSetting,
-	updateUpdateSettings,
-} from "@cookielab.io/klovi-server/services/app-services";
+	completeOnboarding as completeOnboardingEffect,
+	isFirstLaunch as isFirstLaunchEffect,
+	resetSettings as resetSettingsEffect,
+} from "@cookielab.io/klovi-server/services/onboarding-service";
 import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
+import {
+	getProjects as getProjectsEffect,
+	getSession as getSessionEffect,
+	getSessions as getSessionsEffect,
+	getSubAgent as getSubAgentEffect,
+	searchSessions as searchSessionsEffect,
+} from "@cookielab.io/klovi-server/services/sessions-service";
+import { loadSettings as loadSettingsEffect } from "@cookielab.io/klovi-server/services/settings";
+import {
+	getGeneralSettings as getGeneralSettingsEffect,
+	getPluginSettings as getPluginSettingsEffect,
+	getUpdateSettings as getUpdateSettingsEffect,
+	updateGeneralSettings as updateGeneralSettingsEffect,
+	updatePluginSetting as updatePluginSettingEffect,
+	updateUpdateSettings as updateUpdateSettingsEffect,
+} from "@cookielab.io/klovi-server/services/settings-service";
+import { getStats as getStatsEffect } from "@cookielab.io/klovi-server/services/stats-service";
+import { getVersion, makeVersionState } from "@cookielab.io/klovi-server/services/version-service";
+import type { FileSystem } from "@effect/platform";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
@@ -32,8 +39,28 @@ import {
 } from "./linux-runtime.ts";
 import { UpdateManager } from "./updater.ts";
 
-// Initialize version from package.json
-setVersion(pkg.version ?? "0.0.0", pkg.commit ?? "");
+// Version state — computed once at startup from package.json
+const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
+
+function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
+	return Effect.runPromise(
+		effect.pipe(
+			Effect.catchAll((e) => Effect.die(e)),
+			Effect.provide(BunContext.layer),
+		),
+	);
+}
+
+function runRegistry<A, E>(
+	effect: Effect.Effect<A, E, import("@cookielab.io/klovi-plugin-core").RegistryRequirements>,
+): Promise<A> {
+	return Effect.runPromise(
+		effect.pipe(
+			Effect.catchAll((e) => Effect.die(e)),
+			Effect.provide(BunPluginLayer),
+		),
+	);
+}
 
 const isLinux = process.platform === "linux";
 let updateManager: UpdateManager | null = null;
@@ -56,15 +83,15 @@ let registry: PluginRegistry | null = null;
 
 async function ensureRegistry(): Promise<PluginRegistry> {
 	if (!registry) {
-		const settings = await loadSettings(settingsPath);
-		registry = await createRegistry(settings);
+		const settings = await runFs(loadSettingsEffect(settingsPath));
+		registry = await runRegistry(createRegistry(settings));
 	}
 	return registry;
 }
 
 async function refreshRegistry(): Promise<void> {
-	const settings = await loadSettings(settingsPath);
-	registry = await createRegistry(settings);
+	const settings = await runFs(loadSettingsEffect(settingsPath));
+	registry = await runRegistry(createRegistry(settings));
 }
 
 function getUpdatePlatform(platform: NodeJS.Platform): "linux" | "macos" | "win" {
@@ -125,13 +152,13 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 				if (isLinux) {
 					return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
 				}
-				return getUpdateSettings(settingsPath);
+				return runFs(getUpdateSettingsEffect(settingsPath));
 			},
 			updateUpdateSettings: async (params) => {
 				if (isLinux) {
 					return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
 				}
-				const result = await updateUpdateSettings(settingsPath, params);
+				const result = await runFs(updateUpdateSettingsEffect(settingsPath, params));
 				await getUpdateManager().restartSchedule();
 				return result;
 			},
@@ -159,46 +186,46 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 
 			// Data methods (KloviClient)
 			acceptRisks: async () => {
-				await completeOnboarding(settingsPath);
+				await runFs(completeOnboardingEffect(settingsPath));
 				await ensureRegistry();
 				return { ok: true };
 			},
-			isFirstLaunch: () => isFirstLaunch(settingsPath),
-			getVersion: () => getVersion(),
+			isFirstLaunch: () => runFs(isFirstLaunchEffect(settingsPath)),
+			getVersion: () => getVersion(versionState),
 			getStats: async () => {
 				const reg = await ensureRegistry();
-				return getStats(reg);
+				return runRegistry(getStatsEffect(reg));
 			},
 			getProjects: async () => {
 				const reg = await ensureRegistry();
-				return getProjects(reg);
+				return runRegistry(getProjectsEffect(reg));
 			},
 			getSessions: async (params) => {
 				const reg = await ensureRegistry();
-				return getSessions(reg, params);
+				return runRegistry(getSessionsEffect(reg, params));
 			},
 			getSession: async (params) => {
 				const reg = await ensureRegistry();
-				return getSession(reg, params);
+				return runRegistry(getSessionEffect(reg, params));
 			},
 			getSubAgent: async (params) => {
 				const reg = await ensureRegistry();
-				return getSubAgent(reg, params);
+				return runRegistry(getSubAgentEffect(reg, params));
 			},
 			searchSessions: async () => {
 				const reg = await ensureRegistry();
-				return searchSessions(reg);
+				return runRegistry(searchSessionsEffect(reg));
 			},
-			getPluginSettings: () => getPluginSettings(settingsPath),
+			getPluginSettings: () => runFs(getPluginSettingsEffect(settingsPath)),
 			updatePluginSetting: async (params) => {
-				const result = await updatePluginSetting(settingsPath, params);
+				const result = await runFs(updatePluginSettingEffect(settingsPath, params));
 				await refreshRegistry();
 				return result;
 			},
-			getGeneralSettings: () => getGeneralSettings(settingsPath),
-			updateGeneralSettings: (params) => updateGeneralSettings(settingsPath, params),
+			getGeneralSettings: () => runFs(getGeneralSettingsEffect(settingsPath)),
+			updateGeneralSettings: (params) => runFs(updateGeneralSettingsEffect(settingsPath, params)),
 			resetSettings: async () => {
-				const result = await resetSettings(settingsPath);
+				const result = await runFs(resetSettingsEffect(settingsPath));
 				await refreshRegistry();
 				return result;
 			},

@@ -1,8 +1,14 @@
 import { semver } from "bun";
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { getUpdateSettings } from "@cookielab.io/klovi-server/services/app-services";
+import { getUpdateSettings as getUpdateSettingsEffect } from "@cookielab.io/klovi-server/services/settings-service";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
+
+function getUpdateSettings(settingsPath: string): Promise<UpdateSettingsInfo> {
+	return Effect.runPromise(getUpdateSettingsEffect(settingsPath).pipe(Effect.provide(BunContext.layer)));
+}
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
 const ZSTD_SUFFIX_RE = /\.zst$/u;

@@ -1,4 +1,4 @@
-import type { PluginSettingInfo } from "@cookielab.io/klovi-server/services/app-services";
+import type { PluginSettingInfo } from "@cookielab.io/klovi-server/services/settings-service";
 import type {
 	DashboardStats,
 	GlobalSessionResult,

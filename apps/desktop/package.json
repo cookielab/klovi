@@ -23,8 +23,12 @@
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {
+		"@cookielab.io/klovi-plugin-core": "workspace:*",
 		"@cookielab.io/klovi-server": "workspace:*",
 		"@cookielab.io/klovi-ui": "workspace:*",
+		"@effect/platform": "*",
+		"@effect/platform-bun": "*",
+		"effect": "*",
 		"electrobun": "^1.16.0"
 	}
 }

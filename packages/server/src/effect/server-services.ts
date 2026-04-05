@@ -1,65 +1,85 @@
-import type { DashboardStats, GlobalSessionResult, Session, SessionSummary } from "@cookielab.io/klovi-plugin-core";
-import { BunContext } from "@effect/platform-bun";
+import type {
+	DashboardStats,
+	GlobalSessionResult,
+	RegistryRequirements,
+	Session,
+	SessionSummary,
+} from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem } from "@effect/platform";
 import { Context, Effect, Layer } from "effect";
+import { createRegistry } from "../services/auto-discover.ts";
+import type {
+	InvalidSessionIdError,
+	PluginSourceNotFoundError,
+	ProjectNotFoundError,
+	SettingsWriteError,
+	SubAgentNotSupportedError,
+	UnknownPluginError,
+} from "../services/errors.ts";
+import { completeOnboarding, isFirstLaunch, resetSettings } from "../services/onboarding-service.ts";
+import type { MergedProject } from "../services/plugin-types.ts";
+import type { PluginRegistry } from "../services/registry.ts";
+import { getProjects, getSession, getSessions, getSubAgent, searchSessions } from "../services/sessions-service.ts";
+import type { UpdateChannel } from "../services/settings.ts";
+import { loadSettings } from "../services/settings.ts";
 import {
-	completeOnboarding,
 	getGeneralSettings,
 	getPluginSettings,
-	getProjects,
-	getSession,
-	getSessions,
-	getStats,
-	getSubAgent,
 	getUpdateSettings,
-	isFirstLaunch,
 	type PluginSettingInfo,
-	resetSettings,
-	searchSessions,
 	type UpdateSettingsInfo,
 	updateGeneralSettings,
 	updatePluginSetting,
 	updateUpdateSettings,
-	type VersionInfo,
-} from "../services/app-services.ts";
-import { createRegistry } from "../services/auto-discover.ts";
-import type { MergedProject } from "../services/plugin-types.ts";
-import type { PluginRegistry } from "../services/registry.ts";
-import type { UpdateChannel } from "../services/settings.ts";
-import { loadSettings } from "../services/settings.ts";
-import { BunPluginLayer } from "./platform-bun.ts";
+} from "../services/settings-service.ts";
+import { getStats } from "../services/stats-service.ts";
+import { getVersion, makeVersionState, type VersionInfo } from "../services/version-service.ts";
 import { ServerConfig } from "./server-config.ts";
 
 export type KloviServicesShape = {
-	readonly acceptRisks: () => Promise<{ ok: boolean }>;
+	readonly acceptRisks: () => Effect.Effect<{ ok: boolean }, SettingsWriteError, FileSystem.FileSystem>;
 	readonly getVersion: () => VersionInfo;
-	readonly getStats: () => Promise<{ stats: DashboardStats }>;
-	readonly getProjects: () => Promise<{ projects: MergedProject[] }>;
-	readonly getSessions: (params: { encodedPath: string }) => Promise<{ sessions: SessionSummary[] }>;
-	readonly getSession: (params: { sessionId: string; project: string }) => Promise<{ session: Session }>;
+	readonly getStats: () => Effect.Effect<{ stats: DashboardStats }, never, RegistryRequirements>;
+	readonly getProjects: () => Effect.Effect<{ projects: MergedProject[] }, never, RegistryRequirements>;
+	readonly getSessions: (params: {
+		encodedPath: string;
+	}) => Effect.Effect<{ sessions: SessionSummary[] }, never, RegistryRequirements>;
+	readonly getSession: (params: {
+		sessionId: string;
+		project: string;
+	}) => Effect.Effect<
+		{ session: Session },
+		InvalidSessionIdError | ProjectNotFoundError | PluginSourceNotFoundError,
+		RegistryRequirements
+	>;
 	readonly getSubAgent: (params: {
 		sessionId: string;
 		project: string;
 		agentId: string;
-	}) => Promise<{ session: Session }>;
-	readonly searchSessions: () => Promise<{ sessions: GlobalSessionResult[] }>;
-	readonly getPluginSettings: () => Promise<{ plugins: PluginSettingInfo[] }>;
+	}) => Effect.Effect<
+		{ session: Session },
+		InvalidSessionIdError | UnknownPluginError | SubAgentNotSupportedError,
+		RegistryRequirements
+	>;
+	readonly searchSessions: () => Effect.Effect<{ sessions: GlobalSessionResult[] }, never, RegistryRequirements>;
+	readonly getPluginSettings: () => Effect.Effect<{ plugins: PluginSettingInfo[] }, never, FileSystem.FileSystem>;
 	readonly updatePluginSetting: (params: {
 		pluginId: string;
 		enabled?: boolean;
 		dataDir?: string | null;
-	}) => Promise<{ plugins: PluginSettingInfo[] }>;
-	readonly getGeneralSettings: () => Promise<{ showSecurityWarning: boolean }>;
+	}) => Effect.Effect<{ plugins: PluginSettingInfo[] }, UnknownPluginError | SettingsWriteError, RegistryRequirements>;
+	readonly getGeneralSettings: () => Effect.Effect<{ showSecurityWarning: boolean }, never, FileSystem.FileSystem>;
 	readonly updateGeneralSettings: (params: {
 		showSecurityWarning?: boolean;
-	}) => Promise<{ showSecurityWarning: boolean }>;
-	readonly isFirstLaunch: () => Promise<{ firstLaunch: boolean }>;
-	readonly resetSettings: () => Promise<{ ok: boolean }>;
-	readonly getUpdateSettings: () => Promise<UpdateSettingsInfo>;
+	}) => Effect.Effect<{ showSecurityWarning: boolean }, SettingsWriteError, FileSystem.FileSystem>;
+	readonly isFirstLaunch: () => Effect.Effect<{ firstLaunch: boolean }, never, FileSystem.FileSystem>;
+	readonly resetSettings: () => Effect.Effect<{ ok: boolean }, never, RegistryRequirements>;
+	readonly getUpdateSettings: () => Effect.Effect<UpdateSettingsInfo, never, FileSystem.FileSystem>;
 	readonly updateUpdateSettings: (params: {
 		channel?: UpdateChannel;
 		checkIntervalHours?: number;
 		autoDownload?: boolean;
-	}) => Promise<UpdateSettingsInfo>;
+	}) => Effect.Effect<UpdateSettingsInfo, SettingsWriteError, FileSystem.FileSystem>;
 	readonly getRegistry: () => PluginRegistry;
 	readonly settingsPath: string;
 };
@@ -71,19 +91,19 @@ export const KloviServicesLive = Layer.effect(
 	Effect.gen(function* () {
 		const config = yield* ServerConfig;
 		const { settingsPath } = config;
-		const version = config.version === "0.0.0" ? "dev" : config.version;
-		const settings = yield* loadSettings(settingsPath).pipe(Effect.provide(BunContext.layer));
-		let registry: PluginRegistry = yield* createRegistry(settings).pipe(Effect.provide(BunPluginLayer));
+		const versionState = makeVersionState(config.version, config.commit);
+		const settings = yield* loadSettings(settingsPath);
+		let registry: PluginRegistry = yield* createRegistry(settings);
 
-		const refreshRegistry = (): Effect.Effect<void, never, never> =>
+		const refreshRegistry = (): Effect.Effect<void, never, RegistryRequirements> =>
 			Effect.gen(function* () {
-				const freshSettings = yield* loadSettings(settingsPath).pipe(Effect.provide(BunContext.layer));
-				registry = yield* createRegistry(freshSettings).pipe(Effect.provide(BunPluginLayer));
+				const freshSettings = yield* loadSettings(settingsPath);
+				registry = yield* createRegistry(freshSettings);
 			});
 
 		return {
 			acceptRisks: () => completeOnboarding(settingsPath),
-			getVersion: () => ({ version: version, commit: config.commit }),
+			getVersion: () => getVersion(versionState),
 			getStats: () => getStats(registry),
 			getProjects: () => getProjects(registry),
 			getSessions: (params) => getSessions(registry, params),
@@ -91,19 +111,21 @@ export const KloviServicesLive = Layer.effect(
 			getSubAgent: (params) => getSubAgent(registry, params),
 			searchSessions: () => searchSessions(registry),
 			getPluginSettings: () => getPluginSettings(settingsPath),
-			updatePluginSetting: async (params) => {
-				const result = await updatePluginSetting(settingsPath, params);
-				await Effect.runPromise(refreshRegistry());
-				return result;
-			},
+			updatePluginSetting: (params) =>
+				Effect.gen(function* () {
+					const result = yield* updatePluginSetting(settingsPath, params);
+					yield* refreshRegistry();
+					return result;
+				}),
 			getGeneralSettings: () => getGeneralSettings(settingsPath),
 			updateGeneralSettings: (params) => updateGeneralSettings(settingsPath, params),
 			isFirstLaunch: () => isFirstLaunch(settingsPath),
-			resetSettings: async () => {
-				const result = await resetSettings(settingsPath);
-				await Effect.runPromise(refreshRegistry());
-				return result;
-			},
+			resetSettings: () =>
+				Effect.gen(function* () {
+					const result = yield* resetSettings(settingsPath);
+					yield* refreshRegistry();
+					return result;
+				}),
 			getUpdateSettings: () => getUpdateSettings(settingsPath),
 			updateUpdateSettings: (params) => updateUpdateSettings(settingsPath, params),
 			getRegistry: () => registry,

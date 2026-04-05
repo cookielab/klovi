@@ -2,15 +2,26 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getUpdateSettings, getVersion, updateUpdateSettings } from "./app-services.ts";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
+import { getUpdateSettings, updateUpdateSettings } from "./settings-service.ts";
+import { getVersion, makeVersionState } from "./version-service.ts";
 
-describe("rpc-handlers", () => {
-	test("getVersion returns version info", () => {
-		const result = getVersion();
-		expect(result).toHaveProperty("version");
-		expect(typeof result.version).toBe("string");
-		expect(result).toHaveProperty("commit");
-		expect(typeof result.commit).toBe("string");
+function runFs<A, E>(effect: Effect.Effect<A, E, import("@effect/platform").FileSystem.FileSystem>): Promise<A> {
+	return Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
+}
+
+describe("version-service", () => {
+	test("getVersion returns info from state", () => {
+		const state = makeVersionState("1.2.3", "abc");
+		const result = getVersion(state);
+		expect(result.version).toBe("1.2.3");
+		expect(result.commit).toBe("abc");
+	});
+
+	test("makeVersionState normalizes 0.0.0 to dev", () => {
+		const state = makeVersionState("0.0.0", "");
+		expect(state.version).toBe("dev");
 	});
 });
 
@@ -25,7 +36,7 @@ describe("update settings handlers", () => {
 
 	test("getUpdateSettings returns defaults when no settings exist", async () => {
 		const path = join(testDir, "nonexistent", "settings.json");
-		const result = await getUpdateSettings(path);
+		const result = await runFs(getUpdateSettings(path));
 		expect(result.channel).toBe("stable");
 		expect(result.checkIntervalHours).toBe(6);
 		expect(result.autoDownload).toBe(true);
@@ -34,31 +45,31 @@ describe("update settings handlers", () => {
 	test("updateUpdateSettings persists channel change", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = join(testDir, "settings.json");
-		const result = await updateUpdateSettings(path, { channel: "beta" });
+		const result = await runFs(updateUpdateSettings(path, { channel: "beta" }));
 		expect(result.channel).toBe("beta");
-		const reloaded = await getUpdateSettings(path);
+		const reloaded = await runFs(getUpdateSettings(path));
 		expect(reloaded.channel).toBe("beta");
 	});
 
 	test("updateUpdateSettings persists checkIntervalHours change", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = join(testDir, "settings.json");
-		const result = await updateUpdateSettings(path, { checkIntervalHours: 1 });
+		const result = await runFs(updateUpdateSettings(path, { checkIntervalHours: 1 }));
 		expect(result.checkIntervalHours).toBe(1);
 	});
 
 	test("updateUpdateSettings persists autoDownload change", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = join(testDir, "settings.json");
-		const result = await updateUpdateSettings(path, { autoDownload: false });
+		const result = await runFs(updateUpdateSettings(path, { autoDownload: false }));
 		expect(result.autoDownload).toBe(false);
 	});
 
 	test("updateUpdateSettings clamps checkIntervalHours to 1-24", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = join(testDir, "settings.json");
-		expect((await updateUpdateSettings(path, { checkIntervalHours: 0 })).checkIntervalHours).toBe(1);
-		expect((await updateUpdateSettings(path, { checkIntervalHours: 100 })).checkIntervalHours).toBe(24);
-		expect((await updateUpdateSettings(path, { checkIntervalHours: 3.7 })).checkIntervalHours).toBe(4);
+		expect((await runFs(updateUpdateSettings(path, { checkIntervalHours: 0 }))).checkIntervalHours).toBe(1);
+		expect((await runFs(updateUpdateSettings(path, { checkIntervalHours: 100 }))).checkIntervalHours).toBe(24);
+		expect((await runFs(updateUpdateSettings(path, { checkIntervalHours: 3.7 }))).checkIntervalHours).toBe(4);
 	});
 });
