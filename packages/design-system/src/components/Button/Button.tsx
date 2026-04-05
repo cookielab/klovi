@@ -1,5 +1,4 @@
 import type React from "react";
-import styles from "./Button.module.css";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	variant?: "default" | "primary";
@@ -7,16 +6,24 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	icon?: boolean;
 }
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const BASE_CLASSES =
+	"inline-flex items-center gap-1.5 px-3 py-1.5 text-[0.85rem] cursor-pointer border border-border transition-colors duration-150";
+
+const VARIANT_CLASSES = {
+	default: "bg-surface text-foreground hover:bg-surface-muted hover:border-foreground-subtle",
+	primary: "bg-accent text-foreground-inverse border-accent hover:bg-accent-hover hover:border-accent-hover",
+} as const;
+
+const SIZE_SM_CLASSES = "px-2 py-1 text-[0.8rem] h-7";
+
+const ICON_CLASSES = "p-1 min-w-7 justify-center";
 
 export function Button({ variant = "default", size = "md", icon, className, ...props }: ButtonProps) {
 	const classes = [
-		s(styles["btn"]),
-		variant === "primary" ? s(styles["primary"]) : "",
-		size === "sm" ? s(styles["sm"]) : "",
-		icon ? s(styles["icon"]) : "",
+		BASE_CLASSES,
+		VARIANT_CLASSES[variant],
+		size === "sm" ? SIZE_SM_CLASSES : "",
+		icon ? ICON_CLASSES : "",
 		className ?? "",
 	]
 		.filter(Boolean)
