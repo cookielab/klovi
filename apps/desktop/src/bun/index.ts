@@ -67,11 +67,23 @@ async function refreshRegistry(): Promise<void> {
 	registry = await createRegistry(settings);
 }
 
+function getUpdatePlatform(platform: NodeJS.Platform): "linux" | "macos" | "win" {
+	if (platform === "darwin") {
+		return "macos";
+	}
+
+	if (platform === "win32") {
+		return "win";
+	}
+
+	return "linux";
+}
+
 function getUpdateManager(): UpdateManager {
 	if (!updateManager) {
 		updateManager = new UpdateManager({
 			currentVersion: pkg.version ?? "dev",
-			platform: ({ darwin: "macos", win32: "win" } as const)[process.platform] ?? "linux",
+			platform: getUpdatePlatform(process.platform),
 			arch: process.arch === "arm64" ? "arm64" : "x64",
 			settingsPath: settingsPath,
 			appDataDir: Utils.paths.userData,

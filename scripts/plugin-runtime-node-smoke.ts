@@ -15,6 +15,8 @@ import { join } from "node:path";
 import { claudeCodePlugin } from "../packages/plugin-claude-code/src/index.ts";
 import { codexCliPlugin } from "../packages/plugin-codex/src/index.ts";
 import {
+	type Session,
+	type SessionSummary,
   type PluginConfigShape,
   PluginRegistry,
   makePluginConfigLayer,
@@ -96,7 +98,7 @@ async function testRegistryBuild() {
   console.log("\n2. Registry build with Node runtime");
   try {
     const config = { dataDir: testDir };
-    const registry = new PluginRegistry();
+    const registry = new PluginRegistry<string, SessionSummary, Session>();
     registry.register(claudeCodePlugin, config);
     registry.register(codexCliPlugin, config);
     registry.register(openCodePlugin, config);
