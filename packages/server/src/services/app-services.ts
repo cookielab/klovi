@@ -1,4 +1,3 @@
-import { access, rm } from "node:fs/promises";
 import {
 	encodeSessionId,
 	type GlobalSessionResult,
@@ -6,12 +5,29 @@ import {
 	type SessionSummary,
 	sortByIsoDesc,
 } from "@cookielab.io/klovi-plugin-core";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
 import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
 import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
 import type { PluginRegistry } from "./registry.ts";
-import type { UpdateChannel } from "./settings.ts";
-import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
+import {
+	deleteSettingsFile,
+	getDefaultSettings,
+	loadSettings as loadSettingsEffect,
+	type PluginSettings,
+	saveSettings as saveSettingsEffect,
+	settingsFileExists,
+	type UpdateChannel,
+} from "./settings.ts";
 import { scanStats } from "./stats.ts";
+
+function loadSettings(path: string): Promise<PluginSettings> {
+	return Effect.runPromise(loadSettingsEffect(path).pipe(Effect.provide(BunContext.layer)));
+}
+
+function saveSettings(path: string, settings: PluginSettings): Promise<void> {
+	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
+}
 
 type VersionInfo = {
 	version: string;
@@ -185,12 +201,8 @@ async function getGeneralSettings(settingsPath: string): Promise<{ showSecurityW
 }
 
 async function isFirstLaunch(settingsPath: string): Promise<{ firstLaunch: boolean }> {
-	try {
-		await access(settingsPath);
-		return { firstLaunch: false };
-	} catch {
-		return { firstLaunch: true };
-	}
+	const exists = await Effect.runPromise(settingsFileExists(settingsPath).pipe(Effect.provide(BunContext.layer)));
+	return { firstLaunch: !exists };
 }
 
 async function completeOnboarding(settingsPath: string): Promise<{ ok: boolean }> {
@@ -202,11 +214,7 @@ async function completeOnboarding(settingsPath: string): Promise<{ ok: boolean }
 }
 
 async function resetSettings(settingsPath: string): Promise<{ ok: boolean }> {
-	try {
-		await rm(settingsPath);
-	} catch {
-		// File may not exist — that's fine
-	}
+	await Effect.runPromise(deleteSettingsFile(settingsPath).pipe(Effect.provide(BunContext.layer)));
 	return { ok: true };
 }
 
@@ -295,6 +303,7 @@ export {
 	getUpdateSettings,
 	getVersion,
 	isFirstLaunch,
+	loadSettings,
 	resetSettings,
 	searchSessions,
 	setVersion,

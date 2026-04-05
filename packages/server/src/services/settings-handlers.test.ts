@@ -2,6 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
 import {
 	completeOnboarding,
 	getGeneralSettings,
@@ -11,7 +13,19 @@ import {
 	updateGeneralSettings,
 	updatePluginSetting,
 } from "./app-services.ts";
-import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
+import {
+	getDefaultSettings,
+	loadSettings as loadSettingsEffect,
+	saveSettings as saveSettingsEffect,
+} from "./settings.ts";
+
+function loadSettings(path: string) {
+	return Effect.runPromise(loadSettingsEffect(path).pipe(Effect.provide(BunContext.layer)));
+}
+
+function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]) {
+	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
+}
 
 const testDir = join(tmpdir(), `klovi-handlers-test-${Date.now()}`);
 const settingsPath = join(testDir, "settings.json");

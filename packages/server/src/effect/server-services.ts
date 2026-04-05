@@ -1,4 +1,5 @@
 import type { DashboardStats, GlobalSessionResult, Session, SessionSummary } from "@cookielab.io/klovi-plugin-core";
+import { BunContext } from "@effect/platform-bun";
 import { Context, Effect, Layer } from "effect";
 import {
 	completeOnboarding,
@@ -70,13 +71,14 @@ export const KloviServicesLive = Layer.effect(
 		const config = yield* ServerConfig;
 		const { settingsPath } = config;
 		const version = config.version === "0.0.0" ? "dev" : config.version;
-		const settings = yield* Effect.promise(() => loadSettings(settingsPath));
+		const settings = yield* loadSettings(settingsPath).pipe(Effect.provide(BunContext.layer));
 		let registry: PluginRegistry = yield* Effect.promise(() => createRegistry(settings));
 
-		async function refreshRegistry(): Promise<void> {
-			const freshSettings = await loadSettings(settingsPath);
-			registry = await createRegistry(freshSettings);
-		}
+		const refreshRegistry = (): Effect.Effect<void, never, never> =>
+			Effect.gen(function* () {
+				const freshSettings = yield* loadSettings(settingsPath).pipe(Effect.provide(BunContext.layer));
+				registry = yield* Effect.promise(() => createRegistry(freshSettings));
+			});
 
 		return {
 			acceptRisks: () => completeOnboarding(settingsPath),
@@ -90,7 +92,7 @@ export const KloviServicesLive = Layer.effect(
 			getPluginSettings: () => getPluginSettings(settingsPath),
 			updatePluginSetting: async (params) => {
 				const result = await updatePluginSetting(settingsPath, params);
-				await refreshRegistry();
+				await Effect.runPromise(refreshRegistry());
 				return result;
 			},
 			getGeneralSettings: () => getGeneralSettings(settingsPath),
@@ -98,7 +100,7 @@ export const KloviServicesLive = Layer.effect(
 			isFirstLaunch: () => isFirstLaunch(settingsPath),
 			resetSettings: async () => {
 				const result = await resetSettings(settingsPath);
-				await refreshRegistry();
+				await Effect.runPromise(refreshRegistry());
 				return result;
 			},
 			getUpdateSettings: () => getUpdateSettings(settingsPath),

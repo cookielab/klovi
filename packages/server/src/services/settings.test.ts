@@ -1,8 +1,9 @@
-// src/bun/settings.test.ts
 import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { BunContext } from "@effect/platform-bun";
+import { Effect } from "effect";
 import type { PluginSettings } from "./settings.ts";
 import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
 
@@ -10,6 +11,10 @@ const testDir = join(tmpdir(), `klovi-settings-test-${Date.now()}`);
 
 function settingsPath(): string {
 	return join(testDir, "settings.json");
+}
+
+function run<A, E>(effect: Effect.Effect<A, E, BunContext.BunContext>): Promise<A> {
+	return Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
 }
 
 describe("settings", () => {
@@ -28,7 +33,7 @@ describe("settings", () => {
 	});
 
 	test("loadSettings returns defaults when file does not exist", async () => {
-		const settings = await loadSettings(join(testDir, "nonexistent", "settings.json"));
+		const settings = await run(loadSettings(join(testDir, "nonexistent", "settings.json")));
 		expect(settings).toEqual(getDefaultSettings());
 	});
 
@@ -43,14 +48,14 @@ describe("settings", () => {
 				opencode: { enabled: true, dataDir: null },
 			},
 		};
-		await saveSettings(path, settings);
-		const loaded = await loadSettings(path);
+		await run(saveSettings(path, settings));
+		const loaded = await run(loadSettings(path));
 		expect(loaded).toEqual(settings);
 	});
 
 	test("saveSettings creates parent directories", async () => {
 		const deep = join(testDir, "a", "b", "settings.json");
-		await saveSettings(deep, getDefaultSettings());
+		await run(saveSettings(deep, getDefaultSettings()));
 		expect(await Bun.file(deep).exists()).toBe(true);
 	});
 
@@ -58,7 +63,7 @@ describe("settings", () => {
 		await mkdir(testDir, { recursive: true });
 		const path = settingsPath();
 		await Bun.write(path, "not valid json{{{");
-		const settings = await loadSettings(path);
+		const settings = await run(loadSettings(path));
 		expect(settings).toEqual(getDefaultSettings());
 	});
 
@@ -78,8 +83,8 @@ describe("settings", () => {
 			...getDefaultSettings(),
 			updates: { channel: "beta", checkIntervalHours: 1, autoDownload: false },
 		};
-		await saveSettings(path, settings);
-		const loaded = await loadSettings(path);
+		await run(saveSettings(path, settings));
+		const loaded = await run(loadSettings(path));
 		expect(loaded.updates).toEqual({ channel: "beta", checkIntervalHours: 1, autoDownload: false });
 	});
 });

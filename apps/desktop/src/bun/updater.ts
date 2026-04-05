@@ -1,7 +1,7 @@
 import { semver } from "bun";
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
+import { getUpdateSettings } from "@cookielab.io/klovi-server/services/app-services";
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
@@ -279,13 +279,8 @@ class UpdateManager {
 		this.onStatusChange?.(status);
 	}
 
-	private async getSettings(): Promise<UpdateSettingsInfo> {
-		const settings = await loadSettings(this.settingsPath);
-		return {
-			channel: settings.updates?.channel ?? "stable",
-			checkIntervalHours: settings.updates?.checkIntervalHours ?? 6,
-			autoDownload: settings.updates?.autoDownload ?? true,
-		};
+	private getSettings(): Promise<UpdateSettingsInfo> {
+		return getUpdateSettings(this.settingsPath);
 	}
 
 	private updatesDir(): string {

@@ -11,6 +11,7 @@ import {
 	getUpdateSettings,
 	getVersion,
 	isFirstLaunch,
+	loadSettings,
 	resetSettings,
 	searchSessions,
 	setVersion,
@@ -20,7 +21,6 @@ import {
 } from "@cookielab.io/klovi-server/services/app-services";
 import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
 import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
-import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";

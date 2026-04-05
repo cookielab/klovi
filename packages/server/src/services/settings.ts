@@ -1,6 +1,8 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
+import { FileSystem } from "@effect/platform";
+import { Effect } from "effect";
+import { SettingsWriteError } from "./errors.ts";
 
 type UpdateChannel = "stable" | "candidate" | "beta";
 
@@ -45,26 +47,57 @@ function getDefaultSettings(): PluginSettings {
 	};
 }
 
-async function loadSettings(path: string): Promise<PluginSettings> {
-	try {
-		const content = await readFile(path, "utf-8");
-		const parsed = JSON.parse(content) as Record<string, unknown>;
-		if (parsed["version"] !== 1 || typeof parsed["plugins"] !== "object") {
+function loadSettings(path: string): Effect.Effect<PluginSettings, never, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		const content = yield* fs.readFileString(path).pipe(Effect.catchAll(() => Effect.succeed(null)));
+		if (content === null) {
+			return getDefaultSettings();
+		}
+		const parsed = yield* Effect.try({
+			try: () => JSON.parse(content) as Record<string, unknown>,
+			catch: () => null,
+		}).pipe(Effect.catchAll(() => Effect.succeed(null)));
+		if (parsed === null || parsed["version"] !== 1 || typeof parsed["plugins"] !== "object") {
 			return getDefaultSettings();
 		}
 		return parsed as unknown as PluginSettings;
-	} catch {
-		return getDefaultSettings();
-	}
+	});
 }
 
-async function saveSettings(path: string, settings: PluginSettings): Promise<void> {
-	const dir = dirname(path);
-	await mkdir(dir, { recursive: true });
-	const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
-	await writeFile(tmpPath, JSON.stringify(settings, null, 2));
-	await rename(tmpPath, path);
+function saveSettings(
+	path: string,
+	settings: PluginSettings,
+): Effect.Effect<void, SettingsWriteError, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		const dir = dirname(path);
+		yield* fs
+			.makeDirectory(dir, { recursive: true })
+			.pipe(Effect.mapError((cause) => new SettingsWriteError({ path: path, cause: cause })));
+		const tmpPath = join(dir, `.settings-${Date.now()}.tmp`);
+		yield* fs
+			.writeFileString(tmpPath, JSON.stringify(settings, null, 2))
+			.pipe(Effect.mapError((cause) => new SettingsWriteError({ path: path, cause: cause })));
+		yield* fs
+			.rename(tmpPath, path)
+			.pipe(Effect.mapError((cause) => new SettingsWriteError({ path: path, cause: cause })));
+	});
+}
+
+function settingsFileExists(path: string): Effect.Effect<boolean, never, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		return yield* fs.exists(path).pipe(Effect.catchAll(() => Effect.succeed(false)));
+	});
+}
+
+function deleteSettingsFile(path: string): Effect.Effect<void, never, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		yield* fs.remove(path).pipe(Effect.catchAll(() => Effect.void));
+	});
 }
 
 export type { PluginSettings, UpdateChannel, UpdateSettings };
-export { getDefaultSettings, loadSettings, saveSettings };
+export { deleteSettingsFile, getDefaultSettings, loadSettings, saveSettings, settingsFileExists };

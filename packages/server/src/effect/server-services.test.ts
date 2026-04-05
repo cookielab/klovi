@@ -2,10 +2,15 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { BunContext } from "@effect/platform-bun";
 import { Effect, Layer } from "effect";
-import { getDefaultSettings, saveSettings } from "../services/settings.ts";
+import { getDefaultSettings, saveSettings as saveSettingsEffect } from "../services/settings.ts";
 import { ServerConfig } from "./server-config.ts";
 import { KloviServices, KloviServicesLive } from "./server-services.ts";
+
+function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]) {
+	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
+}
 
 const testDir = join(tmpdir(), `klovi-services-test-${Date.now()}`);
 const settingsPath = join(testDir, "settings.json");
