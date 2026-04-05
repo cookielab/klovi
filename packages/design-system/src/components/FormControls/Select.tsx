@@ -1,17 +1,15 @@
 import type React from "react";
-import styles from "./FormControls.module.css";
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 	options: { value: string; label: string }[];
 }
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const SELECT_CLASSES =
+	"w-full px-3 py-2 border border-border bg-surface text-foreground text-[0.85rem] outline-none font-[inherit] cursor-pointer focus:border-accent";
 
 export function Select({ options, className, ...props }: SelectProps) {
 	return (
-		<select {...props} className={`${s(styles["select"])} ${className ?? ""}`}>
+		<select {...props} className={`${SELECT_CLASSES} ${className ?? ""}`}>
 			{options.map((opt) => (
 				<option key={opt.value} value={opt.value}>
 					{opt.label}

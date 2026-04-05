@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import styles from "./FormControls.module.css";
 
 type SegmentedControlProps<T extends string> = {
 	value: T;
@@ -8,9 +7,11 @@ type SegmentedControlProps<T extends string> = {
 	disabled?: boolean;
 };
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
+const OPTION_BASE =
+	"border-0 border-r border-border last:border-r-0 px-[14px] py-[5px] text-[0.85rem] cursor-pointer disabled:cursor-default disabled:opacity-50";
+
+const OPTION_ACTIVE = "bg-accent-subtle text-accent font-medium";
+const OPTION_INACTIVE = "bg-surface text-foreground-muted enabled:hover:bg-surface-muted";
 
 function SegmentedOption<T extends string>({
 	opt,
@@ -27,7 +28,7 @@ function SegmentedOption<T extends string>({
 	return (
 		<button
 			type="button"
-			className={`${s(styles["segmentedOption"])} ${isActive ? s(styles["segmentedOptionActive"]) : ""}`}
+			className={`${OPTION_BASE} ${isActive ? OPTION_ACTIVE : OPTION_INACTIVE}`}
 			disabled={disabled}
 			onClick={handleClick}
 		>
@@ -38,7 +39,9 @@ function SegmentedOption<T extends string>({
 
 export function SegmentedControl<T extends string>({ value, onChange, options, disabled }: SegmentedControlProps<T>) {
 	return (
-		<div className={`${s(styles["segmented"])} ${disabled ? s(styles["segmentedDisabled"]) : ""}`}>
+		<div
+			className={`inline-flex overflow-hidden border border-border ${disabled ? "pointer-events-none opacity-50" : ""}`}
+		>
 			{options.map((opt) => (
 				<SegmentedOption
 					key={opt.value}
