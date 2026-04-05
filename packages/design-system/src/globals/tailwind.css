@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@custom-variant dark ([data-theme="dark"] &);
+
+/* User-configurable font size — set at runtime by useFontSize hook.
+   Kept as a CSS custom property (not @theme token) because it mutates at runtime. */
+:root {
+	--font-size-base: 15px;
+}
+
+@theme {
+	/* Clear Tailwind defaults the project does not use */
+	--radius-*: initial;
+
+	/* Typography */
+	--font-sans: "DM Sans", system-ui, sans-serif;
+	--font-mono: "IBM Plex Mono", "Consolas", monospace;
+
+	/* Spacing tokens for layout */
+	--spacing-sidebar: 320px;
+	--spacing-header: 52px;
+
+	/* Surfaces (backgrounds) */
+	--color-surface: #f2f4f8;
+	--color-surface-muted: #e8eaef;
+	--color-surface-sunken: #d8dce6;
+	--color-surface-raised: #ffffff;
+	--color-surface-card: #ffffff;
+	--color-surface-system: #f0ede8;
+	--color-surface-thinking: #ece9f4;
+	--color-surface-code: #eceef4;
+
+	/* Foreground (text) */
+	--color-foreground: #1a1e2a;
+	--color-foreground-muted: #3a4255;
+	--color-foreground-subtle: #7a8499;
+	--color-foreground-code: #3a4060;
+	--color-foreground-inverse: #f2f4f8;
+
+	/* Role colors */
+	--color-role-user: #3a7a96;
+	--color-role-assistant: #6a58a0;
+	--color-role-tool: #4a6880;
+	--color-role-subagent: #7a5888;
+	--color-role-agent: #8a6828;
+	--color-role-user-surface: rgba(58, 122, 150, 0.1);
+	--color-role-assistant-surface: rgba(106, 88, 160, 0.1);
+	--color-role-agent-surface: rgba(138, 104, 40, 0.1);
+
+	/* Accent */
+	--color-accent: #6a58a0;
+	--color-accent-hover: #5a4890;
+	--color-accent-subtle: #ede9f8;
+	--color-highlight: #3a7a96;
+
+	/* Borders */
+	--color-border: #c8ccda;
+	--color-border-muted: #dce0ea;
+	--color-tree-line: #c0c8d8;
+
+	/* Session types */
+	--color-plan: #6a58a0;
+	--color-plan-subtle: #ede9f8;
+	--color-impl: #8a5830;
+	--color-impl-subtle: #f8ede3;
+
+	/* Status */
+	--color-error: #985050;
+	--color-success: #3a7858;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px rgba(20, 25, 40, 0.06);
+	--shadow-md: 0 2px 8px rgba(20, 25, 40, 0.1);
+	--shadow-lg: 0 4px 16px rgba(20, 25, 40, 0.14);
+}
+
+/* Dark theme overrides — same tokens, different values */
+[data-theme="dark"] {
+	--color-surface: #0c0e14;
+	--color-surface-muted: #11141c;
+	--color-surface-sunken: #161a24;
+	--color-surface-raised: #1c2130;
+	--color-surface-card: #161a24;
+	--color-surface-system: #15120e;
+	--color-surface-thinking: #12101c;
+	--color-surface-code: #12151e;
+
+	--color-foreground: #c0c8d4;
+	--color-foreground-muted: #8890a0;
+	--color-foreground-subtle: #555e70;
+	--color-foreground-code: #a8b4c4;
+	--color-foreground-inverse: #0c0e14;
+
+	--color-role-user: #4a90a8;
+	--color-role-assistant: #7c68b0;
+	--color-role-tool: #5a7890;
+	--color-role-subagent: #8a6898;
+	--color-role-agent: #a08840;
+	--color-role-user-surface: rgba(74, 144, 168, 0.1);
+	--color-role-assistant-surface: rgba(124, 104, 176, 0.1);
+	--color-role-agent-surface: rgba(160, 136, 64, 0.1);
+
+	--color-accent: #7c68b0;
+	--color-accent-hover: #9080c0;
+	--color-accent-subtle: #1a1630;
+	--color-highlight: #4a90a8;
+
+	--color-border: #1e2430;
+	--color-border-muted: #2a3040;
+	--color-tree-line: #2a3040;
+
+	--color-plan: #9080c0;
+	--color-plan-subtle: #1a1530;
+	--color-impl: #c09060;
+	--color-impl-subtle: #1e1510;
+
+	--color-error: #a85050;
+	--color-success: #508868;
+
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+	--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
