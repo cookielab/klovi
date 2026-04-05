@@ -26,15 +26,12 @@
 	--color-surface-sunken: #d8dce6;
 	--color-surface-raised: #ffffff;
 	--color-surface-card: #ffffff;
-	--color-surface-system: #f0ede8;
-	--color-surface-thinking: #ece9f4;
 	--color-surface-code: #eceef4;
 
 	/* Foreground (text) */
 	--color-foreground: #1a1e2a;
 	--color-foreground-muted: #3a4255;
 	--color-foreground-subtle: #7a8499;
-	--color-foreground-code: #3a4060;
 	--color-foreground-inverse: #f2f4f8;
 
 	/* Role colors */
@@ -51,7 +48,6 @@
 	--color-accent: #6a58a0;
 	--color-accent-hover: #5a4890;
 	--color-accent-subtle: #ede9f8;
-	--color-highlight: #3a7a96;
 
 	/* Borders */
 	--color-border: #c8ccda;
@@ -81,14 +77,11 @@
 	--color-surface-sunken: #161a24;
 	--color-surface-raised: #1c2130;
 	--color-surface-card: #161a24;
-	--color-surface-system: #15120e;
-	--color-surface-thinking: #12101c;
 	--color-surface-code: #12151e;
 
 	--color-foreground: #c0c8d4;
 	--color-foreground-muted: #8890a0;
 	--color-foreground-subtle: #555e70;
-	--color-foreground-code: #a8b4c4;
 	--color-foreground-inverse: #0c0e14;
 
 	--color-role-user: #4a90a8;
@@ -103,7 +96,6 @@
 	--color-accent: #7c68b0;
 	--color-accent-hover: #9080c0;
 	--color-accent-subtle: #1a1630;
-	--color-highlight: #4a90a8;
 
 	--color-border: #1e2430;
 	--color-border-muted: #2a3040;

@@ -1,21 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 const TOKEN_GROUPS = {
-	Backgrounds: [
-		"bg-primary",
-		"bg-secondary",
-		"bg-tertiary",
-		"bg-elevated",
-		"bg-card",
-		"bg-system",
-		"bg-thinking",
-		"bg-code",
+	Surfaces: [
+		"color-surface",
+		"color-surface-muted",
+		"color-surface-sunken",
+		"color-surface-raised",
+		"color-surface-card",
+		"color-surface-code",
 	],
-	Text: ["text-primary", "text-secondary", "text-muted", "text-code", "text-inverse"],
-	Roles: ["role-user", "role-assistant", "role-tool", "role-subagent", "role-agent"],
-	Accent: ["accent", "accent-hover", "accent-subtle", "highlight"],
-	Borders: ["border", "border-light"],
-	Status: ["error", "success"],
+	Foreground: ["color-foreground", "color-foreground-muted", "color-foreground-subtle", "color-foreground-inverse"],
+	Roles: ["color-role-user", "color-role-assistant", "color-role-tool", "color-role-subagent", "color-role-agent"],
+	Accent: ["color-accent", "color-accent-hover", "color-accent-subtle"],
+	Borders: ["color-border", "color-border-muted"],
+	Status: ["color-error", "color-success"],
 };
 
 // biome-ignore lint/style/useComponentExportOnlyModules: story-local helper component
@@ -27,7 +25,7 @@ function Swatch({ name }: { name: string }) {
 					width: 48,
 					height: 32,
 					background: `var(--${name})`,
-					border: "1px solid var(--border)",
+					border: "1px solid var(--color-border)",
 				}}
 			/>
 			<code style={{ fontSize: "0.85rem" }}>--{name}</code>

@@ -13,10 +13,10 @@ html {
 }
 
 body {
-	font-family: var(--font-body);
+	font-family: var(--font-sans);
 	line-height: 1.6;
-	color: var(--text-primary);
-	background: var(--bg-primary);
+	color: var(--color-foreground);
+	background: var(--color-surface);
 	min-height: 100vh;
 	position: relative;
 }
@@ -41,7 +41,7 @@ body::after {
 }
 
 a {
-	color: var(--accent);
+	color: var(--color-accent);
 	text-decoration: none;
 }
 
@@ -59,10 +59,10 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: var(--border);
+	background: var(--color-border);
 	border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: var(--text-muted);
+	background: var(--color-foreground-subtle);
 }

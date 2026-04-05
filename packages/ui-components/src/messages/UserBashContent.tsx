@@ -6,6 +6,8 @@ type UserBashContentProps = {
 	turn: UserTurn;
 };
 
+const LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold uppercase text-foreground-subtle";
+
 export function UserBashContent({ turn }: UserBashContentProps) {
 	const output = [turn.bashStdout, turn.bashStderr].filter(Boolean).join("\n");
 	const isError = !turn.bashStdout && Boolean(turn.bashStderr);
@@ -13,18 +15,8 @@ export function UserBashContent({ turn }: UserBashContentProps) {
 	return (
 		<>
 			{turn.bashInput !== undefined && (
-				<div style={{ marginBottom: output ? 8 : 0 }}>
-					<div
-						style={{
-							fontSize: "0.7rem",
-							fontWeight: 600,
-							textTransform: "uppercase",
-							color: "var(--text-muted)",
-							marginBottom: 4,
-						}}
-					>
-						Command
-					</div>
+				<div className={output ? "mb-2" : ""}>
+					<div className={LABEL_CLASSES}>Command</div>
 					<CodeBox language="bash">{turn.bashInput}</CodeBox>
 				</div>
 			)}
