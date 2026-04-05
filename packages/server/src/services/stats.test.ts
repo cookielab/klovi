@@ -1,10 +1,18 @@
 import { describe, expect, test } from "bun:test";
-import type { Session, SessionSummary } from "@cookielab.io/klovi-plugin-core";
-import { PluginError } from "@cookielab.io/klovi-plugin-core";
-import { Effect } from "effect";
+import type { RegistryRequirements, Session, SessionSummary } from "@cookielab.io/klovi-plugin-core";
+import { PluginError, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
 import type { ToolPlugin } from "./plugin-types.ts";
 import { PluginRegistry } from "./registry.ts";
 import { scanStats } from "./stats.ts";
+
+const testLayer = Layer.merge(
+	NodeFileSystem.layer,
+	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
+);
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 const testConfig = { dataDir: "/test" };
 
@@ -138,7 +146,7 @@ describe("scanStats", () => {
 
 		registry.register(createMockPlugin({ s1: s1, s2: s2 }, list), testConfig);
 
-		const stats = await scanStats(registry);
+		const stats = await runEffect(scanStats(registry));
 		expect(stats.projects).toBe(1);
 		expect(stats.sessions).toBe(2);
 		expect(stats.todaySessions).toBe(1);
@@ -169,7 +177,7 @@ describe("scanStats", () => {
 
 		registry.register(createMockPlugin({}, list, { failLoad: true }), testConfig);
 
-		const stats = await scanStats(registry);
+		const stats = await runEffect(scanStats(registry));
 		expect(stats.projects).toBe(1);
 		expect(stats.sessions).toBe(1);
 		expect(stats.messages).toBe(0);
@@ -201,7 +209,7 @@ describe("scanStats", () => {
 			testConfig,
 		);
 
-		const first = await scanStats(registry);
+		const first = await runEffect(scanStats(registry));
 		expect(first.inputTokens).toBe(10);
 
 		session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 999, 5);
@@ -214,7 +222,7 @@ describe("scanStats", () => {
 			),
 			testConfig,
 		);
-		const second = await scanStats(registry);
+		const second = await runEffect(scanStats(registry));
 		expect(second.inputTokens).toBe(999);
 	});
 });

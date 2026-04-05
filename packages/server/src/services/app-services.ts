@@ -65,7 +65,7 @@ function getVersion(): VersionInfo {
 }
 
 async function getStats(registry: PluginRegistry) {
-	const stats = await scanStats(registry);
+	const stats = await runRegistryEffect(scanStats(registry));
 	return { stats: stats };
 }
 

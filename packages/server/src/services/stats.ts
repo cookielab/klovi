@@ -1,22 +1,20 @@
 import type {
 	DashboardStats,
 	ModelTokenUsage,
+	RegistryRequirements,
 	SessionSummary,
 	TokenUsage,
 	Turn,
 } from "@cookielab.io/klovi-plugin-core";
-import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
-import { runPluginEffect, runRegistryEffect } from "../effect/plugin-runtime.ts";
+import { makePluginConfigLayer, parseSessionId } from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
+import type { MergedProject } from "./plugin-types.ts";
 import type { PluginRegistry } from "./registry.ts";
 
 type SessionWithProject = {
-	project: Awaited<ReturnType<typeof runDiscoverProjects>>[number];
+	project: MergedProject;
 	session: SessionSummary;
 };
-
-function runDiscoverProjects(registry: PluginRegistry) {
-	return runRegistryEffect(registry.discoverAllProjects());
-}
 
 function emptyStats(projects = 0): DashboardStats {
 	return {
@@ -87,23 +85,25 @@ function countVisibleMessages(turns: Turn[]): number {
 	return turns.filter((turn) => turn.kind !== "parse_error").length;
 }
 
-async function collectSessionsWithProjects(
+function collectSessionsWithProjects(
 	registry: PluginRegistry,
 	stats: DashboardStats,
-): Promise<SessionWithProject[]> {
-	const projects = await runRegistryEffect(registry.discoverAllProjects()).catch(() => []);
-	stats.projects = projects.length;
+): Effect.Effect<SessionWithProject[], never, RegistryRequirements> {
+	return Effect.gen(function* () {
+		const projects = yield* registry.discoverAllProjects();
+		stats.projects = projects.length;
 
-	const sessionsWithProject: SessionWithProject[] = [];
-	for (const project of projects) {
-		const sessions = await runRegistryEffect(registry.listAllSessions(project)).catch(() => []);
-		stats.sessions += sessions.length;
-		for (const session of sessions) {
-			sessionsWithProject.push({ project: project, session: session });
+		const sessionsWithProject: SessionWithProject[] = [];
+		for (const project of projects) {
+			const sessions = yield* registry.listAllSessions(project);
+			stats.sessions += sessions.length;
+			for (const session of sessions) {
+				sessionsWithProject.push({ project: project, session: session });
+			}
 		}
-	}
 
-	return sessionsWithProject;
+		return sessionsWithProject;
+	});
 }
 
 function applyRecentSessionStats(stats: DashboardStats, sessionsWithProject: SessionWithProject[]): void {
@@ -112,27 +112,31 @@ function applyRecentSessionStats(stats: DashboardStats, sessionsWithProject: Ses
 	stats.thisWeekSessions = recent.thisWeekSessions;
 }
 
-async function loadSessionForStats(
+function loadSessionForStats(
 	registry: PluginRegistry,
 	project: SessionWithProject["project"],
 	session: SessionSummary,
-): Promise<Turn[] | null> {
-	if (!session.pluginId) {
-		return null;
-	}
+): Effect.Effect<Turn[] | null, never, RegistryRequirements> {
+	return Effect.gen(function* () {
+		if (!session.pluginId) {
+			return null;
+		}
 
-	const source = project.sources.find((item) => item.pluginId === session.pluginId);
-	if (!source) {
-		return null;
-	}
+		const source = project.sources.find((item) => item.pluginId === session.pluginId);
+		if (!source) {
+			return null;
+		}
 
-	const plugin = registry.getPlugin(session.pluginId);
-	const pluginConfig = registry.getPluginConfig(session.pluginId);
-	const { rawSessionId } = parseSessionId(session.sessionId);
-	const loaded = await runPluginEffect(plugin.loadSession(source.nativeId, rawSessionId), pluginConfig).catch(
-		() => null,
-	);
-	return loaded?.turns ?? null;
+		const plugin = registry.getPlugin(session.pluginId);
+		const pluginConfig = registry.getPluginConfig(session.pluginId);
+		const { rawSessionId } = parseSessionId(session.sessionId);
+		const configLayer = makePluginConfigLayer(pluginConfig);
+		const loaded = yield* plugin.loadSession(source.nativeId, rawSessionId).pipe(
+			Effect.provide(configLayer),
+			Effect.catchAll(() => Effect.succeed(null)),
+		);
+		return loaded?.turns ?? null;
+	});
 }
 
 function applyUsageStats(stats: DashboardStats, modelUsage: ModelTokenUsage, usage: TokenUsage): void {
@@ -165,23 +169,33 @@ function applyTurnStats(stats: DashboardStats, turns: Turn[], fallbackModel: str
 	}
 }
 
-async function computeStats(registry: PluginRegistry): Promise<DashboardStats> {
-	const stats = emptyStats();
-	const sessionsWithProject = await collectSessionsWithProjects(registry, stats);
+function computeStats(registry: PluginRegistry): Effect.Effect<DashboardStats, never, RegistryRequirements> {
+	return Effect.gen(function* () {
+		const stats = emptyStats();
+		const sessionsWithProject = yield* collectSessionsWithProjects(registry, stats);
 
-	applyRecentSessionStats(stats, sessionsWithProject);
+		applyRecentSessionStats(stats, sessionsWithProject);
 
-	for (const item of sessionsWithProject) {
-		const turns = await loadSessionForStats(registry, item.project, item.session);
-		if (!turns) {
-			continue;
+		const turnsPerSession = yield* Effect.forEach(
+			sessionsWithProject,
+			(item) =>
+				loadSessionForStats(registry, item.project, item.session).pipe(
+					Effect.map((turns) => ({ item: item, turns: turns })),
+				),
+			{ concurrency: "unbounded" },
+		);
+
+		for (const { item, turns } of turnsPerSession) {
+			if (!turns) {
+				continue;
+			}
+			applyTurnStats(stats, turns, item.session.model);
 		}
-		applyTurnStats(stats, turns, item.session.model);
-	}
 
-	return stats;
+		return stats;
+	});
 }
 
-export function scanStats(registry: PluginRegistry): Promise<DashboardStats> {
+export function scanStats(registry: PluginRegistry): Effect.Effect<DashboardStats, never, RegistryRequirements> {
 	return computeStats(registry);
 }
