@@ -1,5 +1,4 @@
 import type React from "react";
-import styles from "./Layout.module.css";
 
 type AppLayoutProps = {
 	sidebar: React.ReactNode;
@@ -7,15 +6,13 @@ type AppLayoutProps = {
 	children: React.ReactNode;
 };
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
-
 export function AppLayout({ sidebar, hideSidebar, children }: AppLayoutProps) {
 	return (
-		<div className={`${s(styles["appLayout"])} ${hideSidebar ? s(styles["sidebarHidden"]) : ""}`}>
+		<div className="group flex min-h-screen" data-hide-sidebar={hideSidebar ? "true" : undefined}>
 			{sidebar}
-			<div className={s(styles["mainContent"])}>{children}</div>
+			<div className="ml-sidebar flex min-h-screen flex-1 flex-col transition-[margin-left] duration-200 ease-[ease] group-data-[hide-sidebar=true]:ml-0">
+				{children}
+			</div>
 		</div>
 	);
 }

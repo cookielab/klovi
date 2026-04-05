@@ -1,20 +1,15 @@
 import type React from "react";
-import styles from "./Layout.module.css";
 
 type ContentHeaderProps = {
 	left?: React.ReactNode;
 	right?: React.ReactNode;
 };
 
-function s(name: string | undefined): string {
-	return name ?? "";
-}
-
 export function ContentHeader({ left, right }: ContentHeaderProps) {
 	return (
-		<div className={s(styles["header"])}>
-			<div className={s(styles["headerLeft"])}>{left}</div>
-			<div className={s(styles["headerRight"])}>{right}</div>
+		<div className="sticky top-0 z-[5] flex h-header flex-shrink-0 items-center justify-between border-border border-b bg-surface px-5">
+			<div className="flex items-center gap-2 font-semibold text-[0.95rem] text-foreground">{left}</div>
+			<div className="flex items-center gap-2">{right}</div>
 		</div>
 	);
 }
