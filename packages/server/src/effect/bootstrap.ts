@@ -2,7 +2,6 @@ import { join } from "node:path";
 import { HttpServer } from "@effect/platform";
 import { Cause, Effect, Fiber, Layer } from "effect";
 import { makeBunServerLayer } from "./platform-bun.ts";
-import { setPluginLayer } from "./plugin-runtime.ts";
 import { ServerConfig } from "./server-config.ts";
 import { KloviServicesLive } from "./server-services.ts";
 
@@ -59,8 +58,7 @@ async function bootstrapServer(
 	// biome-ignore lint/suspicious/noExplicitAny: platform layers have different type signatures
 	let platformLayer: Layer.Layer<any, any, any>;
 	if (rt === "node") {
-		const { NodePluginLayer, makeNodeServerLayer } = await import("./platform-node.ts");
-		setPluginLayer(NodePluginLayer);
+		const { makeNodeServerLayer } = await import("./platform-node.ts");
 		platformLayer = makeNodeServerLayer({ host: host, port: port });
 	} else {
 		platformLayer = makeBunServerLayer({ hostname: host, port: port });
