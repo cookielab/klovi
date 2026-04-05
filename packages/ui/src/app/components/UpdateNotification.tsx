@@ -1,7 +1,14 @@
 import { useCallback, useState } from "react";
 import { useKloviHostBridge } from "../../lib/context.ts";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
-import "./UpdateNotification.css";
+
+const NOTIFICATION_CLASSES =
+	"flex items-center gap-[12px] border-border-muted border-b bg-accent-subtle px-[12px] py-[6px] text-[0.85rem]";
+const TEXT_CLASSES = "flex-1 text-foreground";
+const ACTION_CLASSES =
+	"cursor-pointer border-0 bg-accent px-[12px] py-[4px] text-[0.8rem] text-white enabled:hover:opacity-90 disabled:cursor-default disabled:opacity-60";
+const DISMISS_CLASSES =
+	"cursor-pointer border-0 bg-transparent px-[4px] py-0 text-[1.1rem] leading-none text-foreground-subtle hover:text-foreground";
 
 type UpdateNotificationProps = {
 	status: UpdateStatus;
@@ -45,14 +52,9 @@ function UpdateNotification({
 	// Manual check result takes priority (temporary banner)
 	if (manualCheckResult && manualCheckResult.status !== "ready") {
 		return (
-			<div className="update-notification">
-				<span className="update-notification-text">{formatManualCheckResult(manualCheckResult)}</span>
-				<button
-					type="button"
-					className="update-notification-dismiss"
-					aria-label="Dismiss"
-					onClick={onDismissManualCheck}
-				>
+			<div className={NOTIFICATION_CLASSES}>
+				<span className={TEXT_CLASSES}>{formatManualCheckResult(manualCheckResult)}</span>
+				<button type="button" className={DISMISS_CLASSES} aria-label="Dismiss" onClick={onDismissManualCheck}>
 					&times;
 				</button>
 			</div>
@@ -87,14 +89,12 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 	}, [hostBridge]);
 
 	return (
-		<div className="update-notification">
-			<span className="update-notification-text">
-				{error ? `Update failed: ${error}` : `Klovi v${latestVersion} is ready`}
-			</span>
-			<button type="button" className="update-notification-action" disabled={applying} onClick={handleApply}>
+		<div className={NOTIFICATION_CLASSES}>
+			<span className={TEXT_CLASSES}>{error ? `Update failed: ${error}` : `Klovi v${latestVersion} is ready`}</span>
+			<button type="button" className={ACTION_CLASSES} disabled={applying} onClick={handleApply}>
 				{applying ? "Restarting…" : "Restart to update"}
 			</button>
-			<button type="button" className="update-notification-dismiss" aria-label="Dismiss" onClick={onDismiss}>
+			<button type="button" className={DISMISS_CLASSES} aria-label="Dismiss" onClick={onDismiss}>
 				&times;
 			</button>
 		</div>
