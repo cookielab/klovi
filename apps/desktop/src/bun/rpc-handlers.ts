@@ -13,12 +13,16 @@ import {
 import {
 	getGeneralSettings as getGeneralSettingsEffect,
 	getPluginSettings as getPluginSettingsEffect,
+	getUpdateSettings as getUpdateSettingsEffect,
 	updateGeneralSettings as updateGeneralSettingsEffect,
 	updatePluginSetting as updatePluginSettingEffect,
+	updateUpdateSettings as updateUpdateSettingsEffect,
 } from "@cookielab.io/klovi-server/services/settings-service";
 import { getStats as getStatsEffect } from "@cookielab.io/klovi-server/services/stats-service";
 import { getVersion } from "@cookielab.io/klovi-server/services/version-service";
 import { Effect, Ref } from "effect";
+import type { UpdateChannel } from "../shared/rpc-types.ts";
+import { applyUpdate as applyUpdateEffect, checkForUpdate } from "./updater-service.ts";
 import { refreshRegistry } from "./runtime.ts";
 import { RegistryRef, SettingsPathRef, VersionState } from "./services.ts";
 
@@ -113,8 +117,39 @@ const resetSettingsHandler = Effect.gen(function* () {
 	return result;
 });
 
+// ---------- Update settings ----------
+
+const getUpdateSettingsHandler = Effect.gen(function* () {
+	const { path } = yield* SettingsPathRef;
+	return yield* getUpdateSettingsEffect(path);
+});
+
+const updateUpdateSettingsHandler = (params: {
+	channel?: UpdateChannel;
+	checkIntervalHours?: number;
+	autoDownload?: boolean;
+}) =>
+	Effect.gen(function* () {
+		const { path } = yield* SettingsPathRef;
+		return yield* updateUpdateSettingsEffect(path, params);
+	});
+
+// ---------- Update check/apply ----------
+
+const checkForUpdateHandler = checkForUpdate;
+
+const applyUpdateHandler = Effect.gen(function* () {
+	const result = yield* Effect.either(applyUpdateEffect);
+	if (result._tag === "Left") {
+		return { ok: false, error: result.left instanceof Error ? result.left.message : "Update failed" };
+	}
+	return { ok: true };
+});
+
 export {
 	acceptRisksHandler,
+	applyUpdateHandler,
+	checkForUpdateHandler,
 	getGeneralSettingsHandler,
 	getPluginSettingsHandler,
 	getProjectsHandler,
@@ -122,10 +157,12 @@ export {
 	getSessionsHandler,
 	getStatsHandler,
 	getSubAgentHandler,
+	getUpdateSettingsHandler,
 	getVersionHandler,
 	isFirstLaunchHandler,
 	resetSettingsHandler,
 	searchSessionsHandler,
 	updateGeneralSettingsHandler,
 	updatePluginSettingHandler,
+	updateUpdateSettingsHandler,
 };

@@ -1,12 +1,14 @@
 import { join } from "node:path";
 import { makeVersionState } from "@cookielab.io/klovi-server/services/version-service";
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, Schedule, SubscriptionRef } from "effect";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
-import type { KloviRPC } from "../shared/rpc-types.ts";
+import type { KloviRPC, UpdateStatus } from "../shared/rpc-types.ts";
 import { detectLinuxSystemTheme, ensureDesktopRuntimeDirs, resolveLinuxRenderer, type SystemTheme } from "./linux-runtime.ts";
 import {
 	acceptRisksHandler,
+	applyUpdateHandler,
+	checkForUpdateHandler,
 	getGeneralSettingsHandler,
 	getPluginSettingsHandler,
 	getProjectsHandler,
@@ -14,21 +16,23 @@ import {
 	getSessionsHandler,
 	getStatsHandler,
 	getSubAgentHandler,
+	getUpdateSettingsHandler,
 	getVersionHandler,
 	isFirstLaunchHandler,
 	resetSettingsHandler,
 	searchSessionsHandler,
 	updateGeneralSettingsHandler,
 	updatePluginSettingHandler,
+	updateUpdateSettingsHandler,
 } from "./rpc-handlers.ts";
 import { bridgeHandler, makeDesktopRuntime } from "./runtime.ts";
 import { makeThemePollingFiber } from "./theme-polling.ts";
-import { UpdateManager } from "./updater.ts";
+import { cleanupUpdates, startUpdateSchedule } from "./updater-service.ts";
+import { UpdateStatusRef } from "./services.ts";
 
 const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
 
 const isLinux = process.platform === "linux";
-let updateManager: UpdateManager | null = null;
 
 function getSettingsPath(): string {
 	const home = Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "";
@@ -57,31 +61,6 @@ const runtime = makeDesktopRuntime({
 	arch: runtimeArch,
 });
 
-function getUpdatePlatform(platform: NodeJS.Platform): "linux" | "macos" | "win" {
-	if (platform === "darwin") {
-		return "macos";
-	}
-
-	if (platform === "win32") {
-		return "win";
-	}
-
-	return "linux";
-}
-
-function getUpdateManager(): UpdateManager {
-	if (!updateManager) {
-		updateManager = new UpdateManager({
-			currentVersion: pkg.version ?? "dev",
-			platform: getUpdatePlatform(process.platform),
-			arch: process.arch === "arm64" ? "arm64" : "x64",
-			settingsPath: settingsPath,
-			appDataDir: Utils.paths.userData,
-		});
-	}
-	return updateManager;
-}
-
 const getSystemThemeHandler = Effect.gen(function* () {
 	const theme = yield* detectLinuxSystemTheme();
 	return { theme: theme };
@@ -106,32 +85,25 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 				if (isLinux) {
 					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: false });
 				}
-				return getUpdateManager().getSettings();
+				return bridgeHandler(runtime, getUpdateSettingsHandler);
 			},
-			updateUpdateSettings: async (params) => {
+			updateUpdateSettings: (params) => {
 				if (isLinux) {
-					return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
+					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: false });
 				}
-				const result = await getUpdateManager().updateSettings(params);
-				await getUpdateManager().restartSchedule();
-				return result;
+				return bridgeHandler(runtime, updateUpdateSettingsHandler(params));
 			},
 			checkForUpdate: () => {
 				if (isLinux) {
 					return Promise.resolve({ status: "up-to-date" as const, currentVersion: pkg.version ?? "dev" });
 				}
-				return getUpdateManager().check();
+				return bridgeHandler(runtime, checkForUpdateHandler);
 			},
-			applyUpdate: async () => {
+			applyUpdate: () => {
 				if (isLinux) {
-					return { ok: false, error: "Auto-update is not supported on Linux" };
+					return Promise.resolve({ ok: false, error: "Auto-update is not supported on Linux" });
 				}
-				try {
-					await getUpdateManager().apply();
-					return { ok: true };
-				} catch (error) {
-					return { ok: false, error: error instanceof Error ? error.message : "Update failed" };
-				}
+				return bridgeHandler(runtime, applyUpdateHandler);
 			},
 			openExternal: (params) => {
 				Utils.openExternal(params.url);
@@ -167,14 +139,31 @@ const win = new BrowserWindow({
 	rpc: rpc,
 });
 
-// Start update checking (skip on Linux — no auto-update support)
+// Subscribe to update status changes and forward to webview
 if (!isLinux) {
-	const mgr = getUpdateManager();
-	mgr.setStatusCallback((status) => {
-		win.webview.rpc?.send.updateStatus(status);
-	});
-	await mgr.cleanup();
-	await mgr.startSchedule();
+	runtime.runFork(
+		Effect.gen(function* () {
+			const ref = yield* UpdateStatusRef;
+			let lastStatus: UpdateStatus | null = null;
+			yield* Effect.schedule(
+				Effect.gen(function* () {
+					const current = yield* SubscriptionRef.get(ref);
+					if (lastStatus === null || current.status !== lastStatus.status || current.progress !== lastStatus.progress) {
+						lastStatus = current;
+						win.webview.rpc?.send.updateStatus(current);
+					}
+				}),
+				Schedule.spaced("500 millis"),
+			);
+		}),
+	);
+}
+
+// Start update checking (skip on Linux — no auto-update support)
+let updateScheduleFiber: Fiber.RuntimeFiber<void, never> | null = null;
+if (!isLinux) {
+	await bridgeHandler(runtime, cleanupUpdates);
+	updateScheduleFiber = runtime.runFork(startUpdateSchedule(true));
 }
 
 // Application menu
@@ -235,8 +224,7 @@ Electrobun.events.on("application-menu-clicked", (e) => {
 			break;
 		case "checkForUpdates":
 			if (!isLinux) {
-				getUpdateManager()
-					.check()
+				bridgeHandler(runtime, checkForUpdateHandler)
 					.then((result) => {
 						win.webview.rpc?.send.checkForUpdatesResult(result);
 					})
@@ -257,8 +245,8 @@ if (isLinux) {
 }
 
 Electrobun.events.on("before-quit", () => {
-	if (!isLinux) {
-		updateManager?.stopSchedule();
+	if (updateScheduleFiber) {
+		Effect.runFork(Fiber.interrupt(updateScheduleFiber));
 	}
 	if (themePollingFiber) {
 		Effect.runFork(Fiber.interrupt(themePollingFiber));
