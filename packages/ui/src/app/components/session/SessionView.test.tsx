@@ -4,8 +4,9 @@ import type { Session } from "../../../shared/types.ts";
 import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { SessionView } from "./SessionView.tsx";
 
-const ERROR_PREFIX_REGEX = /Error:/u;
-const NETWORK_ERROR_REGEX = /Error:.*Network error/u;
+const ERROR_TITLE_TEXT = "Something went wrong";
+const HTTP_404_DETAIL_TEXT = "HTTP 404";
+const NETWORK_ERROR_DETAIL_TEXT = "Network error";
 
 function makeSession(overrides: Partial<Session> = {}): Session {
 	return {
@@ -64,7 +65,8 @@ describe("SessionView", () => {
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
 		});
-		expect(await findByText(ERROR_PREFIX_REGEX)).toBeTruthy();
+		expect(await findByText(ERROR_TITLE_TEXT)).toBeTruthy();
+		expect(await findByText(HTTP_404_DETAIL_TEXT)).toBeTruthy();
 	});
 
 	test("shows error state on network error", async () => {
@@ -75,7 +77,8 @@ describe("SessionView", () => {
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
 		});
-		expect(await findByText(NETWORK_ERROR_REGEX)).toBeTruthy();
+		expect(await findByText(ERROR_TITLE_TEXT)).toBeTruthy();
+		expect(await findByText(NETWORK_ERROR_DETAIL_TEXT)).toBeTruthy();
 	});
 
 	test("renders both user and assistant messages", async () => {

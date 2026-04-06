@@ -1,7 +1,7 @@
 import { HiddenProjectList as UiHiddenProjectList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { Project } from "../../../shared/types.ts";
-import { useRPC } from "../../hooks/useRpc.ts";
+import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
 
 type PackageHiddenProjectListProps = {
 	hiddenIds: Set<string>;
@@ -11,13 +11,13 @@ type PackageHiddenProjectListProps = {
 
 export function PackageHiddenProjectList({ hiddenIds, onUnhide, onBack }: PackageHiddenProjectListProps) {
 	const client = useKloviClient();
-	const { data, loading, error, retry } = useRPC<{ projects: Project[] }>(() => client.getProjects(), [client]);
+	const { data, loading, error, retry } = useEffectQuery<{ projects: Project[] }>(() => client.getProjects(), [client]);
 
 	return (
 		<UiHiddenProjectList
 			projects={data?.projects ?? []}
 			loading={loading}
-			error={error ?? undefined}
+			error={error?.message}
 			onRetry={retry}
 			hiddenIds={hiddenIds}
 			onUnhide={onUnhide}

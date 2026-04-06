@@ -28,7 +28,7 @@ export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubA
 			project={project}
 			pluginId={data?.session?.pluginId}
 			loading={loading}
-			error={error ?? undefined}
+			error={error?.message}
 			onRetry={retry}
 			onLinkClick={handleLinkClick}
 			getFrontendPlugin={getFrontendPlugin}

@@ -2,7 +2,7 @@ import { ProjectList as UiProjectList } from "@cookielab.io/klovi-ui-components/
 import { useCallback, useState } from "react";
 import { useKloviClient } from "../../../lib/context.ts";
 import type { Project } from "../../../shared/types.ts";
-import { useRPC } from "../../hooks/useRpc.ts";
+import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
 
 type PackageProjectListProps = {
 	onSelect: (project: Project) => void;
@@ -14,7 +14,7 @@ type PackageProjectListProps = {
 
 export function PackageProjectList({ onSelect, selected, hiddenIds, onHide, onShowHidden }: PackageProjectListProps) {
 	const client = useKloviClient();
-	const { data, loading, error, retry } = useRPC<{ projects: Project[] }>(() => client.getProjects(), [client]);
+	const { data, loading, error, retry } = useEffectQuery<{ projects: Project[] }>(() => client.getProjects(), [client]);
 	const [filter, setFilter] = useState("");
 	const projects = data?.projects ?? [];
 
@@ -32,7 +32,7 @@ export function PackageProjectList({ onSelect, selected, hiddenIds, onHide, onSh
 		<UiProjectList
 			projects={projects}
 			loading={loading}
-			error={error ?? undefined}
+			error={error?.message}
 			onRetry={retry}
 			selectedId={selected}
 			hiddenIds={hiddenIds}

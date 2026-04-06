@@ -1,4 +1,4 @@
-import { FetchError } from "@cookielab.io/klovi-ui-components/utilities";
+import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { PackagePresentationShell } from "./PackagePresentationShell.tsx";
 
@@ -18,7 +18,7 @@ export function SubAgentPresentation({ sessionId, project, agentId, onExit }: Su
 		return <div className={LOADING_CLASSES}>Loading sub-agent conversation...</div>;
 	}
 	if (error) {
-		return <FetchError error={error} onRetry={retry} showPrefix={true} />;
+		return <TypedErrorDisplay error={error} onRetry={retry} />;
 	}
 	if (!data?.session || data.session.turns.length === 0) {
 		return null;

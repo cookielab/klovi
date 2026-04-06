@@ -4,7 +4,7 @@ import type React from "react";
 import { useCallback } from "react";
 import faviconUrl from "../../../../favicon.svg";
 import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
-import { useRPC } from "../../hooks/useRpc.ts";
+import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
 
 type VersionInfo = {
 	version: string;
@@ -31,7 +31,7 @@ const FOOTER_CLASSES =
 export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: SidebarProps) {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
-	const { data: versionInfo } = useRPC<VersionInfo>(() => client.getVersion(), [client]);
+	const { data: versionInfo } = useEffectQuery<VersionInfo>(() => client.getVersion(), [client]);
 
 	const handleCookielabClick = useCallback(
 		(e: React.MouseEvent) => {

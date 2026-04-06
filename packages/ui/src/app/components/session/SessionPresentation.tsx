@@ -1,4 +1,4 @@
-import { FetchError } from "@cookielab.io/klovi-ui-components/utilities";
+import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
 import { useSessionData } from "../../hooks/useSessionData.ts";
 import { PackagePresentationShell } from "./PackagePresentationShell.tsx";
 
@@ -17,7 +17,7 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
 		return <div className={LOADING_CLASSES}>Loading session...</div>;
 	}
 	if (error) {
-		return <FetchError error={error} onRetry={retry} showPrefix={true} />;
+		return <TypedErrorDisplay error={error} onRetry={retry} />;
 	}
 	if (!data?.session) {
 		return null;
