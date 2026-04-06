@@ -43,11 +43,18 @@ ensureDesktopRuntimeDirs({
 });
 const linuxRenderer = resolveLinuxRenderer();
 
+const runtimePlatform: "macos" | "linux" | "win" =
+	process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux";
+const runtimeArch: "arm64" | "x64" = process.arch === "arm64" ? "arm64" : "x64";
+
 const runtime = makeDesktopRuntime({
 	versionInfo: versionState,
 	settingsPath: settingsPath,
 	appDataDir: Utils.paths.userData,
 	isLinux: isLinux,
+	currentVersion: pkg.version ?? "dev",
+	platform: runtimePlatform,
+	arch: runtimeArch,
 });
 
 function getUpdatePlatform(platform: NodeJS.Platform): "linux" | "macos" | "win" {

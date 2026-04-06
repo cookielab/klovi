@@ -2,13 +2,16 @@ import { BunPluginLayer } from "@cookielab.io/klovi-server/effect/platform-bun";
 import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
 import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import type { VersionInfo } from "@cookielab.io/klovi-server/services/version-service";
-import { Effect, Layer, ManagedRuntime, Ref } from "effect";
+import { Effect, Layer, ManagedRuntime, Ref, SubscriptionRef } from "effect";
+import type { UpdateStatus } from "../shared/rpc-types.ts";
 import {
 	AppDataDirRef,
 	type DesktopServices,
 	PlatformInfo,
 	RegistryRef,
 	SettingsPathRef,
+	UpdateStatusRef,
+	UpdaterConfig,
 	VersionState,
 } from "./services.ts";
 
@@ -17,16 +20,24 @@ type DesktopRuntimeConfig = {
 	settingsPath: string;
 	appDataDir: string;
 	isLinux: boolean;
+	currentVersion: string;
+	platform: "macos" | "linux" | "win";
+	arch: "arm64" | "x64";
 };
 
 const makeRefsLayer = (
 	config: DesktopRuntimeConfig,
-): Layer.Layer<VersionState | SettingsPathRef | AppDataDirRef | PlatformInfo, never, never> =>
+): Layer.Layer<VersionState | SettingsPathRef | AppDataDirRef | PlatformInfo | UpdaterConfig, never, never> =>
 	Layer.mergeAll(
 		Layer.succeed(VersionState, { info: config.versionInfo }),
 		Layer.succeed(SettingsPathRef, { path: config.settingsPath }),
 		Layer.succeed(AppDataDirRef, { path: config.appDataDir }),
 		Layer.succeed(PlatformInfo, { isLinux: config.isLinux }),
+		Layer.succeed(UpdaterConfig, {
+			currentVersion: config.currentVersion,
+			platform: config.platform,
+			arch: config.arch,
+		}),
 	);
 
 const makeRegistryRefLayer = (settingsPath: string) =>
@@ -37,6 +48,12 @@ const makeRegistryRefLayer = (settingsPath: string) =>
 			const registry = yield* createRegistry(settings);
 			return yield* Ref.make(registry);
 		}),
+	);
+
+const makeUpdateStatusRefLayer = (currentVersion: string) =>
+	Layer.effect(
+		UpdateStatusRef,
+		SubscriptionRef.make<UpdateStatus>({ status: "up-to-date", currentVersion: currentVersion }),
 	);
 
 type DesktopRuntime = ManagedRuntime.ManagedRuntime<
@@ -70,7 +87,8 @@ export type { DesktopRuntime, DesktopRuntimeConfig };
 export const makeDesktopRuntimeLayer = (config: DesktopRuntimeConfig) => {
 	const refs = makeRefsLayer(config);
 	const registryRef = makeRegistryRefLayer(config.settingsPath).pipe(Layer.provide(BunPluginLayer));
-	return Layer.mergeAll(BunPluginLayer, refs, registryRef);
+	const updateStatusRef = makeUpdateStatusRefLayer(config.currentVersion);
+	return Layer.mergeAll(BunPluginLayer, refs, registryRef, updateStatusRef);
 };
 
 export const makeDesktopRuntime = (config: DesktopRuntimeConfig): DesktopRuntime =>
