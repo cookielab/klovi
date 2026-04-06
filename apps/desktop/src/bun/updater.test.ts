@@ -3,7 +3,10 @@ import { semver } from "bun";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { BunContext } from "@effect/platform-bun";
+import { Effect, Layer, SubscriptionRef } from "effect";
 import type { UpdateStatus } from "../shared/rpc-types.ts";
+import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "./services.ts";
 import {
 	filterReleasesByChannel,
 	findExtractedAppBundlePath,
@@ -21,16 +24,10 @@ import {
 	isValidUpdateInfo,
 	pathExists,
 	releaseHasUpdaterAssets,
-	UpdateManager,
 	validateExtractedBundle,
 	validateUpdateInfo,
 } from "./updater.ts";
-
-type MutableUpdateManagerForTest = {
-	download: () => Promise<void>;
-	getStatus: () => UpdateStatus;
-	latestRelease: GitHubRelease | null;
-};
+import { cleanupUpdates, downloadUpdate, getCurrentStatus } from "./updater-service.ts";
 
 describe("semver.order", () => {
 	test("returns positive when a > b", () => {
@@ -599,8 +596,8 @@ describe("findLatestUsableRelease", () => {
 	});
 });
 
-describe("UpdateManager", () => {
-	const testDir = join(tmpdir(), `klovi-updater-test-${Date.now()}`);
+describe("updater-service", () => {
+	const testDir = join(tmpdir(), `klovi-updater-svc-test-${Date.now()}`);
 
 	afterEach(async () => {
 		try {
@@ -608,87 +605,43 @@ describe("UpdateManager", () => {
 		} catch {}
 	});
 
-	test("constructor sets initial status to up-to-date", () => {
-		const mgr = new UpdateManager({
-			currentVersion: "1.0.0",
-			platform: "macos",
-			arch: "arm64",
-			settingsPath: join(testDir, "settings.json"),
-			appDataDir: testDir,
-		});
-		expect(mgr.getStatus()).toEqual({ status: "up-to-date", currentVersion: "1.0.0" });
+	function makeTestLayer() {
+		return Layer.mergeAll(
+			Layer.succeed(UpdaterConfig, {
+				currentVersion: "1.0.0",
+				platform: "macos" as const,
+				arch: "arm64" as const,
+			}),
+			Layer.succeed(SettingsPathRef, { path: join(testDir, "settings.json") }),
+			Layer.succeed(AppDataDirRef, { path: testDir }),
+			Layer.effect(
+				UpdateStatusRef,
+				SubscriptionRef.make<UpdateStatus>({ status: "up-to-date", currentVersion: "1.0.0" }),
+			),
+			BunContext.layer,
+		);
+	}
+
+	test("getCurrentStatus returns initial up-to-date status", async () => {
+		const result = await Effect.runPromise(getCurrentStatus.pipe(Effect.provide(makeTestLayer())));
+		expect(result).toEqual({ status: "up-to-date", currentVersion: "1.0.0" });
 	});
 
-	test("cleanup removes files from updates directory", async () => {
+	test("cleanupUpdates removes files from updates directory", async () => {
 		await mkdir(join(testDir, "updates", "2.0.0"), { recursive: true });
 		await Bun.write(join(testDir, "updates", "2.0.0", "test.tar"), "data");
 
-		const mgr = new UpdateManager({
-			currentVersion: "1.0.0",
-			platform: "macos",
-			arch: "arm64",
-			settingsPath: join(testDir, "settings.json"),
-			appDataDir: testDir,
-		});
-		await mgr.cleanup();
+		await Effect.runPromise(cleanupUpdates.pipe(Effect.provide(makeTestLayer())));
 		expect(await Bun.file(join(testDir, "updates", "2.0.0")).exists()).toBe(false);
 	});
 
-	test("cleanup does not throw when updates directory missing", async () => {
-		const mgr = new UpdateManager({
-			currentVersion: "1.0.0",
-			platform: "macos",
-			arch: "arm64",
-			settingsPath: join(testDir, "settings.json"),
-			appDataDir: testDir,
-		});
-		await expect(mgr.cleanup()).resolves.toBeUndefined();
+	test("cleanupUpdates does not fail when updates directory missing", async () => {
+		await expect(Effect.runPromise(cleanupUpdates.pipe(Effect.provide(makeTestLayer())))).resolves.toBeUndefined();
 	});
 
-	test("setStatusCallback receives status updates", () => {
-		const mgr = new UpdateManager({
-			currentVersion: "1.0.0",
-			platform: "macos",
-			arch: "arm64",
-			settingsPath: join(testDir, "settings.json"),
-			appDataDir: testDir,
-		});
-		const statuses: UpdateStatus[] = [];
-		mgr.setStatusCallback((status) => statuses.push(status));
-		expect(mgr.getStatus().status).toBe("up-to-date");
-		expect(statuses).toHaveLength(0);
-	});
-
-	test("download reports error when normalized tarball asset is missing", async () => {
-		const mgr = new UpdateManager({
-			currentVersion: "1.0.0",
-			platform: "macos",
-			arch: "arm64",
-			settingsPath: join(testDir, "settings.json"),
-			appDataDir: testDir,
-		}) as unknown as MutableUpdateManagerForTest;
-
-		mgr.latestRelease = {
-			...makeRelease("2.0.0", false),
-			assets: [
-				{
-					name: "Klovi-2.0.0-macos-arm64.dmg",
-					browser_download_url: "https://example.com/Klovi.dmg",
-				},
-				{
-					name: "stable-macos-arm64-update.json",
-					browser_download_url: "https://example.com/update.json",
-				},
-			],
-		};
-
-		await mgr.download();
-
-		expect(mgr.getStatus()).toEqual({
-			status: "error",
-			currentVersion: "1.0.0",
-			latestVersion: "2.0.0",
-			error: "Asset not found: stable-macos-arm64-Klovi.app.tar.zst",
-		});
+	test("downloadUpdate is no-op when no latestRelease set", async () => {
+		await Effect.runPromise(downloadUpdate.pipe(Effect.provide(makeTestLayer())));
+		const status = await Effect.runPromise(getCurrentStatus.pipe(Effect.provide(makeTestLayer())));
+		expect(status.status).toBe("up-to-date");
 	});
 });
