@@ -1,66 +1,31 @@
 import { join } from "node:path";
-import { BunPluginLayer } from "@cookielab.io/klovi-server/effect/platform-bun";
-import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discover";
-import {
-	completeOnboarding as completeOnboardingEffect,
-	isFirstLaunch as isFirstLaunchEffect,
-	resetSettings as resetSettingsEffect,
-} from "@cookielab.io/klovi-server/services/onboarding-service";
-import type { PluginRegistry } from "@cookielab.io/klovi-server/services/registry";
-import {
-	getProjects as getProjectsEffect,
-	getSession as getSessionEffect,
-	getSessions as getSessionsEffect,
-	getSubAgent as getSubAgentEffect,
-	searchSessions as searchSessionsEffect,
-} from "@cookielab.io/klovi-server/services/sessions-service";
-import { loadSettings as loadSettingsEffect } from "@cookielab.io/klovi-server/services/settings";
-import {
-	getGeneralSettings as getGeneralSettingsEffect,
-	getPluginSettings as getPluginSettingsEffect,
-	getUpdateSettings as getUpdateSettingsEffect,
-	updateGeneralSettings as updateGeneralSettingsEffect,
-	updatePluginSetting as updatePluginSettingEffect,
-	updateUpdateSettings as updateUpdateSettingsEffect,
-} from "@cookielab.io/klovi-server/services/settings-service";
-import { getStats as getStatsEffect } from "@cookielab.io/klovi-server/services/stats-service";
-import { getVersion, makeVersionState } from "@cookielab.io/klovi-server/services/version-service";
-import type { FileSystem } from "@effect/platform";
-import { BunContext } from "@effect/platform-bun";
-import { Effect } from "effect";
+import { makeVersionState } from "@cookielab.io/klovi-server/services/version-service";
+import { Effect, Fiber } from "effect";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC } from "../shared/rpc-types.ts";
+import { detectLinuxSystemTheme, ensureDesktopRuntimeDirs, resolveLinuxRenderer, type SystemTheme } from "./linux-runtime.ts";
 import {
-	detectLinuxSystemTheme,
-	ensureDesktopRuntimeDirs,
-	resolveLinuxRenderer,
-	type SystemTheme,
-} from "./linux-runtime.ts";
+	acceptRisksHandler,
+	getGeneralSettingsHandler,
+	getPluginSettingsHandler,
+	getProjectsHandler,
+	getSessionHandler,
+	getSessionsHandler,
+	getStatsHandler,
+	getSubAgentHandler,
+	getVersionHandler,
+	isFirstLaunchHandler,
+	resetSettingsHandler,
+	searchSessionsHandler,
+	updateGeneralSettingsHandler,
+	updatePluginSettingHandler,
+} from "./rpc-handlers.ts";
+import { bridgeHandler, makeDesktopRuntime } from "./runtime.ts";
+import { makeThemePollingFiber } from "./theme-polling.ts";
 import { UpdateManager } from "./updater.ts";
 
-// Version state — computed once at startup from package.json
 const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
-
-function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
-	return Effect.runPromise(
-		effect.pipe(
-			Effect.catchAll((e) => Effect.die(e)),
-			Effect.provide(BunContext.layer),
-		),
-	);
-}
-
-function runRegistry<A, E>(
-	effect: Effect.Effect<A, E, import("@cookielab.io/klovi-plugin-core").RegistryRequirements>,
-): Promise<A> {
-	return Effect.runPromise(
-		effect.pipe(
-			Effect.catchAll((e) => Effect.die(e)),
-			Effect.provide(BunPluginLayer),
-		),
-	);
-}
 
 const isLinux = process.platform === "linux";
 let updateManager: UpdateManager | null = null;
@@ -78,21 +43,12 @@ ensureDesktopRuntimeDirs({
 });
 const linuxRenderer = resolveLinuxRenderer();
 
-// Registry lifecycle: created on acceptRisks, refreshed after settings changes
-let registry: PluginRegistry | null = null;
-
-async function ensureRegistry(): Promise<PluginRegistry> {
-	if (!registry) {
-		const settings = await runFs(loadSettingsEffect(settingsPath));
-		registry = await runRegistry(createRegistry(settings));
-	}
-	return registry;
-}
-
-async function refreshRegistry(): Promise<void> {
-	const settings = await runFs(loadSettingsEffect(settingsPath));
-	registry = await runRegistry(createRegistry(settings));
-}
+const runtime = makeDesktopRuntime({
+	versionInfo: versionState,
+	settingsPath: settingsPath,
+	appDataDir: Utils.paths.userData,
+	isLinux: isLinux,
+});
 
 function getUpdatePlatform(platform: NodeJS.Platform): "linux" | "macos" | "win" {
 	if (platform === "darwin") {
@@ -119,19 +75,10 @@ function getUpdateManager(): UpdateManager {
 	return updateManager;
 }
 
-// Start update checking (skip on Linux — no auto-update support)
-if (!isLinux) {
-	const mgr = getUpdateManager();
-	mgr.setStatusCallback((status) => {
-		win.webview.rpc?.send.updateStatus(status);
-	});
-	await mgr.cleanup();
-	await mgr.startSchedule();
-}
-
-// Linux system theme polling (5s interval)
-let lastLinuxTheme: SystemTheme | null = null;
-let themePollingInterval: ReturnType<typeof setInterval> | null = null;
+const getSystemThemeHandler = Effect.gen(function* () {
+	const theme = yield* detectLinuxSystemTheme();
+	return { theme: theme };
+});
 
 // Desktop RPC: native host bridge + data methods
 const rpc = BrowserView.defineRPC<KloviRPC>({
@@ -150,21 +97,21 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 			},
 			getUpdateSettings: () => {
 				if (isLinux) {
-					return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
+					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: false });
 				}
-				return runFs(getUpdateSettingsEffect(settingsPath));
+				return getUpdateManager().getSettings();
 			},
 			updateUpdateSettings: async (params) => {
 				if (isLinux) {
 					return { channel: "stable" as const, checkIntervalHours: 6, autoDownload: false };
 				}
-				const result = await runFs(updateUpdateSettingsEffect(settingsPath, params));
+				const result = await getUpdateManager().updateSettings(params);
 				await getUpdateManager().restartSchedule();
 				return result;
 			},
 			checkForUpdate: () => {
 				if (isLinux) {
-					return { status: "up-to-date" as const, currentVersion: pkg.version ?? "dev" };
+					return Promise.resolve({ status: "up-to-date" as const, currentVersion: pkg.version ?? "dev" });
 				}
 				return getUpdateManager().check();
 			},
@@ -185,58 +132,43 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 			},
 
 			// Data methods (KloviClient)
-			acceptRisks: async () => {
-				await runFs(completeOnboardingEffect(settingsPath));
-				await ensureRegistry();
-				return { ok: true };
-			},
-			isFirstLaunch: () => runFs(isFirstLaunchEffect(settingsPath)),
-			getVersion: () => getVersion(versionState),
-			getStats: async () => {
-				const reg = await ensureRegistry();
-				return runRegistry(getStatsEffect(reg));
-			},
-			getProjects: async () => {
-				const reg = await ensureRegistry();
-				return runRegistry(getProjectsEffect(reg));
-			},
-			getSessions: async (params) => {
-				const reg = await ensureRegistry();
-				return runRegistry(getSessionsEffect(reg, params));
-			},
-			getSession: async (params) => {
-				const reg = await ensureRegistry();
-				return runRegistry(getSessionEffect(reg, params));
-			},
-			getSubAgent: async (params) => {
-				const reg = await ensureRegistry();
-				return runRegistry(getSubAgentEffect(reg, params));
-			},
-			searchSessions: async () => {
-				const reg = await ensureRegistry();
-				return runRegistry(searchSessionsEffect(reg));
-			},
-			getPluginSettings: () => runFs(getPluginSettingsEffect(settingsPath)),
-			updatePluginSetting: async (params) => {
-				const result = await runFs(updatePluginSettingEffect(settingsPath, params));
-				await refreshRegistry();
-				return result;
-			},
-			getGeneralSettings: () => runFs(getGeneralSettingsEffect(settingsPath)),
-			updateGeneralSettings: (params) => runFs(updateGeneralSettingsEffect(settingsPath, params)),
-			resetSettings: async () => {
-				const result = await runFs(resetSettingsEffect(settingsPath));
-				await refreshRegistry();
-				return result;
-			},
-			getSystemTheme: async () => {
-				const theme = await detectLinuxSystemTheme();
-				return { theme: theme };
-			},
+			acceptRisks: () => bridgeHandler(runtime, acceptRisksHandler),
+			isFirstLaunch: () => bridgeHandler(runtime, isFirstLaunchHandler),
+			getVersion: () => bridgeHandler(runtime, getVersionHandler),
+			getStats: () => bridgeHandler(runtime, getStatsHandler),
+			getProjects: () => bridgeHandler(runtime, getProjectsHandler),
+			getSessions: (params) => bridgeHandler(runtime, getSessionsHandler(params)),
+			getSession: (params) => bridgeHandler(runtime, getSessionHandler(params)),
+			getSubAgent: (params) => bridgeHandler(runtime, getSubAgentHandler(params)),
+			searchSessions: () => bridgeHandler(runtime, searchSessionsHandler),
+			getPluginSettings: () => bridgeHandler(runtime, getPluginSettingsHandler),
+			updatePluginSetting: (params) => bridgeHandler(runtime, updatePluginSettingHandler(params)),
+			getGeneralSettings: () => bridgeHandler(runtime, getGeneralSettingsHandler),
+			updateGeneralSettings: (params) => bridgeHandler(runtime, updateGeneralSettingsHandler(params)),
+			resetSettings: () => bridgeHandler(runtime, resetSettingsHandler),
+			getSystemTheme: () => bridgeHandler(runtime, getSystemThemeHandler),
 		},
 		messages: {},
 	},
 });
+
+const win = new BrowserWindow({
+	title: "Klovi",
+	url: "views://main/index.html",
+	frame: { x: 0, y: 0, width: 1400, height: 900 },
+	...(linuxRenderer ? { renderer: linuxRenderer } : {}),
+	rpc: rpc,
+});
+
+// Start update checking (skip on Linux — no auto-update support)
+if (!isLinux) {
+	const mgr = getUpdateManager();
+	mgr.setStatusCallback((status) => {
+		win.webview.rpc?.send.updateStatus(status);
+	});
+	await mgr.cleanup();
+	await mgr.startSchedule();
+}
 
 // Application menu
 ApplicationMenu.setApplicationMenu([
@@ -271,14 +203,6 @@ ApplicationMenu.setApplicationMenu([
 		submenu: [{ role: "minimize" }, { role: "zoom" }],
 	},
 ]);
-
-const win = new BrowserWindow({
-	title: "Klovi",
-	url: "views://main/index.html",
-	frame: { x: 0, y: 0, width: 1400, height: 900 },
-	...(linuxRenderer ? { renderer: linuxRenderer } : {}),
-	rpc: rpc,
-});
 
 // Forward menu actions to webview as RPC messages
 Electrobun.events.on("application-menu-clicked", (e) => {
@@ -315,22 +239,22 @@ Electrobun.events.on("application-menu-clicked", (e) => {
 	}
 });
 
-// Start Linux theme polling after window is created
+// Start Linux theme polling as an Effect fiber forked on the runtime
+let themePollingFiber: Fiber.RuntimeFiber<void, never> | null = null;
 if (isLinux) {
-	themePollingInterval = setInterval(async () => {
-		const theme = await detectLinuxSystemTheme();
-		if (theme && theme !== lastLinuxTheme) {
-			lastLinuxTheme = theme;
+	themePollingFiber = runtime.runFork(
+		makeThemePollingFiber((theme: SystemTheme) => {
 			win.webview.rpc?.send.systemThemeChanged({ theme: theme });
-		}
-	}, 5000);
+		}),
+	);
 }
 
 Electrobun.events.on("before-quit", () => {
 	if (!isLinux) {
 		updateManager?.stopSchedule();
 	}
-	if (themePollingInterval) {
-		clearInterval(themePollingInterval);
+	if (themePollingFiber) {
+		Effect.runFork(Fiber.interrupt(themePollingFiber));
 	}
+	void runtime.dispose();
 });

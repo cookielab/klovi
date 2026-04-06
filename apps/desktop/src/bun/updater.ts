@@ -285,8 +285,21 @@ class UpdateManager {
 		this.onStatusChange?.(status);
 	}
 
-	private getSettings(): Promise<UpdateSettingsInfo> {
+	public getSettings(): Promise<UpdateSettingsInfo> {
 		return getUpdateSettings(this.settingsPath);
+	}
+
+	public async updateSettings(params: {
+		channel?: UpdateChannel;
+		checkIntervalHours?: number;
+		autoDownload?: boolean;
+	}): Promise<UpdateSettingsInfo> {
+		const { updateUpdateSettings: updateUpdateSettingsEffect } = await import(
+			"@cookielab.io/klovi-server/services/settings-service"
+		);
+		return Effect.runPromise(
+			updateUpdateSettingsEffect(this.settingsPath, params).pipe(Effect.provide(BunContext.layer)),
+		);
 	}
 
 	private updatesDir(): string {
