@@ -1,8 +1,8 @@
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
-import { useKloviClient, useKloviHostBridge } from "../lib/context.ts";
-import { isRpcTransportError } from "../lib/rpc-errors.ts";
+import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../lib/context.ts";
+import { isTransportRpcError } from "../lib/rpc-errors-effect.ts";
 import type { GlobalSessionResult } from "../shared/types.ts";
 import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats.tsx";
 import { Header } from "./components/layout/Header.tsx";
@@ -31,7 +31,7 @@ import {
 import { useUpdateStatus } from "./hooks/useUpdateStatus.ts";
 import { useViewState } from "./hooks/useViewState.ts";
 import { getSidebarContent } from "./sidebar-content.tsx";
-import { getHeaderInfo, getResumeCommand, resolveProjectAndSession } from "./view-state.ts";
+import { getHeaderInfo, getResumeCommand, resolveProjectAndSessionEffect } from "./view-state.ts";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
 const EMPTY_STATE_CLASSES =
@@ -44,6 +44,7 @@ const HOST_RECONNECT_BUTTON_CLASSES =
 function App() {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const systemThemeOverride = useSystemThemeOverride();
 	const themeHook = useTheme({ systemThemeOverride: systemThemeOverride });
 	const { cycle: cycleTheme } = themeHook;
@@ -74,11 +75,10 @@ function App() {
 	const { updateStatus, updateDismissed, dismissUpdate, manualCheckResult, dismissManualCheck } = useUpdateStatus();
 
 	const fetchSearchSessions = useCallback(() => {
-		client
-			.searchSessions()
+		runKloviEffect(client.searchSessions())
 			.then((data) => setSearchSessions(data.sessions))
 			.catch(() => {});
-	}, [client]);
+	}, [client, runKloviEffect]);
 
 	const openSearch = useCallback(() => {
 		setSearchOpen(true);
@@ -90,7 +90,7 @@ function App() {
 	const handleSearchSelect = useCallback(
 		async (encodedPath: string, sessionId: string) => {
 			setSearchOpen(false);
-			const resolved = await resolveProjectAndSession(client, encodedPath, sessionId);
+			const resolved = await runKloviEffect(resolveProjectAndSessionEffect(encodedPath, sessionId));
 			if (resolved) {
 				setView({
 					kind: "session",
@@ -100,7 +100,7 @@ function App() {
 				});
 			}
 		},
-		[client, setView],
+		[runKloviEffect, setView],
 	);
 
 	// Cmd+K / Ctrl+K toggles search
@@ -352,6 +352,7 @@ function AppGate() {
 	useTheme({ systemThemeOverride: systemThemeOverride });
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const [accepted, setAccepted] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [screen, setScreen] = useState<"connecting" | "onboarding" | "security-warning" | "none">("onboarding");
@@ -363,29 +364,29 @@ function AppGate() {
 		setLoading(true);
 		setScreen("onboarding");
 		try {
-			const data = await client.isFirstLaunch();
+			const data = await runKloviEffect(client.isFirstLaunch());
 			if (data.firstLaunch) {
 				setScreen("onboarding");
 				return;
 			}
-			const settings = await client.getGeneralSettings();
+			const settings = await runKloviEffect(client.getGeneralSettings());
 			if (settings.showSecurityWarning) {
 				setScreen("security-warning");
 				return;
 			}
 			setScreen("none");
 			try {
-				await client.acceptRisks();
+				await runKloviEffect(client.acceptRisks());
 				setAccepted(true);
 			} catch (error) {
-				if (isDesktopHost && isRpcTransportError(error)) {
+				if (isDesktopHost && isTransportRpcError(error)) {
 					setScreen("connecting");
 					return;
 				}
 				setAccepted(true);
 			}
 		} catch (error) {
-			if (isDesktopHost && isRpcTransportError(error)) {
+			if (isDesktopHost && isTransportRpcError(error)) {
 				setScreen("connecting");
 				return;
 			}
@@ -393,7 +394,7 @@ function AppGate() {
 		} finally {
 			setLoading(false);
 		}
-	}, [client, isDesktopHost]);
+	}, [client, isDesktopHost, runKloviEffect]);
 
 	useEffect(() => {
 		initialize();
@@ -409,34 +410,32 @@ function AppGate() {
 	}, [initialize]);
 
 	const handleOnboardingComplete = useCallback(() => {
-		client
-			.acceptRisks()
+		runKloviEffect(client.acceptRisks())
 			.then(() => setAccepted(true))
 			.catch((error) => {
-				if (isDesktopHost && isRpcTransportError(error)) {
+				if (isDesktopHost && isTransportRpcError(error)) {
 					setScreen("connecting");
 					return;
 				}
 				setAccepted(true);
 			});
-	}, [client, isDesktopHost]);
+	}, [client, isDesktopHost, runKloviEffect]);
 
 	const handleSecurityAccept = useCallback(() => {
-		client
-			.acceptRisks()
+		runKloviEffect(client.acceptRisks())
 			.then(() => setAccepted(true))
 			.catch((error) => {
-				if (isDesktopHost && isRpcTransportError(error)) {
+				if (isDesktopHost && isTransportRpcError(error)) {
 					setScreen("connecting");
 					return;
 				}
 				setAccepted(true);
 			});
-	}, [client, isDesktopHost]);
+	}, [client, isDesktopHost, runKloviEffect]);
 
 	const handleDontShowAgain = useCallback(() => {
-		client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
-	}, [client]);
+		void runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
+	}, [client, runKloviEffect]);
 
 	if (loading) {
 		return null;

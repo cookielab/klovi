@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import type { KloviClient } from "../../lib/client.ts";
-import { KloviClientContext, KloviHostBridgeContext } from "../../lib/context.ts";
+import { KloviRuntimeProvider } from "../../lib/context.ts";
 import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "../../lib/host-bridge.ts";
 
 type MockClientOverrides = {
@@ -127,11 +127,7 @@ function setMockHostConnectionState(state: KloviHostConnectionState): void {
 }
 
 function MockProviders({ children }: { children: React.ReactNode }) {
-	return createElement(
-		KloviClientContext.Provider,
-		{ value: mockClient },
-		createElement(KloviHostBridgeContext.Provider, { value: mockHostBridge }, children),
-	);
+	return createElement(KloviRuntimeProvider, { client: mockClient, hostBridge: mockHostBridge }, children);
 }
 
 // Initialize defaults

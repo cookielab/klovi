@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
+import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context.ts";
+import { kloviHostBridge } from "../../../lib/rpc-client.ts";
 import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
 import { PluginRow } from "../settings/PluginRow.tsx";
 import { SecurityNoticeContent } from "./SecurityWarning.tsx";
@@ -26,75 +27,66 @@ type OnboardingProps = {
 export function Onboarding({ onComplete }: OnboardingProps) {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const capabilities = hostBridge.getCapabilities();
 	const [step, setStep] = useState<1 | 2>(1);
 	const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		client
-			.getPluginSettings()
+		runKloviEffect(client.getPluginSettings())
 			.then((data) => {
 				setPlugins(data.plugins);
 				setLoading(false);
 			})
 			.catch(() => setLoading(false));
-	}, [client]);
+	}, [client, runKloviEffect]);
 
 	const handleToggle = useCallback(
 		(pluginId: string, enabled: boolean) => {
-			client
-				.updatePluginSetting({ pluginId: pluginId, enabled: enabled })
+			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, enabled: enabled }))
 				.then((data) => setPlugins(data.plugins))
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handleBrowse = useCallback(
-		(pluginId: string, currentDir: string) => {
-			hostBridge
-				.browseDirectory({ startingFolder: currentDir })
-				.then((data) => {
-					if (data.path) {
-						return client.updatePluginSetting({ pluginId: pluginId, dataDir: data.path });
-					}
-					return null;
-				})
-				.then((data) => {
-					if (data) {
-						setPlugins(data.plugins);
-					}
-				})
-				.catch(() => {});
+		async (pluginId: string, currentDir: string) => {
+			try {
+				const data = await runKloviEffect(kloviHostBridge.browseDirectory({ startingFolder: currentDir }));
+				if (!data.path) {
+					return;
+				}
+				const updated = await runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: data.path }));
+				setPlugins(updated.plugins);
+			} catch {}
 		},
-		[client, hostBridge],
+		[client, runKloviEffect],
 	);
 
 	const handlePathChange = useCallback(
 		(pluginId: string, dataDir: string) => {
-			client
-				.updatePluginSetting({ pluginId: pluginId, dataDir: dataDir })
+			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: dataDir }))
 				.then((data) => setPlugins(data.plugins))
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handleReset = useCallback(
 		(pluginId: string) => {
-			client
-				.updatePluginSetting({ pluginId: pluginId, dataDir: null })
+			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: null }))
 				.then((data) => setPlugins(data.plugins))
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handleAcceptStep1 = useCallback(() => setStep(2), []);
 	const handleDontShowAgain = useCallback(() => {
-		client.updateGeneralSettings({ showSecurityWarning: false }).catch(() => {});
-	}, [client]);
+		void runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
+	}, [client, runKloviEffect]);
 	const handleBackToStep1 = useCallback(() => setStep(1), []);
 
 	return (

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { useKloviHostBridge } from "../../lib/context.ts";
+import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context.ts";
+import { kloviHostBridge } from "../../lib/rpc-client.ts";
 import type { UpdateStatus } from "../../shared/rpc-types.ts";
 
 const NOTIFICATION_CLASSES =
@@ -69,7 +70,7 @@ function UpdateNotification({
 }
 
 function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDismiss: () => void }) {
-	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const [applying, setApplying] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +78,7 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 		setApplying(true);
 		setError(null);
 		try {
-			const result = await hostBridge.applyUpdate();
+			const result = await runKloviEffect(kloviHostBridge.applyUpdate());
 			if (!result.ok) {
 				setError(result.error ?? "Update failed");
 				setApplying(false);
@@ -86,7 +87,7 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 			setError("Update failed");
 			setApplying(false);
 		}
-	}, [hostBridge]);
+	}, [runKloviEffect]);
 
 	return (
 		<div className={NOTIFICATION_CLASSES}>

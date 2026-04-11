@@ -1,6 +1,8 @@
+import { Effect } from "effect";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
+import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context.ts";
+import { kloviHostBridge } from "../../../lib/rpc-client.ts";
 import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../../../shared/rpc-types.ts";
 import type { ThemeSetting } from "../../hooks/useTheme.ts";
 import { PluginRow } from "./PluginRow.tsx";
@@ -181,7 +183,7 @@ function UpdatesTab({
 	setUpdateSettings: (s: UpdateSettingsInfo) => void;
 	setChanged: (v: boolean) => void;
 }) {
-	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
 	const [checking, setChecking] = useState(false);
 	const [applying, setApplying] = useState(false);
@@ -193,7 +195,7 @@ function UpdatesTab({
 		setApplying(true);
 		setApplyError(null);
 		try {
-			const result = await hostBridge.applyUpdate();
+			const result = await runKloviEffect(kloviHostBridge.applyUpdate());
 			if (!result.ok) {
 				setApplyError(result.error ?? "Update failed");
 				setApplying(false);
@@ -202,53 +204,49 @@ function UpdatesTab({
 			setApplyError("Update failed");
 			setApplying(false);
 		}
-	}, [hostBridge]);
+	}, [runKloviEffect]);
 
 	const handleChannelChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const channel = e.target.value as UpdateChannel;
 			setUpdateSettings({ ...updateSettings!, channel: channel });
-			hostBridge
-				.updateUpdateSettings({ channel: channel })
+			runKloviEffect(kloviHostBridge.updateUpdateSettings({ channel: channel }))
 				.then(() => setChanged(true))
 				.catch(() => {});
 		},
-		[updateSettings, hostBridge, setUpdateSettings, setChanged],
+		[runKloviEffect, updateSettings, setUpdateSettings, setChanged],
 	);
 
 	const handleIntervalChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const checkIntervalHours = Number(e.target.value);
 			setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
-			hostBridge
-				.updateUpdateSettings({ checkIntervalHours: checkIntervalHours })
+			runKloviEffect(kloviHostBridge.updateUpdateSettings({ checkIntervalHours: checkIntervalHours }))
 				.then(() => setChanged(true))
 				.catch(() => {});
 		},
-		[updateSettings, hostBridge, setUpdateSettings, setChanged],
+		[runKloviEffect, updateSettings, setUpdateSettings, setChanged],
 	);
 
 	const handleAutoDownloadChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const autoDownload = e.target.checked;
 			setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
-			hostBridge
-				.updateUpdateSettings({ autoDownload: autoDownload })
+			runKloviEffect(kloviHostBridge.updateUpdateSettings({ autoDownload: autoDownload }))
 				.then(() => setChanged(true))
 				.catch(() => {});
 		},
-		[updateSettings, hostBridge, setUpdateSettings, setChanged],
+		[runKloviEffect, updateSettings, setUpdateSettings, setChanged],
 	);
 
 	const handleCheckNow = useCallback(() => {
 		setChecking(true);
 		setApplyError(null);
-		hostBridge
-			.checkForUpdate()
+		runKloviEffect(kloviHostBridge.checkForUpdate())
 			.then((result) => setUpdateStatus(result))
 			.catch(() => {})
 			.finally(() => setChecking(false));
-	}, [hostBridge]);
+	}, [runKloviEffect]);
 
 	return (
 		<>
@@ -334,6 +332,7 @@ export function SettingsView({
 }: SettingsViewProps) {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const capabilities = hostBridge.getCapabilities();
 	const [plugins, setPlugins] = useState<PluginSettingInfo[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -345,16 +344,13 @@ export function SettingsView({
 	const [updateSettings, setUpdateSettings] = useState<UpdateSettingsInfo | null>(null);
 
 	useEffect(() => {
-		const promises: [
-			Promise<{ plugins: PluginSettingInfo[] }>,
-			Promise<{ showSecurityWarning: boolean }>,
-			Promise<UpdateSettingsInfo | null>,
-		] = [
-			client.getPluginSettings(),
-			client.getGeneralSettings(),
-			capabilities.updater ? hostBridge.getUpdateSettings() : Promise.resolve(null),
-		];
-		Promise.all(promises)
+		runKloviEffect(
+			Effect.all([
+				client.getPluginSettings(),
+				client.getGeneralSettings(),
+				capabilities.updater ? kloviHostBridge.getUpdateSettings() : Effect.succeed(null),
+			]),
+		)
 			.then(([pluginData, generalData, updateData]) => {
 				setPlugins(pluginData.plugins);
 				setShowSecurityWarning(generalData.showSecurityWarning);
@@ -364,7 +360,7 @@ export function SettingsView({
 				setLoading(false);
 			})
 			.catch(() => setLoading(false));
-	}, [client, hostBridge, capabilities.updater]);
+	}, [capabilities.updater, client, runKloviEffect]);
 
 	useEffect(() => {
 		function handleKeyDown(e: KeyboardEvent) {
@@ -379,74 +375,64 @@ export function SettingsView({
 
 	const handleToggle = useCallback(
 		(pluginId: string, enabled: boolean) => {
-			client
-				.updatePluginSetting({ pluginId: pluginId, enabled: enabled })
+			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, enabled: enabled }))
 				.then((data) => {
 					setPlugins(data.plugins);
 					setChanged(true);
 				})
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handleBrowse = useCallback(
-		(pluginId: string, currentDir: string) => {
-			hostBridge
-				.browseDirectory({ startingFolder: currentDir })
-				.then((data) => {
-					if (data.path) {
-						return client.updatePluginSetting({ pluginId: pluginId, dataDir: data.path });
-					}
-					return null;
-				})
-				.then((data) => {
-					if (data) {
-						setPlugins(data.plugins);
-						setChanged(true);
-					}
-				})
-				.catch(() => {});
+		async (pluginId: string, currentDir: string) => {
+			try {
+				const data = await runKloviEffect(kloviHostBridge.browseDirectory({ startingFolder: currentDir }));
+				if (!data.path) {
+					return;
+				}
+				const updated = await runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: data.path }));
+				setPlugins(updated.plugins);
+				setChanged(true);
+			} catch {}
 		},
-		[client, hostBridge],
+		[client, runKloviEffect],
 	);
 
 	const handlePathChange = useCallback(
 		(pluginId: string, dataDir: string) => {
-			client
-				.updatePluginSetting({ pluginId: pluginId, dataDir: dataDir })
+			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: dataDir }))
 				.then((data) => {
 					setPlugins(data.plugins);
 					setChanged(true);
 				})
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handleReset = useCallback(
 		(pluginId: string) => {
-			client
-				.updatePluginSetting({ pluginId: pluginId, dataDir: null })
+			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: null }))
 				.then((data) => {
 					setPlugins(data.plugins);
 					setChanged(true);
 				})
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handleSecurityWarningChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const value = e.target.checked;
 			setShowSecurityWarning(value);
-			client
-				.updateGeneralSettings({ showSecurityWarning: value })
+			runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: value }))
 				.then(() => setChanged(true))
 				.catch(() => {});
 		},
-		[client],
+		[client, runKloviEffect],
 	);
 
 	const handlePresentationThemeSameChange = useCallback(
@@ -468,8 +454,7 @@ export function SettingsView({
 		}
 		resettingRef.current = true;
 		setResetting(true);
-		client
-			.resetSettings()
+		runKloviEffect(client.resetSettings())
 			.then(() => {
 				const keys = [
 					"klovi-theme",
@@ -490,7 +475,7 @@ export function SettingsView({
 				setResetting(false);
 				setConfirmingReset(false);
 			});
-	}, [client]);
+	}, [client, runKloviEffect]);
 
 	return (
 		<div className={VIEW_CLASSES}>

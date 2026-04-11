@@ -72,7 +72,9 @@ describe("UpdateNotification", () => {
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
 		fireEvent.click(getByRole("button", { name: "Restart to update" }));
-		expect(applyUpdate).toHaveBeenCalled();
+		return waitFor(() => {
+			expect(applyUpdate).toHaveBeenCalled();
+		});
 	});
 
 	test("shows Restarting text and disables button while applying", () => {

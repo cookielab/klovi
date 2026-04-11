@@ -38,7 +38,7 @@ import { ServerConfig } from "./server-config.ts";
 
 export type KloviServicesShape = {
 	readonly acceptRisks: () => Effect.Effect<{ ok: boolean }, SettingsWriteError, FileSystem.FileSystem>;
-	readonly getVersion: () => VersionInfo;
+	readonly getVersion: () => Effect.Effect<VersionInfo>;
 	readonly getStats: () => Effect.Effect<{ stats: DashboardStats }, never, RegistryRequirements>;
 	readonly getProjects: () => Effect.Effect<{ projects: MergedProject[] }, never, RegistryRequirements>;
 	readonly getSessions: (params: {
@@ -103,7 +103,7 @@ export const KloviServicesLive = Layer.effect(
 
 		return {
 			acceptRisks: () => completeOnboarding(settingsPath),
-			getVersion: () => getVersion(versionState),
+			getVersion: () => Effect.succeed(getVersion(versionState)),
 			getStats: () => getStats(registry),
 			getProjects: () => getProjects(registry),
 			getSessions: (params) => getSessions(registry, params),

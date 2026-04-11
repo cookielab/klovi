@@ -1,6 +1,7 @@
 import { ProjectList as UiProjectList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useCallback, useState } from "react";
 import { useKloviClient } from "../../../lib/context.ts";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
 import type { Project } from "../../../shared/types.ts";
 import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
 
@@ -32,7 +33,7 @@ export function PackageProjectList({ onSelect, selected, hiddenIds, onHide, onSh
 		<UiProjectList
 			projects={projects}
 			loading={loading}
-			error={error?.message}
+			error={error ? getRpcErrorMessage(error) : undefined}
 			onRetry={retry}
 			selectedId={selected}
 			hiddenIds={hiddenIds}

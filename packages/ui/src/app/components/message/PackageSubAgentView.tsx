@@ -1,6 +1,8 @@
 import { SubAgentView as UiSubAgentView } from "@cookielab.io/klovi-ui-components/messages";
 import { useCallback } from "react";
-import { useKloviHostBridge } from "../../../lib/context.ts";
+import { useRunKloviEffect } from "../../../lib/context.ts";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
+import { kloviHostBridge } from "../../../lib/rpc-client.ts";
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";
 
@@ -11,14 +13,14 @@ type PackageSubAgentViewProps = {
 };
 
 export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubAgentViewProps) {
-	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const { data, loading, error, retry } = useSubAgentSessionData(sessionId, project, agentId);
 	const turns = data?.session?.turns ?? [];
 	const handleLinkClick = useCallback(
 		(url: string) => {
-			hostBridge.openExternal({ url: url }).catch(() => {});
+			void runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => {});
 		},
-		[hostBridge],
+		[runKloviEffect],
 	);
 
 	return (
@@ -28,7 +30,7 @@ export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubA
 			project={project}
 			pluginId={data?.session?.pluginId}
 			loading={loading}
-			error={error?.message}
+			error={error ? getRpcErrorMessage(error) : undefined}
 			onRetry={retry}
 			onLinkClick={handleLinkClick}
 			getFrontendPlugin={getFrontendPlugin}

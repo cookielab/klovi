@@ -76,13 +76,9 @@ const rpcHandler = Effect.gen(function* () {
 		}
 	}
 
-	const handler = services[method] as (args: Record<string, unknown>) => unknown;
-	const result = handler(params);
-	if (Effect.isEffect(result)) {
-		const value = yield* result as Effect.Effect<unknown, unknown, never>;
-		return HttpServerResponse.unsafeJson(value);
-	}
-	return HttpServerResponse.unsafeJson(result);
+	const handler = services[method] as (args: Record<string, unknown>) => Effect.Effect<unknown, unknown, never>;
+	const value = yield* handler(params);
+	return HttpServerResponse.unsafeJson(value);
 }).pipe(
 	Effect.catchAll((err) => {
 		const { status, message } = mapDomainErrorToStatus(err);

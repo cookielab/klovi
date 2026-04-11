@@ -1,9 +1,9 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useKloviClient, useKloviHostBridge } from "../../lib/context.ts";
+import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context.ts";
 import type { KloviHostConnectionState } from "../../lib/host-bridge.ts";
 import type { Project, SessionSummary } from "../../shared/types.ts";
-import { restoreFromHash, type ViewState, viewToHash } from "../view-state.ts";
+import { restoreFromHashEffect, type ViewState, viewToHash } from "../view-state.ts";
 
 type UseViewStateResult = {
 	view: ViewState;
@@ -26,8 +26,8 @@ function shouldKeepCurrentView(view: ViewState): boolean {
 }
 
 export function useViewState(): UseViewStateResult {
-	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const [view, setViewState] = useState<ViewState>({ kind: "home" });
 	const [ready, setReady] = useState(false);
 	const [hostConnectionState, setHostConnectionState] = useState<KloviHostConnectionState>(
@@ -65,12 +65,11 @@ export function useViewState(): UseViewStateResult {
 			window.location.hash = pendingHash;
 		}
 
-		restoreFromHash(client)
+		runKloviEffect(restoreFromHashEffect())
 			.then((nextView) => {
 				applyRestoredView(nextView, true);
-			})
-			.catch(() => {});
-	}, [applyRestoredView, client]);
+			});
+	}, [applyRestoredView, runKloviEffect]);
 
 	useEffect(() => {
 		currentView.current = view;
@@ -82,13 +81,12 @@ export function useViewState(): UseViewStateResult {
 	}, [hostBridge]);
 
 	useEffect(() => {
-		restoreFromHash(client)
+		runKloviEffect(restoreFromHashEffect())
 			.then((nextView) => {
 				applyRestoredView(nextView, false);
 				setReady(true);
-			})
-			.catch(() => {});
-	}, [applyRestoredView, client]);
+			});
+	}, [applyRestoredView, runKloviEffect]);
 
 	useEffect(() => {
 		if (!ready) {
@@ -102,15 +100,14 @@ export function useViewState(): UseViewStateResult {
 
 	useEffect(() => {
 		const handler = () => {
-			restoreFromHash(client)
+			runKloviEffect(restoreFromHashEffect())
 				.then((nextView) => {
 					applyRestoredView(nextView, true);
-				})
-				.catch(() => {});
+				});
 		};
 		window.addEventListener("hashchange", handler);
 		return () => window.removeEventListener("hashchange", handler);
-	}, [applyRestoredView, client]);
+	}, [applyRestoredView, runKloviEffect]);
 
 	useEffect(() => {
 		if (hostConnectionState !== "connected" || !pendingHashRef.current) {

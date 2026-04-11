@@ -1,6 +1,7 @@
 import { SessionList as UiSessionList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useCallback } from "react";
 import { useKloviClient } from "../../../lib/context.ts";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
 import type { Project, SessionSummary } from "../../../shared/types.ts";
 import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
 import { pluginDisplayName } from "../../utils/plugin.ts";
@@ -34,7 +35,7 @@ export function PackageSessionList({ project, onSelect, onBack, selectedId }: Pa
 		<UiSessionList
 			sessions={sessions}
 			loading={loading}
-			error={error?.message}
+			error={error ? getRpcErrorMessage(error) : undefined}
 			onRetry={retry}
 			selectedId={selectedId}
 			projectName={project.name}

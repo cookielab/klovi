@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { PluginRow, type PluginRowProps } from "../app/components/settings/PluginRow.tsx";
 import { UpdateNotification } from "../app/components/UpdateNotification.tsx";
 import type { KloviClient } from "./client.ts";
-import { KloviClientContext, KloviHostBridgeContext } from "./context.ts";
+import { KloviRuntimeProvider } from "./context.ts";
 import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "./host-bridge.ts";
 
 function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviHostBridge {
@@ -58,13 +58,7 @@ function createMockClient(): KloviClient {
 function renderWithProviders(element: React.ReactElement, caps: Partial<KloviHostCapabilities> = {}) {
 	const client = createMockClient();
 	const hostBridge = createMockHostBridge(caps);
-	return render(
-		createElement(
-			KloviClientContext.Provider,
-			{ value: client },
-			createElement(KloviHostBridgeContext.Provider, { value: hostBridge }, element),
-		),
-	);
+	return render(createElement(KloviRuntimeProvider, { client: client, hostBridge: hostBridge }, element));
 }
 
 describe("UpdateNotification capability gating", () => {

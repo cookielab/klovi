@@ -1,4 +1,7 @@
 import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
+import { Effect } from "effect";
+import { kloviClient } from "../lib/rpc-client.ts";
+import { isTransportRpcError } from "../lib/rpc-errors-effect.ts";
 import type { KloviClient } from "../lib/client.ts";
 import { isRpcTransportError } from "../lib/rpc-errors.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
@@ -95,6 +98,85 @@ async function resolveProjectAndSession(
 	}
 }
 
+const loadProjectEffect = (encodedPath: string) =>
+	kloviClient.getProjects().pipe(Effect.map((data) => data.projects.find((project) => project.encodedPath === encodedPath)));
+
+const loadProjectSessionEffect = (project: Project, sessionId: string) =>
+	kloviClient
+		.getSessions({ encodedPath: project.encodedPath })
+		.pipe(Effect.map((data) => data.sessions.find((session) => session.sessionId === sessionId)));
+
+const resolveProjectAndSessionEffect = (encodedPath: string, sessionId: string) =>
+	Effect.gen(function* () {
+		const project = yield* loadProjectEffect(encodedPath);
+		if (!project) {
+			return null;
+		}
+
+		const session = yield* loadProjectSessionEffect(project, sessionId);
+		if (!session) {
+			return null;
+		}
+
+		return { project: project, session: session };
+	}).pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+const restoreFromHashEffect = () =>
+	Effect.gen(function* () {
+		const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
+		if (!hash) {
+			return { kind: "home" } as ViewState;
+		}
+		if (hash === "hidden") {
+			return { kind: "hidden" } as ViewState;
+		}
+		if (hash === "settings") {
+			return { kind: "settings" } as ViewState;
+		}
+
+		const parts = hash.split("/");
+		const encodedPath = parts[0];
+		const sessionId = parts[1];
+		const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
+		if (!encodedPath) {
+			return { kind: "home" } as ViewState;
+		}
+
+		const projectResult = yield* Effect.either(loadProjectEffect(encodedPath));
+		if (projectResult._tag === "Left") {
+			return isTransportRpcError(projectResult.left) ? createRestoringView() : ({ kind: "home" } as ViewState);
+		}
+
+		const project = projectResult.right;
+		if (!project) {
+			return { kind: "home" } as ViewState;
+		}
+		if (!sessionId) {
+			return { kind: "project", project: project } as ViewState;
+		}
+
+		if (subAgentId) {
+			return {
+				kind: "subagent",
+				project: project,
+				sessionId: sessionId,
+				agentId: subAgentId,
+				presenting: false,
+			} as ViewState;
+		}
+
+		const sessionResult = yield* Effect.either(loadProjectSessionEffect(project, sessionId));
+		if (sessionResult._tag === "Left") {
+			return isTransportRpcError(sessionResult.left)
+				? createRestoringView()
+				: ({ kind: "project", project: project } as ViewState);
+		}
+
+		return sessionResult.right
+			? ({ kind: "session", project: project, session: sessionResult.right, presenting: false } as ViewState)
+			: ({ kind: "project", project: project } as ViewState);
+	});
+
 async function restoreFromHash(client: KloviClient): Promise<ViewState> {
 	const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
 	if (!hash) {
@@ -181,4 +263,12 @@ function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
 }
 
 export type { ViewState };
-export { getHeaderInfo, getResumeCommand, resolveProjectAndSession, restoreFromHash, viewToHash };
+export {
+	getHeaderInfo,
+	getResumeCommand,
+	resolveProjectAndSession,
+	resolveProjectAndSessionEffect,
+	restoreFromHash,
+	restoreFromHashEffect,
+	viewToHash,
+};

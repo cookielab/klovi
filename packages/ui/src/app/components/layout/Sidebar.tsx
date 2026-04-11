@@ -3,7 +3,8 @@ import { formatShortcut } from "@cookielab.io/klovi-ui-components/utilities";
 import type React from "react";
 import { useCallback } from "react";
 import faviconUrl from "../../../../favicon.svg";
-import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
+import { useKloviClient, useRunKloviEffect } from "../../../lib/context.ts";
+import { kloviHostBridge } from "../../../lib/rpc-client.ts";
 import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
 
 type VersionInfo = {
@@ -30,19 +31,19 @@ const FOOTER_CLASSES =
 
 export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: SidebarProps) {
 	const client = useKloviClient();
-	const hostBridge = useKloviHostBridge();
+	const runKloviEffect = useRunKloviEffect();
 	const { data: versionInfo } = useEffectQuery<VersionInfo>(() => client.getVersion(), [client]);
 
 	const handleCookielabClick = useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault();
-			hostBridge
-				.openExternal({
+			void runKloviEffect(
+				kloviHostBridge.openExternal({
 					url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
-				})
-				.catch(() => {});
+				}),
+			).catch(() => {});
 		},
-		[hostBridge],
+		[runKloviEffect],
 	);
 
 	return (
