@@ -9,7 +9,7 @@ alwaysApply: false
 After every code change, run ALL checks and fix any issues you introduced:
 
 ```sh
-bun run check      # Biome lint + format
+bun run lint       # Biome lint + format
 bun run typecheck  # TypeScript type checking
 bun test           # Unit tests
 ```

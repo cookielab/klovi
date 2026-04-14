@@ -16,10 +16,9 @@
 		"test": "bun test",
 		"test:node-smoke": "tsx scripts/plugin-runtime-node-smoke.ts",
 		"typecheck": "tsc --noEmit",
-		"lint": "biome lint .",
 		"format": "biome format --write .",
-		"check": "biome check .",
-		"check:fix": "biome check --write .",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
 		"storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
 	},
 	"devDependencies": {

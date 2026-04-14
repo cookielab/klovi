@@ -1,7 +1,7 @@
 ---
 name: verify
 description: Run lint, typecheck, and tests to verify code quality. Use AUTOMATICALLY after every code contribution — do not wait for the user to ask.
-allowed-tools: Bash(bun run check*), Bash(bun run typecheck*), Bash(bun test*)
+allowed-tools: Bash(bun run lint*), Bash(bun run typecheck*), Bash(bun test*)
 ---
 
 # Verify Skill
@@ -12,7 +12,7 @@ Run all quality checks after every code change. This skill should be invoked **a
 
 Run all three checks in parallel:
 
-1. `bun run check` — Biome lint + format
+1. `bun run lint` — Biome lint + format
 2. `bun run typecheck` — TypeScript type checking (`tsc --noEmit`)
 3. `bun test` — Unit tests
 
@@ -27,7 +27,7 @@ Run all three checks in parallel:
 
 ## Auto-fix
 
-- For Biome lint/format issues, run `bun run check:fix` first, then re-check
+- For Biome lint/format issues, run `bun run lint:fix` first, then re-check
 - For TypeScript errors, fix the source code manually
 - For test failures, investigate and fix the root cause
 

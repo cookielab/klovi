@@ -74,7 +74,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       # Verification gates
-      - run: bun run check
+      - run: bun run lint
       - run: bun run typecheck
       - run: bun test
 

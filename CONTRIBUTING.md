@@ -24,7 +24,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 Before submitting a PR, ensure all checks pass:
 
 ```bash
-bun run check      # Biome lint + format
+bun run lint       # Biome lint + format
 bun run typecheck  # TypeScript type checking
 bun test           # Unit tests
 ```
@@ -32,12 +32,12 @@ bun test           # Unit tests
 To auto-fix lint/format issues:
 
 ```bash
-bun run check:fix
+bun run lint:fix
 ```
 
 ## Code Style
 
-- **Linting & Formatting:** Enforced by [Biome](https://biomejs.dev/). No manual style decisions needed — just run `bun run check:fix`.
+- **Linting & Formatting:** Enforced by [Biome](https://biomejs.dev/). No manual style decisions needed — just run `bun run lint:fix`.
 - **TypeScript:** Strict mode with `noUncheckedIndexedAccess`. Use `!` non-null assertions for array index access when the index is known to be valid.
 - **CSS:** Plain CSS (custom properties + CSS modules). No CSS framework. App shell styles live in `src/frontend/`; reusable package styles live in `packages/ui-components/` and `packages/design-system/`.
 - **Testing:** Use `bun:test` with `@testing-library/react` and `happy-dom`. See `docs/testing.md` for patterns.
@@ -64,7 +64,7 @@ docs: update README with contributing section
 
 1. Fork the repo and create a branch from `main`.
 2. Make your changes.
-3. Ensure all checks pass (`bun run check`, `bun run typecheck`, `bun test`).
+3. Ensure all checks pass (`bun run lint`, `bun run typecheck`, `bun test`).
 4. Write a clear PR description explaining **what** and **why**.
 5. If you add a new feature, consider adding tests and updating docs.
 

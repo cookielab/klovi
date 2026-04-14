@@ -188,7 +188,7 @@ primitives consumed by `packages/ui` and `packages/ui-components`.
 
 The repository baseline verification set is:
 
-- `bun run check`
+- `bun run lint`
 - `bun run typecheck`
 - `bun test`
 

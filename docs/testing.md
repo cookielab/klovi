@@ -18,7 +18,7 @@ setup in every file.
 ## Commands
 
 ```bash
-bun run check
+bun run lint
 bun run typecheck
 bun test
 bun run test:node-smoke
