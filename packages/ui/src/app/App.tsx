@@ -434,7 +434,7 @@ function AppGate() {
 	}, [client, isDesktopHost, runKloviEffect]);
 
 	const handleDontShowAgain = useCallback(() => {
-		void runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
+		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
 	}, [client, runKloviEffect]);
 
 	if (loading) {

@@ -1,9 +1,9 @@
 import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { kloviClient } from "../lib/rpc-client.ts";
-import { isTransportRpcError } from "../lib/rpc-errors-effect.ts";
 import type { KloviClient } from "../lib/client.ts";
+import { kloviClient } from "../lib/rpc-client.ts";
 import { isRpcTransportError } from "../lib/rpc-errors.ts";
+import { isTransportRpcError } from "../lib/rpc-errors-effect.ts";
 import type { Project, SessionSummary } from "../shared/types.ts";
 import { getFrontendPlugin } from "./plugin-registry.ts";
 
@@ -99,7 +99,9 @@ async function resolveProjectAndSession(
 }
 
 const loadProjectEffect = (encodedPath: string) =>
-	kloviClient.getProjects().pipe(Effect.map((data) => data.projects.find((project) => project.encodedPath === encodedPath)));
+	kloviClient
+		.getProjects()
+		.pipe(Effect.map((data) => data.projects.find((project) => project.encodedPath === encodedPath)));
 
 const loadProjectSessionEffect = (project: Project, sessionId: string) =>
 	kloviClient
@@ -121,27 +123,36 @@ const resolveProjectAndSessionEffect = (encodedPath: string, sessionId: string) 
 		return { project: project, session: session };
 	}).pipe(Effect.catchAll(() => Effect.succeed(null)));
 
-const restoreFromHashEffect = () =>
-	Effect.gen(function* () {
-		const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
-		if (!hash) {
-			return { kind: "home" } as ViewState;
-		}
-		if (hash === "hidden") {
-			return { kind: "hidden" } as ViewState;
-		}
-		if (hash === "settings") {
-			return { kind: "settings" } as ViewState;
+function parseHashToStaticView(hash: string): ViewState | null {
+	if (!hash) {
+		return { kind: "home" };
+	}
+	if (hash === "hidden") {
+		return { kind: "hidden" };
+	}
+	if (hash === "settings") {
+		return { kind: "settings" };
+	}
+	return null;
+}
+
+function resolveSessionViewEffect(project: Project, sessionId: string) {
+	return Effect.gen(function* () {
+		const sessionResult = yield* Effect.either(loadProjectSessionEffect(project, sessionId));
+		if (sessionResult._tag === "Left") {
+			return isTransportRpcError(sessionResult.left)
+				? createRestoringView()
+				: ({ kind: "project", project: project } as ViewState);
 		}
 
-		const parts = hash.split("/");
-		const encodedPath = parts[0];
-		const sessionId = parts[1];
-		const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
-		if (!encodedPath) {
-			return { kind: "home" } as ViewState;
-		}
+		return sessionResult.right
+			? ({ kind: "session", project: project, session: sessionResult.right, presenting: false } as ViewState)
+			: ({ kind: "project", project: project } as ViewState);
+	});
+}
 
+function resolveProjectViewEffect(encodedPath: string, sessionId: string | undefined, subAgentId: string | undefined) {
+	return Effect.gen(function* () {
 		const projectResult = yield* Effect.either(loadProjectEffect(encodedPath));
 		if (projectResult._tag === "Left") {
 			return isTransportRpcError(projectResult.left) ? createRestoringView() : ({ kind: "home" } as ViewState);
@@ -165,16 +176,27 @@ const restoreFromHashEffect = () =>
 			} as ViewState;
 		}
 
-		const sessionResult = yield* Effect.either(loadProjectSessionEffect(project, sessionId));
-		if (sessionResult._tag === "Left") {
-			return isTransportRpcError(sessionResult.left)
-				? createRestoringView()
-				: ({ kind: "project", project: project } as ViewState);
+		return yield* resolveSessionViewEffect(project, sessionId);
+	});
+}
+
+const restoreFromHashEffect = () =>
+	Effect.gen(function* () {
+		const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
+		const staticView = parseHashToStaticView(hash);
+		if (staticView) {
+			return staticView;
 		}
 
-		return sessionResult.right
-			? ({ kind: "session", project: project, session: sessionResult.right, presenting: false } as ViewState)
-			: ({ kind: "project", project: project } as ViewState);
+		const parts = hash.split("/");
+		const encodedPath = parts[0];
+		const sessionId = parts[1];
+		const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
+		if (!encodedPath) {
+			return { kind: "home" } as ViewState;
+		}
+
+		return yield* resolveProjectViewEffect(encodedPath, sessionId, subAgentId);
 	});
 
 async function restoreFromHash(client: KloviClient): Promise<ViewState> {

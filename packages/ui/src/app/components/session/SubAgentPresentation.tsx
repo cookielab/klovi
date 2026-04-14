@@ -1,5 +1,5 @@
-import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
+import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
 import { PackagePresentationShell } from "./PackagePresentationShell.tsx";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";

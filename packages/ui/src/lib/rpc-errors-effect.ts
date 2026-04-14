@@ -5,6 +5,16 @@ const TIMEOUT_MS_REGEX = /exceeded (?<ms>\d+)ms/u;
 const TIMEOUT_METHOD_REGEX = /\((?<method>\w+) exceeded/u;
 const DISCONNECT_METHOD_REGEX = /during (?<method>\w+)/u;
 
+type RpcTag = "RpcTimeoutError" | "RpcDisconnectedError" | "RpcHandlerError";
+
+function hasRpcTag(error: unknown): error is { _tag: RpcTag } {
+	if (!(typeof error === "object" && error !== null && "_tag" in error)) {
+		return false;
+	}
+
+	return error._tag === "RpcTimeoutError" || error._tag === "RpcDisconnectedError" || error._tag === "RpcHandlerError";
+}
+
 export class RpcTimeoutError extends Data.TaggedError("RpcTimeoutError")<{
 	readonly method: string;
 	readonly timeoutMs: number;
@@ -20,16 +30,6 @@ export class RpcHandlerError extends Data.TaggedError("RpcHandlerError")<{
 }> {}
 
 export type RpcError = RpcTimeoutError | RpcDisconnectedError | RpcHandlerError;
-
-function hasRpcTag(error: unknown): error is { _tag: RpcError["_tag"] } {
-	if (!(typeof error === "object" && error !== null && "_tag" in error)) {
-		return false;
-	}
-
-	return (
-		error._tag === "RpcTimeoutError" || error._tag === "RpcDisconnectedError" || error._tag === "RpcHandlerError"
-	);
-}
 
 export function isRpcError(error: unknown): error is RpcError {
 	return hasRpcTag(error);

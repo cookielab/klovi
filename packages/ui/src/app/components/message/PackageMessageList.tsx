@@ -34,7 +34,7 @@ export function PackageMessageList({
 	const runKloviEffect = useRunKloviEffect();
 	const handleLinkClick = useCallback(
 		(url: string) => {
-			void runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => {});
+			runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => {});
 		},
 		[runKloviEffect],
 	);

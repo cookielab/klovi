@@ -1,8 +1,8 @@
 import { SubAgentView as UiSubAgentView } from "@cookielab.io/klovi-ui-components/messages";
 import { useCallback } from "react";
 import { useRunKloviEffect } from "../../../lib/context.ts";
-import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
 import { kloviHostBridge } from "../../../lib/rpc-client.ts";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
 import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
 import { getFrontendPlugin } from "../../plugin-registry.ts";
 
@@ -18,7 +18,7 @@ export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubA
 	const turns = data?.session?.turns ?? [];
 	const handleLinkClick = useCallback(
 		(url: string) => {
-			void runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => {});
+			runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => {});
 		},
 		[runKloviEffect],
 	);

@@ -4,7 +4,12 @@ import { Effect, Fiber, Schedule, SubscriptionRef } from "effect";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
 import type { KloviRPC, UpdateStatus } from "../shared/rpc-types.ts";
-import { detectLinuxSystemTheme, ensureDesktopRuntimeDirs, resolveLinuxRenderer, type SystemTheme } from "./linux-runtime.ts";
+import {
+	detectLinuxSystemTheme,
+	ensureDesktopRuntimeDirs,
+	resolveLinuxRenderer,
+	type SystemTheme,
+} from "./linux-runtime.ts";
 import {
 	acceptRisksHandler,
 	applyUpdateHandler,
@@ -26,9 +31,9 @@ import {
 	updateUpdateSettingsHandler,
 } from "./rpc-handlers.ts";
 import { bridgeHandler, makeDesktopRuntime } from "./runtime.ts";
+import { UpdateStatusRef } from "./services.ts";
 import { makeThemePollingFiber } from "./theme-polling.ts";
 import { cleanupUpdates, startUpdateSchedule } from "./updater-service.ts";
-import { UpdateStatusRef } from "./services.ts";
 
 const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
 
@@ -47,8 +52,17 @@ ensureDesktopRuntimeDirs({
 });
 const linuxRenderer = resolveLinuxRenderer();
 
-const runtimePlatform: "macos" | "linux" | "win" =
-	process.platform === "darwin" ? "macos" : process.platform === "win32" ? "win" : "linux";
+function resolveRuntimePlatform(): "macos" | "linux" | "win" {
+	if (process.platform === "darwin") {
+		return "macos";
+	}
+	if (process.platform === "win32") {
+		return "win";
+	}
+	return "linux";
+}
+
+const runtimePlatform = resolveRuntimePlatform();
 const runtimeArch: "arm64" | "x64" = process.arch === "arm64" ? "arm64" : "x64";
 
 const runtime = makeDesktopRuntime({
@@ -251,5 +265,5 @@ Electrobun.events.on("before-quit", () => {
 	if (themePollingFiber) {
 		Effect.runFork(Fiber.interrupt(themePollingFiber));
 	}
-	void runtime.dispose();
+	runtime.dispose();
 });

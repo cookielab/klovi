@@ -1,6 +1,6 @@
-import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
 import { useSessionData } from "../../hooks/useSessionData.ts";
 import { PackageMessageList } from "../message/PackageMessageList.tsx";
+import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
 const BRANCH_BAR_CLASSES =

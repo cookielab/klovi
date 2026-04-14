@@ -37,7 +37,7 @@ export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: Si
 	const handleCookielabClick = useCallback(
 		(e: React.MouseEvent) => {
 			e.preventDefault();
-			void runKloviEffect(
+			runKloviEffect(
 				kloviHostBridge.openExternal({
 					url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
 				}),

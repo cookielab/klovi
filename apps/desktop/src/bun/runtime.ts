@@ -10,8 +10,8 @@ import {
 	PlatformInfo,
 	RegistryRef,
 	SettingsPathRef,
-	UpdateStatusRef,
 	UpdaterConfig,
+	UpdateStatusRef,
 	VersionState,
 } from "./services.ts";
 

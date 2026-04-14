@@ -1,3 +1,4 @@
+import process from "node:process";
 import tailwindPlugin from "bun-plugin-tailwind";
 
 const isWatch = process.argv.includes("--watch");

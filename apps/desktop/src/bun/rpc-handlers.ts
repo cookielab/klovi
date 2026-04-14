@@ -22,9 +22,9 @@ import { getStats as getStatsEffect } from "@cookielab.io/klovi-server/services/
 import { getVersion } from "@cookielab.io/klovi-server/services/version-service";
 import { Effect, Ref } from "effect";
 import type { UpdateChannel } from "../shared/rpc-types.ts";
-import { applyUpdate as applyUpdateEffect, checkForUpdate } from "./updater-service.ts";
 import { refreshRegistry } from "./runtime.ts";
 import { RegistryRef, SettingsPathRef, VersionState } from "./services.ts";
+import { applyUpdate as applyUpdateEffect, checkForUpdate } from "./updater-service.ts";
 
 // ---------- Onboarding / misc ----------
 

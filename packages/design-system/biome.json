@@ -1,5 +1,22 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
 	"root": false,
-	"extends": ["@cookielab.io/biome-config/react", "../../biome.shared.json"]
+	"extends": ["@cookielab.io/biome-config/react", "../../biome.shared.json"],
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+	"overrides": [
+		{
+			"includes": [".storybook/**"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUndeclaredDependencies": "off"
+					}
+				}
+			}
+		}
+	]
 }

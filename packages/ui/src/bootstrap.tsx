@@ -37,6 +37,10 @@ export type MountKloviAppConfig = {
 export function mountKloviApp(config: MountKloviAppConfig): void {
 	const root = createRoot(config.container);
 	root.render(
-		createElement(KloviRuntimeProvider, { client: config.client, hostBridge: config.hostBridge }, createElement(AppGate)),
+		createElement(
+			KloviRuntimeProvider,
+			{ client: config.client, hostBridge: config.hostBridge },
+			createElement(AppGate),
+		),
 	);
 }

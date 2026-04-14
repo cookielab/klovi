@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { Command, CommandExecutor } from "@effect/platform";
+import { Command, type CommandExecutor } from "@effect/platform";
 import { Effect } from "effect";
 
 type BrowserRenderer = "native" | "cef";
@@ -38,14 +38,31 @@ function ensureDesktopRuntimeDirs(paths: DesktopRuntimePaths): void {
 	}
 }
 
-const runGsettings = (
-	key: string,
-): Effect.Effect<string | null, never, CommandExecutor.CommandExecutor> =>
+const runGsettings = (key: string): Effect.Effect<string | null, never, CommandExecutor.CommandExecutor> =>
 	Command.make("gsettings", "get", "org.gnome.desktop.interface", key).pipe(
 		Command.string,
 		Effect.map((out) => out.trim()),
 		Effect.catchAll(() => Effect.succeed<string | null>(null)),
 	);
+
+const themeFromColorScheme = (colorScheme: string): SystemTheme | null => {
+	if (colorScheme.includes("prefer-dark")) {
+		return "dark";
+	}
+	if (colorScheme.includes("prefer-light") || colorScheme.includes("default")) {
+		return "light";
+	}
+	return null;
+};
+
+const themeFromGtkThemeEnv = (gtkThemeEnv: string): SystemTheme => {
+	if (DARK_SUFFIX_RE.test(gtkThemeEnv) || DARK_VARIANT_RE.test(gtkThemeEnv)) {
+		return "dark";
+	}
+	return "light";
+};
+
+const themeFromGtkThemeName = (gtkTheme: string): SystemTheme => (DARK_RE.test(gtkTheme) ? "dark" : "light");
 
 const detectLinuxSystemTheme = (
 	platform: NodeJS.Platform = process.platform,
@@ -59,30 +76,22 @@ const detectLinuxSystemTheme = (
 		// 1. GNOME 42+ color-scheme setting
 		const colorScheme = yield* runGsettings("color-scheme");
 		if (colorScheme !== null) {
-			if (colorScheme.includes("prefer-dark")) {
-				return "dark";
-			}
-			if (colorScheme.includes("prefer-light") || colorScheme.includes("default")) {
-				return "light";
+			const theme = themeFromColorScheme(colorScheme);
+			if (theme !== null) {
+				return theme;
 			}
 		}
 
 		// 2. GTK_THEME environment variable
 		const gtkThemeEnv = env["GTK_THEME"];
 		if (gtkThemeEnv) {
-			if (DARK_SUFFIX_RE.test(gtkThemeEnv) || DARK_VARIANT_RE.test(gtkThemeEnv)) {
-				return "dark";
-			}
-			return "light";
+			return themeFromGtkThemeEnv(gtkThemeEnv);
 		}
 
 		// 3. GNOME gtk-theme setting
 		const gtkTheme = yield* runGsettings("gtk-theme");
 		if (gtkTheme !== null) {
-			if (DARK_RE.test(gtkTheme)) {
-				return "dark";
-			}
-			return "light";
+			return themeFromGtkThemeName(gtkTheme);
 		}
 
 		return null;

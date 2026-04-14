@@ -1,5 +1,18 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.9/schema.json",
 	"root": false,
-	"extends": ["@cookielab.io/biome-config/react", "../../biome.shared.json"]
+	"extends": ["@cookielab.io/biome-config/react", "../../biome.shared.json"],
+	"overrides": [
+		{
+			"includes": ["build.ts"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noNodejsModules": "off",
+						"noUndeclaredDependencies": "off"
+					}
+				}
+			}
+		}
+	]
 }

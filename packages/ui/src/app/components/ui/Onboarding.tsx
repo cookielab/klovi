@@ -85,7 +85,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
 	const handleAcceptStep1 = useCallback(() => setStep(2), []);
 	const handleDontShowAgain = useCallback(() => {
-		void runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
+		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
 	}, [client, runKloviEffect]);
 	const handleBackToStep1 = useCallback(() => setStep(1), []);
 

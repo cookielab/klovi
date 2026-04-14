@@ -65,10 +65,9 @@ export function useViewState(): UseViewStateResult {
 			window.location.hash = pendingHash;
 		}
 
-		runKloviEffect(restoreFromHashEffect())
-			.then((nextView) => {
-				applyRestoredView(nextView, true);
-			});
+		runKloviEffect(restoreFromHashEffect()).then((nextView) => {
+			applyRestoredView(nextView, true);
+		});
 	}, [applyRestoredView, runKloviEffect]);
 
 	useEffect(() => {
@@ -81,11 +80,10 @@ export function useViewState(): UseViewStateResult {
 	}, [hostBridge]);
 
 	useEffect(() => {
-		runKloviEffect(restoreFromHashEffect())
-			.then((nextView) => {
-				applyRestoredView(nextView, false);
-				setReady(true);
-			});
+		runKloviEffect(restoreFromHashEffect()).then((nextView) => {
+			applyRestoredView(nextView, false);
+			setReady(true);
+		});
 	}, [applyRestoredView, runKloviEffect]);
 
 	useEffect(() => {
@@ -100,10 +98,9 @@ export function useViewState(): UseViewStateResult {
 
 	useEffect(() => {
 		const handler = () => {
-			runKloviEffect(restoreFromHashEffect())
-				.then((nextView) => {
-					applyRestoredView(nextView, true);
-				});
+			runKloviEffect(restoreFromHashEffect()).then((nextView) => {
+				applyRestoredView(nextView, true);
+			});
 		};
 		window.addEventListener("hashchange", handler);
 		return () => window.removeEventListener("hashchange", handler);
