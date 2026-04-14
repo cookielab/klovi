@@ -197,14 +197,10 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 				result: "[Tool execution was interrupted]",
 				isError: true,
 			};
-		default:
-			return {
-				toolUseId: toolId,
-				name: toolPart.tool,
-				input: state.input,
-				result: "[Unknown tool state]",
-				isError: true,
-			};
+		default: {
+			const _exhaustive: never = state;
+			return _exhaustive;
+		}
 	}
 }
 

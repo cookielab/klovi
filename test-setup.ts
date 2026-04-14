@@ -26,8 +26,12 @@ const globals = [
 	"navigator",
 	"location",
 	"getComputedStyle",
+	"matchMedia",
 	"localStorage",
 	"history",
+	"addEventListener",
+	"removeEventListener",
+	"dispatchEvent",
 ] as const;
 
 for (const key of globals) {
