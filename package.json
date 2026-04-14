@@ -13,6 +13,7 @@
 		"build:package": "bun run build:web && bun run --filter @cookielab.io/klovi build",
 		"stage:npm": "bun run build:web && bun run --filter @cookielab.io/klovi stage:npm",
 		"verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
+		"check": "bun run typecheck && bun run lint && bun run test",
 		"test": "bun run test:unit && bun run test:integration",
 		"test:unit": "bun run --filter '*' test:unit",
 		"test:integration": "bun run --filter '*' test:integration",

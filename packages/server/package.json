@@ -29,6 +29,7 @@
 		"./services/version-service": "./src/services/version-service.ts"
 	},
 	"scripts": {
+		"check": "bun run typecheck && bun run lint && bun run test",
 		"test": "bun run test:unit && bun run test:integration",
 		"test:unit": "bun test --preload ../../test-setup.ts -t '^(?!.*integration)'",
 		"test:integration": "bun test --preload ../../test-setup.ts -t 'integration'",

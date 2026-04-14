@@ -20,6 +20,7 @@
 	"scripts": {
 		"dev": "bun scripts/run-electrobun-cli.ts dev",
 		"build": "bun scripts/run-electrobun-cli.ts build",
+		"check": "bun run typecheck && bun run lint && bun run test",
 		"test": "bun run test:unit && bun run test:integration",
 		"test:unit": "bun test --preload ../../test-setup.ts",
 		"test:integration": "true",
