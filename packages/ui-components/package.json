@@ -16,6 +16,7 @@
 	},
 	"files": ["src"],
 	"scripts": {
+		"test": "bun run test:unit && bun run test:integration",
 		"test:unit": "bun test --preload ../../test-setup.ts",
 		"test:integration": "true",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
