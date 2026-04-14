@@ -61,7 +61,7 @@ function viewToHash(view: ViewState): string {
 }
 
 function createRestoringView(): ViewState {
-	return { kind: "restoring", hash: window.location.hash || "#/" };
+	return { kind: "restoring", hash: globalThis.location.hash || "#/" };
 }
 
 async function loadProject(client: KloviClient, encodedPath: string): Promise<Project | undefined> {
@@ -182,15 +182,14 @@ function resolveProjectViewEffect(encodedPath: string, sessionId: string | undef
 
 const restoreFromHashEffect = () =>
 	Effect.gen(function* () {
-		const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
+		const hash = globalThis.location.hash.replace(HASH_PREFIX_REGEX, "");
 		const staticView = parseHashToStaticView(hash);
 		if (staticView) {
 			return staticView;
 		}
 
 		const parts = hash.split("/");
-		const encodedPath = parts[0];
-		const sessionId = parts[1];
+		const [encodedPath, sessionId] = parts;
 		const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
 		if (!encodedPath) {
 			return { kind: "home" } as ViewState;
@@ -200,7 +199,7 @@ const restoreFromHashEffect = () =>
 	});
 
 async function restoreFromHash(client: KloviClient): Promise<ViewState> {
-	const hash = window.location.hash.replace(HASH_PREFIX_REGEX, "");
+	const hash = globalThis.location.hash.replace(HASH_PREFIX_REGEX, "");
 	if (!hash) {
 		return { kind: "home" };
 	}
@@ -212,8 +211,7 @@ async function restoreFromHash(client: KloviClient): Promise<ViewState> {
 	}
 
 	const parts = hash.split("/");
-	const encodedPath = parts[0];
-	const sessionId = parts[1];
+	const [encodedPath, sessionId] = parts;
 	const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
 	if (!encodedPath) {
 		return { kind: "home" };

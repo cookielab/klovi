@@ -9,7 +9,7 @@ function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; a
 }
 
 function fireKey(key: string, opts: KeyboardEventInit = {}) {
-	window.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true, ...opts }));
+	globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true, ...opts }));
 }
 
 afterEach(cleanup);

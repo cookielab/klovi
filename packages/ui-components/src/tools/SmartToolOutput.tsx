@@ -31,7 +31,7 @@ function ToolResultImageButton({
 
 	return (
 		<button type="button" className="group inline-block cursor-pointer [all:unset]" onClick={handleClick}>
-			<img className={IMAGE_CLASSES} src={src} alt={`Tool result ${index + 1}`} />
+			<img className={IMAGE_CLASSES} src={src} alt={`Tool result ${index + 1}`} width={200} height={200} />
 		</button>
 	);
 }

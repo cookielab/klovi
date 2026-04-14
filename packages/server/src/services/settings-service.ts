@@ -26,8 +26,8 @@ function buildPluginSettingsResponse(
 	return Effect.gen(function* () {
 		const settings = yield* loadSettings(settingsPath);
 		const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir }) => {
-			const id = plugin.id;
-			const displayName = plugin.displayName;
+			const { id } = plugin;
+			const { displayName } = plugin;
 			const pluginConf = settings.plugins[id] ?? { enabled: true, dataDir: null };
 			const defaultDataDir = defaultDir;
 			const isCustomDir = pluginConf.dataDir !== null;

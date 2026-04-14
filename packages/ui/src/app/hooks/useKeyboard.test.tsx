@@ -10,7 +10,7 @@ function KeyboardTestHarness(props: { handlers: Parameters<typeof useKeyboard>[0
 
 function fireKey(key: string, opts: KeyboardEventInit = {}) {
 	// Dispatch directly on window since the hook listens on window
-	window.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true, ...opts }));
+	globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true, ...opts }));
 }
 
 describe("useKeyboard", () => {

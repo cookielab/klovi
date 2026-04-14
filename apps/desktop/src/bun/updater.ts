@@ -31,6 +31,7 @@ function filterReleasesByChannel(releases: GitHubRelease[], channel: UpdateChann
 			return false;
 		}
 		const tagChannel = getReleaseChannel(r.tag_name);
+		// biome-ignore lint/nursery/noUnnecessaryConditions: switch on exhaustive string union
 		switch (channel) {
 			case "stable":
 				return tagChannel === "stable";
@@ -117,6 +118,7 @@ async function pathExists(path: string): Promise<boolean> {
 }
 
 function getRequiredLauncherRelativePath(platform: Platform): string {
+	// biome-ignore lint/nursery/noUnnecessaryConditions: switch on exhaustive string union
 	switch (platform) {
 		case "macos":
 			return join("Contents", "MacOS", "launcher");
@@ -124,6 +126,8 @@ function getRequiredLauncherRelativePath(platform: Platform): string {
 			return join("bin", "launcher");
 		case "win":
 			return join("bin", "launcher.exe");
+		default:
+			return join("bin", "launcher");
 	}
 }
 

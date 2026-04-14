@@ -10,6 +10,7 @@ import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "
 import {
 	filterReleasesByChannel,
 	findExtractedAppBundlePath,
+	// biome-ignore lint/suspicious/noDeprecatedImports: testing the deprecated function for backward compat
 	findLatestRelease,
 	findLatestUsableRelease,
 	findReleaseAsset,

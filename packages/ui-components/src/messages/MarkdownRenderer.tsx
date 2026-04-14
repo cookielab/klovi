@@ -3,8 +3,8 @@ import React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const FILE_REF_RE = /@([\w./-]+\.\w+)/gu;
-const LANGUAGE_CLASS_REGEX = /language-(\w+)/u;
+const FILE_REF_RE = /@(?<path>[\w./-]+\.\w+)/gu;
+const LANGUAGE_CLASS_REGEX = /language-(?<lang>\w+)/u;
 const TRAILING_NEWLINE_REGEX = /\n$/u;
 
 const FILE_REF_CLASSES = "bg-transparent p-0 border-none font-medium text-accent";
@@ -37,7 +37,7 @@ function renderTextWithFileRefs(text: string): React.ReactNode {
 		}
 		parts.push(
 			<code key={match.index} className={FILE_REF_CLASSES}>
-				@{match[1]}
+				@{match.groups?.["path"]}
 			</code>,
 		);
 		last = FILE_REF_RE.lastIndex;
@@ -84,7 +84,7 @@ export function MarkdownRenderer({ content, onLinkClick }: MarkdownRendererProps
 							);
 						}
 
-						const lang = match?.[1];
+						const lang = match?.groups?.["lang"];
 						return <CodeBox {...(lang ? { language: lang } : {})}>{text}</CodeBox>;
 					},
 					a: ({ href, children, ...props }) => {

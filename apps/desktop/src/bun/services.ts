@@ -16,6 +16,7 @@ export class SettingsPathRef extends Context.Tag("@klovi/desktop/SettingsPathRef
 	{ readonly path: string }
 >() {}
 
+// biome-ignore lint/security/noSecrets: not a real secret
 export class AppDataDirRef extends Context.Tag("@klovi/desktop/AppDataDirRef")<
 	AppDataDirRef,
 	{ readonly path: string }

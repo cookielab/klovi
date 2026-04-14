@@ -18,6 +18,34 @@
 						"filenameCases": ["camelCase", "PascalCase", "kebab-case"]
 					}
 				},
+				"useNamingConvention": {
+					"level": "warn",
+					"options": {
+						"strictCase": false,
+						"conventions": [
+							{
+								"selector": {
+									"kind": "typeParameter"
+								},
+								"formats": ["PascalCase"]
+							},
+							{
+								"selector": {
+									"kind": "objectLiteralProperty"
+								},
+								"formats": ["camelCase", "CONSTANT_CASE", "PascalCase", "snake_case"]
+							},
+							{
+								"selector": {
+									"kind": "typeMember"
+								},
+								"match": "_(.+)|(.*)",
+								"formats": ["camelCase", "snake_case"]
+							}
+						]
+					}
+				},
+				"noJsxLiterals": "off",
 				"noProcessEnv": "off",
 				"noNonNullAssertion": "warn",
 				"useConsistentMemberAccessibility": "off"
@@ -30,12 +58,25 @@
 			"suspicious": {
 				"noEmptyBlockStatements": "off"
 			},
+			"nursery": {
+				"noExcessiveClassesPerFile": "off"
+			},
 			"security": {
 				"noSecrets": "warn"
 			}
 		}
 	},
 	"overrides": [
+		{
+			"includes": ["**/*.test.ts", "**/*.test.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noMagicNumbers": "off"
+					}
+				}
+			}
+		},
 		{
 			"includes": ["**/*.stories.tsx", "**/*.stories.ts"],
 			"linter": {
@@ -172,7 +213,7 @@
 					},
 					"style": {
 						"noDescendingSpecificity": "error",
-						"noJsxLiterals": "warn",
+						"noJsxLiterals": "off",
 						"noValueAtRule": "error",
 						"useComponentExportOnlyModules": "error",
 						"useConsistentCurlyBraces": "error",

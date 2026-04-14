@@ -92,7 +92,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 					canChooseDirectory: true,
 					allowsMultipleSelection: false,
 				});
-				const selected = paths[0];
+				const [selected] = paths;
 				return { path: selected && selected !== "" ? selected : null };
 			},
 			getUpdateSettings: () => {
@@ -244,6 +244,8 @@ Electrobun.events.on("application-menu-clicked", (e) => {
 					})
 					.catch(() => {});
 			}
+			break;
+		default:
 			break;
 	}
 });

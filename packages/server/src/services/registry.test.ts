@@ -121,7 +121,7 @@ describe("PluginRegistry", () => {
 		const projects = await runEffect(registry.discoverAllProjects());
 		expect(projects).toHaveLength(1);
 
-		const merged = projects[0];
+		const [merged] = projects;
 		expect(merged?.resolvedPath).toBe("/Users/foo/project");
 		expect(merged?.sessionCount).toBe(8);
 		expect(merged?.lastActivity).toBe("2025-01-02T00:00:00Z");

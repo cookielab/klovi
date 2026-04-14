@@ -1,13 +1,18 @@
 const XML_CLOSING_TAG_REGEX = /<\/\w+>\s*$/u;
-const TS_DECLARATION_REGEX = /^(export\s+)?(interface|type)\s+\w+/u;
-const TS_TYPE_ANNOTATION_REGEX = /:\s*(string|number|boolean|Record|Array)\b/u;
-const PY_DECLARATION_REGEX = /^(def|class|import|from)\s+\w+/u;
-const PY_BLOCK_KEYWORD_REGEX = /^\s*(def|class|if|for|while|with|try|except)\s/u;
+const TS_DECLARATION_REGEX = /^(?:export\s+)?(?:interface|type)\s+\w+/u;
+const TS_TYPE_ANNOTATION_REGEX = /:\s*(?:string|number|boolean|Record|Array)\b/u;
+const PY_DECLARATION_REGEX = /^(?:def|class|import|from)\s+\w+/u;
+const PY_BLOCK_KEYWORD_REGEX = /^\s*(?:def|class|if|for|while|with|try|except)\s/u;
 const CSS_SELECTOR_BLOCK_REGEX = /^[@.#:\w[\]-]+\s*\{/mu;
 const CSS_DECLARATION_REGEX = /:\s*[^;]+;/mu;
-const CSS_AT_RULE_REGEX = /^@(media|import|keyframes|font-face)\s/u;
+const CSS_AT_RULE_REGEX = /^@(?:media|import|keyframes|font-face)\s/u;
 const YAML_KEY_VALUE_REGEX = /^\s*[\w.-]+:\s/u;
-const CODE_STRUCTURE_REGEX = /^(export|import|const|let|var|function|class)\s/u;
+const CODE_STRUCTURE_REGEX = /^(?:export|import|const|let|var|function|class)\s/u;
+
+const MIN_DIFF_LINES = 3;
+const DIFF_LINE_RATIO = 0.3;
+const YAML_LINE_RATIO = 0.3;
+const MIN_CODE_LINES = 2;
 
 /**
  * Detects the language/format of CLI output for syntax highlighting.
@@ -46,7 +51,7 @@ function detectOutputFormat(output: string): string | null {
 }
 
 function isJson(text: string): boolean {
-	const first = text[0];
+	const [first] = text;
 	const last = text.at(-1);
 	if (!((first === "{" && last === "}") || (first === "[" && last === "]"))) {
 		return false;
@@ -71,7 +76,7 @@ function isDiff(text: string): boolean {
 			diffLineCount += 1;
 		}
 	}
-	return diffLineCount >= 3 && diffLineCount / lines.length > 0.3;
+	return diffLineCount >= MIN_DIFF_LINES && diffLineCount / lines.length > DIFF_LINE_RATIO;
 }
 
 function isXmlOrHtml(text: string): boolean {
@@ -106,7 +111,7 @@ function isPython(text: string): boolean {
 	// Multiple lines with Python-style indent and colons
 	const lines = text.split("\n");
 	const pyLines = lines.filter((l) => PY_BLOCK_KEYWORD_REGEX.test(l));
-	return pyLines.length >= 2;
+	return pyLines.length >= MIN_CODE_LINES;
 }
 
 function isCss(text: string): boolean {
@@ -130,12 +135,12 @@ function isYaml(text: string): boolean {
 	}
 	const lines = text.split("\n");
 	const kvLines = lines.filter((l) => YAML_KEY_VALUE_REGEX.test(l));
-	return kvLines.length >= 2 && kvLines.length / lines.length > 0.3;
+	return kvLines.length >= MIN_CODE_LINES && kvLines.length / lines.length > YAML_LINE_RATIO;
 }
 
 function hasCodeStructure(text: string): boolean {
 	const lines = text.split("\n");
-	return lines.length >= 2 && CODE_STRUCTURE_REGEX.test(text);
+	return lines.length >= MIN_CODE_LINES && CODE_STRUCTURE_REGEX.test(text);
 }
 
 export { detectOutputFormat };

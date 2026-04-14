@@ -218,7 +218,7 @@ function normalizeEvent(raw: unknown): CodexEvent | null {
 		return raw as CodexEvent;
 	}
 
-	const payload = obj.payload;
+	const { payload } = obj;
 	if (!payload) {
 		return null;
 	}
@@ -447,6 +447,8 @@ function dispatchEvent(state: TurnBuilderState, event: CodexEvent, ctx: TurnBuil
 			break;
 		case "tool_output":
 			handleToolOutput(state, event);
+			break;
+		default:
 			break;
 	}
 }

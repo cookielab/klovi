@@ -26,7 +26,7 @@ function parseArgs(argv: string[]): VerifyArgs {
 	const iter = args[Symbol.iterator]();
 	for (const arg of iter) {
 		if (arg === "--zstd") {
-			const value = iter.next().value;
+			const { value } = iter.next();
 			if (!value) {
 				throw new Error("Missing value for --zstd");
 			}
@@ -111,6 +111,7 @@ async function resolveZstdPath(appPath: string, explicitPath?: string): Promise<
 	}
 
 	for (const candidate of getDefaultZstdPaths(appPath)) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential processing required
 		if (await Bun.file(candidate).exists()) {
 			return candidate;
 		}

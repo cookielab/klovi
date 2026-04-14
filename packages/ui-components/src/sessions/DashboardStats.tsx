@@ -2,7 +2,7 @@ import type { ModelTokenUsage, DashboardStats as Stats } from "../types/index.ts
 import { FetchError } from "../utilities/FetchError.tsx";
 
 const fmt = new Intl.NumberFormat();
-const CLAUDE_MODEL_NAME_REGEX = /claude-(\w+-[\d-]+?)(?:-\d{8})?$/u;
+const CLAUDE_MODEL_NAME_REGEX = /claude-(?<modelId>\w+-[\d-]+?)(?:-\d{8})?$/u;
 
 const DASHBOARD_STATS_CLASSES = "mx-auto flex w-full max-w-[700px] flex-col gap-[12px] px-[40px] pb-[40px]";
 const STATS_ROW_CLASSES = "grid gap-[12px]";
@@ -35,7 +35,7 @@ function compactNumber(n: number): string {
 
 function simplifyModelName(model: string): string {
 	const match = CLAUDE_MODEL_NAME_REGEX.exec(model);
-	return match?.[1] ?? model;
+	return match?.groups?.["modelId"] ?? model;
 }
 
 function totalTokens(usage: ModelTokenUsage): number {

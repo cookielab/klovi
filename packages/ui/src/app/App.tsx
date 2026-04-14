@@ -139,6 +139,8 @@ function App() {
 					case "openSettings":
 						goSettings();
 						break;
+					default:
+						break;
 				}
 			}),
 		[hostBridge, cycleTheme, increase, decrease, canPresent, togglePresentation, goSettings],
@@ -402,11 +404,11 @@ function AppGate() {
 
 	useEffect(() => {
 		const handleReset = () => {
-			window.location.hash = "#/";
+			globalThis.location.hash = "#/";
 			initialize();
 		};
-		window.addEventListener("klovi:reset", handleReset);
-		return () => window.removeEventListener("klovi:reset", handleReset);
+		globalThis.addEventListener("klovi:reset", handleReset);
+		return () => globalThis.removeEventListener("klovi:reset", handleReset);
 	}, [initialize]);
 
 	const handleOnboardingComplete = useCallback(() => {

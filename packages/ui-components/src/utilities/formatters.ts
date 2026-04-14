@@ -75,11 +75,11 @@ function formatTime(iso: string): string {
 	});
 }
 
-const CLAUDE_MODEL_REGEX = /claude-(opus|sonnet|haiku)-(\d+)(?:-(\d{1,2}))?(?:-\d{8,})?$/u;
-const GPT_MODEL_REGEX = /^(gpt-[\w.-]+?)(?:-\d{4}-\d{2}-\d{2})?$/u;
-const OPENAI_REASONING_REGEX = /^(o\d+(?:-\w+)?)(?:-\d{4}-\d{2}-\d{2})?$/u;
-const GEMINI_MODEL_REGEX = /^gemini-([\d]+\.[\d]+[\w-]*)$/u;
-const CODEX_MODEL_REGEX = /^codex-([\w-]+)$/u;
+const CLAUDE_MODEL_REGEX = /claude-(?<family>opus|sonnet|haiku)-(?<major>\d+)(?:-(?<minor>\d{1,2}))?(?:-\d{8,})?$/u;
+const GPT_MODEL_REGEX = /^(?<model>gpt-[\w.-]+?)(?:-\d{4}-\d{2}-\d{2})?$/u;
+const OPENAI_REASONING_REGEX = /^(?<model>o\d+(?:-\w+)?)(?:-\d{4}-\d{2}-\d{2})?$/u;
+const GEMINI_MODEL_REGEX = /^gemini-(?<version>[\d]+\.[\d]+[\w-]*)$/u;
+const CODEX_MODEL_REGEX = /^codex-(?<variant>[\w-]+)$/u;
 
 function isClaudeModel(model: string): boolean {
 	return model.startsWith("claude-");
@@ -89,35 +89,35 @@ function shortModel(model: string): string {
 	// Claude: claude-opus-4-6, claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001
 	const claudeMatch = CLAUDE_MODEL_REGEX.exec(model);
 	if (claudeMatch) {
-		const rawFamily = claudeMatch[1] ?? "";
+		const rawFamily = claudeMatch.groups?.["family"] ?? "";
 		const family = rawFamily.charAt(0).toUpperCase() + rawFamily.slice(1);
-		const major = claudeMatch[2] ?? "";
-		const minor = claudeMatch[3];
+		const major = claudeMatch.groups?.["major"] ?? "";
+		const minor = claudeMatch.groups?.["minor"];
 		return minor ? `${family} ${major}.${minor}` : `${family} ${major}`;
 	}
 
 	// GPT: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
 	const gptMatch = GPT_MODEL_REGEX.exec(model);
 	if (gptMatch) {
-		return gptMatch[1]?.replace("gpt-", "GPT-") ?? model;
+		return gptMatch.groups?.["model"]?.replace("gpt-", "GPT-") ?? model;
 	}
 
 	// OpenAI reasoning: o1, o3, o3-mini, o4-mini
 	const reasoningMatch = OPENAI_REASONING_REGEX.exec(model);
 	if (reasoningMatch) {
-		return reasoningMatch[1] ?? model;
+		return reasoningMatch.groups?.["model"] ?? model;
 	}
 
 	// Gemini: gemini-2.0-flash, gemini-1.5-pro, gemini-2.5-pro-preview-05-06
 	const geminiMatch = GEMINI_MODEL_REGEX.exec(model);
 	if (geminiMatch) {
-		return `Gemini ${geminiMatch[1] ?? ""}`;
+		return `Gemini ${geminiMatch.groups?.["version"] ?? ""}`;
 	}
 
 	// Codex: codex-mini-latest, codex-mini
 	const codexMatch = CODEX_MODEL_REGEX.exec(model);
 	if (codexMatch) {
-		return `Codex ${codexMatch[1] ?? ""}`;
+		return `Codex ${codexMatch.groups?.["variant"] ?? ""}`;
 	}
 
 	return model;

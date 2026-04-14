@@ -20,8 +20,8 @@ export function useSearchShortcut({
 				});
 			}
 		}
-		window.addEventListener("keydown", handleCmdK);
-		return () => window.removeEventListener("keydown", handleCmdK);
+		globalThis.addEventListener("keydown", handleCmdK);
+		return () => globalThis.removeEventListener("keydown", handleCmdK);
 	}, [fetchSearchSessions, setSearchOpen]);
 }
 
@@ -61,11 +61,13 @@ export function useGlobalShortcuts({
 					e.preventDefault();
 					decrease();
 					break;
+				default:
+					break;
 			}
 		}
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
+		globalThis.addEventListener("keydown", handleKeyDown);
+		return () => globalThis.removeEventListener("keydown", handleKeyDown);
 	}, [canPresent, togglePresentation, increase, decrease]);
 }
 
@@ -89,7 +91,7 @@ export function useSettingsShortcut({
 				}
 			}
 		}
-		window.addEventListener("keydown", handleCmdComma);
-		return () => window.removeEventListener("keydown", handleCmdComma);
+		globalThis.addEventListener("keydown", handleCmdComma);
+		return () => globalThis.removeEventListener("keydown", handleCmdComma);
 	}, [isSettings, goSettings, closeSettings]);
 }

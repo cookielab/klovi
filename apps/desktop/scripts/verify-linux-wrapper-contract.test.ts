@@ -61,6 +61,7 @@ describe("parseArgs", () => {
 
 describe("parseDesktopEntry", () => {
 	test("parses desktop keys and values", () => {
+		// biome-ignore lint/security/noSecrets: not a real secret
 		const entry = parseDesktopEntry("[Desktop Entry]\nName=Klovi\nStartupWMClass=Klovi\n");
 		expect(entry.get("Name")).toBe("Klovi");
 		expect(entry.get("StartupWMClass")).toBe("Klovi");

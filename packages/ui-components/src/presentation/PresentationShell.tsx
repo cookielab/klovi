@@ -60,7 +60,7 @@ export function PresentationShell({
 	);
 
 	// Auto-scroll to bottom when step changes
-	const currentStep = presentation.currentStep;
+	const { currentStep } = presentation;
 	useEffect(() => {
 		if (currentStep >= 0 && scrollRef.current) {
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

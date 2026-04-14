@@ -3,7 +3,7 @@ import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 
 const T3CODE_SUFFIX_REGEX = /\/t3code-[a-f0-9]+$/u;
-const GITDIR_WORKTREE_REGEX = /^gitdir:\s*(.+?)\s*$/u;
+const GITDIR_WORKTREE_REGEX = /^gitdir:\s*(?<gitdir>.+?)\s*$/u;
 const GIT_WORKTREES_SEGMENT = "/.git/worktrees/";
 
 /**
@@ -45,11 +45,11 @@ function resolveGitWorktree(worktreePath: string) {
 		}
 
 		const match = GITDIR_WORKTREE_REGEX.exec(content);
-		if (!match?.[1]) {
+		if (!match?.groups?.["gitdir"]) {
 			return worktreePath;
 		}
 
-		const gitdir = match[1];
+		const gitdir = match.groups!["gitdir"];
 		const worktreeIdx = gitdir.indexOf(GIT_WORKTREES_SEGMENT);
 		if (worktreeIdx === -1) {
 			return worktreePath;
@@ -122,7 +122,7 @@ function resolveEntry<T extends { resolvedPath: string }>(entry: T3CodeEntry<T>,
 		}
 
 		if (candidates.length === 1) {
-			const resolvedPath = candidates[0];
+			const [resolvedPath] = candidates;
 			if (resolvedPath) {
 				entry.project.resolvedPath = resolvedPath;
 			}

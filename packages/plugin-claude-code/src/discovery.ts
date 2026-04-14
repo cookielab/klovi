@@ -127,7 +127,7 @@ function extractCwd(filePath: string) {
 			({ parsed }) => {
 				const obj = parsed as RawLine;
 				if (obj.cwd) {
-					cwd = obj.cwd;
+					({ cwd } = obj);
 					return false;
 				}
 				// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript

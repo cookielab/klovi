@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ResolvedTheme, ThemeSetting } from "../types.ts";
 
 function getSystemTheme(): ResolvedTheme {
-	return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+	return globalThis.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 export function resolveTheme(setting: ThemeSetting, systemThemeOverride?: "dark" | "light" | null): ResolvedTheme {
@@ -49,7 +49,7 @@ export function useTheme(options?: UseThemeOptions) {
 			return;
 		}
 
-		const mq = window.matchMedia("(prefers-color-scheme: dark)");
+		const mq = globalThis.matchMedia("(prefers-color-scheme: dark)");
 		const handler = () => setResolved(getSystemTheme());
 		mq.addEventListener("change", handler);
 		return () => mq.removeEventListener("change", handler);

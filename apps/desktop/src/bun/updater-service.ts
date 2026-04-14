@@ -21,7 +21,11 @@ import {
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
 const ZSTD_SUFFIX_RE = /\.zst$/u;
-const CHECK_THROTTLE_MS = 5 * 60 * 1000;
+const MINUTES_PER_THROTTLE = 5;
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const MS_PER_SECOND = 1000;
+const CHECK_THROTTLE_MS = MINUTES_PER_THROTTLE * SECONDS_PER_MINUTE * MS_PER_SECOND;
 
 // ────── State helpers ──────
 
@@ -78,10 +82,12 @@ const streamChunksToFile = (state: StreamState) =>
 			});
 			bytesDownloaded += value.length;
 
-			if (bytesDownloaded % 500_000 < value.length) {
+			const progressReportIntervalBytes = 500_000;
+			const percentageMultiplier = 100;
+			if (bytesDownloaded % progressReportIntervalBytes < value.length) {
 				const status: UpdateStatus = { status: "downloading", currentVersion: currentVersion, latestVersion: version };
 				if (totalBytes) {
-					status.progress = Math.round((bytesDownloaded / totalBytes) * 100);
+					status.progress = Math.round((bytesDownloaded / totalBytes) * percentageMultiplier);
 				}
 				yield* emitStatus(status);
 			}
@@ -346,6 +352,7 @@ const applyUpdate = Effect.gen(function* () {
 
 	const applyPipeline = Effect.gen(function* () {
 		const archiveBytes = yield* Effect.tryPromise({
+			// biome-ignore lint/style/noNonNullAssertion: downloadedAssetPath guaranteed non-null by preceding guard
 			try: () => Bun.file(downloadedAssetPath!).arrayBuffer(),
 			catch: () => new Error("Failed to read update archive"),
 		});
@@ -421,7 +428,7 @@ const applyMacOs = (stagingDir: string, updatesDir: string) =>
 			catch: () => new Error("Quarantine removal failed"),
 		}).pipe(Effect.ignore);
 
-		const pid = process.pid;
+		const { pid } = process;
 		Bun.spawn(
 			["sh", "-c", `while kill -0 ${pid} 2>/dev/null; do sleep 0.5; done; sleep 1; open "${runningAppPath}"`],
 			// biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option
@@ -457,7 +464,7 @@ const applyWindows = (stagingDir: string, appDataDir: string) =>
 		const stagingDirWin = stagingDir.replace(/\//gu, "\\");
 		const launcherPathWin = launcherPath.replace(/\//gu, "\\");
 
-		const pid = process.pid;
+		const { pid } = process;
 		const updateScript = `@echo off
 setlocal
 
@@ -540,9 +547,7 @@ const cleanupUpdates = Effect.gen(function* () {
 	yield* Effect.tryPromise({
 		try: async () => {
 			const entries = await readdir(dir);
-			for (const entry of entries) {
-				await rm(join(dir, entry), { recursive: true }).catch(() => {});
-			}
+			await Promise.all(entries.map((entry) => rm(join(dir, entry), { recursive: true }).catch(() => {})));
 		},
 		catch: () => new Error("Cleanup failed"),
 	}).pipe(Effect.ignore);
@@ -554,7 +559,7 @@ const startUpdateSchedule = (immediateCheck: boolean) =>
 	Effect.gen(function* () {
 		const { path: settingsPath } = yield* SettingsPathRef;
 		const settings = yield* getUpdateSettings(settingsPath);
-		const intervalMs = settings.checkIntervalHours * 60 * 60 * 1000;
+		const intervalMs = settings.checkIntervalHours * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MS_PER_SECOND;
 
 		if (immediateCheck) {
 			yield* checkForUpdate.pipe(Effect.ignore);

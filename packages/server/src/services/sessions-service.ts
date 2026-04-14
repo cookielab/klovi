@@ -55,8 +55,8 @@ function getSession(
 			return yield* Effect.fail(new InvalidSessionIdError({ value: params.sessionId }));
 		}
 
-		const pluginId = parsed.pluginId;
-		const rawSessionId = parsed.rawSessionId;
+		const { pluginId } = parsed;
+		const { rawSessionId } = parsed;
 
 		const projects = yield* registry.discoverAllProjects();
 		const project = projects.find((p) => p.encodedPath === params.project);

@@ -138,7 +138,7 @@ describe("buildCodexTurns", () => {
 		expect(turns).toHaveLength(1);
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.contentBlocks).toHaveLength(1);
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.name).toBe("command_execution");
@@ -165,7 +165,7 @@ describe("buildCodexTurns", () => {
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
 		const assistant = turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.isError).toBe(true);
@@ -190,7 +190,7 @@ describe("buildCodexTurns", () => {
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
 		const assistant = turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.name).toBe("file_change");
@@ -222,7 +222,7 @@ describe("buildCodexTurns", () => {
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
 		const assistant = turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.name).toBe("search_docs");
@@ -243,7 +243,7 @@ describe("buildCodexTurns", () => {
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
 		const assistant = turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.name).toBe("web_search");
@@ -412,7 +412,7 @@ describe("loadCodexSession", () => {
 
 		expect(session.turns).toHaveLength(1);
 		const assistant = session.turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.name).toBe("file_change");
@@ -439,7 +439,7 @@ describe("loadCodexSession", () => {
 		);
 
 		const assistant = session.turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.name).toBe("search");
@@ -586,7 +586,7 @@ describe("new envelope format", () => {
 			expect(session.turns).toHaveLength(1);
 			const assistant = session.turns[0] as AssistantTurn;
 			expect(assistant.contentBlocks).toHaveLength(1);
-			const block = assistant.contentBlocks[0];
+			const [block] = assistant.contentBlocks;
 			expect(block?.type).toBe("tool_call");
 			const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 			expect(toolBlock.call.name).toBe("exec_command");

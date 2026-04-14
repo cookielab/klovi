@@ -27,8 +27,8 @@ export function Modal({ open, onClose, width = 560, children }: ModalProps) {
 		if (!open) {
 			return;
 		}
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
+		globalThis.addEventListener("keydown", handleKeyDown);
+		return () => globalThis.removeEventListener("keydown", handleKeyDown);
 	}, [open, handleKeyDown]);
 
 	if (!open) {

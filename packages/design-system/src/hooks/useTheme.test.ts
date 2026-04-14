@@ -5,7 +5,7 @@ import { resolveTheme, useTheme } from "./useTheme.ts";
 
 const THEME_KEY = "klovi-theme";
 const FONT_SIZE_KEY = "klovi-font-size";
-const originalMatchMedia = window.matchMedia;
+const originalMatchMedia = globalThis.matchMedia;
 
 type MockMediaApi = {
 	addEventListener: ReturnType<typeof mock>;
@@ -43,7 +43,7 @@ function installMatchMedia(initialMatches: boolean): MockMediaApi {
 		}),
 	};
 
-	Object.defineProperty(window, "matchMedia", {
+	Object.defineProperty(globalThis, "matchMedia", {
 		configurable: true,
 		value: () => mediaQuery,
 	});
@@ -73,7 +73,7 @@ afterEach(() => {
 	localStorage.removeItem(FONT_SIZE_KEY);
 	document.documentElement.removeAttribute("data-theme");
 	document.documentElement.style.removeProperty("--font-size-base");
-	Object.defineProperty(window, "matchMedia", {
+	Object.defineProperty(globalThis, "matchMedia", {
 		configurable: true,
 		value: originalMatchMedia,
 	});

@@ -49,10 +49,12 @@ export function useKeyboard(handlers: KeyboardHandlers, active: boolean) {
 						handlers.onFullscreen?.();
 					}
 					break;
+				default:
+					break;
 			}
 		}
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
+		globalThis.addEventListener("keydown", handleKeyDown);
+		return () => globalThis.removeEventListener("keydown", handleKeyDown);
 	}, [active, handlers]);
 }

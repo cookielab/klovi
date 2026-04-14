@@ -42,7 +42,7 @@ function createClient(overrides: Partial<KloviClient> = {}): KloviClient {
 }
 
 afterEach(() => {
-	window.location.hash = "#/";
+	globalThis.location.hash = "#/";
 });
 
 describe("getResumeCommand", () => {
@@ -67,7 +67,7 @@ describe("getResumeCommand", () => {
 
 describe("restoreFromHash", () => {
 	test("returns restoring when project loading hits a transport timeout", async () => {
-		window.location.hash = "#/project-one";
+		globalThis.location.hash = "#/project-one";
 		const view = await restoreFromHash(
 			createClient({
 				getProjects: () => Promise.reject(createRpcTimeoutError("getProjects", 120_000)),
@@ -78,7 +78,7 @@ describe("restoreFromHash", () => {
 	});
 
 	test("returns restoring when session loading hits a transport timeout", async () => {
-		window.location.hash = "#/project-one/session-1";
+		globalThis.location.hash = "#/project-one/session-1";
 		const view = await restoreFromHash(
 			createClient({
 				getSessions: () => Promise.reject(createRpcTimeoutError("getSessions", 120_000)),
@@ -89,7 +89,7 @@ describe("restoreFromHash", () => {
 	});
 
 	test("returns home when project is missing", async () => {
-		window.location.hash = "#/missing-project";
+		globalThis.location.hash = "#/missing-project";
 		const view = await restoreFromHash(
 			createClient({
 				getProjects: () => Promise.resolve({ projects: [] }),
@@ -100,7 +100,7 @@ describe("restoreFromHash", () => {
 	});
 
 	test("returns project when session is missing", async () => {
-		window.location.hash = "#/project-one/missing-session";
+		globalThis.location.hash = "#/project-one/missing-session";
 		const view = await restoreFromHash(
 			createClient({
 				getSessions: () => Promise.resolve({ sessions: [] }),

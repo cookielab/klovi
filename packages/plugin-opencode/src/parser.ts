@@ -168,7 +168,7 @@ function partToContentBlock(partData: PartData, nextToolUseId: () => string): Co
 }
 
 function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): ToolCallWithResult {
-	const state = toolPart.state;
+	const { state } = toolPart;
 	const toolId = toolPart.callID || nextToolUseId();
 
 	switch (state.status) {
@@ -195,6 +195,14 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 				name: toolPart.tool,
 				input: state.input,
 				result: "[Tool execution was interrupted]",
+				isError: true,
+			};
+		default:
+			return {
+				toolUseId: toolId,
+				name: toolPart.tool,
+				input: state.input,
+				result: "[Unknown tool state]",
 				isError: true,
 			};
 	}

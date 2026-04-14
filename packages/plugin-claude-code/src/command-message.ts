@@ -5,8 +5,8 @@
  *   <command-args>please create a pr...</command-args>
  */
 
-const COMMAND_ARGS_REGEX = /<command-args>([\s\S]*?)<\/command-args>/u;
-const COMMAND_NAME_REGEX = /<command-name>([\s\S]*?)<\/command-name>/u;
+const COMMAND_ARGS_REGEX = /<command-args>(?<content>[\s\S]*?)<\/command-args>/u;
+const COMMAND_NAME_REGEX = /<command-name>(?<content>[\s\S]*?)<\/command-name>/u;
 const COMMAND_MESSAGE_TAG_REGEX = /<command-message>[\s\S]*?<\/command-message>/gu;
 const COMMAND_NAME_TAG_REGEX = /<command-name>[\s\S]*?<\/command-name>/gu;
 
@@ -17,14 +17,14 @@ export function cleanCommandMessage(text: string): string {
 	}
 
 	const argsMatch = COMMAND_ARGS_REGEX.exec(text);
-	if (argsMatch?.[1]) {
-		return argsMatch[1].trim();
+	if (argsMatch?.groups?.["content"]) {
+		return argsMatch.groups["content"].trim();
 	}
 
 	// Fallback: use command name when no args present (e.g. arg-less slash commands)
 	const nameMatch = COMMAND_NAME_REGEX.exec(text);
-	if (nameMatch?.[1]) {
-		return nameMatch[1].trim();
+	if (nameMatch?.groups?.["content"]) {
+		return nameMatch.groups["content"].trim();
 	}
 
 	return text.replace(COMMAND_MESSAGE_TAG_REGEX, "").replace(COMMAND_NAME_TAG_REGEX, "").trim();
@@ -39,8 +39,8 @@ export function parseCommandMessage(text: string): { name: string; args: string 
 	const nameMatch = COMMAND_NAME_REGEX.exec(text);
 	const argsMatch = COMMAND_ARGS_REGEX.exec(text);
 
-	const name = nameMatch?.[1]?.trim() ?? "";
-	const args = argsMatch?.[1]?.trim() ?? "";
+	const name = nameMatch?.groups?.["content"]?.trim() ?? "";
+	const args = argsMatch?.groups?.["content"]?.trim() ?? "";
 
 	if (!(name || args)) {
 		return null;

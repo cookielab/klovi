@@ -42,6 +42,8 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 				className={`${IMAGE_BASE} ${visible ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
 				src={src}
 				alt="Full size preview"
+				width={800}
+				height={600}
 			/>
 		</div>
 	);

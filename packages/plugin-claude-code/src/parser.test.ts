@@ -130,7 +130,7 @@ describe("buildTurns", () => {
 		expect(turns).toHaveLength(1);
 		const turn = turns[0] as AssistantTurn;
 		expect(turn.contentBlocks).toHaveLength(1);
-		const call = turn.contentBlocks[0];
+		const [call] = turn.contentBlocks;
 		expect(call?.type).toBe("tool_call");
 		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
 		expect(toolCall.call.name).toBe("Read");
@@ -172,7 +172,7 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const call = turn.contentBlocks[0];
+		const [call] = turn.contentBlocks;
 		expect(call?.type).toBe("tool_call");
 		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
 		expect(toolCall.call.isError).toBe(true);
@@ -675,7 +675,7 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const call = turn.contentBlocks[0];
+		const [call] = turn.contentBlocks;
 		expect(call?.type).toBe("tool_call");
 		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
 		expect(toolCall.call.result).toBe("Image read successfully");

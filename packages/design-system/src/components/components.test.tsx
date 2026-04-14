@@ -73,7 +73,7 @@ describe("design-system components", () => {
 		fireEvent.click(overlay);
 		expect(onClose).toHaveBeenCalledTimes(1);
 
-		window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+		globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 		expect(onClose).toHaveBeenCalledTimes(2);
 
 		rerender(
@@ -82,7 +82,7 @@ describe("design-system components", () => {
 			</Modal>,
 		);
 
-		window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+		globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 		expect(onClose).toHaveBeenCalledTimes(2);
 	});
 

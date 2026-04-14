@@ -209,7 +209,8 @@ function UpdatesTab({
 	const handleChannelChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const channel = e.target.value as UpdateChannel;
-			setUpdateSettings({ ...updateSettings!, channel: channel });
+			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
+				setUpdateSettings({ ...updateSettings!, channel: channel });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ channel: channel }))
 				.then(() => setChanged(true))
 				.catch(() => {});
@@ -220,7 +221,8 @@ function UpdatesTab({
 	const handleIntervalChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const checkIntervalHours = Number(e.target.value);
-			setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
+			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
+				setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ checkIntervalHours: checkIntervalHours }))
 				.then(() => setChanged(true))
 				.catch(() => {});
@@ -231,7 +233,8 @@ function UpdatesTab({
 	const handleAutoDownloadChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const autoDownload = e.target.checked;
-			setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
+			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
+				setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ autoDownload: autoDownload }))
 				.then(() => setChanged(true))
 				.catch(() => {});
@@ -369,8 +372,8 @@ export function SettingsView({
 				onNavigateHome();
 			}
 		}
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
+		globalThis.addEventListener("keydown", handleKeyDown);
+		return () => globalThis.removeEventListener("keydown", handleKeyDown);
 	}, [onNavigateHome]);
 
 	const handleToggle = useCallback(
@@ -468,7 +471,7 @@ export function SettingsView({
 				for (const key of keys) {
 					localStorage.removeItem(key);
 				}
-				window.dispatchEvent(new CustomEvent("klovi:reset"));
+				globalThis.dispatchEvent(new CustomEvent("klovi:reset"));
 			})
 			.catch(() => {
 				resettingRef.current = false;

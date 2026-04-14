@@ -163,7 +163,7 @@ async function main(): Promise<void> {
 
 	// 3. Find the top-level bundle directory from extracted output
 	const extractedEntries = readdirSync(extractDir);
-	const bundleDir = extractedEntries[0];
+	const [bundleDir] = extractedEntries;
 	if (!bundleDir) {
 		fail("Tarball extracted to empty directory");
 	}
@@ -245,7 +245,7 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 		fail(`AppImage was not created at: ${outputPath}`);
 	}
 
-	const size = outputFile.size;
+	const { size } = outputFile;
 	console.log("\nAppImage created successfully!");
 	console.log(`  Path: ${outputPath}`);
 	console.log(`  Size: ${(size / 1024 / 1024).toFixed(1)} MB`);

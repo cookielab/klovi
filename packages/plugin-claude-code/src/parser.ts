@@ -91,7 +91,7 @@ function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: s
 	});
 }
 
-const AGENT_ID_RE = /agentId:\s*(\w+)/u;
+const AGENT_ID_RE = /agentId:\s*(?<id>\w+)/u;
 
 function extractFromProgressEvent(line: RawLine, map: Map<string, string>): void {
 	if (line.type === "progress" && line.parentToolUseID && line.data?.type === "agent_progress" && line.data.agentId) {
@@ -245,7 +245,7 @@ function collectToolResults(
 		if (line.type !== "user" || !line.message) {
 			continue;
 		}
-		const content = line.message.content;
+		const { content } = line.message;
 		if (!Array.isArray(content)) {
 			continue;
 		}
@@ -294,25 +294,25 @@ function isSkippedUserText(text: string): boolean {
 	);
 }
 
-const BASH_INPUT_RE = /<bash-input>([\s\S]*?)<\/bash-input>/u;
-const BASH_OUTPUT_RE = /^<bash-stdout>([\s\S]*?)<\/bash-stdout>(?:<bash-stderr>([\s\S]*?)<\/bash-stderr>)?$/u;
-const IDE_OPENED_FILE_RE = /<ide_opened_file>[\s\S]*?opened the file (.*?) in the IDE[\s\S]*?<\/ide_opened_file>/u;
+const BASH_INPUT_RE = /<bash-input>(?<input>[\s\S]*?)<\/bash-input>/u;
+const BASH_OUTPUT_RE = /^<bash-stdout>(?<stdout>[\s\S]*?)<\/bash-stdout>(?:<bash-stderr>(?<stderr>[\s\S]*?)<\/bash-stderr>)?$/u;
+const IDE_OPENED_FILE_RE = /<ide_opened_file>[\s\S]*?opened the file (?<file>.*?) in the IDE[\s\S]*?<\/ide_opened_file>/u;
 function parseSpecialUserContent(
 	text: string,
 ): { bashInput: string } | { bashStdout: string; bashStderr: string | undefined } | { ideOpenedFile: string } | null {
 	const bashMatch = BASH_INPUT_RE.exec(text);
-	if (bashMatch?.[1] !== undefined) {
-		return { bashInput: bashMatch[1] };
+	if (bashMatch?.groups?.["input"] !== undefined) {
+		return { bashInput: bashMatch.groups["input"] };
 	}
 
 	const outputMatch = BASH_OUTPUT_RE.exec(text);
-	if (outputMatch?.[1] !== undefined) {
-		return { bashStdout: outputMatch[1], bashStderr: outputMatch[2] };
+	if (outputMatch?.groups?.["stdout"] !== undefined) {
+		return { bashStdout: outputMatch.groups["stdout"], bashStderr: outputMatch.groups?.["stderr"] };
 	}
 
 	const ideMatch = IDE_OPENED_FILE_RE.exec(text);
-	if (ideMatch?.[1] !== undefined) {
-		return { ideOpenedFile: ideMatch[1] };
+	if (ideMatch?.groups?.["file"] !== undefined) {
+		return { ideOpenedFile: ideMatch.groups?.["file"] ?? "" };
 	}
 
 	return null;
@@ -322,7 +322,7 @@ function processUserLine(line: RawLine): UserTurn | "tool_result_only" | null {
 	if (!line.message) {
 		return null;
 	}
-	const content = line.message.content;
+	const { content } = line.message;
 
 	if (Array.isArray(content) && content.every((b) => b.type === "tool_result")) {
 		return "tool_result_only";

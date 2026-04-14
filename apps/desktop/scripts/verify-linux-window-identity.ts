@@ -7,9 +7,9 @@ import { resolveLinuxLauncherPath } from "./linux-bundle.ts";
 
 const EXPECTED_WM_CLASS = "Klovi";
 const FORBIDDEN_WM_CLASS = "ElectrobunKitchenSink";
-const PID_REGEX = /_NET_WM_PID\(CARDINAL\)\s*=\s*(\d+)/u;
-const WM_CLASS_REGEX = /WM_CLASS\([^)]+\)\s*=\s*(.+)/u;
-const WINDOW_NAME_REGEX = /_NET_WM_NAME\([^)]+\)\s*=\s*"(.+)"/u;
+const PID_REGEX = /_NET_WM_PID\(CARDINAL\)\s*=\s*(?<pid>\d+)/u;
+const WM_CLASS_REGEX = /WM_CLASS\([^)]+\)\s*=\s*(?<wmclass>.+)/u;
+const WINDOW_NAME_REGEX = /_NET_WM_NAME\([^)]+\)\s*=\s*"(?<name>.+)"/u;
 const WINDOW_ID_REGEX = /0x[0-9a-f]+/giu;
 const WHITESPACE_REGEX = /\s+/u;
 const OUTPUT_TAIL_LINE_COUNT = 20;
@@ -78,9 +78,9 @@ async function readWindowIdentity(windowId: string): Promise<WindowIdentity> {
 
 	return {
 		id: windowId,
-		pid: pidMatch?.[1] ? Number(pidMatch[1]) : null,
-		wmClass: wmClassMatch?.[1] ?? null,
-		name: nameMatch?.[1] ?? null,
+		pid: pidMatch?.groups?.["pid"] ? Number(pidMatch.groups["pid"]) : null,
+		wmClass: wmClassMatch?.groups?.["wmclass"] ?? null,
+		name: nameMatch?.groups?.["name"] ?? null,
 	};
 }
 
@@ -210,6 +210,7 @@ async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise
 	const deadline = Date.now() + timeoutMs;
 
 	while (Date.now() < deadline) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential polling required - each iteration checks new window state
 		const windowIds = await listWindowIds();
 		const identities = await Promise.all(windowIds.map((windowId) => readWindowIdentity(windowId)));
 		const ownerPids = await listProcessFamily(rootPid);
@@ -221,7 +222,8 @@ async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise
 			return match;
 		}
 
-		await Bun.sleep(500);
+		const pollIntervalMs = 500;
+		await Bun.sleep(pollIntervalMs);
 	}
 
 	const summary = lastObservedWindows.length > 0 ? lastObservedWindows : [];
@@ -247,12 +249,15 @@ async function killProcessTree(rootPid: number): Promise<void> {
 		}
 	}
 
-	const deadline = Date.now() + 5000;
+	const killWaitTimeoutMs = 5000;
+	const deadline = Date.now() + killWaitTimeoutMs;
 	while (Date.now() < deadline) {
 		if (!pids.some((pid) => processExists(pid))) {
 			return;
 		}
-		await Bun.sleep(100);
+		const killPollIntervalMs = 100;
+		// biome-ignore lint/performance/noAwaitInLoops: sequential polling required - deliberate sleep between polls
+		await Bun.sleep(killPollIntervalMs);
 	}
 
 	for (const pid of pids) {
@@ -289,7 +294,7 @@ async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
 	});
 
 	try {
-		const pid = proc.pid;
+		const { pid } = proc;
 		if (pid == null) {
 			throw new Error("Failed to start launcher process");
 		}

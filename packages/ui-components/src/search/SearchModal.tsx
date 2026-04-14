@@ -180,6 +180,8 @@ function SearchModal({
 					e.preventDefault();
 					onClose();
 					break;
+				default:
+					break;
 			}
 		},
 		[filtered, highlightedIndex, handleSelect, onClose],

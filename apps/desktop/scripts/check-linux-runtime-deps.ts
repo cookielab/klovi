@@ -7,8 +7,8 @@ import {
 	resolveLinuxNativeWrapperPaths,
 } from "./linux-bundle.ts";
 
-const MISSING_DEPENDENCY_REGEX = /^\s*(\S+)\s*=>\s*not found\s*$/u;
-const NON_DYNAMIC_EXECUTABLE_REGEX = /\b(not a dynamic executable|statically linked)\b/iu;
+const MISSING_DEPENDENCY_REGEX = /^\s*(?<lib>\S+)\s*=>\s*not found\s*$/u;
+const NON_DYNAMIC_EXECUTABLE_REGEX = /\b(?:not a dynamic executable|statically linked)\b/iu;
 
 type RuntimeDependencyArgs = {
 	bundlePath: string;
@@ -35,8 +35,8 @@ function parseMissingDependencies(stdout: string): string[] {
 
 	for (const line of stdout.split("\n")) {
 		const match = line.match(MISSING_DEPENDENCY_REGEX);
-		if (match?.[1]) {
-			missing.add(match[1]);
+		if (match?.groups?.["lib"]) {
+			missing.add(match.groups!["lib"]);
 		}
 	}
 

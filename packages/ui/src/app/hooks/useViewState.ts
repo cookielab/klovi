@@ -61,8 +61,8 @@ export function useViewState(): UseViewStateResult {
 			return;
 		}
 
-		if (window.location.hash !== pendingHash) {
-			window.location.hash = pendingHash;
+		if (globalThis.location.hash !== pendingHash) {
+			globalThis.location.hash = pendingHash;
 		}
 
 		runKloviEffect(restoreFromHashEffect()).then((nextView) => {
@@ -91,8 +91,8 @@ export function useViewState(): UseViewStateResult {
 			return;
 		}
 		const newHash = viewToHash(view);
-		if (window.location.hash !== newHash) {
-			window.location.hash = newHash;
+		if (globalThis.location.hash !== newHash) {
+			globalThis.location.hash = newHash;
 		}
 	}, [view, ready]);
 
@@ -102,8 +102,8 @@ export function useViewState(): UseViewStateResult {
 				applyRestoredView(nextView, true);
 			});
 		};
-		window.addEventListener("hashchange", handler);
-		return () => window.removeEventListener("hashchange", handler);
+		globalThis.addEventListener("hashchange", handler);
+		return () => globalThis.removeEventListener("hashchange", handler);
 	}, [applyRestoredView, runKloviEffect]);
 
 	useEffect(() => {

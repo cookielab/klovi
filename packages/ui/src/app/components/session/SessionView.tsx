@@ -26,7 +26,7 @@ export function SessionView({ sessionId, project, gitBranch }: SessionViewProps)
 		return null;
 	}
 
-	const session = data.session;
+	const { session } = data;
 	return (
 		<>
 			{gitBranch ? (

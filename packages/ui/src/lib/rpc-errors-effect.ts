@@ -51,7 +51,10 @@ export function getRpcErrorMessage(error: RpcError): string {
 			return `Desktop host disconnected during ${error.method}`;
 		case "RpcHandlerError":
 			return error.reason;
+		default:
+			break;
 	}
+	return "Unknown RPC error";
 }
 
 export function mapToRpcError(error: unknown, fallbackMethod = "unknown"): RpcError {

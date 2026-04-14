@@ -257,7 +257,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(turns).toHaveLength(1);
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.contentBlocks).toHaveLength(1);
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.toolUseId).toBe("call-123");
@@ -296,7 +296,7 @@ describe("buildOpenCodeTurns", () => {
 		const turns = buildOpenCodeTurns(messages);
 
 		const assistant = turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.isError).toBe(true);
@@ -330,7 +330,7 @@ describe("buildOpenCodeTurns", () => {
 		const turns = buildOpenCodeTurns(messages);
 
 		const assistant = turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.isError).toBe(true);
@@ -660,7 +660,7 @@ describe("loadOpenCodeSession", () => {
 
 		expect(session.turns).toHaveLength(1);
 		const assistant = session.turns[0] as AssistantTurn;
-		const block = assistant.contentBlocks[0];
+		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.isError).toBe(true);
