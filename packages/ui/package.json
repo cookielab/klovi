@@ -12,7 +12,9 @@
 	"scripts": {
 		"dev": "bun run build.ts --watch",
 		"build": "bun run build.ts --minify",
-		"typecheck": "tsc --noEmit -p tsconfig.json"
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
 	},
 	"dependencies": {
 		"@cookielab.io/klovi-design-system": "workspace:*",

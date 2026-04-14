@@ -9,6 +9,11 @@
 	},
 	"sideEffects": false,
 	"files": ["src"],
+	"scripts": {
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
+	},
 	"dependencies": {
 		"effect": "*",
 		"@effect/platform": "*"

@@ -15,10 +15,10 @@
 		"verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
 		"test": "bun test",
 		"test:node-smoke": "tsx scripts/plugin-runtime-node-smoke.ts",
-		"typecheck": "tsc -p tsconfig.fe.json --noEmit",
+		"typecheck": "bun run --filter '*' typecheck",
 		"format": "biome format --write .",
-		"lint": "biome check .",
-		"lint:fix": "biome check --write .",
+		"lint": "bun run --filter '*' lint",
+		"lint:fix": "bun run --filter '*' lint:fix",
 		"storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
 	},
 	"devDependencies": {
