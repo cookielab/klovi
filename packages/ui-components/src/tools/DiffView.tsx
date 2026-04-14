@@ -2,6 +2,7 @@ import { useTheme } from "@cookielab.io/klovi-design-system";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+const LINE_NUMBER_THRESHOLD = 3;
 const HEADER_CLASSES =
 	"flex items-center px-3 py-[6px] bg-surface-code text-[0.75rem] text-foreground-subtle font-mono";
 
@@ -48,7 +49,7 @@ export function DiffView({ filePath, oldString, newString }: DiffViewProps) {
 						fontSize: "0.85em",
 						lineHeight: 1.5,
 					}}
-					showLineNumbers={diff.split("\n").length > 3}
+					showLineNumbers={diff.split("\n").length > LINE_NUMBER_THRESHOLD}
 				>
 					{diff}
 				</SyntaxHighlighter>

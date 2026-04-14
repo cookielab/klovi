@@ -42,7 +42,8 @@ function countRecentSessions(sessions: SessionSummary[]): {
 } {
 	const today = toDateString(new Date());
 	const now = new Date();
-	const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+	const daysPerWeek = 7;
+	const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysPerWeek);
 	const weekAgoStr = toDateString(weekAgo);
 
 	let todaySessions = 0;

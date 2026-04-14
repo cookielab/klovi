@@ -38,7 +38,8 @@ const RPC_TIMEOUTS: Partial<Record<DesktopRpcMethod, number>> = {
 
 let hostConnectionState: KloviHostConnectionState = "connecting";
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-let reconnectDelay = 1000;
+const INITIAL_RECONNECT_DELAY = 1000;
+let reconnectDelay = INITIAL_RECONNECT_DELAY;
 const MAX_RECONNECT_DELAY = 30_000;
 const observedSockets = new WeakSet<WebSocket>();
 
@@ -121,7 +122,7 @@ function attachSocketStateListeners(socket: WebSocket | undefined): void {
 
 	socket.addEventListener("open", () => {
 		clearReconnectTimer();
-		reconnectDelay = 1000;
+		reconnectDelay = INITIAL_RECONNECT_DELAY;
 		setHostConnectionState("connected");
 	});
 
@@ -194,8 +195,10 @@ function waitForHostConnection(timeoutMs: number): Promise<boolean> {
 	});
 }
 
+const MAX_CONNECTION_WAIT = 5000;
+
 async function callDesktopRpc<T>(method: DesktopRpcMethod, fn: () => Promise<T>, timeoutMs: number): Promise<T> {
-	const connected = await waitForHostConnection(Math.min(timeoutMs, 5000));
+	const connected = await waitForHostConnection(Math.min(timeoutMs, MAX_CONNECTION_WAIT));
 	if (!connected) {
 		throw createRpcDisconnectedError(String(method));
 	}

@@ -287,7 +287,8 @@ function getFirstUserTextPart(db: SqliteDb, messageId: string): string {
 	for (const part of parts) {
 		const partData = tryParseJson<PartDataJson>(part.data);
 		if (partData?.type === "text" && partData.text) {
-			return partData.text.slice(0, 200);
+			const maxPreviewLength = 200;
+			return partData.text.slice(0, maxPreviewLength);
 		}
 	}
 

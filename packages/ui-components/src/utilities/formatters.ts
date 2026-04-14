@@ -1,3 +1,9 @@
+const MS_PER_MINUTE = 60_000;
+const MS_PER_HOUR = 3_600_000;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const DAYS_PER_MONTH = 30;
+
 function formatTimestamp(iso: string): string {
 	const date = new Date(iso);
 	if (Number.isNaN(date.getTime())) {
@@ -6,16 +12,16 @@ function formatTimestamp(iso: string): string {
 
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
-	const diffMin = Math.floor(diffMs / 60_000);
-	const diffHr = Math.floor(diffMs / 3_600_000);
+	const diffMin = Math.floor(diffMs / MS_PER_MINUTE);
+	const diffHr = Math.floor(diffMs / MS_PER_HOUR);
 
 	if (diffMin < 1) {
 		return "just now";
 	}
-	if (diffMin < 60) {
+	if (diffMin < MINUTES_PER_HOUR) {
 		return `${diffMin}m ago`;
 	}
-	if (diffHr < 24) {
+	if (diffHr < HOURS_PER_DAY) {
 		return `${diffHr}h ago`;
 	}
 
@@ -31,20 +37,20 @@ function formatRelativeTime(iso: string): string {
 	const date = new Date(iso);
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
-	const diffMins = Math.floor(diffMs / 60_000);
-	const diffHours = Math.floor(diffMins / 60);
-	const diffDays = Math.floor(diffHours / 24);
+	const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
+	const diffHours = Math.floor(diffMins / MINUTES_PER_HOUR);
+	const diffDays = Math.floor(diffHours / HOURS_PER_DAY);
 
 	if (diffMins < 1) {
 		return "just now";
 	}
-	if (diffMins < 60) {
+	if (diffMins < MINUTES_PER_HOUR) {
 		return `${diffMins}m ago`;
 	}
-	if (diffHours < 24) {
+	if (diffHours < HOURS_PER_DAY) {
 		return `${diffHours}h ago`;
 	}
-	if (diffDays < 30) {
+	if (diffDays < DAYS_PER_MONTH) {
 		return `${diffDays}d ago`;
 	}
 	return date.toLocaleDateString();

@@ -17,6 +17,7 @@ afterEach(async () => {
 	while (tempPaths.length > 0) {
 		const path = tempPaths.pop();
 		if (path) {
+			// biome-ignore lint/performance/noAwaitInLoops: sequential cleanup of temp directories
 			await rm(path, { recursive: true, force: true });
 		}
 	}

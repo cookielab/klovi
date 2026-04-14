@@ -67,7 +67,9 @@ export function PresentationShell({
 		}
 	}, [currentStep]);
 
-	const progress = presentation.totalSteps > 0 ? ((presentation.currentStep + 1) / presentation.totalSteps) * 100 : 0;
+	const percentMultiplier = 100;
+	const progress =
+		presentation.totalSteps > 0 ? ((presentation.currentStep + 1) / presentation.totalSteps) * percentMultiplier : 0;
 
 	const className = presentation.fullscreen ? FULLSCREEN_CLASSES : SHELL_CLASSES;
 

@@ -17,6 +17,8 @@ import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types.t
 import { readFileText } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
+const MAX_RAW_LINE_LENGTH = 500;
+
 type ParsedSession = {
 	session: Session;
 	slug: string | undefined;
@@ -206,7 +208,8 @@ function readJsonlLines(filePath: string) {
 						uuid: `parse-error-line-${lineNumber}`,
 						timestamp: rawLines.at(-1)?.timestamp ?? "",
 						lineNumber: lineNumber,
-						rawLine: line.length > 500 ? `${line.slice(0, 500)}\u2026 (truncated)` : line,
+						rawLine:
+							line.length > MAX_RAW_LINE_LENGTH ? `${line.slice(0, MAX_RAW_LINE_LENGTH)}\u2026 (truncated)` : line,
 						errorType: "json_parse",
 						errorDetails: error instanceof Error ? error.message : undefined,
 					});
@@ -295,8 +298,10 @@ function isSkippedUserText(text: string): boolean {
 }
 
 const BASH_INPUT_RE = /<bash-input>(?<input>[\s\S]*?)<\/bash-input>/u;
-const BASH_OUTPUT_RE = /^<bash-stdout>(?<stdout>[\s\S]*?)<\/bash-stdout>(?:<bash-stderr>(?<stderr>[\s\S]*?)<\/bash-stderr>)?$/u;
-const IDE_OPENED_FILE_RE = /<ide_opened_file>[\s\S]*?opened the file (?<file>.*?) in the IDE[\s\S]*?<\/ide_opened_file>/u;
+const BASH_OUTPUT_RE =
+	/^<bash-stdout>(?<stdout>[\s\S]*?)<\/bash-stdout>(?:<bash-stderr>(?<stderr>[\s\S]*?)<\/bash-stderr>)?$/u;
+const IDE_OPENED_FILE_RE =
+	/<ide_opened_file>[\s\S]*?opened the file (?<file>.*?) in the IDE[\s\S]*?<\/ide_opened_file>/u;
 function parseSpecialUserContent(
 	text: string,
 ): { bashInput: string } | { bashStdout: string; bashStderr: string | undefined } | { ideOpenedFile: string } | null {
@@ -471,7 +476,7 @@ function handleAssistantLine(
 			uuid: `parse-error-${line.uuid ?? "unknown"}`,
 			timestamp: line.timestamp ?? "",
 			lineNumber: 0,
-			rawLine: JSON.stringify(line.message.content).slice(0, 500),
+			rawLine: JSON.stringify(line.message.content).slice(0, MAX_RAW_LINE_LENGTH),
 			errorType: "invalid_structure",
 			errorDetails: `Assistant message content is ${typeof line.message.content}, expected array`,
 		});

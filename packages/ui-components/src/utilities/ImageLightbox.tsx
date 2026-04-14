@@ -9,8 +9,9 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 	const [visible, setVisible] = useState(false);
 
 	const handleClose = useCallback(() => {
+		const transitionDuration = 200;
 		setVisible(false);
-		setTimeout(onClose, 200);
+		setTimeout(onClose, transitionDuration);
 	}, [onClose]);
 
 	useEffect(() => {

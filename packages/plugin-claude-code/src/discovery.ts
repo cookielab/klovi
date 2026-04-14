@@ -12,8 +12,10 @@ import {
 } from "./shared/discovery-utils.ts";
 import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
-const CWD_SCAN_BYTES = 64 * 1024;
-const SESSION_META_SCAN_BYTES = 1024 * 1024;
+const BYTES_PER_KB = 1024;
+const CWD_SCAN_KB = 64;
+const CWD_SCAN_BYTES = CWD_SCAN_KB * BYTES_PER_KB;
+const SESSION_META_SCAN_BYTES = BYTES_PER_KB * BYTES_PER_KB;
 const BRACKETED_TEXT_REGEX = /^\[.+\]$/u;
 
 function inspectProjectSessions(projectDir: string, sessionFiles: { fileName: string; mtime: string }[]) {
@@ -189,7 +191,8 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 	if (!meta.firstMessage && obj.type === "user" && !obj.isMeta && obj.message) {
 		const raw = extractTextFromContent(obj.message.content);
 		if (raw && !isInternalMessage(raw)) {
-			meta.firstMessage = cleanCommandMessage(raw).slice(0, 200);
+			const maxPreviewLength = 200;
+			meta.firstMessage = cleanCommandMessage(raw).slice(0, maxPreviewLength);
 		}
 	}
 }

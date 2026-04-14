@@ -1,3 +1,5 @@
+const MS_PER_SECOND = 1000;
+
 export function sortByIsoDesc<T>(items: T[], select: (item: T) => string): void {
 	items.sort((a, b) => select(b).localeCompare(select(a)));
 }
@@ -17,5 +19,5 @@ export function epochMsToIso(epochMs: number): string {
 }
 
 export function epochSecondsToIso(epochSeconds: number): string {
-	return new Date(epochSeconds * 1000).toISOString();
+	return new Date(epochSeconds * MS_PER_SECOND).toISOString();
 }

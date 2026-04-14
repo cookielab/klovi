@@ -12,6 +12,7 @@ afterEach(async () => {
 		if (!root) {
 			continue;
 		}
+		// biome-ignore lint/performance/noAwaitInLoops: sequential cleanup of temp directories
 		await Bun.$`rm -rf ${root}`;
 	}
 });

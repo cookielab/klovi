@@ -36,7 +36,7 @@ function parseMissingDependencies(stdout: string): string[] {
 	for (const line of stdout.split("\n")) {
 		const match = line.match(MISSING_DEPENDENCY_REGEX);
 		if (match?.groups?.["lib"]) {
-			missing.add(match.groups!["lib"]);
+			missing.add(match.groups["lib"]);
 		}
 	}
 
@@ -89,6 +89,7 @@ async function checkLinuxRuntimeDeps(
 
 	const failures: string[] = [];
 	for (const targetPath of [launcherPath, ...nativeWrapperPaths]) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential ldd invocations per binary
 		const result = await commandRunner(["ldd", targetPath], env);
 		if (result.exitCode !== 0) {
 			const combinedOutput = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();

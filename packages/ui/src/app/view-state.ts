@@ -274,8 +274,9 @@ function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
 	}
 	if (view.kind === "subagent") {
 		const parts = view.project.name.split("/").filter(Boolean);
+		const agentIdPrefixLength = 8;
 		return {
-			title: `Sub-agent ${view.agentId.slice(0, 8)}`,
+			title: `Sub-agent ${view.agentId.slice(0, agentIdPrefixLength)}`,
 			breadcrumb: parts.slice(-2).join("/"),
 		};
 	}

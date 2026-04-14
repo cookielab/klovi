@@ -198,6 +198,7 @@ async function ensureShims(): Promise<void> {
 		const fullPath = join(electrobunDir, relativePath);
 		mkdirSync(dirname(fullPath), { recursive: true });
 		const file = Bun.file(fullPath);
+		// biome-ignore lint/performance/noAwaitInLoops: sequential shim file writes
 		const current = (await file.exists()) ? await file.text() : null;
 		if (current !== contents) {
 			await Bun.write(fullPath, contents);
@@ -218,6 +219,7 @@ async function patchNativeLibraries(): Promise<void> {
 	for (const lib of libs) {
 		const libPath = join(distDir, lib);
 		const file = Bun.file(libPath);
+		// biome-ignore lint/performance/noAwaitInLoops: sequential native library patching
 		if (!(await file.exists())) {
 			continue;
 		}

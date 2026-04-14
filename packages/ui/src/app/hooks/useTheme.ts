@@ -3,6 +3,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context.ts";
 import { kloviHostBridge } from "../../lib/rpc-client.ts";
 
+const DEFAULT_PRESENTATION_FONT_SIZE = 15;
+const PRESENTATION_FONT_SIZE_STEP = 2;
+const MAX_PRESENTATION_FONT_SIZE = 28;
+const MIN_PRESENTATION_FONT_SIZE = 10;
+
 export type { ThemeSetting, UseThemeOptions } from "@cookielab.io/klovi-design-system";
 // Re-export core theme hooks from DS
 export { resolveTheme, useFontSize, useTheme } from "@cookielab.io/klovi-design-system";
@@ -76,7 +81,7 @@ export function usePresentationTheme() {
 export function usePresentationFontSize() {
 	const [size, setSize] = useState(() => {
 		const stored = localStorage.getItem("klovi-presentation-font-size");
-		return stored ? Number.parseInt(stored, 10) : 15;
+		return stored ? Number.parseInt(stored, 10) : DEFAULT_PRESENTATION_FONT_SIZE;
 	});
 
 	const [sameAsGlobal, setSameAsGlobalState] = useState(
@@ -91,9 +96,18 @@ export function usePresentationFontSize() {
 		localStorage.setItem("klovi-presentation-same-font-size", String(sameAsGlobal));
 	}, [sameAsGlobal]);
 
-	const increase = useCallback(() => setSize((s) => Math.min(s + 2, 28)), []);
-	const decrease = useCallback(() => setSize((s) => Math.max(s - 2, 10)), []);
-	const set = useCallback((s: number) => setSize(Math.max(10, Math.min(28, s))), []);
+	const increase = useCallback(
+		() => setSize((s) => Math.min(s + PRESENTATION_FONT_SIZE_STEP, MAX_PRESENTATION_FONT_SIZE)),
+		[],
+	);
+	const decrease = useCallback(
+		() => setSize((s) => Math.max(s - PRESENTATION_FONT_SIZE_STEP, MIN_PRESENTATION_FONT_SIZE)),
+		[],
+	);
+	const set = useCallback(
+		(s: number) => setSize(Math.max(MIN_PRESENTATION_FONT_SIZE, Math.min(MAX_PRESENTATION_FONT_SIZE, s))),
+		[],
+	);
 
 	const setSameAsGlobal = useCallback((v: boolean) => {
 		setSameAsGlobalState(v);

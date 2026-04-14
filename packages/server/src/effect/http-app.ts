@@ -63,7 +63,8 @@ const rpcHandler = Effect.gen(function* () {
 	}
 
 	if (!isRpcMethod(method, services)) {
-		return yield* Effect.fail(new RPCError(404, `Unknown method: ${method}`));
+		const httpNotFound = 404;
+		return yield* Effect.fail(new RPCError(httpNotFound, `Unknown method: ${method}`));
 	}
 
 	let params: Record<string, unknown> = {};

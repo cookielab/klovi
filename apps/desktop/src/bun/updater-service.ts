@@ -68,6 +68,7 @@ const streamChunksToFile = (state: StreamState) =>
 		let bytesDownloaded = 0;
 		const { reader, writer, totalBytes, version, currentVersion } = state;
 
+		// biome-ignore lint/nursery/noUnnecessaryConditions: intentional infinite loop - exits via break when stream completes
 		while (true) {
 			const { done, value } = yield* Effect.tryPromise({
 				try: () => reader.read(),

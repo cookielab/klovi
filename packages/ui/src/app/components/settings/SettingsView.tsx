@@ -130,6 +130,8 @@ function ThemeSelector({
 	);
 }
 
+const MAX_FONT_SIZE = 28;
+
 function FontSizeControl({
 	size,
 	onIncrease,
@@ -148,8 +150,13 @@ function FontSizeControl({
 				A-
 			</button>
 			<span className={FONT_SIZE_VALUE_CLASSES}>{size}</span>
-			{/* biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy */}
-			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size >= 28} onClick={onIncrease}>
+			<button
+				type="button"
+				className={FONT_SIZE_BUTTON_CLASSES}
+				// biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy
+				disabled={disabled || size >= MAX_FONT_SIZE}
+				onClick={onIncrease}
+			>
 				A+
 			</button>
 		</div>
@@ -210,7 +217,7 @@ function UpdatesTab({
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const channel = e.target.value as UpdateChannel;
 			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
-				setUpdateSettings({ ...updateSettings!, channel: channel });
+			setUpdateSettings({ ...updateSettings!, channel: channel });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ channel: channel }))
 				.then(() => setChanged(true))
 				.catch(() => {});
@@ -222,7 +229,7 @@ function UpdatesTab({
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const checkIntervalHours = Number(e.target.value);
 			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
-				setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
+			setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ checkIntervalHours: checkIntervalHours }))
 				.then(() => setChanged(true))
 				.catch(() => {});
@@ -234,7 +241,7 @@ function UpdatesTab({
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const autoDownload = e.target.checked;
 			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
-				setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
+			setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ autoDownload: autoDownload }))
 				.then(() => setChanged(true))
 				.catch(() => {});

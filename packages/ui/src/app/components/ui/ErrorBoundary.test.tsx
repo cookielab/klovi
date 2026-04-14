@@ -65,6 +65,7 @@ describe("ErrorBoundary", () => {
 		silenceExpectedBoundaryErrors();
 		let shouldThrow = true;
 		function MaybeThrow(): React.JSX.Element {
+			// biome-ignore lint/nursery/noUnnecessaryConditions: value is mutated between renders in test
 			if (shouldThrow) {
 				throw new Error("boom");
 			}
@@ -87,6 +88,7 @@ describe("ErrorBoundary", () => {
 		silenceExpectedBoundaryErrors();
 		let shouldThrow = true;
 		function MaybeThrow(): React.JSX.Element {
+			// biome-ignore lint/nursery/noUnnecessaryConditions: value is mutated between renders in test
 			if (shouldThrow) {
 				throw new Error("boom");
 			}

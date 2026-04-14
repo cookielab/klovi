@@ -20,15 +20,19 @@ const MODEL_LIST_ITEM_CLASSES = "flex items-center justify-between py-[2px] text
 const MODEL_NAME_CLASSES = "font-mono text-[0.78rem] text-foreground-muted";
 const MODEL_COUNT_CLASSES = "text-[0.75rem] text-foreground-subtle";
 
+const ONE_BILLION = 1_000_000_000;
+const ONE_MILLION = 1_000_000;
+const ONE_THOUSAND = 1000;
+
 function compactNumber(n: number): string {
-	if (n >= 1_000_000_000) {
-		return `${(n / 1_000_000_000).toFixed(1)}B`;
+	if (n >= ONE_BILLION) {
+		return `${(n / ONE_BILLION).toFixed(1)}B`;
 	}
-	if (n >= 1_000_000) {
-		return `${(n / 1_000_000).toFixed(1)}M`;
+	if (n >= ONE_MILLION) {
+		return `${(n / ONE_MILLION).toFixed(1)}M`;
 	}
-	if (n >= 1000) {
-		return `${(n / 1000).toFixed(1)}K`;
+	if (n >= ONE_THOUSAND) {
+		return `${(n / ONE_THOUSAND).toFixed(1)}K`;
 	}
 	return String(n);
 }

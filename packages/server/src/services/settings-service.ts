@@ -14,6 +14,8 @@ type PluginSettingInfo = {
 	isCustomDir: boolean;
 };
 
+const DEFAULT_CHECK_INTERVAL_HOURS = 6;
+
 type UpdateSettingsInfo = {
 	channel: UpdateChannel;
 	checkIntervalHours: number;
@@ -105,7 +107,7 @@ function getUpdateSettings(settingsPath: string): Effect.Effect<UpdateSettingsIn
 		const settings = yield* loadSettings(settingsPath);
 		return {
 			channel: settings.updates?.channel ?? "stable",
-			checkIntervalHours: settings.updates?.checkIntervalHours ?? 6,
+			checkIntervalHours: settings.updates?.checkIntervalHours ?? DEFAULT_CHECK_INTERVAL_HOURS,
 			autoDownload: settings.updates?.autoDownload ?? true,
 		};
 	});

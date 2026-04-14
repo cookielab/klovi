@@ -1,7 +1,9 @@
 import { truncate } from "./shared/text-utils.ts";
 
+const COMMAND_SUMMARY_MAX = 80;
+
 export const codexSummaryExtractors: Record<string, (input: Record<string, unknown>) => string> = {
-	command_execution: (i) => truncate(String(i["command"] || ""), 80),
+	command_execution: (i) => truncate(String(i["command"] || ""), COMMAND_SUMMARY_MAX),
 	file_change: (i) => {
 		const changes = i["changes"];
 		if (Array.isArray(changes) && changes.length > 0) {

@@ -19,7 +19,9 @@ type CodexEvent = {
 	};
 };
 
-const SESSION_TITLE_SCAN_BYTES = 256 * 1024;
+const BYTES_PER_KB = 1024;
+const SESSION_TITLE_SCAN_KB = 256;
+const SESSION_TITLE_SCAN_BYTES = SESSION_TITLE_SCAN_KB * BYTES_PER_KB;
 
 function discoverCodexProjects() {
 	return Effect.gen(function* () {
@@ -70,7 +72,8 @@ function extractFirstUserMessage(text: string): string | null {
 
 			// Old format: item.completed with agent_message
 			if (event.type === "item.completed" && event.item?.type === "agent_message" && event.item.text) {
-				message = event.item.text.slice(0, 200);
+				const maxPreviewLength = 200;
+				message = event.item.text.slice(0, maxPreviewLength);
 				return false;
 			}
 
@@ -78,7 +81,8 @@ function extractFirstUserMessage(text: string): string | null {
 			if (event.type === "event_msg" && event.payload?.type === "user_message") {
 				const payloadText = event.payload.message || event.payload.text;
 				if (typeof payloadText === "string" && payloadText) {
-					message = payloadText.slice(0, 200);
+					const maxMsgLength = 200;
+					message = payloadText.slice(0, maxMsgLength);
 					return false;
 				}
 			}

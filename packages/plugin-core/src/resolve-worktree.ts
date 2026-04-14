@@ -49,7 +49,7 @@ function resolveGitWorktree(worktreePath: string) {
 			return worktreePath;
 		}
 
-		const gitdir = match.groups!["gitdir"];
+		const gitdir = match.groups["gitdir"];
 		const worktreeIdx = gitdir.indexOf(GIT_WORKTREES_SEGMENT);
 		if (worktreeIdx === -1) {
 			return worktreePath;

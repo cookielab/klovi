@@ -20,7 +20,10 @@ type SessionFileInfo = {
 	mtime: string;
 };
 
-const FIRST_LINE_SCAN_BYTES = 512 * 1024;
+const BYTES_PER_KB = 1024;
+const FIRST_LINE_SCAN_KB = 512;
+const FIRST_LINE_SCAN_BYTES = FIRST_LINE_SCAN_KB * BYTES_PER_KB;
+const MS_PER_SECOND = 1000;
 
 function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
 	return (
@@ -70,7 +73,7 @@ function normalizeSessionMeta(parsed: unknown, fileMtimeEpoch?: number): CodexSe
 	if (isNewFormatMeta(parsed)) {
 		const { payload } = parsed;
 		const isoTimestamp = payload.timestamp || parsed.timestamp;
-		const createdEpoch = isoTimestamp ? new Date(isoTimestamp).getTime() / 1000 : 0;
+		const createdEpoch = isoTimestamp ? new Date(isoTimestamp).getTime() / MS_PER_SECOND : 0;
 		const updatedEpoch = fileMtimeEpoch ?? createdEpoch;
 
 		return {
@@ -195,7 +198,7 @@ function scanCodexSessions() {
 		yield* walkJsonlFiles(sessionsDir, (filePath, _fileName) =>
 			Effect.gen(function* () {
 				const info = yield* fs.stat(filePath).pipe(Effect.catchAll(() => Effect.succeed(null)));
-				const fileMtimeEpoch = info?.mtime._tag === "Some" ? info.mtime.value.getTime() / 1000 : undefined;
+				const fileMtimeEpoch = info?.mtime._tag === "Some" ? info.mtime.value.getTime() / MS_PER_SECOND : undefined;
 
 				const meta = yield* parseSessionMeta(filePath, fileMtimeEpoch);
 				if (!meta) {

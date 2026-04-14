@@ -10,6 +10,8 @@ type CodeBoxProps = {
 	showLineNumbers?: boolean;
 };
 
+const LINE_NUMBER_THRESHOLD = 3;
+
 const CUSTOM_STYLE = {
 	margin: 0,
 	padding: "12px 16px",
@@ -22,7 +24,7 @@ export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps) {
 	const { resolved: theme } = useTheme();
 	const lang = language ?? "text";
 	const style = theme === "dark" ? oneDark : oneLight;
-	const lineNumbers = showLineNumbers ?? children.split("\n").length > 3;
+	const lineNumbers = showLineNumbers ?? children.split("\n").length > LINE_NUMBER_THRESHOLD;
 
 	return (
 		<div className="relative my-3">

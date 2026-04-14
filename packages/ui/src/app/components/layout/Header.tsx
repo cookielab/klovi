@@ -59,7 +59,8 @@ export function Header({
 		if (!copied) {
 			return;
 		}
-		const timer = setTimeout(() => setCopied(false), 1500);
+		const copiedResetDelay = 1500;
+		const timer = setTimeout(() => setCopied(false), copiedResetDelay);
 		return () => clearTimeout(timer);
 	}, [copied]);
 

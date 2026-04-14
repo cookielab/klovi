@@ -38,6 +38,7 @@ function parseArgs(argv: string[]): VerifyArgs {
 
 async function hasMetadataFile(dir: string): Promise<boolean> {
 	for (const filename of METADATA_FILENAMES) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential metadata file existence check
 		if (await Bun.file(join(dir, "Resources", filename)).exists()) {
 			return true;
 		}
@@ -106,6 +107,7 @@ function parseDesktopEntry(raw: string): Map<string, string> {
 async function readWrapperMetadata(bundleRoot: string): Promise<WrapperMetadata> {
 	for (const filename of METADATA_FILENAMES) {
 		const filePath = join(bundleRoot, "Resources", filename);
+		// biome-ignore lint/performance/noAwaitInLoops: sequential metadata file read
 		if (await Bun.file(filePath).exists()) {
 			const parsed: unknown = await Bun.file(filePath).json();
 			assertMetadata(parsed);
@@ -132,6 +134,7 @@ async function assertBundleIcons(bundleRoot: string): Promise<void> {
 	const iconPaths = [join(bundleRoot, "Resources", "appIcon.png"), join(bundleRoot, "Resources", "app", "icon.png")];
 
 	for (const iconPath of iconPaths) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential icon existence check
 		if (!(await Bun.file(iconPath).exists())) {
 			throw new Error(`Missing required icon asset: ${iconPath}`);
 		}
@@ -142,6 +145,7 @@ async function assertAppDirIcons(inputRoot: string): Promise<void> {
 	const iconPaths = [join(inputRoot, `${EXPECTED_LINUX_ICON_BASENAME}.png`), join(inputRoot, ".DirIcon")];
 
 	for (const iconPath of iconPaths) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential icon existence check
 		if (!(await Bun.file(iconPath).exists())) {
 			throw new Error(`Missing required AppDir icon asset: ${iconPath}`);
 		}

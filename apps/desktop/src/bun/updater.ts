@@ -150,6 +150,7 @@ async function findExtractedAppBundlePath(platform: Platform, stagingDir: string
 	const entries = await readdir(stagingDir);
 	for (const entry of entries) {
 		const fullPath = join(stagingDir, entry);
+		// biome-ignore lint/performance/noAwaitInLoops: sequential directory scan for app bundle
 		if ((await stat(fullPath)).isDirectory()) {
 			return fullPath;
 		}

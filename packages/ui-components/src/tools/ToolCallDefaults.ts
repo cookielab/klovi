@@ -43,8 +43,10 @@ const fileSummaryExtractors: Record<string, SummaryExtractor> = {
 	NotebookRead: (i) => String(i["notebook_path"] || ""),
 };
 
+const COMMAND_SUMMARY_MAX = 80;
+
 const shellSummaryExtractors: Record<string, SummaryExtractor> = {
-	Bash: (i) => truncate(String(i["command"] || ""), 80),
+	Bash: (i) => truncate(String(i["command"] || ""), COMMAND_SUMMARY_MAX),
 };
 
 const agentSummaryExtractors: Record<string, SummaryExtractor> = {

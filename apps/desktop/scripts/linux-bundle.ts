@@ -25,6 +25,7 @@ async function findNamedFiles(root: string, fileNames: readonly string[]): Promi
 
 		let entries: Dirent<string>[];
 		try {
+			// biome-ignore lint/performance/noAwaitInLoops: sequential directory traversal
 			entries = await readdir(dir, { encoding: "utf8", withFileTypes: true });
 		} catch {
 			continue;
@@ -51,6 +52,7 @@ async function resolveLinuxLauncherPath(bundlePath: string): Promise<string> {
 
 	for (const segments of LINUX_LAUNCHER_RELATIVE_PATHS) {
 		const candidate = join(resolvedBundle, ...segments);
+		// biome-ignore lint/performance/noAwaitInLoops: sequential file existence check per candidate path
 		if (await Bun.file(candidate).exists()) {
 			return candidate;
 		}

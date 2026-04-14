@@ -30,7 +30,8 @@ function contentBlockKey(block: ContentBlock, index: number): string {
 		return `tool-${block.call.toolUseId}`;
 	}
 	if (block.type === "thinking") {
-		return `thinking-${block.block.text.slice(0, 40)}-${index}`;
+		const thinkingKeyLength = 40;
+		return `thinking-${block.block.text.slice(0, thinkingKeyLength)}-${index}`;
 	}
 	return `text-${index}`;
 }

@@ -85,6 +85,9 @@ function fail(message: string): never {
 // Architecture mapping (exported for testing)
 // ---------------------------------------------------------------------------
 
+const BYTES_PER_KB = 1024;
+const BYTES_PER_MB = BYTES_PER_KB * BYTES_PER_KB;
+
 const APPIMAGE_ARCH_MAP: Record<string, string> = {
 	x64: "x86_64",
 	arm64: "aarch64",
@@ -248,7 +251,7 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 	const { size } = outputFile;
 	console.log("\nAppImage created successfully!");
 	console.log(`  Path: ${outputPath}`);
-	console.log(`  Size: ${(size / 1024 / 1024).toFixed(1)} MB`);
+	console.log(`  Size: ${(size / BYTES_PER_MB).toFixed(1)} MB`);
 }
 
 // Only run main when executed directly, not when imported for testing.

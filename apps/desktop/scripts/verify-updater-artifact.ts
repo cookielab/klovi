@@ -101,6 +101,7 @@ async function resolveZstdPath(platform: Platform, arch: Arch, explicitPath?: st
 	}
 
 	for (const candidate of getDefaultZstdPaths(platform, arch)) {
+		// biome-ignore lint/performance/noAwaitInLoops: sequential file existence check per candidate path
 		if (await Bun.file(candidate).exists()) {
 			return candidate;
 		}
