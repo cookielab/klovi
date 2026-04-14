@@ -11,6 +11,8 @@
 	"sideEffects": false,
 	"files": ["src"],
 	"scripts": {
+		"test:unit": "bun test --preload ../../test-setup.ts",
+		"test:integration": "true",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write ."

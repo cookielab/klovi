@@ -28,6 +28,8 @@
 		"build:web-assets": "rm -rf dist/web && cp -r ../../packages/ui/dist dist/web",
 		"stage:npm": "bun run build && bun scripts/stage-npm.ts",
 		"prepublishOnly": "echo 'ERROR: Do not publish from apps/package source. Publish from apps/package/.stage/npm instead. Run: bun run stage:npm' && exit 1",
+		"test:unit": "bun test --preload ../../test-setup.ts -t '^(?!.*integration)'",
+		"test:integration": "bun test --preload ../../test-setup.ts -t 'integration'",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write ."

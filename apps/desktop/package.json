@@ -20,6 +20,8 @@
 	"scripts": {
 		"dev": "bun scripts/run-electrobun-cli.ts dev",
 		"build": "bun scripts/run-electrobun-cli.ts build",
+		"test:unit": "bun test --preload ../../test-setup.ts",
+		"test:integration": "true",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write ."

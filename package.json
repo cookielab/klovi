@@ -14,6 +14,8 @@
 		"stage:npm": "bun run build:web && bun run --filter @cookielab.io/klovi stage:npm",
 		"verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
 		"test": "bun test",
+		"test:unit": "bun run --filter '*' test:unit",
+		"test:integration": "bun run --filter '*' test:integration",
 		"test:node-smoke": "tsx scripts/plugin-runtime-node-smoke.ts",
 		"typecheck": "bun run --filter '*' typecheck",
 		"format": "biome format --write .",
