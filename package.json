@@ -15,7 +15,7 @@
 		"verify:packed-artifact": "bun scripts/verify-packed-artifact.ts",
 		"test": "bun test",
 		"test:node-smoke": "tsx scripts/plugin-runtime-node-smoke.ts",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "tsc -p tsconfig.fe.json --noEmit",
 		"format": "biome format --write .",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
