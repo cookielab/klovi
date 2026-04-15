@@ -1,3 +1,4 @@
+import tailwindPlugin from "bun-plugin-tailwind";
 import type { ElectrobunConfig } from "electrobun";
 import pkg from "./package.json" with { type: "json" };
 
@@ -23,6 +24,7 @@ export default {
 		views: {
 			main: {
 				entrypoint: "src/views/main/index.ts",
+				plugins: [tailwindPlugin],
 			},
 		},
 		copy: {

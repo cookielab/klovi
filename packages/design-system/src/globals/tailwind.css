@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Explicit content sources for Tailwind JIT scanning.
+   Required because the desktop (Electrobun) build enters from a TS file
+   rather than an HTML file, so auto-detection misses these packages. */
+@source "../../..";
+
 @custom-variant dark ([data-theme="dark"] &);
 
 /* User-configurable font size — set at runtime by useFontSize hook.
