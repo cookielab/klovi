@@ -21,10 +21,10 @@
 	},
 	"dependencies": {
 		"@cookielab.io/klovi-plugin-core": "workspace:*",
-		"effect": "*",
-		"@effect/platform": "*"
+		"effect": "3.21.0",
+		"@effect/platform": "0.96.0"
 	},
 	"devDependencies": {
-		"@effect/platform-node": "*"
+		"@effect/platform-node": "0.106.0"
 	}
 }

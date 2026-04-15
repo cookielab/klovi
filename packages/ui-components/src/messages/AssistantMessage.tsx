@@ -91,7 +91,7 @@ export function AssistantMessage({
 	getFrontendPlugin,
 }: AssistantMessageProps) {
 	const groups = groupContentBlocks(turn.contentBlocks);
-	const limit = visibleSubSteps === undefined ? groups.length : visibleSubSteps;
+	const limit = visibleSubSteps ?? groups.length;
 	const visibleGroups = groups.slice(0, limit);
 	const isPresentation = visibleSubSteps !== undefined;
 

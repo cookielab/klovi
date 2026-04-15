@@ -27,11 +27,11 @@
 		"@cookielab.io/klovi-plugin-core": "workspace:*",
 		"@cookielab.io/klovi-plugin-opencode": "workspace:*",
 		"@cookielab.io/klovi-ui-components": "workspace:*",
-		"effect": "*",
-		"react": "^19.2.5",
-		"react-dom": "^19.2.5"
+		"effect": "3.21.0",
+		"react": "19.2.5",
+		"react-dom": "19.2.5"
 	},
 	"devDependencies": {
-		"@testing-library/react": "^16.3.2"
+		"@testing-library/react": "16.3.2"
 	}
 }

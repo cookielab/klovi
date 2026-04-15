@@ -32,9 +32,9 @@
 		"@cookielab.io/klovi-plugin-core": "workspace:*",
 		"@cookielab.io/klovi-server": "workspace:*",
 		"@cookielab.io/klovi-ui": "workspace:*",
-		"@effect/platform": "*",
-		"@effect/platform-bun": "*",
-		"effect": "*",
-		"electrobun": "^1.16.0"
+		"@effect/platform": "0.96.0",
+		"@effect/platform-bun": "0.89.0",
+		"effect": "3.21.0",
+		"electrobun": "1.16.0"
 	}
 }

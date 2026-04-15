@@ -1,26 +1,23 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
-  "extends": [
-    "@cookielab.io/biome-config/base",
-    "./biome.shared.json"
-  ],
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "main"
-  },
-  "files": {
-    "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/build",
-      "!**/coverage",
-      "!**/.claude",
-      "!bun.lock",
-      "!scripts"
-    ]
-  }
+	"$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+	"extends": ["@cookielab.io/biome-config/base", "./biome.shared.json"],
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/build",
+			"!**/coverage",
+			"!**/.claude",
+			"!bun.lock",
+			"!scripts"
+		]
+	}
 }

@@ -25,15 +25,15 @@
 		"react-dom": ">=19"
 	},
 	"dependencies": {
-		"@fontsource/dm-sans": "^5.2.8",
-		"@fontsource/ibm-plex-mono": "^5.2.7",
-		"react-syntax-highlighter": "^16.1.1"
+		"@fontsource/dm-sans": "5.2.8",
+		"@fontsource/ibm-plex-mono": "5.2.7",
+		"react-syntax-highlighter": "16.1.1"
 	},
 	"devDependencies": {
-		"@testing-library/react": "^16.3.2",
-		"@storybook/react": "^10.3.5",
-		"@storybook/react-vite": "^10.3.5",
-		"@types/react-syntax-highlighter": "^15.5.13",
-		"storybook": "^10.3.5"
+		"@testing-library/react": "16.3.2",
+		"@storybook/react": "10.3.5",
+		"@storybook/react-vite": "10.3.5",
+		"@types/react-syntax-highlighter": "15.5.13",
+		"storybook": "10.3.5"
 	}
 }
