@@ -36,7 +36,7 @@
 		"happy-dom": "20.9.0",
 		"tailwindcss": "4.2.2",
 		"tsx": "4.21.0",
-		"typescript": "6.0.2"
+		"typescript": "6.0.3"
 	},
 	"patchedDependencies": {
 		"electrobun@1.16.0": "patches/electrobun@1.16.0.patch"
