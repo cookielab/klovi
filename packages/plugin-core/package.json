@@ -19,7 +19,7 @@
 		"lint:fix": "biome check --write ."
 	},
 	"dependencies": {
-		"effect": "3.21.0",
+		"effect": "3.21.1",
 		"@effect/platform": "0.96.0"
 	},
 	"devDependencies": {
