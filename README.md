@@ -1,3 +1,5 @@
+![Klovi logo](apps/desktop/icon.iconset/icon_128x128.png)
+
 # Klovi
 
 [![CI](https://github.com/cookielab/klovi/actions/workflows/ci.yml/badge.svg)](https://github.com/cookielab/klovi/actions/workflows/ci.yml)
