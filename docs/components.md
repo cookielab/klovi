@@ -132,6 +132,7 @@ In desktop mode the general tab also surfaces update controls through
 
 - `@cookielab.io/klovi-plugin-claude-code/frontend`
 - `@cookielab.io/klovi-plugin-codex/frontend`
+- `@cookielab.io/klovi-plugin-cursor/frontend`
 - `@cookielab.io/klovi-plugin-opencode/frontend`
 
 The app-shell wrappers inject `getFrontendPlugin(...)` into the reusable message

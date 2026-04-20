@@ -18,6 +18,7 @@ Built-in plugins currently cover:
 
 - Claude Code
 - Codex CLI
+- Cursor
 - OpenCode
 
 ## Workspace Structure
@@ -47,6 +48,7 @@ Klovi/
 │   ├── plugin-core/
 │   ├── plugin-claude-code/
 │   ├── plugin-codex/
+│   ├── plugin-cursor/
 │   ├── plugin-opencode/
 │   ├── ui-components/
 │   └── design-system/
@@ -161,6 +163,7 @@ Plugins remain separate packages:
 
 - `packages/plugin-claude-code`
 - `packages/plugin-codex`
+- `packages/plugin-cursor`
 - `packages/plugin-opencode`
 
 `packages/plugin-core` provides the registry and canonical plugin contracts.

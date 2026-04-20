@@ -1,6 +1,6 @@
 # Klovi Content Types & Formatting Guide
 
-Catalog of all distinct content types found in AI coding session data and their visual treatment needs. Covers Claude Code (JSONL), Codex CLI (JSONL), and OpenCode (SQLite).
+Catalog of all distinct content types found in AI coding session data and their visual treatment needs. Covers Claude Code (JSONL), Codex CLI (JSONL), Cursor (SQLite + JSONL + markdown), and OpenCode (SQLite).
 
 ---
 
@@ -376,7 +376,40 @@ Tool parts have a `state` field with one of these statuses:
 
 ---
 
-## 12. Claude Code Content Structure Reference
+## 12. Cursor Content Types
+
+Cursor stores foreground Composer state in platform-specific SQLite databases, background agent transcripts in `~/.cursor/projects/*/agent-transcripts`, and plan artifacts as `.plan.md` files referenced from the global Cursor registry.
+
+### 12.1 Foreground Composer Bubbles
+
+| Cursor Shape | Description | Rendered As | Status |
+|---|---|---|---|
+| `type: 1` bubble | User prompt | UserTurn | Handled |
+| Assistant text bubble | Assistant response text | Text content block | Handled |
+| Assistant thinking capability | Internal reasoning | Thinking block | Handled |
+| `toolFormerData` bubble | Tool invocation + result | Tool call block | Handled |
+
+### 12.2 Background Agent Transcripts
+
+Background agent transcripts are JSONL files. Supported roles:
+
+| Role | Description | Rendered As | Status |
+|---|---|---|---|
+| `user` | Agent request text blocks | UserTurn | Handled |
+| `assistant` | Agent response text blocks | AssistantTurn with text blocks | Handled |
+
+Unsupported transcript block types are currently ignored unless they contain plain text.
+
+### 12.3 Plan Artifacts
+
+| Artifact | Description | Rendered As | Status |
+|---|---|---|---|
+| `.plan.md` with YAML frontmatter | Foreground or background plan file | Single system turn with frontmatter stripped | Handled |
+| Frontmatter `name` | Preferred plan title | Session firstMessage | Handled |
+| First `#` heading | Fallback plan title | Session firstMessage | Handled |
+| File stem | Final fallback title | Session firstMessage | Handled |
+
+## 13. Claude Code Content Structure Reference
 
 ### Full assistant message line:
 ```json

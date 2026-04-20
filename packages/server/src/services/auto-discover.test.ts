@@ -75,7 +75,7 @@ describe("createRegistry with settings", () => {
 		expect(plugin).toBeDefined();
 	});
 
-	test("without settings argument, behaves as before (all enabled, default dirs)", async () => {
+	test("without settings argument, uses the built-in default enablement", async () => {
 		const registry = await runEffect(createRegistry());
 		expect(registry).toBeDefined();
 	});

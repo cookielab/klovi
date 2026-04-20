@@ -1,0 +1,30 @@
+{
+	"name": "@cookielab.io/klovi-plugin-cursor",
+	"version": "0.1.0",
+	"description": "Cursor plugin for Klovi",
+	"type": "module",
+	"license": "MIT",
+	"exports": {
+		".": "./src/index.ts",
+		"./frontend": "./src/frontend.ts"
+	},
+	"sideEffects": false,
+	"files": ["src"],
+	"scripts": {
+		"check": "bun run typecheck && bun run lint && bun run test",
+		"test": "bun run test:unit && bun run test:integration",
+		"test:unit": "bun test --preload ../../test-setup.ts",
+		"test:integration": "true",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
+	},
+	"dependencies": {
+		"@cookielab.io/klovi-plugin-core": "workspace:*",
+		"@effect/platform": "0.96.0",
+		"effect": "3.21.0"
+	},
+	"devDependencies": {
+		"@effect/platform-node": "0.106.0"
+	}
+}

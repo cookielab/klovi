@@ -27,6 +27,7 @@ const BROWSE_BTN_CLASSES =
 function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps) {
 	const customPath = plugin.isCustomDir ? plugin.dataDir : "";
 	const [editingPath, setEditingPath] = useState(customPath);
+	const displayName = plugin.id === "cursor" ? "Cursor (beta)" : plugin.displayName;
 
 	useEffect(() => {
 		setEditingPath(plugin.isCustomDir ? plugin.dataDir : "");
@@ -70,7 +71,7 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrows
 			<div className={HEADER_CLASSES}>
 				<label className={LABEL_CLASSES}>
 					<input type="checkbox" className="custom-checkbox" checked={plugin.enabled} onChange={handleToggle} />
-					<span className={NAME_CLASSES}>{plugin.displayName}</span>
+					<span className={NAME_CLASSES}>{displayName}</span>
 				</label>
 			</div>
 			<div className={PATH_CLASSES}>

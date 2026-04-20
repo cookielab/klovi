@@ -1,7 +1,7 @@
 # @cookielab.io/klovi
 
 Browse and present AI coding session history. Supports Claude Code, Codex CLI,
-and OpenCode.
+Cursor, and OpenCode.
 
 ## Quick Start
 
@@ -71,6 +71,7 @@ Starts the Klovi backend server. Returns `{ url, stop() }`.
 
 - **Claude Code** — reads from `~/.claude/projects/`
 - **Codex CLI** — reads from `~/.codex/sessions/`
+- **Cursor** — reads from `~/.cursor/` plus Cursor's platform-specific app-support SQLite state
 - **OpenCode** — reads from `~/.local/share/opencode/opencode.db`
 
 ## Settings

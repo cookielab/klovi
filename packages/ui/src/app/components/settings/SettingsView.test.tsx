@@ -68,6 +68,20 @@ describe("SettingsView", () => {
 		expect(await findByText("Codex CLI")).toBeTruthy();
 	});
 
+	test("renders Cursor as beta on the plugins page", async () => {
+		setupMockRPC({
+			getPluginSettings: () =>
+				Promise.resolve({
+					plugins: [makePlugin({ id: "cursor", displayName: "Cursor", defaultDataDir: "/Users/test/.cursor" })],
+				}),
+		});
+		const props = defaultProps();
+		props.activeTab = "plugins";
+		const { findByText, queryByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
+		expect(await findByText("Cursor (beta)")).toBeTruthy();
+		expect(queryByText("Cursor")).toBeNull();
+	});
+
 	test("renders checkbox for each plugin", async () => {
 		setupMockRPC({
 			getPluginSettings: () =>

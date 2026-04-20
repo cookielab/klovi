@@ -1,0 +1,12 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+	"root": false,
+	"extends": ["@cookielab.io/biome-config/node", "../../biome.shared.json"],
+	"linter": {
+		"rules": {
+			"correctness": {
+				"noProcessGlobal": "off"
+			}
+		}
+	}
+}

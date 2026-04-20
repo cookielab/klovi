@@ -15,12 +15,13 @@ import { join } from "node:path";
 import { claudeCodePlugin } from "../packages/plugin-claude-code/src/index.ts";
 import { codexCliPlugin } from "../packages/plugin-codex/src/index.ts";
 import {
+	type PluginConfigShape,
+	PluginRegistry,
+	makePluginConfigLayer,
 	type Session,
 	type SessionSummary,
-  type PluginConfigShape,
-  PluginRegistry,
-  makePluginConfigLayer,
 } from "../packages/plugin-core/src/index.ts";
+import { cursorPlugin } from "../packages/plugin-cursor/src/index.ts";
 import { openCodePlugin } from "../packages/plugin-opencode/src/index.ts";
 import { NodePluginLayer } from "../packages/server/src/effect/platform-node.ts";
 import { Effect, ManagedRuntime } from "effect";
@@ -28,29 +29,27 @@ import { Effect, ManagedRuntime } from "effect";
 const runtime = ManagedRuntime.make(NodePluginLayer);
 
 function runPlugin<A, E>(
-  effect: Effect.Effect<A, E, any>,
-  config: PluginConfigShape,
+	effect: Effect.Effect<A, E, any>,
+	config: PluginConfigShape,
 ): Promise<A> {
-  return runtime.runPromise(
-    effect.pipe(Effect.provide(makePluginConfigLayer(config))),
-  );
+	return runtime.runPromise(effect.pipe(Effect.provide(makePluginConfigLayer(config))));
 }
 
 function runRegistry<A>(effect: Effect.Effect<A, never, any>): Promise<A> {
-  return runtime.runPromise(effect);
+	return runtime.runPromise(effect);
 }
 
 let passed = 0;
 let failed = 0;
 
 function ok(label: string) {
-  passed++;
-  console.log(`  ✓ ${label}`);
+	passed++;
+	console.log(`  ✓ ${label}`);
 }
 
 function fail(label: string, err: unknown) {
-  failed++;
-  console.error(`  ✗ ${label}:`, err);
+	failed++;
+	console.error(`  ✗ ${label}:`, err);
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -58,16 +57,54 @@ function fail(label: string, err: unknown) {
 const testDir = join(tmpdir(), `klovi-node-smoke-${Date.now()}`);
 
 async function writeJsonl(
-  filePath: string,
-  lines: Record<string, unknown>[],
+	filePath: string,
+	lines: Record<string, unknown>[],
 ): Promise<void> {
-  const dir = filePath.substring(0, filePath.lastIndexOf("/"));
-  await mkdir(dir, { recursive: true });
-  await writeFile(
-    filePath,
-    lines.map((l) => JSON.stringify(l)).join("\n"),
-    "utf-8",
-  );
+	const dir = filePath.substring(0, filePath.lastIndexOf("/"));
+	await mkdir(dir, { recursive: true });
+	await writeFile(
+		filePath,
+		lines.map((l) => JSON.stringify(l)).join("\n"),
+		"utf-8",
+	);
+}
+
+function withCursorTestEnv(): () => void {
+	const originalHome = process.env["HOME"];
+	const originalUserProfile = process.env["USERPROFILE"];
+	const originalXdgConfigHome = process.env["XDG_CONFIG_HOME"];
+	const originalAppData = process.env["APPDATA"];
+
+	process.env["HOME"] = testDir;
+	process.env["USERPROFILE"] = testDir;
+	process.env["XDG_CONFIG_HOME"] = join(testDir, ".config");
+	process.env["APPDATA"] = join(testDir, "AppData", "Roaming");
+
+	return () => {
+		if (originalHome === undefined) {
+			delete process.env["HOME"];
+		} else {
+			process.env["HOME"] = originalHome;
+		}
+
+		if (originalUserProfile === undefined) {
+			delete process.env["USERPROFILE"];
+		} else {
+			process.env["USERPROFILE"] = originalUserProfile;
+		}
+
+		if (originalXdgConfigHome === undefined) {
+			delete process.env["XDG_CONFIG_HOME"];
+		} else {
+			process.env["XDG_CONFIG_HOME"] = originalXdgConfigHome;
+		}
+
+		if (originalAppData === undefined) {
+			delete process.env["APPDATA"];
+		} else {
+			process.env["APPDATA"] = originalAppData;
+		}
+	};
 }
 
 // ── Tests ──────────────────────────────────────────────────
@@ -92,23 +129,33 @@ async function testPluginImports() {
   } catch (e) {
     fail("opencode import", e);
   }
+  try {
+    if (cursorPlugin.id !== "cursor") throw new Error("bad id");
+    ok("cursor plugin imported");
+  } catch (e) {
+    fail("cursor import", e);
+  }
 }
 
 async function testRegistryBuild() {
   console.log("\n2. Registry build with Node runtime");
+  const restoreEnv = withCursorTestEnv();
   try {
     const config = { dataDir: testDir };
     const registry = new PluginRegistry<string, SessionSummary, Session>();
     registry.register(claudeCodePlugin, config);
     registry.register(codexCliPlugin, config);
     registry.register(openCodePlugin, config);
-    ok("registry constructed with three plugins");
+    registry.register(cursorPlugin, config);
+    ok("registry constructed with four plugins");
 
     const projects = await runRegistry(registry.discoverAllProjects());
     if (!Array.isArray(projects)) throw new Error("expected array");
     ok(`discoverAllProjects returned ${projects.length} projects`);
   } catch (e) {
     fail("registry build", e);
+  } finally {
+    restoreEnv();
   }
 }
 

@@ -36,6 +36,7 @@ bun test packages/ui/src
 bun test packages/plugin-core/src
 bun test packages/plugin-claude-code/src
 bun test packages/plugin-codex/src
+bun test packages/plugin-cursor/src
 bun test packages/plugin-opencode/src
 ```
 
@@ -86,6 +87,7 @@ gating, and view-state behavior.
 - `packages/plugin-core/src/*.test.ts`
 - `packages/plugin-claude-code/src/*.test.ts`
 - `packages/plugin-codex/src/*.test.ts`
+- `packages/plugin-cursor/src/*.test.ts`
 - `packages/plugin-opencode/src/*.test.ts`
 
 These cover plugin contracts, discovery, parsing, and runtime portability.
@@ -107,6 +109,7 @@ It verifies that:
 
 - plugin packages import cleanly under Node
 - a registry can be built with the Node runtime
+- Cursor can be registered alongside the other built-in plugins under Node
 - file-backed plugin flows still work
 - the OpenCode plugin handles missing SQLite data correctly
 

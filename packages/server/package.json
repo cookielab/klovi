@@ -44,6 +44,7 @@
 		"@cookielab.io/klovi-plugin-claude-code": "workspace:*",
 		"@cookielab.io/klovi-plugin-codex": "workspace:*",
 		"@cookielab.io/klovi-plugin-core": "workspace:*",
+		"@cookielab.io/klovi-plugin-cursor": "workspace:*",
 		"@cookielab.io/klovi-plugin-opencode": "workspace:*",
 		"effect": "3.21.1",
 		"@effect/platform": "0.96.0",

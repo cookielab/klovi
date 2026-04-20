@@ -9,11 +9,11 @@ export function createRegistry(settings?: PluginSettings): Effect.Effect<PluginR
 	return Effect.gen(function* () {
 		const registry = new PluginRegistry();
 
-		for (const { plugin, defaultDir } of BUILTIN_PLUGIN_DESCRIPTORS) {
+		for (const { plugin, defaultDir, defaultEnabled } of BUILTIN_PLUGIN_DESCRIPTORS) {
 			const pluginSettings = settings?.plugins[plugin.id];
+			const enabled = pluginSettings?.enabled ?? defaultEnabled;
 
-			// If settings exist and plugin is disabled, skip it
-			if (pluginSettings && !pluginSettings.enabled) {
+			if (!enabled) {
 				continue;
 			}
 

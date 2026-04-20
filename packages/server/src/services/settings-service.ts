@@ -27,10 +27,10 @@ function buildPluginSettingsResponse(
 ): Effect.Effect<{ plugins: PluginSettingInfo[] }, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const settings = yield* loadSettings(settingsPath);
-		const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir }) => {
+		const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir, defaultEnabled }) => {
 			const { id } = plugin;
 			const { displayName } = plugin;
-			const pluginConf = settings.plugins[id] ?? { enabled: true, dataDir: null };
+			const pluginConf = settings.plugins[id] ?? { enabled: defaultEnabled, dataDir: null };
 			const defaultDataDir = defaultDir;
 			const isCustomDir = pluginConf.dataDir !== null;
 			return {
@@ -87,7 +87,11 @@ function updatePluginSetting(
 			return yield* Effect.fail(new UnknownPluginError({ pluginId: params.pluginId }));
 		}
 		const settings: PluginSettings = yield* loadSettings(settingsPath);
-		const existing = settings.plugins[params.pluginId] ?? { enabled: true, dataDir: null };
+		const descriptor = BUILTIN_PLUGIN_DESCRIPTORS.find(({ plugin }) => plugin.id === params.pluginId);
+		const existing = settings.plugins[params.pluginId] ?? {
+			enabled: descriptor?.defaultEnabled ?? true,
+			dataDir: null,
+		};
 
 		if (params.enabled !== undefined) {
 			existing.enabled = params.enabled;

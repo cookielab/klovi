@@ -24,12 +24,13 @@ describe("settings", () => {
 		}
 	});
 
-	test("getDefaultSettings returns all plugins enabled with null dataDirs", () => {
+	test("getDefaultSettings returns the built-in plugin defaults with null dataDirs", () => {
 		const settings = getDefaultSettings();
 		expect(settings.version).toBe(1);
 		expect(settings.plugins["claude-code"]).toEqual({ enabled: true, dataDir: null });
 		expect(settings.plugins["codex-cli"]).toEqual({ enabled: true, dataDir: null });
 		expect(settings.plugins["opencode"]).toEqual({ enabled: true, dataDir: null });
+		expect(settings.plugins["cursor"]).toEqual({ enabled: false, dataDir: null });
 	});
 
 	test("loadSettings returns defaults when file does not exist", async () => {
@@ -46,6 +47,7 @@ describe("settings", () => {
 				"claude-code": { enabled: false, dataDir: "/custom/path" },
 				"codex-cli": { enabled: true, dataDir: null },
 				opencode: { enabled: true, dataDir: null },
+				cursor: { enabled: false, dataDir: null },
 			},
 		};
 		await run(saveSettings(path, settings));

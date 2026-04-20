@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path";
-import { BUILTIN_KLOVI_PLUGIN_IDS } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
+import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
 import { SettingsWriteError } from "./errors.ts";
 
 type UpdateChannel = "stable" | "candidate" | "beta";
@@ -29,7 +29,12 @@ type PluginSettings = {
 };
 
 function createDefaultPluginStates(): PluginSettings["plugins"] {
-	return Object.fromEntries(BUILTIN_KLOVI_PLUGIN_IDS.map((pluginId) => [pluginId, { enabled: true, dataDir: null }]));
+	return Object.fromEntries(
+		BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultEnabled }) => [
+			plugin.id,
+			{ enabled: defaultEnabled, dataDir: null },
+		]),
+	);
 }
 
 function getDefaultSettings(): PluginSettings {

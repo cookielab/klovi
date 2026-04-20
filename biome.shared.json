@@ -122,7 +122,8 @@
 			"includes": [
 				"packages/plugin-claude-code/src/frontend.ts",
 				"packages/plugin-codex/src/frontend.ts",
-				"packages/plugin-opencode/src/frontend.ts"
+				"packages/plugin-opencode/src/frontend.ts",
+				"packages/plugin-cursor/src/frontend.ts"
 			],
 			"linter": {
 				"rules": {

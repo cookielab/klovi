@@ -4,7 +4,7 @@
 
 Klovi is a **read-only** native desktop app for browsing AI coding session history. It:
 
-- Reads JSONL/session data from local tool directories (defaults: `~/.claude/projects/`, `~/.codex/sessions/`, and `~/.local/share/opencode/`; paths can be customized in Settings)
+- Reads JSONL/session data from local tool directories and local SQLite state (defaults: `~/.claude/projects/`, `~/.codex/sessions/`, `~/.cursor/` plus Cursor's platform-specific app-support database, and `~/.local/share/opencode/`; paths can be customized in Settings where supported)
 - Runs as a native desktop application (no network server)
 - Does **not** write, modify, or delete any session files
 - Does **not** send data to external servers

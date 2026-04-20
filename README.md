@@ -4,8 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
 Klovi lets you browse, search, and present AI coding session history from
-Claude Code, Codex CLI, and OpenCode. It ships in two distribution modes that
-share the same backend, plugin, and UI packages:
+Claude Code, Codex CLI, Cursor, and OpenCode. It ships in two distribution
+modes that share the same backend, plugin, and UI packages:
 
 - Desktop app: native Electrobun shell with menus, updater integration, and
   directory picker support
@@ -94,13 +94,14 @@ Linux note:
 - `packages/plugin-core` - plugin contracts and registry primitives
 - `packages/plugin-claude-code` - Claude Code discovery, parsing, frontend integration
 - `packages/plugin-codex` - Codex discovery, parsing, frontend integration
+- `packages/plugin-cursor` - Cursor discovery, parsing, frontend integration
 - `packages/plugin-opencode` - OpenCode discovery, parsing, frontend integration
 - `packages/ui-components` - reusable Klovi-specific UI feature components
 - `packages/design-system` - design tokens, primitives, and global styles
 
 ## Features
 
-- Unified browsing for Claude Code, Codex CLI, and OpenCode sessions
+- Unified browsing for Claude Code, Codex CLI, Cursor, and OpenCode sessions
 - Project merging across tools that share the same working directory
 - Search across discovered sessions
 - Session presentation mode for demos and talks
@@ -142,6 +143,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and workflow details.
 ## Trademark Notice
 
 "Claude" and "Claude Code" are trademarks of Anthropic, PBC. "OpenAI",
-"ChatGPT", and "Codex" are trademarks of OpenAI, Inc. "OpenCode" is a trademark
-of its respective owner. This project is not affiliated with, endorsed by, or
-sponsored by Anthropic, OpenAI, or any other AI tool vendor.
+"ChatGPT", and "Codex" are trademarks of OpenAI, Inc. "Cursor" and "OpenCode"
+are trademarks of their respective owners. This project is not affiliated with,
+endorsed by, or sponsored by Anthropic, OpenAI, or any other AI tool vendor.

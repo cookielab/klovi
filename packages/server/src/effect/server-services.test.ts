@@ -142,14 +142,15 @@ describe("KloviServicesLive registry refresh", () => {
 			const registryBefore = services.getRegistry();
 			expect(registryBefore.getAllPlugins()).toHaveLength(0);
 
-			// Reset settings — goes back to defaults (all enabled)
+			// Reset settings — goes back to the per-plugin defaults
 			await runService(services.resetSettings());
 
-			// After reset, plugin settings should reflect defaults (all enabled)
+			// After reset, plugin settings should reflect the built-in defaults
 			const { plugins } = await runService(services.getPluginSettings());
-			for (const plugin of plugins) {
-				expect(plugin.enabled).toBe(true);
-			}
+			expect(plugins.find((plugin) => plugin.id === "claude-code")?.enabled).toBe(true);
+			expect(plugins.find((plugin) => plugin.id === "codex-cli")?.enabled).toBe(true);
+			expect(plugins.find((plugin) => plugin.id === "opencode")?.enabled).toBe(true);
+			expect(plugins.find((plugin) => plugin.id === "cursor")?.enabled).toBe(false);
 
 			// The registry should be a new instance rebuilt from defaults
 			const registryAfter = services.getRegistry();

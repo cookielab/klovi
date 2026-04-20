@@ -70,12 +70,12 @@ describe("settings RPC handlers", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("getPluginSettings returns all three plugins", async () => {
+	test("getPluginSettings returns all four plugins", async () => {
 		await mkdir(testDir, { recursive: true });
 		await saveSettings(settingsPath, getDefaultSettings());
 		const result = await getPluginSettings(settingsPath);
-		expect(result.plugins).toHaveLength(3);
-		expect(result.plugins.map((p) => p.id)).toEqual(["claude-code", "codex-cli", "opencode"]);
+		expect(result.plugins).toHaveLength(4);
+		expect(result.plugins.map((p) => p.id)).toEqual(["claude-code", "codex-cli", "opencode", "cursor"]);
 	});
 
 	test("getPluginSettings shows enabled and default dirs", async () => {
@@ -87,6 +87,21 @@ describe("settings RPC handlers", () => {
 		expect(claude?.enabled).toBe(true);
 		expect(claude?.isCustomDir).toBe(false);
 		expect(claude?.dataDir).toBe(claude?.defaultDataDir);
+	});
+
+	test("getPluginSettings uses Cursor's default disabled state for legacy settings files", async () => {
+		await mkdir(testDir, { recursive: true });
+		const defaults = getDefaultSettings();
+		const { cursor: _cursor, ...legacyPlugins } = defaults.plugins;
+		const settings = { ...defaults, plugins: legacyPlugins };
+		await saveSettings(settingsPath, settings);
+
+		const result = await getPluginSettings(settingsPath);
+		const cursor = result.plugins.find((p) => p.id === "cursor");
+		expect(cursor).toBeDefined();
+		expect(cursor?.enabled).toBe(false);
+		expect(cursor?.isCustomDir).toBe(false);
+		expect(cursor?.dataDir).toBe(cursor?.defaultDataDir);
 	});
 
 	test("updatePluginSetting disables a plugin", async () => {
@@ -206,6 +221,7 @@ describe("settings RPC handlers", () => {
 		const loaded = await loadSettings(settingsPath);
 		expect(loaded.version).toBe(1);
 		expect(loaded.plugins["claude-code"]?.enabled).toBe(true);
+		expect(loaded.plugins["cursor"]?.enabled).toBe(false);
 	});
 
 	test("completeOnboarding does not overwrite existing settings", async () => {
