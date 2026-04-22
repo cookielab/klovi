@@ -10,7 +10,8 @@ Klovi has two distribution modes that share the same backend and UI packages:
 The shared source-of-truth packages are:
 
 - `packages/server` for backend services and HTTP server startup
-- `packages/ui` for the shared React app shell and transport-neutral contracts
+- `packages/ui` for the shared React app shell and transport-neutral contracts,
+  including the desktop host contract in `src/shared/desktop-contract.ts`
 - `packages/plugin-*`, `packages/ui-components`, and `packages/design-system`
   for plugins and reusable UI
 
@@ -83,7 +84,8 @@ At runtime:
 - `src/bun/index.ts` starts the Electrobun app, menu, updater, and main-process
   RPC handlers
 - `src/views/main/index.ts` mounts the shared UI from `@cookielab.io/klovi-ui`
-- `src/shared/rpc-types.ts` defines the typed Electrobun RPC schema
+- `src/shared/rpc-types.ts` adapts the shared desktop contract to Electrobun's
+  typed RPC schema
 
 At runtime:
 
@@ -116,7 +118,7 @@ This is the transport-neutral interface for server-backed operations:
 - plugin/general settings
 
 Browser mode implements it over HTTP. Desktop mode implements it over Electrobun
-RPC.
+RPC today, and the same request map can be reused by a future Electron IPC layer.
 
 ### `KloviHostBridge`
 
@@ -130,7 +132,9 @@ This carries desktop-native capabilities such as:
 - open external links
 
 Browser mode uses the stubbed `browserHostBridge`. Desktop mode wires the real
-Electrobun-backed implementation.
+Electrobun-backed implementation. The request/message surface lives in
+`packages/ui/src/shared/desktop-contract.ts`, so the transport adapter can be
+swapped without changing the shared UI contract.
 
 ### `startKloviServer(options)`
 

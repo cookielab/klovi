@@ -7,7 +7,10 @@
 	"exports": {
 		"./bootstrap": "./src/bootstrap.tsx",
 		"./styles": "./src/styles.ts",
-		"./app/*": "./src/app/*"
+		"./app/*": "./src/app/*",
+		"./shared/desktop-contract": "./src/shared/desktop-contract.ts",
+		"./shared/rpc-types": "./src/shared/rpc-types.ts",
+		"./shared/types": "./src/shared/types.ts"
 	},
 	"scripts": {
 		"dev": "bun run build.ts --watch",

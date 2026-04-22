@@ -216,15 +216,25 @@ These are Klovi-owned modules that replace or extend Electrobun features where p
 
 ---
 
-### 15. Typed RPC schema (`apps/desktop/src/shared/rpc-types.ts`)
+### 15. Electrobun RPC adapter (`apps/desktop/src/shared/rpc-types.ts`)
 
-**What:** Defines the `KloviRPC` interface that types the entire Electrobun RPC contract between the main process (bun) and the webview:
+**What:** Defines the `KloviRPC` interface that adapts Klovi's transport-neutral
+desktop contract to Electrobun's `RPCSchema`.
 
-- **`bun.requests`** (main process handles, webview calls): `browseDirectory`, `getUpdateSettings`, `updateUpdateSettings`, `checkForUpdate`, `applyUpdate`, `openExternal`, `acceptRisks`, `isFirstLaunch`, `getVersion`, `getStats`, `getProjects`, `getSessions`, `getSession`, `getSubAgent`, `searchSessions`, `getPluginSettings`, `updatePluginSetting`, `getGeneralSettings`, `updateGeneralSettings`, `resetSettings`.
-- **`webview.messages`** (main process sends, webview handles): `cycleTheme`, `increaseFontSize`, `decreaseFontSize`, `togglePresentation`, `openSettings`, `updateStatus`, `checkForUpdatesResult`.
-- **Shared types**: `UpdateChannel`, `UpdateSettingsInfo`, `UpdateStatus`.
+The source-of-truth request/message definitions now live in
+`packages/ui/src/shared/desktop-contract.ts`:
 
-**Why:** Electrobun's RPC is typed via `RPCSchema`, but the actual method definitions are application-specific. This file is the single source of truth for the RPC contract — both sides import it, so any signature mismatch is a compile-time error.
+- **`DesktopRequestMap`**: desktop host requests plus the transport-neutral
+  `KloviClient` request surface.
+- **`DesktopWebviewMessageMap`**: menu actions, update notifications, and theme
+  change messages sent back into the renderer.
+- **Shared types**: `UpdateChannel`, `UpdateSettingsInfo`, `UpdateStatus` stay
+  in `packages/ui/src/shared/rpc-types.ts`.
+
+**Why:** Electrobun's RPC is typed via `RPCSchema`, but the application contract
+should not be locked to Electrobun. Moving the request/message maps into
+`packages/ui` makes the contract reusable for a future Electron preload/main IPC
+adapter while keeping the current Electrobun implementation type-safe.
 
 ---
 

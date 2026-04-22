@@ -11,22 +11,21 @@ import {
 	isRpcTransportError,
 	mountKloviApp,
 } from "@cookielab.io/klovi-ui/bootstrap";
+import type { DesktopMenuAction, DesktopRequestMethod } from "@cookielab.io/klovi-ui/shared/desktop-contract";
 import { Electroview } from "electrobun/view";
 import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types.ts";
 
 // Import design system globals (tokens, reset, fonts) via klovi-ui
 import "@cookielab.io/klovi-ui/styles";
 
-type MenuAction = "cycleTheme" | "increaseFontSize" | "decreaseFontSize" | "togglePresentation" | "openSettings";
-
-const menuActionListeners = new Set<(action: MenuAction) => void>();
+const menuActionListeners = new Set<(action: DesktopMenuAction) => void>();
 const updateStatusListeners = new Set<(status: UpdateStatus) => void>();
 const manualUpdateListeners = new Set<(result: UpdateStatus) => void>();
 const statsUpdatedListeners = new Set<(stats: DashboardStats) => void>();
 const connectionStateListeners = new Set<(state: KloviHostConnectionState) => void>();
 const systemThemeListeners = new Set<(theme: "dark" | "light") => void>();
 
-type DesktopRpcMethod = keyof KloviRPC["bun"]["requests"];
+type DesktopRpcMethod = DesktopRequestMethod;
 
 const DEFAULT_RPC_TIMEOUT = 30_000;
 const RPC_TIMEOUTS: Partial<Record<DesktopRpcMethod, number>> = {

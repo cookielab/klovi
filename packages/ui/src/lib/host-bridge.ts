@@ -1,37 +1,31 @@
-import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
+import type { DesktopHostRequestMap, DesktopMenuAction, DesktopRequestArgs } from "../shared/desktop-contract.ts";
+import type { UpdateStatus } from "../shared/rpc-types.ts";
 import type { DashboardStats } from "../shared/types.ts";
 
-export type KloviHostCapabilities = {
+type KloviHostCapabilities = {
 	desktop: boolean;
 	browseDirectory: boolean;
 	updater: boolean;
 	menuActions: boolean;
 };
 
-export type KloviHostConnectionState = "connecting" | "connected" | "disconnected";
+type KloviHostConnectionState = "connecting" | "connected" | "disconnected";
 
-export type KloviHostBridge = {
+type DesktopHostRequestFns = {
+	[K in keyof DesktopHostRequestMap]: (
+		...args: DesktopRequestArgs<DesktopHostRequestMap[K]>
+	) => Promise<DesktopHostRequestMap[K]["response"]>;
+};
+
+type KloviHostBridge = DesktopHostRequestFns & {
 	getCapabilities: () => KloviHostCapabilities;
 	getConnectionState: () => KloviHostConnectionState;
-	browseDirectory: (params: { startingFolder?: string }) => Promise<{ path: string | null }>;
-	getUpdateSettings: () => Promise<UpdateSettingsInfo>;
-	updateUpdateSettings: (params: {
-		channel?: UpdateChannel;
-		checkIntervalHours?: number;
-		autoDownload?: boolean;
-	}) => Promise<UpdateSettingsInfo>;
-	checkForUpdate: () => Promise<UpdateStatus>;
-	applyUpdate: () => Promise<{ ok: boolean; error?: string }>;
-	openExternal: (params: { url: string }) => Promise<{ ok: boolean }>;
-	onMenuAction: (
-		callback: (
-			action: "cycleTheme" | "increaseFontSize" | "decreaseFontSize" | "togglePresentation" | "openSettings",
-		) => void,
-	) => () => void;
+	onMenuAction: (callback: (action: DesktopMenuAction) => void) => () => void;
 	onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void;
 	onManualUpdateResult: (callback: (result: UpdateStatus) => void) => () => void;
 	onStatsUpdated: (callback: (stats: DashboardStats) => void) => () => void;
 	onConnectionState: (callback: (state: KloviHostConnectionState) => void) => () => void;
-	getSystemTheme: () => Promise<{ theme: "dark" | "light" | null }>;
 	onSystemThemeChange: (callback: (theme: "dark" | "light") => void) => () => void;
 };
+
+export type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState };

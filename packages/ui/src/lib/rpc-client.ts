@@ -10,6 +10,10 @@ type EffectfulKloviClient = {
 	) => Effect.Effect<Awaited<ReturnType<KloviClient[K]>>, RpcError, KloviClientService>;
 };
 
+type ClientMethod<K extends keyof KloviClient> = (
+	...args: Parameters<KloviClient[K]>
+) => Promise<Awaited<ReturnType<KloviClient[K]>>>;
+
 type HostBridgeRequestMethod =
 	| "applyUpdate"
 	| "browseDirectory"
@@ -25,15 +29,17 @@ type EffectfulKloviHostBridge = {
 	) => Effect.Effect<Awaited<ReturnType<KloviHostBridge[K]>>, RpcError, KloviHostBridgeService>;
 };
 
+type HostBridgeMethod<K extends HostBridgeRequestMethod> = (
+	...args: Parameters<KloviHostBridge[K]>
+) => Promise<Awaited<ReturnType<KloviHostBridge[K]>>>;
+
 function callClient<K extends keyof KloviClient>(
 	method: K,
 	...args: Parameters<KloviClient[K]>
 ): Effect.Effect<Awaited<ReturnType<KloviClient[K]>>, RpcError, KloviClientService> {
 	return Effect.gen(function* () {
 		const client = yield* KloviClientService;
-		const fn = client[method] as (
-			...callArgs: Parameters<KloviClient[K]>
-		) => Promise<Awaited<ReturnType<KloviClient[K]>>>;
+		const fn = client[method] as unknown as ClientMethod<K>;
 		return yield* Effect.tryPromise<Awaited<ReturnType<KloviClient[K]>>, RpcError>({
 			try: () => fn(...args),
 			catch: (error) => mapToRpcError(error, String(method)),
@@ -47,9 +53,7 @@ function callHostBridge<K extends HostBridgeRequestMethod>(
 ): Effect.Effect<Awaited<ReturnType<KloviHostBridge[K]>>, RpcError, KloviHostBridgeService> {
 	return Effect.gen(function* () {
 		const hostBridge = yield* KloviHostBridgeService;
-		const fn = hostBridge[method] as (
-			...callArgs: Parameters<KloviHostBridge[K]>
-		) => Promise<Awaited<ReturnType<KloviHostBridge[K]>>>;
+		const fn = hostBridge[method] as unknown as HostBridgeMethod<K>;
 		return yield* Effect.tryPromise<Awaited<ReturnType<KloviHostBridge[K]>>, RpcError>({
 			try: () => fn(...args),
 			catch: (error) => mapToRpcError(error, String(method)),
