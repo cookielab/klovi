@@ -248,6 +248,35 @@ describe("cursor plugin", () => {
 		expect(sessions[0]?.sessionType).toBe("implementation");
 	});
 
+	test("lists and loads background agent sessions for an explicit project path without a workspace", async () => {
+		const projectPath = join(testDir, "project-no-workspace");
+		await mkdir(projectPath, { recursive: true });
+		await addAgentTranscript(projectPath, "agent-standalone", [
+			{
+				role: "user",
+				message: {
+					content: [{ type: "text", text: "Investigate the release freeze" }],
+				},
+			},
+			{
+				role: "assistant",
+				message: {
+					content: [{ type: "text", text: "I am checking it now." }],
+				},
+			},
+		]);
+
+		const sessions = await runEffect(listCursorSessions(projectPath));
+		expect(sessions).toHaveLength(1);
+		expect(sessions[0]?.sessionId).toBe("agent:agent-standalone");
+		expect(sessions[0]?.firstMessage).toBe("Investigate the release freeze");
+
+		const session = await runEffect(loadCursorSession(projectPath, "agent:agent-standalone"));
+		expect(session.project).toBe(projectPath);
+		expect(session.turns).toHaveLength(2);
+		expect((session.turns[0] as UserTurn).text).toBe("Investigate the release freeze");
+	});
+
 	test("maps plans to composer or agent sessions and excludes orphan plans", async () => {
 		const projectPath = join(testDir, "project-gamma");
 		const composerPlanPath = join(testDir, "plans", "composer.plan.md");

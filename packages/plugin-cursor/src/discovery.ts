@@ -81,6 +81,40 @@ type ValueRow = {
 	value: string;
 };
 
+type ComposerSummaryOptions = {
+	resolveFirstMessage: boolean;
+};
+
+type BackgroundAgentDiscoveryOptions = {
+	readPreviewText: boolean;
+};
+
+type PlanDiscoveryOptions = {
+	loadDisplayName: boolean;
+};
+
+type AgentTranscriptFile = {
+	agentId: string;
+	filePath: string;
+	mtimeIso: string;
+};
+
+type ComposerSummaryInput = {
+	projectPath: string;
+	workspaceDbPath: string;
+	composer: WorkspaceComposerEntry;
+	globalDb: SqliteDb | null;
+	options?: ComposerSummaryOptions;
+};
+
+type CollectComposerSessionsInput = {
+	workspaceDescriptors: readonly WorkspaceDescriptor[];
+	globalDb: SqliteDb | null;
+	sessionsByProject: Map<string, CursorSessionRecord[]>;
+	composersById: Map<string, CursorComposerSummary>;
+	options: ComposerSummaryOptions;
+};
+
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === "string" && value.trim().length > 0;
 }
@@ -178,6 +212,16 @@ function extractFirstUserTextFromHeaders(
 	return "";
 }
 
+function resolveComposerFallbackMessage(composer: WorkspaceComposerEntry): string {
+	if (isNonEmptyString(composer.name)) {
+		return composer.name.trim();
+	}
+	if (isNonEmptyString(composer.subtitle)) {
+		return composer.subtitle.trim();
+	}
+	return "Cursor session";
+}
+
 function resolveComposerFirstMessage(
 	globalDb: SqliteDb | null,
 	composer: WorkspaceComposerEntry,
@@ -197,13 +241,7 @@ function resolveComposerFirstMessage(
 		}
 	}
 
-	if (isNonEmptyString(composer.name)) {
-		return composer.name.trim();
-	}
-	if (isNonEmptyString(composer.subtitle)) {
-		return composer.subtitle.trim();
-	}
-	return "Cursor session";
+	return resolveComposerFallbackMessage(composer);
 }
 
 function resolveComposerSessionType(unifiedMode: string): SessionSummary["sessionType"] {
@@ -217,12 +255,13 @@ function resolveComposerSessionType(unifiedMode: string): SessionSummary["sessio
 	return undefined;
 }
 
-function createComposerSummary(
-	projectPath: string,
-	workspaceDbPath: string,
-	composer: WorkspaceComposerEntry,
-	globalDb: SqliteDb | null,
-): CursorComposerSummary | null {
+function createComposerSummary({
+	projectPath,
+	workspaceDbPath,
+	composer,
+	globalDb,
+	options = { resolveFirstMessage: true },
+}: ComposerSummaryInput): CursorComposerSummary | null {
 	if (!isNonEmptyString(composer.composerId)) {
 		return null;
 	}
@@ -234,7 +273,9 @@ function createComposerSummary(
 
 	const { composerId } = composer;
 	const unifiedMode = composer.unifiedMode ?? composer.forceMode ?? "chat";
-	const firstMessage = resolveComposerFirstMessage(globalDb, composer, composerId);
+	const firstMessage = options.resolveFirstMessage
+		? resolveComposerFirstMessage(globalDb, composer, composerId)
+		: resolveComposerFallbackMessage(composer);
 
 	return {
 		kind: "composer",
@@ -264,6 +305,40 @@ function parseProjectPathFromWorkspaceJson(content: string): string | null {
 	return fileUrlToPath(parsed.folder);
 }
 
+function discoverWorkspaceDescriptors(targetProjectPath?: string) {
+	return Effect.gen(function* () {
+		const workspaceStorageDir = yield* getCursorWorkspaceStorageDirEffect();
+		const workspaceEntries = yield* readDirEntriesSafe(workspaceStorageDir);
+		const workspaceDescriptors: WorkspaceDescriptor[] = [];
+
+		for (const entry of workspaceEntries) {
+			if (!entry.isDirectory) {
+				continue;
+			}
+
+			const workspaceDir = join(workspaceStorageDir, entry.name);
+			const workspaceJsonPath = join(workspaceDir, "workspace.json");
+			const workspaceDbPath = join(workspaceDir, "state.vscdb");
+			const exists = yield* fileExists(workspaceJsonPath);
+			if (!exists) {
+				continue;
+			}
+
+			const projectPath = yield* readFileText(workspaceJsonPath).pipe(
+				Effect.map(parseProjectPathFromWorkspaceJson),
+				Effect.catchAll(() => Effect.succeed(null)),
+			);
+			if (!projectPath || (targetProjectPath && projectPath !== targetProjectPath)) {
+				continue;
+			}
+
+			workspaceDescriptors.push({ projectPath: projectPath, workspaceDbPath: workspaceDbPath });
+		}
+
+		return workspaceDescriptors;
+	});
+}
+
 function findProjectSessions(
 	sessionsByProject: Map<string, CursorSessionRecord[]>,
 	projectPath: string,
@@ -279,6 +354,53 @@ function findProjectSessions(
 
 function pushSession(sessionsByProject: Map<string, CursorSessionRecord[]>, session: CursorSessionRecord): void {
 	findProjectSessions(sessionsByProject, session.projectPath).push(session);
+}
+
+function pushSessions(
+	sessionsByProject: Map<string, CursorSessionRecord[]>,
+	sessions: Iterable<CursorSessionRecord>,
+): void {
+	for (const session of sessions) {
+		pushSession(sessionsByProject, session);
+	}
+}
+
+function collectComposerSessions({
+	workspaceDescriptors,
+	globalDb,
+	sessionsByProject,
+	composersById,
+	options,
+}: CollectComposerSessionsInput) {
+	return Effect.gen(function* () {
+		for (const descriptor of workspaceDescriptors) {
+			const workspaceDb = yield* openCursorDbIfExists(descriptor.workspaceDbPath);
+			if (!workspaceDb) {
+				continue;
+			}
+
+			try {
+				const composers = readWorkspaceComposerEntries(workspaceDb);
+				for (const composer of composers) {
+					const summary = createComposerSummary({
+						projectPath: descriptor.projectPath,
+						workspaceDbPath: descriptor.workspaceDbPath,
+						composer: composer,
+						globalDb: globalDb,
+						options: options,
+					});
+					if (!summary) {
+						continue;
+					}
+
+					composersById.set(summary.composerId, summary);
+					pushSession(sessionsByProject, summary);
+				}
+			} finally {
+				workspaceDb.close();
+			}
+		}
+	});
 }
 
 function readFirstTranscriptUserMessage(text: string): string {
@@ -316,7 +438,7 @@ function readFirstTranscriptUserMessage(text: string): string {
 function listTranscriptFiles(agentTranscriptsDir: string) {
 	return Effect.gen(function* () {
 		const agentDirs = yield* readDirEntriesSafe(agentTranscriptsDir);
-		const files: { agentId: string; filePath: string; mtimeIso: string }[] = [];
+		const files: AgentTranscriptFile[] = [];
 
 		for (const entry of agentDirs) {
 			if (!entry.isDirectory) {
@@ -344,52 +466,71 @@ function listTranscriptFiles(agentTranscriptsDir: string) {
 	});
 }
 
-function discoverBackgroundAgents(workspaceProjectPaths: readonly string[]) {
+function createBackgroundAgentSummary(
+	projectPath: string,
+	transcript: AgentTranscriptFile,
+	firstMessage: string,
+): CursorAgentSummary {
+	return {
+		kind: "agent",
+		rawSessionId: `agent:${transcript.agentId}`,
+		projectPath: projectPath,
+		agentId: transcript.agentId,
+		filePath: transcript.filePath,
+		timestamp: transcript.mtimeIso,
+		timestampMs: new Date(transcript.mtimeIso).getTime(),
+		firstMessage: firstMessage,
+		slug: transcript.agentId,
+		model: "unknown",
+		gitBranch: "",
+		sessionType: "implementation",
+	};
+}
+
+function discoverBackgroundAgentsForProject(
+	projectPath: string,
+	options: BackgroundAgentDiscoveryOptions = { readPreviewText: true },
+) {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
-		const projectsDir = join(config.dataDir, "projects");
-		const entries = yield* readDirEntriesSafe(projectsDir);
-		const encodedProjectPaths = new Map(
-			workspaceProjectPaths.map((projectPath) => [encodeCursorProjectPath(projectPath), projectPath]),
+		const agentTranscriptsDir = join(
+			config.dataDir,
+			"projects",
+			encodeCursorProjectPath(projectPath),
+			"agent-transcripts",
 		);
 		const agentsById = new Map<string, CursorAgentSummary>();
+		const transcriptDirExists = yield* fileExists(agentTranscriptsDir);
+		if (!transcriptDirExists) {
+			return agentsById;
+		}
 
-		for (const entry of entries) {
-			if (!entry.isDirectory) {
-				continue;
-			}
-
-			const projectPath = encodedProjectPaths.get(entry.name);
-			if (!projectPath) {
-				continue;
-			}
-
-			const agentTranscriptsDir = join(projectsDir, entry.name, "agent-transcripts");
-			const transcriptDirExists = yield* fileExists(agentTranscriptsDir);
-			if (!transcriptDirExists) {
-				continue;
-			}
-
-			const transcripts = yield* listTranscriptFiles(agentTranscriptsDir);
-			for (const transcript of transcripts) {
+		const transcripts = yield* listTranscriptFiles(agentTranscriptsDir);
+		for (const transcript of transcripts) {
+			let firstMessage = "Cursor background agent";
+			if (options.readPreviewText) {
 				const text = yield* readFileText(transcript.filePath).pipe(Effect.catchAll(() => Effect.succeed("")));
-				const firstMessage = readFirstTranscriptUserMessage(text) || "Cursor background agent";
-				const timestampMs = new Date(transcript.mtimeIso).getTime();
+				firstMessage = readFirstTranscriptUserMessage(text) || firstMessage;
+			}
 
-				agentsById.set(transcript.agentId, {
-					kind: "agent",
-					rawSessionId: `agent:${transcript.agentId}`,
-					projectPath: projectPath,
-					agentId: transcript.agentId,
-					filePath: transcript.filePath,
-					timestamp: transcript.mtimeIso,
-					timestampMs: timestampMs,
-					firstMessage: firstMessage,
-					slug: transcript.agentId,
-					model: "unknown",
-					gitBranch: "",
-					sessionType: "implementation",
-				});
+			agentsById.set(transcript.agentId, createBackgroundAgentSummary(projectPath, transcript, firstMessage));
+		}
+
+		return agentsById;
+	});
+}
+
+function discoverBackgroundAgents(
+	projectPaths: readonly string[],
+	options: BackgroundAgentDiscoveryOptions = { readPreviewText: true },
+) {
+	return Effect.gen(function* () {
+		const agentsById = new Map<string, CursorAgentSummary>();
+
+		for (const projectPath of new Set(projectPaths)) {
+			const projectAgents = yield* discoverBackgroundAgentsForProject(projectPath, options);
+			for (const agent of projectAgents.values()) {
+				agentsById.set(agent.agentId, agent);
 			}
 		}
 
@@ -442,6 +583,7 @@ function discoverMappedPlans(
 	globalDb: SqliteDb | null,
 	composersById: Map<string, CursorComposerSummary>,
 	agentsById: Map<string, CursorAgentSummary>,
+	options: PlanDiscoveryOptions = { loadDisplayName: true },
 ) {
 	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: sqlite registry mapping is linear but branchy
 	return Effect.gen(function* () {
@@ -469,9 +611,16 @@ function discoverMappedPlans(
 				continue;
 			}
 
-			const displayName = yield* readPlanDisplayName(filePath).pipe(Effect.catchAll(() => Effect.succeed("")));
+			const displayName = options.loadDisplayName
+				? yield* readPlanDisplayName(filePath).pipe(Effect.catchAll(() => Effect.succeed("")))
+				: "";
 
-			const summary = createPlanSummary(entry, projectPath, filePath, displayName || entry.name?.trim() || "");
+			const summary = createPlanSummary(
+				entry,
+				projectPath,
+				filePath,
+				displayName || entry.name?.trim() || "Cursor plan",
+			);
 			if (!summary) {
 				continue;
 			}
@@ -509,84 +658,66 @@ function buildProjects(sessionsByProject: Map<string, CursorSessionRecord[]>): P
 	return projects;
 }
 
-function buildCursorIndex() {
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: discovery orchestration spans filesystem and sqlite inputs
+function buildCursorProjectIndex(nativeId: string) {
 	return Effect.gen(function* () {
-		const workspaceStorageDir = yield* getCursorWorkspaceStorageDirEffect();
-		const workspaceEntries = yield* readDirEntriesSafe(workspaceStorageDir);
 		const globalDb = yield* openCursorGlobalDb();
 		const sessionsByProject = new Map<string, CursorSessionRecord[]>();
 		const composersById = new Map<string, CursorComposerSummary>();
 
 		try {
-			const workspaceDescriptors: WorkspaceDescriptor[] = [];
+			const workspaceDescriptors = yield* discoverWorkspaceDescriptors(nativeId);
+			yield* collectComposerSessions({
+				workspaceDescriptors: workspaceDescriptors,
+				globalDb: globalDb,
+				sessionsByProject: sessionsByProject,
+				composersById: composersById,
+				options: { resolveFirstMessage: true },
+			});
 
-			for (const entry of workspaceEntries) {
-				if (!entry.isDirectory) {
-					continue;
-				}
+			const agentsById = yield* discoverBackgroundAgents([nativeId], { readPreviewText: true });
+			pushSessions(sessionsByProject, agentsById.values());
 
-				const workspaceDir = join(workspaceStorageDir, entry.name);
-				const workspaceJsonPath = join(workspaceDir, "workspace.json");
-				const workspaceDbPath = join(workspaceDir, "state.vscdb");
-				const exists = yield* fileExists(workspaceJsonPath);
-				if (!exists) {
-					continue;
-				}
+			const plansById = yield* discoverMappedPlans(globalDb, composersById, agentsById, { loadDisplayName: true });
+			pushSessions(sessionsByProject, plansById.values());
 
-				const projectPath = yield* readFileText(workspaceJsonPath).pipe(
-					Effect.map(parseProjectPathFromWorkspaceJson),
-					Effect.catchAll(() => Effect.succeed(null)),
-				);
-				if (!projectPath) {
-					continue;
-				}
+			return {
+				projects: buildProjects(sessionsByProject),
+				sessionsByProject: sessionsByProject,
+				composersById: composersById,
+				agentsById: agentsById,
+				plansById: plansById,
+			} satisfies CursorIndex;
+		} finally {
+			globalDb?.close();
+		}
+	});
+}
 
-				workspaceDescriptors.push({ projectPath: projectPath, workspaceDbPath: workspaceDbPath });
-			}
+function buildCursorIndex() {
+	return Effect.gen(function* () {
+		const globalDb = yield* openCursorGlobalDb();
+		const sessionsByProject = new Map<string, CursorSessionRecord[]>();
+		const composersById = new Map<string, CursorComposerSummary>();
 
+		try {
+			const workspaceDescriptors = yield* discoverWorkspaceDescriptors();
 			const workspaceProjectPaths = [...new Set(workspaceDescriptors.map((descriptor) => descriptor.projectPath))];
-
-			for (const descriptor of workspaceDescriptors) {
-				const workspaceDb = yield* openCursorDbIfExists(descriptor.workspaceDbPath);
-				if (!workspaceDb) {
-					continue;
-				}
-
-				try {
-					const composers = readWorkspaceComposerEntries(workspaceDb);
-					for (const composer of composers) {
-						const summary = createComposerSummary(
-							descriptor.projectPath,
-							descriptor.workspaceDbPath,
-							composer,
-							globalDb,
-						);
-						if (!summary) {
-							continue;
-						}
-
-						composersById.set(summary.composerId, summary);
-						pushSession(sessionsByProject, summary);
-					}
-				} finally {
-					workspaceDb.close();
-				}
-			}
+			yield* collectComposerSessions({
+				workspaceDescriptors: workspaceDescriptors,
+				globalDb: globalDb,
+				sessionsByProject: sessionsByProject,
+				composersById: composersById,
+				options: { resolveFirstMessage: true },
+			});
 
 			const agentsById = yield* discoverBackgroundAgents(workspaceProjectPaths);
-			for (const agent of agentsById.values()) {
-				pushSession(sessionsByProject, agent);
-			}
+			pushSessions(sessionsByProject, agentsById.values());
 
 			const plansById = yield* discoverMappedPlans(globalDb, composersById, agentsById);
-			for (const plan of plansById.values()) {
-				pushSession(sessionsByProject, plan);
-			}
+			pushSessions(sessionsByProject, plansById.values());
 
-			const projects = buildProjects(sessionsByProject);
 			return {
-				projects: projects,
+				projects: buildProjects(sessionsByProject),
 				sessionsByProject: sessionsByProject,
 				composersById: composersById,
 				agentsById: agentsById,
@@ -612,11 +743,39 @@ function toSessionSummary(session: CursorSessionRecord): SessionSummary {
 }
 
 function discoverCursorProjects() {
-	return buildCursorIndex().pipe(Effect.map((index) => index.projects));
+	return Effect.gen(function* () {
+		const globalDb = yield* openCursorGlobalDb();
+		const sessionsByProject = new Map<string, CursorSessionRecord[]>();
+		const composersById = new Map<string, CursorComposerSummary>();
+
+		try {
+			const workspaceDescriptors = yield* discoverWorkspaceDescriptors();
+			const workspaceProjectPaths = [...new Set(workspaceDescriptors.map((descriptor) => descriptor.projectPath))];
+			yield* collectComposerSessions({
+				workspaceDescriptors: workspaceDescriptors,
+				globalDb: globalDb,
+				sessionsByProject: sessionsByProject,
+				composersById: composersById,
+				options: { resolveFirstMessage: false },
+			});
+
+			const agentsById = yield* discoverBackgroundAgents(workspaceProjectPaths, { readPreviewText: false });
+			pushSessions(sessionsByProject, agentsById.values());
+
+			const plansById = yield* discoverMappedPlans(globalDb, composersById, agentsById, {
+				loadDisplayName: false,
+			});
+			pushSessions(sessionsByProject, plansById.values());
+
+			return buildProjects(sessionsByProject);
+		} finally {
+			globalDb?.close();
+		}
+	});
 }
 
 function listCursorSessions(nativeId: string) {
-	return buildCursorIndex().pipe(
+	return buildCursorProjectIndex(nativeId).pipe(
 		Effect.map((index) => {
 			const sessions = index.sessionsByProject.get(nativeId) ?? [];
 			sortByIsoDesc(sessions, (session) => session.timestamp);
@@ -629,4 +788,4 @@ function findCursorSession(index: CursorIndex, nativeId: string, sessionId: stri
 	return (index.sessionsByProject.get(nativeId) ?? []).find((session) => session.rawSessionId === sessionId);
 }
 
-export { buildCursorIndex, discoverCursorProjects, findCursorSession, listCursorSessions };
+export { buildCursorIndex, buildCursorProjectIndex, discoverCursorProjects, findCursorSession, listCursorSessions };

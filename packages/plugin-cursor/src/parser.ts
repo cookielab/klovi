@@ -9,7 +9,7 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
 import { openCursorGlobalDb } from "./db.ts";
-import { buildCursorIndex } from "./discovery.ts";
+import { buildCursorProjectIndex } from "./discovery.ts";
 import { loadCursorPlanSession } from "./plans.ts";
 import { readFileText } from "./shared/discovery-utils.ts";
 import { tryParseJson } from "./shared/json-utils.ts";
@@ -348,7 +348,7 @@ function loadCursorAgentSession(summary: CursorAgentSummary) {
 
 function loadCursorSession(nativeId: string, sessionId: string) {
 	return Effect.gen(function* () {
-		const index = yield* buildCursorIndex();
+		const index = yield* buildCursorProjectIndex(nativeId);
 		const session =
 			index.composersById.get(sessionId.replace(COMPOSER_PREFIX_REGEX, "")) ??
 			index.agentsById.get(sessionId.replace(AGENT_PREFIX_REGEX, "")) ??
