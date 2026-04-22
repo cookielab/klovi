@@ -91,12 +91,12 @@ function collectSessionsWithProjects(
 	stats: DashboardStats,
 ): Effect.Effect<SessionWithProject[], never, RegistryRequirements> {
 	return Effect.gen(function* () {
-		const projects = yield* registry.discoverAllProjects();
-		stats.projects = projects.length;
+		const discovered = yield* registry.discoverAllProjectsWithSessions();
+		stats.projects = discovered.projects.length;
 
 		const sessionsWithProject: SessionWithProject[] = [];
-		for (const project of projects) {
-			const sessions = yield* registry.listAllSessions(project);
+		for (const project of discovered.projects) {
+			const sessions = discovered.sessionsByEncodedPath.get(project.encodedPath) ?? [];
 			stats.sessions += sessions.length;
 			for (const session of sessions) {
 				sessionsWithProject.push({ project: project, session: session });

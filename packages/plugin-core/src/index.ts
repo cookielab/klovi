@@ -21,6 +21,7 @@ export { makePluginConfigLayer } from "./plugin-runtime.ts";
 export type {
 	Badge,
 	MergedProject,
+	PluginDiscoveryIndex,
 	PluginProject,
 	ProjectSource,
 	RegistrySession,

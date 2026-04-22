@@ -33,13 +33,11 @@ function getSessions(
 	params: { encodedPath: string },
 ): Effect.Effect<SessionsResponse, never, RegistryRequirements> {
 	return Effect.gen(function* () {
-		const projects = yield* registry.discoverAllProjects();
-		const project = projects.find((p) => p.encodedPath === params.encodedPath);
-		if (!project) {
+		const discovered = yield* registry.discoverAllProjectsWithSessions();
+		if (!discovered.projects.find((project) => project.encodedPath === params.encodedPath)) {
 			return { sessions: [] as SessionSummary[] };
 		}
-		const sessions = yield* registry.listAllSessions(project);
-		return { sessions: sessions };
+		return { sessions: discovered.sessionsByEncodedPath.get(params.encodedPath) ?? [] };
 	});
 }
 
@@ -139,16 +137,11 @@ function projectNameFromPath(fullPath: string): string {
 
 function searchSessions(registry: PluginRegistry): Effect.Effect<SearchResponse, never, RegistryRequirements> {
 	return Effect.gen(function* () {
-		const projects = yield* registry.discoverAllProjects();
-		const perProject = yield* Effect.forEach(
-			projects,
-			(project) =>
-				registry.listAllSessions(project).pipe(Effect.map((sessions) => ({ project: project, sessions: sessions }))),
-			{ concurrency: "unbounded" },
-		);
+		const discovered = yield* registry.discoverAllProjectsWithSessions();
 
 		const allSessions: GlobalSessionResult[] = [];
-		for (const { project, sessions } of perProject) {
+		for (const project of discovered.projects) {
+			const sessions = discovered.sessionsByEncodedPath.get(project.encodedPath) ?? [];
 			const projectName = projectNameFromPath(project.name);
 			for (const session of sessions) {
 				allSessions.push({

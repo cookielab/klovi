@@ -4,7 +4,13 @@ import { Effect, Layer } from "effect";
 import { PluginError } from "./plugin-errors.ts";
 import { encodeResolvedPath, PluginRegistry } from "./plugin-registry.ts";
 import type { RegistryRequirements } from "./plugin-runtime.ts";
-import type { PluginProject, RegistrySession, RegistrySessionSummary, ToolPlugin } from "./plugin-types.ts";
+import type {
+	PluginDiscoveryIndex,
+	PluginProject,
+	RegistrySession,
+	RegistrySessionSummary,
+	ToolPlugin,
+} from "./plugin-types.ts";
 import { SqliteClientTag } from "./sqlite-service.ts";
 
 interface TestSessionSummary extends RegistrySessionSummary {
@@ -28,6 +34,25 @@ function createPlugin(
 		isDataAvailable: Effect.succeed(true),
 		discoverProjects: Effect.succeed(projects),
 		listSessions: (nativeId: string) => Effect.succeed(sessionsByNativeId[nativeId] ?? []),
+		loadSession: (_nativeId: string, sessionId: string) => Effect.succeed({ sessionId: sessionId, turns: [] }),
+	};
+}
+
+function createIndexedPlugin(
+	id: string,
+	index: PluginDiscoveryIndex<string, TestSessionSummary>,
+	options: {
+		listSessions?: ToolPlugin<string, TestSessionSummary, TestSession>["listSessions"];
+	} = {},
+): ToolPlugin<string, TestSessionSummary, TestSession> {
+	return {
+		id: id,
+		displayName: id,
+		getDefaultDataDir: () => null,
+		isDataAvailable: Effect.succeed(true),
+		discoverProjects: Effect.succeed(index.projects),
+		discoverIndex: Effect.succeed(index),
+		listSessions: options.listSessions ?? ((_nativeId: string) => Effect.succeed([])),
 		loadSession: (_nativeId: string, sessionId: string) => Effect.succeed({ sessionId: sessionId, turns: [] }),
 	};
 }
@@ -324,6 +349,64 @@ describe("PluginRegistry", () => {
 
 		expect(sessions).toHaveLength(1);
 		expect(sessions[0]?.sessionId).toBe("claude-code/abc");
+	});
+
+	test("discoverAllProjectsWithSessions reuses plugin discovery indexes", async () => {
+		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
+		let listSessionsCalls = 0;
+
+		registry.register(
+			createIndexedPlugin(
+				"cursor",
+				{
+					projects: [
+						{
+							pluginId: "cursor",
+							nativeId: "/Users/dev/project",
+							resolvedPath: "/Users/dev/project",
+							displayName: "project",
+							sessionCount: 2,
+							lastActivity: "2026-02-22T10:00:00Z",
+						},
+					],
+					sessionsByNativeId: new Map([
+						[
+							"/Users/dev/project",
+							[
+								{
+									sessionId: "composer:1",
+									timestamp: "2026-02-21T08:00:00Z",
+									slug: "composer-1",
+									firstMessage: "First indexed session",
+								},
+								{
+									sessionId: "composer:2",
+									timestamp: "2026-02-22T10:00:00Z",
+									slug: "composer-2",
+									firstMessage: "Second indexed session",
+								},
+							],
+						],
+					]),
+				},
+				{
+					listSessions: (_nativeId: string) => {
+						listSessionsCalls += 1;
+						return Effect.succeed([]);
+					},
+				},
+			),
+			testConfig,
+		);
+
+		const discovered = await runEffect(registry.discoverAllProjectsWithSessions());
+		const sessions = discovered.sessionsByEncodedPath.get("-Users-dev-project") ?? [];
+
+		expect(discovered.projects).toHaveLength(1);
+		expect(sessions).toHaveLength(2);
+		expect(sessions[0]?.sessionId).toBe("cursor::composer:2");
+		expect(sessions[1]?.sessionId).toBe("cursor::composer:1");
+		expect(listSessionsCalls).toBe(0);
 	});
 
 	test("plugin can be instantiated with explicit config rather than module mutation", () => {

@@ -742,6 +742,20 @@ function toSessionSummary(session: CursorSessionRecord): SessionSummary {
 	};
 }
 
+function buildCursorDiscoveryIndex() {
+	return buildCursorIndex().pipe(
+		Effect.map((index) => ({
+			projects: index.projects,
+			sessionsByNativeId: new Map(
+				[...index.sessionsByProject.entries()].map(([projectPath, sessions]) => [
+					projectPath,
+					sessions.map(toSessionSummary),
+				]),
+			),
+		})),
+	);
+}
+
 function discoverCursorProjects() {
 	return Effect.gen(function* () {
 		const globalDb = yield* openCursorGlobalDb();
@@ -788,4 +802,11 @@ function findCursorSession(index: CursorIndex, nativeId: string, sessionId: stri
 	return (index.sessionsByProject.get(nativeId) ?? []).find((session) => session.rawSessionId === sessionId);
 }
 
-export { buildCursorIndex, buildCursorProjectIndex, discoverCursorProjects, findCursorSession, listCursorSessions };
+export {
+	buildCursorDiscoveryIndex,
+	buildCursorIndex,
+	buildCursorProjectIndex,
+	discoverCursorProjects,
+	findCursorSession,
+	listCursorSessions,
+};

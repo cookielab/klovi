@@ -37,6 +37,21 @@ type RegisteredPlugin<
 	configLayer: Layer.Layer<PluginConfig>;
 };
 
+type DiscoveredPluginState<
+	TPluginId extends string,
+	TSessionSummary extends RegistrySessionSummary,
+	TSession extends RegistrySession,
+> = {
+	entry: RegisteredPlugin<TPluginId, TSessionSummary, TSession>;
+	projects: PluginProject<TPluginId>[];
+	sessionsByNativeId?: Map<string, TSessionSummary[]>;
+};
+
+type DiscoveredProjectsWithSessions<TPluginId extends string, TSessionSummary extends RegistrySessionSummary> = {
+	projects: MergedProject<TPluginId>[];
+	sessionsByEncodedPath: Map<string, TSessionSummary[]>;
+};
+
 class PluginRegistry<
 	TPluginId extends string = string,
 	TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
@@ -79,18 +94,43 @@ class PluginRegistry<
 		return [...this.plugins.values()].map((entry) => entry.plugin);
 	}
 
-	discoverAllProjects(): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
+	private discoverPluginStates(
+		includeSessions: boolean,
+	): Effect.Effect<DiscoveredPluginState<TPluginId, TSessionSummary, TSession>[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
-			const allProjects: PluginProject<TPluginId>[] = [];
+			const states: DiscoveredPluginState<TPluginId, TSessionSummary, TSession>[] = [];
 
-			for (const { plugin, configLayer } of this.plugins.values()) {
-				const projects = yield* plugin.discoverProjects.pipe(
-					Effect.provide(configLayer),
-					Effect.catchAll(() => Effect.succeed([] as PluginProject<TPluginId>[])),
-				);
-				allProjects.push(...projects);
+			for (const entry of this.plugins.values()) {
+				const discoveredIndex =
+					includeSessions && entry.plugin.discoverIndex
+						? yield* entry.plugin.discoverIndex.pipe(
+								Effect.provide(entry.configLayer),
+								Effect.catchAll(() => Effect.succeed(undefined)),
+							)
+						: undefined;
+
+				const projects =
+					discoveredIndex?.projects ??
+					(yield* entry.plugin.discoverProjects.pipe(
+						Effect.provide(entry.configLayer),
+						Effect.catchAll(() => Effect.succeed([] as PluginProject<TPluginId>[])),
+					));
+
+				states.push({
+					entry: entry,
+					projects: projects,
+					...(discoveredIndex ? { sessionsByNativeId: discoveredIndex.sessionsByNativeId } : {}),
+				});
 			}
 
+			return states;
+		});
+	}
+
+	private mergeProjects(
+		allProjects: PluginProject<TPluginId>[],
+	): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
+		return Effect.gen(function* () {
 			yield* resolveT3CodePaths(allProjects);
 
 			const projectsByPath = new Map<string, PluginProject<TPluginId>[]>();
@@ -124,6 +164,74 @@ class PluginRegistry<
 		});
 	}
 
+	private encodeSessions(pluginId: TPluginId, sessions: TSessionSummary[]): TSessionSummary[] {
+		return sessions.map(
+			(session) =>
+				({
+					...session,
+					sessionId: this.sessionIdEncoder(pluginId, session.sessionId),
+					pluginId: pluginId,
+				}) as TSessionSummary,
+		);
+	}
+
+	private loadSourceSessions(
+		state: DiscoveredPluginState<TPluginId, TSessionSummary, TSession>,
+		source: MergedProject<TPluginId>["sources"][number],
+	): Effect.Effect<TSessionSummary[], never, RegistryRequirements> {
+		const discoveredSessions = state.sessionsByNativeId?.get(source.nativeId);
+		if (discoveredSessions) {
+			return Effect.succeed(this.encodeSessions(source.pluginId, discoveredSessions));
+		}
+
+		return state.entry.plugin.listSessions(source.nativeId).pipe(
+			Effect.provide(state.entry.configLayer),
+			Effect.catchAll(() => Effect.succeed([] as TSessionSummary[])),
+			Effect.map((sessions) => this.encodeSessions(source.pluginId, sessions)),
+		);
+	}
+
+	discoverAllProjects(): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
+		return Effect.gen(this, function* () {
+			const states = yield* this.discoverPluginStates(false);
+			return yield* this.mergeProjects(states.flatMap((state) => state.projects));
+		});
+	}
+
+	discoverAllProjectsWithSessions(): Effect.Effect<
+		DiscoveredProjectsWithSessions<TPluginId, TSessionSummary>,
+		never,
+		RegistryRequirements
+	> {
+		return Effect.gen(this, function* () {
+			const states = yield* this.discoverPluginStates(true);
+			const mergedProjects = yield* this.mergeProjects(states.flatMap((state) => state.projects));
+			const statesByPluginId = new Map(states.map((state) => [state.entry.plugin.id, state] as const));
+			const sessionsByEncodedPath = new Map<string, TSessionSummary[]>();
+
+			for (const project of mergedProjects) {
+				const allSessions: TSessionSummary[] = [];
+
+				for (const source of project.sources) {
+					const state = statesByPluginId.get(source.pluginId);
+					if (!state) {
+						continue;
+					}
+
+					allSessions.push(...(yield* this.loadSourceSessions(state, source)));
+				}
+
+				sortByIsoDesc(allSessions, (session) => session.timestamp);
+				sessionsByEncodedPath.set(project.encodedPath, allSessions);
+			}
+
+			return {
+				projects: mergedProjects,
+				sessionsByEncodedPath: sessionsByEncodedPath,
+			};
+		});
+	}
+
 	listAllSessions(project: MergedProject<TPluginId>): Effect.Effect<TSessionSummary[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
 			const allSessions: TSessionSummary[] = [];
@@ -134,20 +242,12 @@ class PluginRegistry<
 					continue;
 				}
 
-				const sessions = yield* entry.plugin.listSessions(source.nativeId).pipe(
-					Effect.provide(entry.configLayer),
-					Effect.catchAll(() => Effect.succeed([] as TSessionSummary[])),
-				);
-
 				allSessions.push(
-					...sessions.map(
-						(session) =>
-							({
-								...session,
-								sessionId: this.sessionIdEncoder(source.pluginId, session.sessionId),
-								pluginId: source.pluginId,
-							}) as TSessionSummary,
-					),
+					...(yield* entry.plugin.listSessions(source.nativeId).pipe(
+						Effect.provide(entry.configLayer),
+						Effect.catchAll(() => Effect.succeed([] as TSessionSummary[])),
+						Effect.map((sessions) => this.encodeSessions(source.pluginId, sessions)),
+					)),
 				);
 			}
 

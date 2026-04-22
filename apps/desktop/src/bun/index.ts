@@ -194,10 +194,10 @@ if (!isLinux) {
 }
 
 const statsRefreshFiber = runtime.runFork(
-	Effect.gen(function* () {
-		yield* pushStatsUpdate;
-		yield* Effect.schedule(pushStatsUpdate, Schedule.spaced(STATS_REFRESH_INTERVAL));
-	}),
+	Effect.sleep(STATS_REFRESH_INTERVAL).pipe(
+		Effect.flatMap(() => pushStatsUpdate),
+		Effect.forever,
+	),
 );
 
 // Application menu

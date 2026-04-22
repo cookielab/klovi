@@ -11,6 +11,14 @@ export type PluginProject<TPluginId extends string = string> = {
 	lastActivity: string;
 };
 
+export type PluginDiscoveryIndex<
+	TPluginId extends string = string,
+	TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
+> = {
+	projects: PluginProject<TPluginId>[];
+	sessionsByNativeId: Map<string, TSessionSummary[]>;
+};
+
 export type ProjectSource<TPluginId extends string = string> = {
 	pluginId: TPluginId;
 	nativeId: string;
@@ -64,6 +72,11 @@ export type ToolPlugin<
 	getDefaultDataDir: () => string | null;
 	readonly isDataAvailable: Effect.Effect<boolean, never, PluginRequirements>;
 	readonly discoverProjects: Effect.Effect<PluginProject<TPluginId>[], PluginError, PluginRequirements>;
+	readonly discoverIndex?: Effect.Effect<
+		PluginDiscoveryIndex<TPluginId, TSessionSummary>,
+		PluginError,
+		PluginRequirements
+	>;
 	listSessions: (nativeId: string) => Effect.Effect<TSessionSummary[], PluginError, PluginRequirements>;
 	loadSession: (nativeId: string, sessionId: string) => Effect.Effect<TSession, PluginError, PluginRequirements>;
 	loadSessionDetail?: (
