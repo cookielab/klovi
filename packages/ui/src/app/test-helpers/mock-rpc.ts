@@ -91,6 +91,7 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
 		onMenuAction: () => () => {},
 		onUpdateStatus: () => () => {},
 		onManualUpdateResult: () => () => {},
+		onStatsUpdated: () => () => {},
 		onConnectionState: (callback) => {
 			connectionStateListeners.add(callback);
 			return () => {

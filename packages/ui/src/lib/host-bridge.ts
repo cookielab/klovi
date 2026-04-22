@@ -1,4 +1,5 @@
 import type { UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
+import type { DashboardStats } from "../shared/types.ts";
 
 export type KloviHostCapabilities = {
 	desktop: boolean;
@@ -29,6 +30,7 @@ export type KloviHostBridge = {
 	) => () => void;
 	onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void;
 	onManualUpdateResult: (callback: (result: UpdateStatus) => void) => () => void;
+	onStatsUpdated: (callback: (stats: DashboardStats) => void) => () => void;
 	onConnectionState: (callback: (state: KloviHostConnectionState) => void) => () => void;
 	getSystemTheme: () => Promise<{ theme: "dark" | "light" | null }>;
 	onSystemThemeChange: (callback: (theme: "dark" | "light") => void) => () => void;

@@ -1,4 +1,5 @@
 import type {
+	DashboardStats,
 	KloviClient,
 	KloviHostBridge,
 	KloviHostCapabilities,
@@ -21,6 +22,7 @@ type MenuAction = "cycleTheme" | "increaseFontSize" | "decreaseFontSize" | "togg
 const menuActionListeners = new Set<(action: MenuAction) => void>();
 const updateStatusListeners = new Set<(status: UpdateStatus) => void>();
 const manualUpdateListeners = new Set<(result: UpdateStatus) => void>();
+const statsUpdatedListeners = new Set<(stats: DashboardStats) => void>();
 const connectionStateListeners = new Set<(state: KloviHostConnectionState) => void>();
 const systemThemeListeners = new Set<(theme: "dark" | "light") => void>();
 
@@ -81,6 +83,11 @@ const rpc = Electroview.defineRPC<KloviRPC>({
 			checkForUpdatesResult: (data) => {
 				for (const cb of manualUpdateListeners) {
 					cb(data);
+				}
+			},
+			statsUpdated: (data) => {
+				for (const cb of statsUpdatedListeners) {
+					cb(data.stats);
 				}
 			},
 			systemThemeChanged: (data) => {
@@ -318,6 +325,12 @@ const desktopHostBridge: KloviHostBridge = {
 		manualUpdateListeners.add(callback);
 		return () => {
 			manualUpdateListeners.delete(callback);
+		};
+	},
+	onStatsUpdated: (callback) => {
+		statsUpdatedListeners.add(callback);
+		return () => {
+			statsUpdatedListeners.delete(callback);
 		};
 	},
 	onConnectionState: (callback) => {

@@ -124,6 +124,7 @@ export type KloviRPC = {
 			openSettings: Record<string, never>;
 			updateStatus: UpdateStatus;
 			checkForUpdatesResult: UpdateStatus;
+			statsUpdated: { stats: DashboardStats };
 			systemThemeChanged: { theme: "dark" | "light" };
 		};
 	}>;

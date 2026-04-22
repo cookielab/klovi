@@ -50,6 +50,12 @@ describe("browserHostBridge methods in browser mode", () => {
 		unsubscribe();
 	});
 
+	test("onStatsUpdated returns no-op unsubscribe", () => {
+		const unsubscribe = browserHostBridge.onStatsUpdated(() => {});
+		expect(typeof unsubscribe).toBe("function");
+		unsubscribe();
+	});
+
 	test("connection state is always connected", () => {
 		expect(browserHostBridge.getConnectionState()).toBe("connected");
 		const unsubscribe = browserHostBridge.onConnectionState(() => {});

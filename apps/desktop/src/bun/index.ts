@@ -36,6 +36,7 @@ import { makeThemePollingFiber } from "./theme-polling.ts";
 import { cleanupUpdates, startUpdateSchedule } from "./updater-service.ts";
 
 const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
+const STATS_REFRESH_INTERVAL = "5 minutes";
 
 const isLinux = process.platform === "linux";
 
@@ -153,6 +154,18 @@ const win = new BrowserWindow({
 	rpc: rpc,
 });
 
+const pushStatsUpdate = getStatsHandler.pipe(
+	Effect.flatMap((result) =>
+		Effect.try({
+			try: () => {
+				win.webview.rpc?.send.statsUpdated(result);
+			},
+			catch: () => undefined,
+		}).pipe(Effect.ignore),
+	),
+	Effect.catchAllCause(() => Effect.void),
+);
+
 // Subscribe to update status changes and forward to webview
 if (!isLinux) {
 	runtime.runFork(
@@ -179,6 +192,13 @@ if (!isLinux) {
 	await bridgeHandler(runtime, cleanupUpdates);
 	updateScheduleFiber = runtime.runFork(startUpdateSchedule(true));
 }
+
+const statsRefreshFiber = runtime.runFork(
+	Effect.gen(function* () {
+		yield* pushStatsUpdate;
+		yield* Effect.schedule(pushStatsUpdate, Schedule.spaced(STATS_REFRESH_INTERVAL));
+	}),
+);
 
 // Application menu
 ApplicationMenu.setApplicationMenu([
@@ -264,6 +284,7 @@ Electrobun.events.on("before-quit", () => {
 	if (updateScheduleFiber) {
 		Effect.runFork(Fiber.interrupt(updateScheduleFiber));
 	}
+	Effect.runFork(Fiber.interrupt(statsRefreshFiber));
 	if (themePollingFiber) {
 		Effect.runFork(Fiber.interrupt(themePollingFiber));
 	}
