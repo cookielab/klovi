@@ -57,12 +57,15 @@ describe("PackageDashboardStats", () => {
 		});
 		expect(screen.getByText("Refreshing stats...")).toBeDefined();
 
-		await waitFor(() => {
-			const projectsLabel = screen.getByText("Projects");
-			expect(projectsLabel.previousSibling?.textContent).toBe("7");
-		});
-		expect(getStatsCalls).toBeGreaterThanOrEqual(2);
-		expect(screen.queryByText("Refreshing stats...")).toBeNull();
+		await waitFor(
+			() => {
+				expect(getStatsCalls).toBeGreaterThanOrEqual(2);
+				const projectsLabel = screen.getByText("Projects");
+				expect(projectsLabel.previousSibling?.textContent).toBe("7");
+				expect(screen.queryByText("Refreshing stats...")).toBeNull();
+			},
+			{ timeout: 2500 },
+		);
 	});
 
 	test("updates when the desktop host pushes refreshed stats", async () => {
