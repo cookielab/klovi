@@ -18,7 +18,11 @@ import {
 	updatePluginSetting as updatePluginSettingEffect,
 	updateUpdateSettings as updateUpdateSettingsEffect,
 } from "@cookielab.io/klovi-server/services/settings-service";
-import { getStats as getStatsEffect } from "@cookielab.io/klovi-server/services/stats-service";
+import {
+	getStats as getStatsEffect,
+	invalidateStatsCache,
+	refreshStats as refreshStatsEffect,
+} from "@cookielab.io/klovi-server/services/stats-service";
 import { getVersion } from "@cookielab.io/klovi-server/services/version-service";
 import { Effect, Ref } from "effect";
 import type { UpdateChannel } from "../shared/rpc-types.ts";
@@ -52,8 +56,15 @@ const currentRegistry = Effect.gen(function* () {
 });
 
 const getStatsHandler = Effect.gen(function* () {
+	const { path } = yield* SettingsPathRef;
 	const registry = yield* currentRegistry;
-	return yield* getStatsEffect(registry);
+	return yield* getStatsEffect(path, registry);
+});
+
+const refreshStatsHandler = Effect.gen(function* () {
+	const { path } = yield* SettingsPathRef;
+	const registry = yield* currentRegistry;
+	return yield* refreshStatsEffect(path, registry);
 });
 
 const getProjectsHandler = Effect.gen(function* () {
@@ -96,6 +107,7 @@ const updatePluginSettingHandler = (params: { pluginId: string; enabled?: boolea
 		const { path } = yield* SettingsPathRef;
 		const result = yield* updatePluginSettingEffect(path, params);
 		yield* refreshRegistry;
+		yield* invalidateStatsCache(path);
 		return result;
 	});
 
@@ -114,6 +126,7 @@ const resetSettingsHandler = Effect.gen(function* () {
 	const { path } = yield* SettingsPathRef;
 	const result = yield* resetSettingsEffect(path);
 	yield* refreshRegistry;
+	yield* invalidateStatsCache(path);
 	return result;
 });
 
@@ -160,6 +173,7 @@ export {
 	getUpdateSettingsHandler,
 	getVersionHandler,
 	isFirstLaunchHandler,
+	refreshStatsHandler,
 	resetSettingsHandler,
 	searchSessionsHandler,
 	updateGeneralSettingsHandler,

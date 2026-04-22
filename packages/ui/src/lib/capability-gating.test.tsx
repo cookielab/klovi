@@ -42,7 +42,7 @@ function createMockClient(): KloviClient {
 		acceptRisks: () => Promise.resolve({ ok: true }),
 		isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 		getVersion: () => Promise.resolve({ version: "1.0.0", commit: "" }),
-		getStats: () => Promise.resolve({ stats: {} as never }),
+		getStats: () => Promise.resolve({ stats: {} as never, refreshing: false }),
 		getProjects: () => Promise.resolve({ projects: [] }),
 		getSessions: () => Promise.resolve({ sessions: [] }),
 		getSession: () => Promise.resolve({ session: {} as never }),

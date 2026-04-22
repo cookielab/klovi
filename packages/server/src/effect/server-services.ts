@@ -1,5 +1,4 @@
 import type {
-	DashboardStats,
 	GlobalSessionResult,
 	RegistryRequirements,
 	Session,
@@ -32,14 +31,14 @@ import {
 	updatePluginSetting,
 	updateUpdateSettings,
 } from "../services/settings-service.ts";
-import { getStats } from "../services/stats-service.ts";
+import { getStats, invalidateStatsCache, type StatsResponse } from "../services/stats-service.ts";
 import { getVersion, makeVersionState, type VersionInfo } from "../services/version-service.ts";
 import { ServerConfig } from "./server-config.ts";
 
 export type KloviServicesShape = {
 	readonly acceptRisks: () => Effect.Effect<{ ok: boolean }, SettingsWriteError, FileSystem.FileSystem>;
 	readonly getVersion: () => Effect.Effect<VersionInfo>;
-	readonly getStats: () => Effect.Effect<{ stats: DashboardStats }, never, RegistryRequirements>;
+	readonly getStats: () => Effect.Effect<StatsResponse, never, RegistryRequirements>;
 	readonly getProjects: () => Effect.Effect<{ projects: MergedProject[] }, never, RegistryRequirements>;
 	readonly getSessions: (params: {
 		encodedPath: string;
@@ -104,7 +103,7 @@ export const KloviServicesLive = Layer.effect(
 		return {
 			acceptRisks: () => completeOnboarding(settingsPath),
 			getVersion: () => Effect.succeed(getVersion(versionState)),
-			getStats: () => getStats(registry),
+			getStats: () => getStats(settingsPath, registry),
 			getProjects: () => getProjects(registry),
 			getSessions: (params) => getSessions(registry, params),
 			getSession: (params) => getSession(registry, params),
@@ -115,6 +114,7 @@ export const KloviServicesLive = Layer.effect(
 				Effect.gen(function* () {
 					const result = yield* updatePluginSetting(settingsPath, params);
 					yield* refreshRegistry();
+					yield* invalidateStatsCache(settingsPath);
 					return result;
 				}),
 			getGeneralSettings: () => getGeneralSettings(settingsPath),
@@ -124,6 +124,7 @@ export const KloviServicesLive = Layer.effect(
 				Effect.gen(function* () {
 					const result = yield* resetSettings(settingsPath);
 					yield* refreshRegistry();
+					yield* invalidateStatsCache(settingsPath);
 					return result;
 				}),
 			getUpdateSettings: () => getUpdateSettings(settingsPath),

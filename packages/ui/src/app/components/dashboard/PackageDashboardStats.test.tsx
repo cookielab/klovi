@@ -1,10 +1,8 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import type { DashboardStats } from "../../../shared/types.ts";
 import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
 import { PackageDashboardStats } from "./PackageDashboardStats.tsx";
-
-const STATS_CACHE_KEY = "klovi-dashboard-stats";
 
 function makeStats(projects: number): DashboardStats {
 	return {
@@ -23,13 +21,8 @@ function makeStats(projects: number): DashboardStats {
 }
 
 describe("PackageDashboardStats", () => {
-	beforeEach(() => {
-		localStorage.removeItem(STATS_CACHE_KEY);
-	});
-
 	afterEach(() => {
 		cleanup();
-		localStorage.removeItem(STATS_CACHE_KEY);
 	});
 
 	test("shows a scaffold on a cold load", () => {
@@ -43,21 +36,17 @@ describe("PackageDashboardStats", () => {
 		expect(screen.getByText("Loading stats...")).toBeDefined();
 	});
 
-	test("hydrates from cached stats before the fresh request resolves", async () => {
-		let resolveStats: ((value: { stats: DashboardStats }) => void) | null = null;
-		localStorage.setItem(
-			STATS_CACHE_KEY,
-			JSON.stringify({
-				version: 1,
-				stats: makeStats(4),
-			}),
-		);
+	test("uses server-cached stats before polling to a fresh result", async () => {
+		let getStatsCalls = 0;
 
 		setupMockRPC({
-			getStats: () =>
-				new Promise((resolve) => {
-					resolveStats = resolve;
-				}),
+			getStats: () => {
+				getStatsCalls += 1;
+				if (getStatsCalls === 1) {
+					return Promise.resolve({ stats: makeStats(4), refreshing: true, cachedAt: "2026-04-22T10:00:00.000Z" });
+				}
+				return Promise.resolve({ stats: makeStats(7), refreshing: false, cachedAt: "2026-04-22T10:00:01.000Z" });
+			},
 		});
 
 		render(<PackageDashboardStats />, { wrapper: MockProviders });
@@ -68,15 +57,11 @@ describe("PackageDashboardStats", () => {
 		});
 		expect(screen.getByText("Refreshing stats...")).toBeDefined();
 
-		await act(async () => {
-			resolveStats?.({ stats: makeStats(7) });
-			await Promise.resolve();
-		});
-
 		await waitFor(() => {
 			const projectsLabel = screen.getByText("Projects");
 			expect(projectsLabel.previousSibling?.textContent).toBe("7");
 		});
+		expect(getStatsCalls).toBeGreaterThanOrEqual(2);
 		expect(screen.queryByText("Refreshing stats...")).toBeNull();
 	});
 
@@ -84,7 +69,7 @@ describe("PackageDashboardStats", () => {
 		let listener: ((stats: DashboardStats) => void) | null = null;
 
 		setupMockRPC({
-			getStats: () => Promise.resolve({ stats: makeStats(1) }),
+			getStats: () => Promise.resolve({ stats: makeStats(1), refreshing: false }),
 			hostBridge: {
 				onStatsUpdated: (callback) => {
 					listener = callback;

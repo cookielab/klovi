@@ -1,5 +1,5 @@
 import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "./rpc-types.ts";
-import type { DashboardStats, GlobalSessionResult, Project, Session, SessionSummary } from "./types.ts";
+import type { DashboardStats, GlobalSessionResult, Project, Session, SessionSummary, StatsResponse } from "./types.ts";
 
 type EmptyPayload = Record<string, never>;
 
@@ -31,7 +31,7 @@ type DesktopClientRequestMap = {
 	acceptRisks: DesktopRequestDefinition<EmptyPayload, { ok: boolean }>;
 	isFirstLaunch: DesktopRequestDefinition<EmptyPayload, { firstLaunch: boolean }>;
 	getVersion: DesktopRequestDefinition<EmptyPayload, { version: string; commit: string }>;
-	getStats: DesktopRequestDefinition<EmptyPayload, { stats: DashboardStats }>;
+	getStats: DesktopRequestDefinition<EmptyPayload, StatsResponse>;
 	getProjects: DesktopRequestDefinition<EmptyPayload, { projects: Project[] }>;
 	getSessions: DesktopRequestDefinition<{ encodedPath: string }, { sessions: SessionSummary[] }>;
 	getSession: DesktopRequestDefinition<{ sessionId: string; project: string }, { session: Session }>;

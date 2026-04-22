@@ -1,3 +1,5 @@
+import type { DashboardStats } from "@cookielab.io/klovi-plugin-core";
+
 export type {
 	AssistantTurn,
 	Attachment,
@@ -17,3 +19,9 @@ export type {
 	Turn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
+
+export type StatsResponse = {
+	stats: DashboardStats;
+	cachedAt?: string | undefined;
+	refreshing: boolean;
+};

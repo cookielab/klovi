@@ -24,6 +24,7 @@ import {
 	getUpdateSettingsHandler,
 	getVersionHandler,
 	isFirstLaunchHandler,
+	refreshStatsHandler,
 	resetSettingsHandler,
 	searchSessionsHandler,
 	updateGeneralSettingsHandler,
@@ -154,11 +155,11 @@ const win = new BrowserWindow({
 	rpc: rpc,
 });
 
-const pushStatsUpdate = getStatsHandler.pipe(
+const pushStatsUpdate = refreshStatsHandler.pipe(
 	Effect.flatMap((result) =>
 		Effect.try({
 			try: () => {
-				win.webview.rpc?.send.statsUpdated(result);
+				win.webview.rpc?.send.statsUpdated({ stats: result.stats });
 			},
 			catch: () => undefined,
 		}).pipe(Effect.ignore),

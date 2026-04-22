@@ -47,6 +47,7 @@ function createMockClient(overrides: MockClientOverrides = {}): KloviClient {
 					toolCalls: 0,
 					models: {},
 				},
+				refreshing: false,
 			}),
 		getProjects: () => Promise.resolve({ projects: [] }),
 		getSessions: () => Promise.resolve({ sessions: [] }),
