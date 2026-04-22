@@ -152,6 +152,10 @@ function applyUsageStats(stats: DashboardStats, modelUsage: ModelTokenUsage, usa
 	modelUsage.cacheCreationTokens += usage.cacheCreationTokens ?? 0;
 }
 
+function totalUsageTokens(usage: TokenUsage): number {
+	return usage.inputTokens + usage.outputTokens + (usage.cacheReadTokens ?? 0) + (usage.cacheCreationTokens ?? 0);
+}
+
 function applyTurnStats(stats: DashboardStats, turns: Turn[], fallbackModel: string): void {
 	stats.messages += countVisibleMessages(turns);
 
@@ -161,11 +165,11 @@ function applyTurnStats(stats: DashboardStats, turns: Turn[], fallbackModel: str
 		}
 
 		stats.toolCalls += turn.contentBlocks.filter((block) => block.type === "tool_call").length;
-		const modelUsage = ensureModelUsage(stats.models, turn.model || fallbackModel || "unknown");
-
-		if (!turn.usage) {
+		if (!turn.usage || totalUsageTokens(turn.usage) <= 0) {
 			continue;
 		}
+
+		const modelUsage = ensureModelUsage(stats.models, turn.model || fallbackModel || "unknown");
 		applyUsageStats(stats, modelUsage, turn.usage);
 	}
 }

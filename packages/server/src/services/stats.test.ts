@@ -225,4 +225,44 @@ describe("scanStats", () => {
 		const second = await runEffect(scanStats(registry));
 		expect(second.inputTokens).toBe(999);
 	});
+
+	test("filters models with zero total tokens from stats", async () => {
+		const registry = new PluginRegistry();
+		const zeroUsageSession = makeSession("s1", "project-1", isoDaysAgo(0), "gpt-5", 0, 0);
+		const [, assistantTurn] = zeroUsageSession.turns;
+		if (assistantTurn?.kind === "assistant" && assistantTurn.usage) {
+			assistantTurn.usage.cacheReadTokens = 0;
+			assistantTurn.usage.cacheCreationTokens = 0;
+		}
+
+		const countedSession = makeSession("s2", "project-1", isoDaysAgo(0), "claude-opus", 10, 5);
+
+		const list: SessionSummary[] = [
+			{
+				sessionId: "s1",
+				timestamp: zeroUsageSession.turns[0]?.timestamp ?? "",
+				slug: "s1",
+				firstMessage: "session 1",
+				model: "gpt-5",
+				gitBranch: "main",
+			},
+			{
+				sessionId: "s2",
+				timestamp: countedSession.turns[0]?.timestamp ?? "",
+				slug: "s2",
+				firstMessage: "session 2",
+				model: "claude-opus",
+				gitBranch: "main",
+			},
+		];
+
+		registry.register(createMockPlugin({ s1: zeroUsageSession, s2: countedSession }, list), testConfig);
+
+		const stats = await runEffect(scanStats(registry));
+		expect(stats.sessions).toBe(2);
+		expect(stats.messages).toBe(4);
+		expect(stats.toolCalls).toBe(2);
+		expect(stats.models["gpt-5"]).toBeUndefined();
+		expect(stats.models["claude-opus"]?.inputTokens).toBe(10);
+	});
 });
