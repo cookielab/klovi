@@ -9,7 +9,7 @@ const STATS_ROW_CLASSES = "grid gap-[12px]";
 const STATS_ROW_3_CLASSES = "grid-cols-3";
 const STATS_ROW_4_CLASSES = "grid-cols-4";
 const STAT_CARD_CLASSES = "border border-border-muted bg-surface-muted px-[18px] py-[14px]";
-const STAT_CARD_SKELETON_CLASSES = "h-[64px] opacity-40";
+const STAT_CARD_SKELETON_CLASSES = "animate-pulse";
 const STAT_VALUE_CLASSES = "text-[1.3rem] font-bold leading-[1.2] whitespace-nowrap text-foreground";
 const STAT_LABEL_CLASSES =
 	"mt-[2px] text-[0.7rem] font-semibold uppercase tracking-[0.04em] whitespace-nowrap text-foreground-subtle";
@@ -19,6 +19,15 @@ const MODEL_LIST_CLASSES = "mt-[6px] mb-0 list-none p-0";
 const MODEL_LIST_ITEM_CLASSES = "flex items-center justify-between py-[2px] text-[0.8rem]";
 const MODEL_NAME_CLASSES = "font-mono text-[0.78rem] text-foreground-muted";
 const MODEL_COUNT_CLASSES = "text-[0.75rem] text-foreground-subtle";
+const STATS_STATUS_CLASSES = "text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-foreground-subtle";
+const SKELETON_BAR_CLASSES = "rounded-sm bg-border-muted/70";
+const SKELETON_VALUE_CLASSES = `${SKELETON_BAR_CLASSES} h-[22px] w-[58%]`;
+const SKELETON_LABEL_CLASSES = `${SKELETON_BAR_CLASSES} mt-[10px] h-[10px] w-[42%]`;
+const SKELETON_TOKEN_VALUE_CLASSES = `${SKELETON_BAR_CLASSES} h-[20px] w-[70%]`;
+const SKELETON_TOKEN_LABEL_CLASSES = `${SKELETON_BAR_CLASSES} mt-[8px] h-[9px] w-[48%]`;
+const SKELETON_MODEL_ROW_CLASSES = "flex items-center justify-between gap-[12px]";
+const SKELETON_MODEL_NAME_CLASSES = `${SKELETON_BAR_CLASSES} h-[10px] w-[44%]`;
+const SKELETON_MODEL_COUNT_CLASSES = `${SKELETON_BAR_CLASSES} h-[10px] w-[24%]`;
 
 const ONE_BILLION = 1_000_000_000;
 const ONE_MILLION = 1_000_000;
@@ -49,18 +58,53 @@ function totalTokens(usage: ModelTokenUsage): number {
 export type DashboardStatsProps = {
 	stats: Stats | null;
 	loading?: boolean | undefined;
+	refreshing?: boolean | undefined;
 	error?: string | undefined;
 	onRetry?: (() => void) | undefined;
 };
 
-export function DashboardStats({ stats, loading, error, onRetry }: DashboardStatsProps) {
+export function DashboardStats({ stats, loading, refreshing, error, onRetry }: DashboardStatsProps) {
 	if (loading) {
 		return (
-			<div className={DASHBOARD_STATS_CLASSES}>
+			<div className={DASHBOARD_STATS_CLASSES} aria-busy="true" role="status" aria-label="Loading stats">
+				<div className={STATS_STATUS_CLASSES}>Loading stats...</div>
 				<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
 					{["skeleton-0", "skeleton-1", "skeleton-2"].map((key) => (
-						<div key={key} className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`} />
+						<div key={key} className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`}>
+							<div className={SKELETON_VALUE_CLASSES} />
+							<div className={SKELETON_LABEL_CLASSES} />
+						</div>
 					))}
+				</div>
+				<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
+					{["skeleton-3", "skeleton-4", "skeleton-5"].map((key) => (
+						<div key={key} className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`}>
+							<div className={SKELETON_VALUE_CLASSES} />
+							<div className={SKELETON_LABEL_CLASSES} />
+						</div>
+					))}
+				</div>
+				<div className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`}>
+					<div className={`${SKELETON_LABEL_CLASSES} mt-0 w-[18%]`} />
+					<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_4_CLASSES} ${TOKEN_ROW_CLASSES}`}>
+						{["token-0", "token-1", "token-2", "token-3"].map((key) => (
+							<div key={key}>
+								<div className={SKELETON_TOKEN_VALUE_CLASSES} />
+								<div className={SKELETON_TOKEN_LABEL_CLASSES} />
+							</div>
+						))}
+					</div>
+				</div>
+				<div className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`}>
+					<div className={`${SKELETON_LABEL_CLASSES} mt-0 w-[14%]`} />
+					<ul className={MODEL_LIST_CLASSES}>
+						{["model-0", "model-1", "model-2", "model-3"].map((key) => (
+							<li key={key} className={`${MODEL_LIST_ITEM_CLASSES} ${SKELETON_MODEL_ROW_CLASSES}`}>
+								<div className={SKELETON_MODEL_NAME_CLASSES} />
+								<div className={SKELETON_MODEL_COUNT_CLASSES} />
+							</li>
+						))}
+					</ul>
 				</div>
 			</div>
 		);
@@ -78,6 +122,7 @@ export function DashboardStats({ stats, loading, error, onRetry }: DashboardStat
 
 	return (
 		<div className={DASHBOARD_STATS_CLASSES}>
+			{refreshing ? <div className={STATS_STATUS_CLASSES}>Refreshing stats...</div> : null}
 			<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.projects)}</div>
