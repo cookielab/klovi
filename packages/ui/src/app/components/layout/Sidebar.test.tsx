@@ -58,7 +58,9 @@ describe("Sidebar", () => {
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
-		expect(await findByText("1.2.3 (abc1234)")).toBeTruthy();
+		const versionBadge = await findByText("1.2.3 (abc1234)");
+		expect(versionBadge.classList.contains("sidebar-version")).toBe(true);
+		expect(versionBadge.className).toContain("bg-surface-sunken");
 	});
 
 	test("renders version without commit hash when empty", async () => {

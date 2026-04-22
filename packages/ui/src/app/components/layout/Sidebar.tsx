@@ -24,7 +24,8 @@ const SIDEBAR_BASE_CLASSES =
 const SIDEBAR_HIDDEN_CLASSES = "-translate-x-full";
 const HEADER_CLASSES = "flex h-header flex-shrink-0 items-center gap-3 border-border border-b px-4";
 const TITLE_CLASSES = "text-[1.1rem] font-bold text-foreground";
-const VERSION_CLASSES = "text-[0.7rem] font-normal text-foreground-subtle";
+const VERSION_CLASSES =
+	"sidebar-version inline-flex shrink-0 items-center whitespace-nowrap bg-surface-sunken px-[6px] py-px font-mono text-[0.68rem] leading-[1.4] text-foreground-subtle";
 const CONTENT_CLASSES = "flex-1 overflow-y-auto p-2";
 const FOOTER_CLASSES =
 	"sidebar-footer flex-shrink-0 border-border-muted border-t px-4 py-[10px] text-center text-[0.7rem] text-foreground-subtle [&_a]:text-foreground-subtle [&_a]:no-underline [&_a:hover]:text-accent";
