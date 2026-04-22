@@ -67,4 +67,21 @@ describe("apps/package integration", () => {
 		const text = await res.text();
 		expect(text).toContain("Klovi");
 	});
+
+	// Regression: missing hashed asset chunks (e.g. when a browser has cached
+	// an older index.html referencing now-removed chunk filenames) must return
+	// 404, not an HTML fallback. An HTML response for a <link rel="stylesheet">
+	// or <script type="module"> is silently rejected by browsers and produces
+	// the "broken CSS" symptom that prompted this fix.
+	test("static: missing .css asset returns 404 (no index.html fallback)", async () => {
+		const res = await fetch(`${server.url}/chunk-missing.css`);
+		expect(res.status).toBe(404);
+		expect(res.headers.get("content-type")).not.toContain("text/html");
+	});
+
+	test("static: missing .js asset returns 404 (no index.html fallback)", async () => {
+		const res = await fetch(`${server.url}/chunk-missing.js`);
+		expect(res.status).toBe(404);
+		expect(res.headers.get("content-type")).not.toContain("text/html");
+	});
 });
