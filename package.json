@@ -6,7 +6,7 @@
 	"workspaces": ["apps/*", "packages/*"],
 	"scripts": {
 		"dev:desktop": "bun run --filter @cookielab.io/klovi-desktop dev",
-		"dev:bun": "bun run --filter @cookielab.io/klovi dev",
+		"dev:bun": "bun run build:web && bun run --filter @cookielab.io/klovi dev",
 		"dev:node": "tsx apps/package/src/cli.ts",
 		"build": "bun run --filter @cookielab.io/klovi-desktop build",
 		"build:web": "bun run --filter @cookielab.io/klovi-ui build",
