@@ -46,8 +46,8 @@
 		"@cookielab.io/klovi-plugin-core": "workspace:*",
 		"@cookielab.io/klovi-plugin-cursor": "workspace:*",
 		"@cookielab.io/klovi-plugin-opencode": "workspace:*",
-		"effect": "3.21.1",
-		"@effect/platform": "0.96.0",
+		"effect": "3.21.2",
+		"@effect/platform": "0.96.1",
 		"@effect/platform-bun": "0.89.0",
 		"@effect/platform-node": "0.106.0"
 	}
