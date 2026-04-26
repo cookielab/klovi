@@ -39,8 +39,8 @@
 	"dependencies": {
 		"@cookielab.io/klovi-server": "workspace:*",
 		"@cookielab.io/klovi-ui": "workspace:*",
-		"effect": "3.21.1",
-		"@effect/platform": "0.96.0",
+		"effect": "3.21.2",
+		"@effect/platform": "0.96.1",
 		"@effect/platform-bun": "0.89.0",
 		"@effect/platform-node": "0.106.0"
 	}
