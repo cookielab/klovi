@@ -25,16 +25,16 @@
 		"storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.12",
+		"@biomejs/biome": "2.4.13",
 		"@cookielab.io/biome-config": "1.4.0",
-		"@tailwindcss/vite": "4.2.2",
-		"@types/bun": "1.3.12",
+		"@tailwindcss/vite": "4.2.4",
+		"@types/bun": "1.3.13",
 		"@types/react": "19.2.14",
 		"@types/react-dom": "19.2.3",
 		"bun-plugin-tailwind": "0.1.2",
 		"effect": "3.21.1",
 		"happy-dom": "20.9.0",
-		"tailwindcss": "4.2.2",
+		"tailwindcss": "4.2.4",
 		"tsx": "4.21.0",
 		"typescript": "6.0.3"
 	},
