@@ -11,7 +11,6 @@ import {
 	listFilesBySuffix,
 	listFilesWithMtime,
 	readDirEntriesSafe,
-	readTextPrefix,
 } from "./discovery-utils.ts";
 
 const testDir = join(tmpdir(), `klovi-claude-discovery-utils-test-${Date.now()}`);
@@ -72,14 +71,6 @@ describe("claude discovery utils", () => {
 
 		const files = await runFs(listFilesWithMtime(testDir, ".jsonl"));
 		expect(files.map((f) => f.fileName)).toEqual(["b.jsonl", "a.jsonl"]);
-	});
-
-	test("readTextPrefix reads only requested prefix length", async () => {
-		const filePath = join(testDir, "sample.txt");
-		await Bun.write(filePath, "abcdef");
-
-		const prefix = await runFs(readTextPrefix(filePath, 3));
-		expect(prefix).toBe("abc");
 	});
 
 	test("decodeEncodedPath decodes unix-style encoded paths", () => {

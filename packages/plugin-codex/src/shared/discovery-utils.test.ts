@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
-import { decodeEncodedPath, readDirEntriesSafe, readTextPrefix } from "./discovery-utils.ts";
+import { decodeEncodedPath, readDirEntriesSafe } from "./discovery-utils.ts";
 
 const testDir = join(tmpdir(), `klovi-codex-discovery-utils-test-${Date.now()}`);
 const originalPlatform = process.platform;
@@ -27,14 +27,6 @@ describe("codex discovery utils", () => {
 			readDirEntriesSafe(join(testDir, "missing")).pipe(Effect.provide(testLayer)),
 		);
 		expect(entries).toEqual([]);
-	});
-
-	test("readTextPrefix reads only requested bytes", async () => {
-		const filePath = join(testDir, "sample.txt");
-		await Bun.write(filePath, "abcdef");
-
-		const prefix = await Effect.runPromise(readTextPrefix(filePath, 4).pipe(Effect.provide(testLayer)));
-		expect(prefix).toBe("abcd");
 	});
 
 	test("decodeEncodedPath supports unix-style paths", () => {

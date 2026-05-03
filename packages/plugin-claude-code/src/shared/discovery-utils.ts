@@ -73,15 +73,6 @@ export function listFilesWithMtime(dir: string, suffix: string) {
 	});
 }
 
-export function readTextPrefix(filePath: string, maxBytes: number) {
-	return Effect.gen(function* () {
-		const fs = yield* FileSystem.FileSystem;
-		const bytes = yield* fs.readFile(filePath);
-		const slice = bytes.subarray(0, maxBytes);
-		return new TextDecoder().decode(slice);
-	});
-}
-
 export function readFileText(filePath: string) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
