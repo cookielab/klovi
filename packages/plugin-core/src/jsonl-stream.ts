@@ -29,6 +29,8 @@ const DEFAULT_HEAD_CHUNK_SIZE = DEFAULT_HEAD_CHUNK_KILOBYTES * KILOBYTE_BYTES;
 
 function processLine(line: string, state: LineProcessorState): Effect.Effect<void> {
 	return Effect.gen(function* () {
+		// `Stream.takeUntilEffect` (below) is the inclusive variant and `Stream.splitLines`
+		// chunk-buffers, so lines may already be in flight after a bail. Drop them here.
 		if (yield* Ref.get(state.bailedRef)) {
 			return;
 		}
