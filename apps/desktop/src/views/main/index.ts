@@ -350,7 +350,7 @@ const desktopHostBridge: KloviHostBridge = {
 
 // Mount shared app
 // biome-ignore lint/style/noNonNullAssertion: root element is guaranteed to exist in index.html
-const container = document.getElementById("root")!;
+const container = document.querySelector<HTMLElement>("#root")!;
 mountKloviApp({
 	container: container,
 	client: desktopClient,

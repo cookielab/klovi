@@ -90,6 +90,7 @@ export function PresentationShell({
 					Step {presentation.currentStep + 1} / {presentation.totalSteps}
 				</span>
 				<div className={PROGRESS_BAR_CLASSES}>
+					{/* biome-ignore lint/nursery/noInlineStyles: dynamic progress percentage */}
 					<div className={PROGRESS_FILL_CLASSES} style={{ width: `${progress}%` }} />
 				</div>
 				<span className={HINT_CLASSES}>← → step · ↑ ↓ message · Esc exit · F fullscreen</span>

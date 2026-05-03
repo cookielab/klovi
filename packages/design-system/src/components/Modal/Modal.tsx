@@ -45,6 +45,7 @@ export function Modal({ open, onClose, width = 560, children }: ModalProps) {
 			<div
 				className="flex max-h-[480px] flex-col overflow-hidden border border-border bg-surface shadow-lg"
 				role="dialog"
+				// biome-ignore lint/nursery/noInlineStyles: width is a dynamic prop value
 				style={{ width: width }}
 				onClick={stopPropagation}
 			>

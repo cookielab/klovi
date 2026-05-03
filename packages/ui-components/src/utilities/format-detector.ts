@@ -14,12 +14,14 @@ const DIFF_LINE_RATIO = 0.3;
 const YAML_LINE_RATIO = 0.3;
 const MIN_CODE_LINES = 2;
 
+type DetectedFormat = "json" | "diff" | "markup" | "typescript" | "python" | "css" | "yaml";
+
 /**
  * Detects the language/format of CLI output for syntax highlighting.
  * Returns a Prism language identifier or null if no format is detected.
  * Only matches when the entire output is a single format (whole-output detection).
  */
-function detectOutputFormat(output: string): string | null {
+function detectOutputFormat(output: string): DetectedFormat | null {
 	const trimmed = output.trim();
 	if (!trimmed) {
 		return null;

@@ -34,7 +34,7 @@ function getSessions(
 ): Effect.Effect<SessionsResponse, never, RegistryRequirements> {
 	return Effect.gen(function* () {
 		const discovered = yield* registry.discoverAllProjectsWithSessions();
-		if (!discovered.projects.find((project) => project.encodedPath === params.encodedPath)) {
+		if (!discovered.projects.some((project) => project.encodedPath === params.encodedPath)) {
 			return { sessions: [] as SessionSummary[] };
 		}
 		return { sessions: discovered.sessionsByEncodedPath.get(params.encodedPath) ?? [] };

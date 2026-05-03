@@ -4,9 +4,6 @@ import { getUpdateSettings } from "@cookielab.io/klovi-server/services/settings-
 import { Duration, Effect, Schedule, SubscriptionRef } from "effect";
 import type { UpdateStatus } from "../shared/rpc-types.ts";
 import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "./services.ts";
-
-type Platform = "macos" | "linux" | "win";
-
 import {
 	findLatestUsableRelease,
 	findReleaseAsset,
@@ -18,6 +15,8 @@ import {
 	validateExtractedBundle,
 	validateUpdateInfo,
 } from "./updater.ts";
+
+type Platform = "macos" | "linux" | "win";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
 const ZSTD_SUFFIX_RE = /\.zst$/u;

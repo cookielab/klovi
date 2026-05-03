@@ -1,0 +1,90 @@
+diff --git a/dist/api/bun/core/ApplicationMenu.ts b/dist/api/bun/core/ApplicationMenu.ts
+index 65f59ff7f8563ee1132846c2ae999595f01ff96b..699110ec3479250c76c81e6751d18339b292b671 100644
+--- a/dist/api/bun/core/ApplicationMenu.ts
++++ b/dist/api/bun/core/ApplicationMenu.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, type ApplicationMenuItemConfig } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { roleLabelMap } from "./menuRoles";
+diff --git a/dist/api/bun/core/BrowserView.ts b/dist/api/bun/core/BrowserView.ts
+index 815be82b961fcff5229f9809cfe800be16db65ed..22fc1aa3b408f43ed9682e01e8d4cd496eaf2075 100644
+--- a/dist/api/bun/core/BrowserView.ts
++++ b/dist/api/bun/core/BrowserView.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { native, toCString, ffi } from "../proc/native";
+ import * as fs from "fs";
+ import electrobunEventEmitter from "../events/eventEmitter";
+diff --git a/dist/api/bun/core/BrowserWindow.ts b/dist/api/bun/core/BrowserWindow.ts
+index c26c2c977ee1fc25a8dc144b85bac8626a45f572..085f4e1eaa58483207489fdef2997aa328472ceb 100644
+--- a/dist/api/bun/core/BrowserWindow.ts
++++ b/dist/api/bun/core/BrowserWindow.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { BrowserView } from "./BrowserView";
+diff --git a/dist/api/bun/core/ContextMenu.ts b/dist/api/bun/core/ContextMenu.ts
+index 807fd20e2264616a9dd95ac909c2fe326932e7d1..3142526485f1f7da3336876a7a43e61236fc72c1 100644
+--- a/dist/api/bun/core/ContextMenu.ts
++++ b/dist/api/bun/core/ContextMenu.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ // Context menus intentionally share ApplicationMenuItemConfig for now:
+ // - macOS supports role-based context menu items.
+ // - Windows has partial role behavior.
+diff --git a/dist/api/bun/core/Socket.ts b/dist/api/bun/core/Socket.ts
+index cdaa2bca0fabe577cb667056aa6f8f84211189c2..4993b44b345496809ff7da7551cc231b50d3f5d4 100644
+--- a/dist/api/bun/core/Socket.ts
++++ b/dist/api/bun/core/Socket.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import type { Server, ServerWebSocket } from "bun";
+ import { BrowserView } from "./BrowserView";
+ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+diff --git a/dist/api/bun/core/Tray.ts b/dist/api/bun/core/Tray.ts
+index 9625a2ea8d0d81d8d3e227db8259d493100dafe7..edcef80bb16145c48fd610c9a559210f252e99c3 100644
+--- a/dist/api/bun/core/Tray.ts
++++ b/dist/api/bun/core/Tray.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, type MenuItemConfig, type Rectangle } from "../proc/native";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import { VIEWS_FOLDER } from "./Paths";
+diff --git a/dist/api/bun/core/Updater.ts b/dist/api/bun/core/Updater.ts
+index 721dd775408e5978b6cae0fa4889309c76b43cce..36cbbc4ad6ec4140cab93ea22bdf1d2e30c409b3 100644
+--- a/dist/api/bun/core/Updater.ts
++++ b/dist/api/bun/core/Updater.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { join, dirname, resolve } from "path";
+ import { homedir } from "os";
+ import {
+diff --git a/dist/api/bun/core/Utils.ts b/dist/api/bun/core/Utils.ts
+index 54d6298012e94df1f6ee34e6ba376d336938a98e..feaedd71e9103016c5528552e7476150e0a6b0d7 100644
+--- a/dist/api/bun/core/Utils.ts
++++ b/dist/api/bun/core/Utils.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { ffi, native } from "../proc/native";
+ import { electrobunEventEmitter } from "../events/eventEmitter";
+ import { homedir, tmpdir } from "node:os";
+diff --git a/dist/api/bun/index.ts b/dist/api/bun/index.ts
+index 8af542a997e3fb25cab3700875063cead1493f26..e55e06eb0d3e1017606a0692078ea91867c5a4c5 100644
+--- a/dist/api/bun/index.ts
++++ b/dist/api/bun/index.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import electobunEventEmmitter from "./events/eventEmitter";
+ import { BrowserWindow, type WindowOptionsType } from "./core/BrowserWindow";
+ import { BrowserView, type BrowserViewOptions } from "./core/BrowserView";
+diff --git a/dist/api/bun/proc/native.ts b/dist/api/bun/proc/native.ts
+index f0f6c2532ba2eb467ec1d452a25c835b6db72661..9d2972cbcc20f4e976eeff2d8f9b58574ae0ddb4 100644
+--- a/dist/api/bun/proc/native.ts
++++ b/dist/api/bun/proc/native.ts
+@@ -1,3 +1,4 @@
++// @ts-nocheck
+ import { join } from "path";
+ import electrobunEventEmitter from "../events/eventEmitter";
+ import ElectrobunEvent from "../events/event";

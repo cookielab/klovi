@@ -7,7 +7,7 @@ const baseUrl = globalThis.location.origin;
 const client = createHttpClient(baseUrl);
 
 // biome-ignore lint/style/noNonNullAssertion: root element is guaranteed to exist in index.html
-const container = document.getElementById("root")!;
+const container = document.querySelector<HTMLElement>("#root")!;
 
 mountKloviApp({
 	container: container,

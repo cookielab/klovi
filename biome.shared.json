@@ -59,7 +59,16 @@
 				"noEmptyBlockStatements": "off"
 			},
 			"nursery": {
-				"noExcessiveClassesPerFile": "off"
+				"noExcessiveClassesPerFile": "off",
+				"noReactNativeRawText": "off",
+				"useConsistentTestIt": {
+					"level": "error",
+					"options": {
+						"function": "test",
+						"withinDescribe": "test"
+					}
+				},
+				"useExplicitReturnType": "off"
 			},
 			"security": {
 				"noSecrets": "warn"
@@ -73,6 +82,9 @@
 				"rules": {
 					"style": {
 						"noMagicNumbers": "off"
+					},
+					"nursery": {
+						"noComponentHookFactories": "off"
 					}
 				}
 			}
@@ -84,6 +96,9 @@
 					"style": {
 						"noDefaultExport": "off",
 						"useExportsLast": "off"
+					},
+					"nursery": {
+						"noInlineStyles": "off"
 					}
 				}
 			}

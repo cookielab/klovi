@@ -59,7 +59,7 @@ function getUpdaterAssetPrefix(platform: Platform, arch: Arch): string {
 	return `stable-${platform}-${arch}`;
 }
 
-function getElectrobunTarballName(platform: Platform): string {
+function getElectrobunTarballName(platform: Platform): "Klovi.app.tar.zst" | "Klovi.tar.zst" {
 	return platform === "macos" ? "Klovi.app.tar.zst" : "Klovi.tar.zst";
 }
 
