@@ -1,5 +1,11 @@
 import { join } from "node:path";
-import { PluginConfig, type PluginProject, type SessionSummary, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
+import {
+	PluginConfig,
+	type PluginProject,
+	type SessionSummary,
+	sortByIsoDesc,
+	streamJsonlHead,
+} from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
 import { cleanCommandMessage } from "./command-message.ts";
 import type { RawContentBlock, RawLine } from "./raw-types.ts";
@@ -8,14 +14,8 @@ import {
 	listFilesBySuffix,
 	listFilesWithMtime,
 	readDirEntriesSafe,
-	readTextPrefix,
 } from "./shared/discovery-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
-const BYTES_PER_KB = 1024;
-const CWD_SCAN_KB = 64;
-const CWD_SCAN_BYTES = CWD_SCAN_KB * BYTES_PER_KB;
-const SESSION_META_SCAN_BYTES = BYTES_PER_KB * BYTES_PER_KB;
 const BRACKETED_TEXT_REGEX = /^\[.+\]$/u;
 
 function inspectProjectSessions(projectDir: string, sessionFiles: { fileName: string; mtime: string }[]) {
@@ -117,15 +117,9 @@ function classifySessionTypes(sessions: SessionSummary[]): void {
 
 function extractCwd(filePath: string) {
 	return Effect.gen(function* () {
-		const text = yield* readTextPrefix(filePath, CWD_SCAN_BYTES).pipe(Effect.catchAll(() => Effect.succeed("")));
-		if (!text) {
-			return "";
-		}
-
 		let cwd = "";
-
-		iterateJsonl(
-			text,
+		yield* streamJsonlHead(
+			filePath,
 			({ parsed }) => {
 				const obj = parsed as RawLine;
 				if (obj.cwd) {
@@ -136,8 +130,7 @@ function extractCwd(filePath: string) {
 				return undefined;
 			},
 			{ maxLines: 20 },
-		);
-
+		).pipe(Effect.catchAll(() => Effect.void));
 		return cwd;
 	});
 }
@@ -199,13 +192,6 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 
 function extractSessionMeta(filePath: string) {
 	return Effect.gen(function* () {
-		const text = yield* readTextPrefix(filePath, SESSION_META_SCAN_BYTES).pipe(
-			Effect.catchAll(() => Effect.succeed("")),
-		);
-		if (!text) {
-			return null;
-		}
-
 		const meta: MetaFields = {
 			timestamp: "",
 			slug: "",
@@ -214,8 +200,8 @@ function extractSessionMeta(filePath: string) {
 			gitBranch: "",
 		};
 
-		iterateJsonl(
-			text,
+		yield* streamJsonlHead(
+			filePath,
 			({ parsed }) => {
 				const obj = parsed as RawLine;
 				processMetaLine(obj, meta);
@@ -231,7 +217,7 @@ function extractSessionMeta(filePath: string) {
 					// Malformed lines skipped here; full errors reported by loadClaudeSession()
 				},
 			},
-		);
+		).pipe(Effect.catchAll(() => Effect.void));
 
 		if (!(meta.timestamp && meta.firstMessage)) {
 			return null;
