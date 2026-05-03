@@ -1,9 +1,7 @@
 import { join } from "node:path";
-import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { PluginConfig, streamJsonlHead } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import { readTextPrefix } from "./shared/discovery-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
 type CodexSessionMeta = {
 	uuid: string;
@@ -20,9 +18,6 @@ type SessionFileInfo = {
 	mtime: string;
 };
 
-const BYTES_PER_KB = 1024;
-const FIRST_LINE_SCAN_KB = 512;
-const FIRST_LINE_SCAN_BYTES = FIRST_LINE_SCAN_KB * BYTES_PER_KB;
 const MS_PER_SECOND = 1000;
 
 function isCodexSessionMeta(obj: unknown): obj is CodexSessionMeta {
@@ -103,62 +98,58 @@ function extractTurnContextModel(parsed: unknown): string | null {
 	return typeof event.payload?.model === "string" ? event.payload.model : null;
 }
 
-function inferModelFromPrefix(prefixText: string): string | null {
-	let model: string | null = null;
-	iterateJsonl(
-		prefixText,
-		({ parsed }) => {
-			const extracted = extractTurnContextModel(parsed);
-			if (isKnownModel(extracted)) {
-				model = extracted;
-				return false;
-			}
-			// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
-			return undefined;
-		},
-		{ startAt: 1, maxLines: 256 },
-	);
-	return model;
+function streamInferredModel(filePath: string) {
+	return Effect.gen(function* () {
+		let model: string | null = null;
+		yield* streamJsonlHead(
+			filePath,
+			({ parsed, lineIndex }) => {
+				if (lineIndex === 0) {
+					// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
+					return undefined;
+				}
+				const extracted = extractTurnContextModel(parsed);
+				if (isKnownModel(extracted)) {
+					model = extracted;
+					return false;
+				}
+				// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
+				return undefined;
+			},
+			{ maxLines: 256 },
+		).pipe(Effect.catchAll(() => Effect.void));
+		return model;
+	});
 }
 
 function parseSessionMeta(filePath: string, fileMtimeEpoch: number | undefined) {
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
 	return Effect.gen(function* () {
-		const prefix = yield* readTextPrefix(filePath, FIRST_LINE_SCAN_BYTES).pipe(
-			Effect.catchAll(() => Effect.succeed("")),
-		);
-		if (!prefix) {
+		const captured = { value: null as CodexSessionMeta | null };
+		yield* streamJsonlHead(
+			filePath,
+			({ parsed }) => {
+				captured.value = normalizeSessionMeta(parsed, fileMtimeEpoch);
+				return false;
+			},
+			{ maxLines: 1 },
+		).pipe(Effect.catchAll(() => Effect.void));
+
+		const firstLineMeta = captured.value;
+		if (!firstLineMeta) {
 			return null;
 		}
-
-		const firstNewline = prefix.indexOf("\n");
-		const firstLine = firstNewline === -1 ? prefix : prefix.slice(0, firstNewline);
-		const trimmedFirstLine = firstLine.trim();
-		if (!trimmedFirstLine) {
-			return null;
+		if (isKnownModel(firstLineMeta.model)) {
+			return firstLineMeta;
 		}
-		try {
-			const parsed: unknown = JSON.parse(trimmedFirstLine);
-			const meta = normalizeSessionMeta(parsed, fileMtimeEpoch);
-			if (!meta) {
-				return null;
-			}
-			if (isKnownModel(meta.model)) {
-				return meta;
-			}
 
-			const inferred = inferModelFromPrefix(prefix);
-			if (isKnownModel(inferred)) {
-				return { ...meta, model: inferred };
-			}
-			if (isKnownModel(meta.provider_id)) {
-				return { ...meta, model: meta.provider_id };
-			}
-			return meta;
-		} catch {
-			// Malformed first line
+		const inferred = yield* streamInferredModel(filePath);
+		if (isKnownModel(inferred)) {
+			return { ...firstLineMeta, model: inferred };
 		}
-		return null;
+		if (isKnownModel(firstLineMeta.provider_id)) {
+			return { ...firstLineMeta, model: firstLineMeta.provider_id };
+		}
+		return firstLineMeta;
 	});
 }
 
