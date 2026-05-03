@@ -11,6 +11,8 @@ export {
 	KLOVI_PLUGIN_PACKAGE_NAMES,
 } from "./ids.ts";
 export { epochMsToIso, epochSecondsToIso, maxIso, sortByIsoDesc } from "./iso-time.ts";
+export type { JsonlLineContext, JsonlVisitor, StreamJsonlHeadOptions } from "./jsonl-stream.ts";
+export { streamJsonlHead } from "./jsonl-stream.ts";
 export type { PluginConfigShape } from "./plugin-config.ts";
 export { PluginConfig } from "./plugin-config.ts";
 export { PluginError } from "./plugin-errors.ts";
