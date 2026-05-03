@@ -102,7 +102,7 @@ Four independent changes. Each is shippable in isolation; later sections depend 
         └─────────────────────────────────────────────────┘
 ```
 
-Implementation order: **§1 → §2 → §3a → §3b → §4a → §4b**. Each step is independently valuable.
+Implementation order: **§1 → §2 → §3a → §4a → §3b → §4b**. §4a precedes §3b so the tail-append path lands on a virtualized list from day one. See the cross-section dependency table at the end of this document.
 
 ## §1 — Bail-early streaming metadata read
 
@@ -137,11 +137,20 @@ Bailing closes the underlying file handle automatically through Effect Stream's 
 
 ### Migration
 
-`packages/plugin-claude-code/src/discovery.ts` — `extractSessionMeta` and `extractCwd` switch from `readTextPrefix` + `iterateJsonl` to `streamJsonlHead`. Same visitor logic, same bail conditions, same outputs.
+`readTextPrefix` exists in **two plugin packages** with identical implementations:
+
+- `packages/plugin-claude-code/src/shared/discovery-utils.ts`
+- `packages/plugin-codex/src/shared/discovery-utils.ts`
+
+Both are migrated in this round (codex has 738 jsonl files in the representative install — same pain shape).
+
+- **Claude Code**: `extractSessionMeta` and `extractCwd` in `packages/plugin-claude-code/src/discovery.ts` switch from `readTextPrefix` + `iterateJsonl` to `streamJsonlHead`. Same visitor logic, same bail conditions, same outputs.
+- **Codex**: callers of `readTextPrefix` in `packages/plugin-codex/src/discovery.ts` (line 107: session-title scan) switch to `streamJsonlHead`. Same visitor logic.
+- **Cursor**: not migrated in this round — no `readTextPrefix` call. (`packages/plugin-cursor` uses `readFileText` for full-file parses, addressed indirectly by §3a's full-file streaming primitive, which Cursor's parsers can adopt opportunistically.)
 
 The existing `iterateJsonl` helper stays for callers that legitimately operate on a string already (e.g. test fixtures).
 
-`readTextPrefix` is removed once no callers remain.
+Both copies of `readTextPrefix` are removed once no callers remain. The two copies are not consolidated into `plugin-core` in this round — only the new `streamJsonlHead` lives there.
 
 ### Tests
 
@@ -157,15 +166,19 @@ For a typical session (metadata in first ~5 lines): cost goes from "read entire 
 
 ### Problem
 
-Five `for...of yield*` loops execute sequentially even though each iteration is an independent IO operation. After §1 makes individual reads tiny, round-trip count dominates.
+Sequential `for...of yield*` loops execute even though each iteration is an independent IO operation. After §1 makes individual reads tiny, round-trip count dominates.
+
+Loops in scope (Claude Code, Codex, and the shared registry):
 
 | Location | Loop | Worst case |
 |---|---|---|
-| `discoverClaudeProjects` (`discovery.ts:44`) | over project dirs | 38 dirs |
-| `inspectProjectSessions` (`discovery.ts:26`) | over session files (bails after first cwd hit) | up to N |
-| `listClaudeSessions` (`discovery.ts:82`) | calls `extractSessionMeta` per file | 22–44 sessions |
-| `listFilesWithMtime` (`shared/discovery-utils.ts:64`) | `fs.stat` per file | up to N |
-| `PluginRegistry.discoverPluginStates` (`plugin-registry.ts:103`) | over registered plugins | 4 plugins |
+| `packages/plugin-claude-code/src/discovery.ts:44` `discoverClaudeProjects` | over project dirs | 38 dirs |
+| `packages/plugin-claude-code/src/discovery.ts:26` `inspectProjectSessions` | over session files (bails after first cwd hit) | up to N |
+| `packages/plugin-claude-code/src/discovery.ts:82` `listClaudeSessions` | calls `extractSessionMeta` per file | 22–44 sessions |
+| `packages/plugin-claude-code/src/shared/discovery-utils.ts:64` `listFilesWithMtime` | `fs.stat` per file | up to N |
+| `packages/plugin-codex/src/discovery.ts` (sessions, byCwd, matching loops at lines 32, 42, 44, 104) | sequential per-session work | 738 sessions on representative install |
+| `packages/plugin-codex/src/shared/discovery-utils.ts:17` | `fs.stat`/dir-walk per entry | up to N |
+| `packages/plugin-core/src/plugin-registry.ts:103` `discoverPluginStates` | over registered plugins | 4 plugins |
 
 ### Change
 
@@ -174,9 +187,9 @@ Replace each loop with `Effect.forEach(items, fn, { concurrency: N })`. Concurre
 | Loop | Concurrency | Rationale |
 |---|---|---|
 | Plugins (`discoverPluginStates`) | `"unbounded"` | only 4 plugins; isolated config layers |
-| Project dirs (`discoverClaudeProjects`) | `16` | bounded so 100+ project trees don't fork-bomb FS |
-| Session files (`listClaudeSessions`) | `16` | safely under macOS 256-fd default; saturates SSD |
-| `fs.stat` (`listFilesWithMtime`) | `32` | stats are very cheap; high concurrency is fine |
+| Project dirs (`discoverClaudeProjects`, codex equivalent) | `16` | bounded so 100+ project trees don't fork-bomb FS |
+| Session files (`listClaudeSessions`, codex per-session loops) | `16` | safely under macOS 256-fd default; saturates SSD |
+| `fs.stat` (`listFilesWithMtime`, codex equivalent) | `32` | stats are very cheap; high concurrency is fine |
 
 ### Bonus: refactor `inspectProjectSessions`
 
@@ -192,6 +205,10 @@ Today's loop reads `extractCwd` per session file but bails after the first non-e
 Klovi project listing: `22 × stream-bail` → `ceil(22 / 16) × stream-bail`. Cold dashboard scan benefits proportionally because `scanStats` traverses the same shapes.
 
 ## §3a — Server-side streaming session parse
+
+### Scope
+
+Claude Code's `loadClaudeSession` is the focus. Codex (`packages/plugin-codex/src/parser.ts`) and Cursor (`packages/plugin-cursor/src/parser.ts`) have similar shapes and benefit from the new `streamJsonl` primitive, but their parser migrations are deferred to a follow-up — the immediate session-open pain is dominated by Claude Code's session sizes and call frequency.
 
 ### Problem
 
@@ -399,6 +416,8 @@ bun run verify:packed-artifact
 
 - **Pain F (re-navigation)** — requires shared in-memory state across navigation OR a derived index. Both touch the no-caching rule and need a separate decision.
 - **Search performance (E)** — currently calls `discoverAllProjectsWithSessions`. Same wins as §1 + §2 will apply transitively, but no dedicated work in this round.
+- **Codex and Cursor parser migrations to `streamJsonl`** — same shape as §3a, deferred until Claude Code's pain is resolved and we measure remaining cost.
+- **Consolidating the two `readTextPrefix` copies into `plugin-core`** once both are removed.
 - **Code-splitting `MarkdownRenderer` and syntax highlighting.**
 - **Lazy-loading images inside tool outputs.**
 - **Removing or formalizing the existing `stats-cache.json`.**
