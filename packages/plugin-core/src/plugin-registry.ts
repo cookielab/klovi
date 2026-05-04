@@ -98,32 +98,34 @@ class PluginRegistry<
 		includeSessions: boolean,
 	): Effect.Effect<DiscoveredPluginState<TPluginId, TSessionSummary, TSession>[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
-			const states: DiscoveredPluginState<TPluginId, TSessionSummary, TSession>[] = [];
+			const entries = [...this.plugins.values()];
+			return yield* Effect.forEach(
+				entries,
+				(entry) =>
+					Effect.gen(function* () {
+						const discoveredIndex =
+							includeSessions && entry.plugin.discoverIndex
+								? yield* entry.plugin.discoverIndex.pipe(
+										Effect.provide(entry.configLayer),
+										Effect.catchAll(() => Effect.succeed(undefined)),
+									)
+								: undefined;
 
-			for (const entry of this.plugins.values()) {
-				const discoveredIndex =
-					includeSessions && entry.plugin.discoverIndex
-						? yield* entry.plugin.discoverIndex.pipe(
+						const projects =
+							discoveredIndex?.projects ??
+							(yield* entry.plugin.discoverProjects.pipe(
 								Effect.provide(entry.configLayer),
-								Effect.catchAll(() => Effect.succeed(undefined)),
-							)
-						: undefined;
+								Effect.catchAll(() => Effect.succeed([] as PluginProject<TPluginId>[])),
+							));
 
-				const projects =
-					discoveredIndex?.projects ??
-					(yield* entry.plugin.discoverProjects.pipe(
-						Effect.provide(entry.configLayer),
-						Effect.catchAll(() => Effect.succeed([] as PluginProject<TPluginId>[])),
-					));
-
-				states.push({
-					entry: entry,
-					projects: projects,
-					...(discoveredIndex ? { sessionsByNativeId: discoveredIndex.sessionsByNativeId } : {}),
-				});
-			}
-
-			return states;
+						return {
+							entry: entry,
+							projects: projects,
+							...(discoveredIndex ? { sessionsByNativeId: discoveredIndex.sessionsByNativeId } : {}),
+						} as DiscoveredPluginState<TPluginId, TSessionSummary, TSession>;
+					}),
+				{ concurrency: "unbounded" },
+			);
 		});
 	}
 
