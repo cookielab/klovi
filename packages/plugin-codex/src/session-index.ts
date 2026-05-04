@@ -124,6 +124,9 @@ function streamInferredModel(filePath: string) {
 
 function parseSessionMeta(filePath: string, fileMtimeEpoch: number | undefined) {
 	return Effect.gen(function* () {
+		// Object wrapper avoids TS narrowing the closure-assigned `null` after the stream
+		// completes — direct `let firstLineMeta: CodexSessionMeta | null = null` followed by
+		// `if (!firstLineMeta) ... firstLineMeta.model` would not narrow inside the visitor.
 		const captured = { value: null as CodexSessionMeta | null };
 		yield* streamJsonlHead(
 			filePath,
