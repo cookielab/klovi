@@ -34,7 +34,7 @@ describe("SessionPresentation", () => {
 
 	test("shows loading state initially", () => {
 		setupMockRPC({
-			getSession: () => new Promise(() => {}),
+			getSessionHead: () => new Promise(() => {}),
 		});
 		const { container } = render(
 			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
@@ -47,7 +47,8 @@ describe("SessionPresentation", () => {
 	test("renders presentation mode after fetch", async () => {
 		const session = makeSession();
 		setupMockRPC({
-			getSession: () => Promise.resolve({ session: session }),
+			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
+			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
 		const { container, findByText } = render(
@@ -62,7 +63,8 @@ describe("SessionPresentation", () => {
 	test("renders progress bar", async () => {
 		const session = makeSession();
 		setupMockRPC({
-			getSession: () => Promise.resolve({ session: session }),
+			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
+			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
 		const { container, findByText } = render(
@@ -76,7 +78,8 @@ describe("SessionPresentation", () => {
 
 	test("returns null when no session data", async () => {
 		setupMockRPC({
-			getSession: () => Promise.resolve({ session: null as unknown as Session }),
+			getSessionHead: () => Promise.resolve({ session: null as unknown as Session, totalTurns: 0 }),
+			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
 		const { container } = render(

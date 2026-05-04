@@ -36,7 +36,7 @@ describe("SessionView", () => {
 
 	test("shows loading state initially", () => {
 		setupMockRPC({
-			getSession: () => new Promise(() => {}),
+			getSessionHead: () => new Promise(() => {}),
 		});
 		const { container } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
@@ -48,7 +48,8 @@ describe("SessionView", () => {
 	test("renders messages after successful fetch", async () => {
 		const session = makeSession();
 		setupMockRPC({
-			getSession: () => Promise.resolve({ session: session }),
+			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
+			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
@@ -59,7 +60,7 @@ describe("SessionView", () => {
 
 	test("shows error state on fetch failure", async () => {
 		setupMockRPC({
-			getSession: () => Promise.reject(new Error("HTTP 404")),
+			getSessionHead: () => Promise.reject(new Error("HTTP 404")),
 		});
 
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
@@ -71,7 +72,7 @@ describe("SessionView", () => {
 
 	test("shows error state on network error", async () => {
 		setupMockRPC({
-			getSession: () => Promise.reject(new Error("Network error")),
+			getSessionHead: () => Promise.reject(new Error("Network error")),
 		});
 
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
@@ -84,7 +85,8 @@ describe("SessionView", () => {
 	test("renders both user and assistant messages", async () => {
 		const session = makeSession();
 		setupMockRPC({
-			getSession: () => Promise.resolve({ session: session }),
+			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
+			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
 		const { findByText } = render(<SessionView sessionId="session-1" project="test-project" />, {
