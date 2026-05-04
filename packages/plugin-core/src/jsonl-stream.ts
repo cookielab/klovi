@@ -29,6 +29,24 @@ const DEFAULT_HEAD_CHUNK_SIZE = DEFAULT_HEAD_CHUNK_KILOBYTES * KILOBYTE_BYTES;
 const DEFAULT_FULL_CHUNK_KILOBYTES = 64;
 const DEFAULT_FULL_CHUNK_SIZE = DEFAULT_FULL_CHUNK_KILOBYTES * KILOBYTE_BYTES;
 
+function parseAndVisit(
+	line: string,
+	lineIndex: number,
+	visitor: JsonlVisitor,
+	onMalformed: StreamJsonlHeadOptions["onMalformed"],
+): unknown {
+	if (!line.trim()) {
+		return;
+	}
+	const lineNumber = lineIndex + 1;
+	try {
+		const parsed = JSON.parse(line);
+		return visitor({ parsed: parsed, line: line, lineIndex: lineIndex, lineNumber: lineNumber });
+	} catch (error) {
+		onMalformed?.(line, lineNumber, error);
+	}
+}
+
 function processLine(line: string, state: LineProcessorState): Effect.Effect<void> {
 	return Effect.gen(function* () {
 		// `Stream.takeUntilEffect` (below) is the inclusive variant and `Stream.splitLines`
@@ -37,18 +55,9 @@ function processLine(line: string, state: LineProcessorState): Effect.Effect<voi
 			return;
 		}
 		const lineIndex = yield* Ref.getAndUpdate(state.indexRef, (n) => n + 1);
-		if (!line.trim()) {
-			return;
-		}
-		const lineNumber = lineIndex + 1;
-		try {
-			const parsed = JSON.parse(line);
-			const result = state.visitor({ parsed: parsed, line: line, lineIndex: lineIndex, lineNumber: lineNumber });
-			if (result === false) {
-				yield* Ref.set(state.bailedRef, true);
-			}
-		} catch (error) {
-			state.onMalformed?.(line, lineNumber, error);
+		const result = parseAndVisit(line, lineIndex, state.visitor, state.onMalformed);
+		if (result === false) {
+			yield* Ref.set(state.bailedRef, true);
 		}
 	});
 }
@@ -97,27 +106,17 @@ function streamJsonl(
 		const indexRef = yield* Ref.make(0);
 		const chunkSize = options.chunkSize ?? DEFAULT_FULL_CHUNK_SIZE;
 
-		yield* fs
-			.stream(filePath, { chunkSize: chunkSize })
-			.pipe(Stream.decodeText("utf-8"), Stream.splitLines)
-			.pipe(
-				Stream.runForEach((line) =>
-					Effect.gen(function* () {
-						const lineIndex = yield* Ref.getAndUpdate(indexRef, (n) => n + 1);
-						const trimmed = line.trim();
-						if (!trimmed) {
-							return;
-						}
-						const lineNumber = lineIndex + 1;
-						try {
-							const parsed = JSON.parse(line);
-							visitor({ parsed: parsed, line: line, lineIndex: lineIndex, lineNumber: lineNumber });
-						} catch (error) {
-							options.onMalformed?.(line, lineNumber, error);
-						}
-					}),
-				),
-			);
+		yield* fs.stream(filePath, { chunkSize: chunkSize }).pipe(
+			Stream.decodeText("utf-8"),
+			Stream.splitLines,
+			Stream.runForEach((line) =>
+				Effect.gen(function* () {
+					const lineIndex = yield* Ref.getAndUpdate(indexRef, (n) => n + 1);
+					// streamJsonl never bails; visitor return value is intentionally discarded
+					parseAndVisit(line, lineIndex, visitor, options.onMalformed);
+				}),
+			),
+		);
 	});
 }
 
