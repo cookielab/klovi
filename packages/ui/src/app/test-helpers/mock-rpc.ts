@@ -55,6 +55,12 @@ function createMockClient(overrides: MockClientOverrides = {}): KloviClient {
 			Promise.resolve({
 				session: { sessionId: "", project: "", turns: [] },
 			}),
+		getSessionHead: () =>
+			Promise.resolve({
+				session: { sessionId: "", project: "", turns: [] },
+				totalTurns: 0,
+			}),
+		getSessionTail: () => Promise.resolve({ turns: [] }),
 		getSubAgent: () =>
 			Promise.resolve({
 				session: { sessionId: "", project: "", turns: [] },
