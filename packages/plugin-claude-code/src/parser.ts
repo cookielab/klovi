@@ -10,12 +10,10 @@ import type {
 	Turn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
-import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { PluginConfig, streamJsonl } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
 import { parseCommandMessage } from "./command-message.ts";
 import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types.ts";
-import { readFileText } from "./shared/discovery-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
 
 const MAX_RAW_LINE_LENGTH = 500;
 
@@ -191,13 +189,11 @@ type ParsedLines = {
 
 function readJsonlLines(filePath: string) {
 	return Effect.gen(function* () {
-		const text = yield* readFileText(filePath);
-
 		const rawLines: RawLine[] = [];
 		const parseErrors: ParseErrorTurn[] = [];
 
-		iterateJsonl(
-			text,
+		yield* streamJsonl(
+			filePath,
 			({ parsed }) => {
 				rawLines.push(parsed as RawLine);
 			},

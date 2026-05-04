@@ -1,4 +1,7 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { mkdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type {
 	AssistantTurn,
 	ParseErrorTurn,
@@ -6,7 +9,17 @@ import type {
 	SystemTurn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
-import { buildTurns, extractSlug, extractSubAgentMap, findImplSessionId, findPlanSessionId } from "./parser.ts";
+import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
+import { NodeFileSystem } from "@effect/platform-node";
+import { Effect, Layer } from "effect";
+import {
+	buildTurns,
+	extractSlug,
+	extractSubAgentMap,
+	findImplSessionId,
+	findPlanSessionId,
+	loadClaudeSession,
+} from "./parser.ts";
 import type { RawLine } from "./raw-types.ts";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
@@ -1085,5 +1098,49 @@ describe("findImplSessionId", () => {
 		];
 		const result = findImplSessionId("some-slug", noImplSessions, "session-a");
 		expect(result).toBeUndefined();
+	});
+});
+
+const memTestDir = join(tmpdir(), `klovi-claude-parser-mem-${Date.now()}`);
+const memTestLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: memTestDir }));
+function memRun<A, E, R>(eff: Effect.Effect<A, E, R>) {
+	return Effect.runPromise(eff.pipe(Effect.provide(memTestLayer)) as Effect.Effect<A, E, never>);
+}
+
+describe("loadClaudeSession streaming memory", () => {
+	beforeEach(async () => {
+		await rm(memTestDir, { recursive: true, force: true });
+		await mkdir(join(memTestDir, "projects", "p"), { recursive: true });
+	});
+	afterEach(async () => {
+		await rm(memTestDir, { recursive: true, force: true });
+	});
+
+	test("does not allocate full file size as a single string", async () => {
+		const sessionId = "huge-session";
+		const filePath = join(memTestDir, "projects", "p", `${sessionId}.jsonl`);
+		const padLine = JSON.stringify({
+			type: "user",
+			timestamp: "2025-01-15T10:00:00Z",
+			isMeta: false,
+			message: { role: "user", content: "x".repeat(1024) },
+		});
+		const lineCount = 50_000; // ~50 MB total
+		const lines = Array.from({ length: lineCount }, () => padLine);
+		await Bun.write(filePath, lines.join("\n"));
+
+		if (typeof global.gc === "function") {
+			global.gc();
+		}
+		const before = process.memoryUsage().heapUsed;
+		const result = await memRun(loadClaudeSession("p", sessionId));
+		const after = process.memoryUsage().heapUsed;
+		expect(result.session.turns.length).toBeGreaterThan(0);
+
+		// File is ~50 MB; before streaming we'd hold a full 50 MB string in addition to the
+		// parsed-line array (~65 MB), for a worst-case delta of ~115 MB. Streaming drops the
+		// string layer, so the delta should stay under 90 MB.
+		const heapDelta = after - before;
+		expect(heapDelta).toBeLessThan(90 * 1024 * 1024);
 	});
 });
