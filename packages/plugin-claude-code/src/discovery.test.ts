@@ -145,9 +145,9 @@ describe("claude-code discovery", () => {
 
 	test("listClaudeSessions returns sessions in newest-first order regardless of FS order", async () => {
 		const projectId = "-Users-dev-many";
-		// Create 30 sessions with reverse-sorted timestamps in line 1 to validate sort order.
+		// Create 30 sessions with interleaved (non-monotonic) timestamps in line 1.
 		// Writes run in parallel — listClaudeSessions sorts by line-1 `timestamp`, not mtime.
-		const writes = Array.from({ length: 30 }, (_unused, i) => {
+		const writes = Array.from({ length: 30 }, (_, i) => {
 			const ts = `2025-01-${(15 - (i % 14)).toString().padStart(2, "0")}T10:${i.toString().padStart(2, "0")}:00.000Z`;
 			return writeSession(projectId, `session-${i.toString().padStart(2, "0")}`, [
 				JSON.stringify({
