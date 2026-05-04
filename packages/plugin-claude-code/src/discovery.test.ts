@@ -146,9 +146,10 @@ describe("claude-code discovery", () => {
 	test("listClaudeSessions returns sessions in newest-first order regardless of FS order", async () => {
 		const projectId = "-Users-dev-many";
 		// Create 30 sessions with reverse-sorted timestamps in line 1 to validate sort order.
-		for (let i = 0; i < 30; i++) {
+		// Writes run in parallel — listClaudeSessions sorts by line-1 `timestamp`, not mtime.
+		const writes = Array.from({ length: 30 }, (_unused, i) => {
 			const ts = `2025-01-${(15 - (i % 14)).toString().padStart(2, "0")}T10:${i.toString().padStart(2, "0")}:00.000Z`;
-			await writeSession(projectId, `session-${i.toString().padStart(2, "0")}`, [
+			return writeSession(projectId, `session-${i.toString().padStart(2, "0")}`, [
 				JSON.stringify({
 					type: "user",
 					timestamp: ts,
@@ -159,7 +160,8 @@ describe("claude-code discovery", () => {
 					message: { model: "claude-sonnet-4-5-20250929", content: `msg ${i}` },
 				}),
 			]);
-		}
+		});
+		await Promise.all(writes);
 
 		const sessions = await run(listClaudeSessions(projectId));
 		const timestamps = sessions.map((s) => s.timestamp);
