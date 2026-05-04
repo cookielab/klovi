@@ -142,6 +142,30 @@ describe("claude-code discovery", () => {
 		expect(projects[0]?.resolvedPath).toBe("/Users/dev/project-a");
 		expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");
 	});
+
+	test("listClaudeSessions returns sessions in newest-first order regardless of FS order", async () => {
+		const projectId = "-Users-dev-many";
+		// Create 30 sessions with reverse-sorted timestamps in line 1 to validate sort order.
+		for (let i = 0; i < 30; i++) {
+			const ts = `2025-01-${(15 - (i % 14)).toString().padStart(2, "0")}T10:${i.toString().padStart(2, "0")}:00.000Z`;
+			await writeSession(projectId, `session-${i.toString().padStart(2, "0")}`, [
+				JSON.stringify({
+					type: "user",
+					timestamp: ts,
+					slug: `slug-${i}`,
+					gitBranch: "main",
+					cwd: "/Users/dev/many",
+					isMeta: false,
+					message: { model: "claude-sonnet-4-5-20250929", content: `msg ${i}` },
+				}),
+			]);
+		}
+
+		const sessions = await run(listClaudeSessions(projectId));
+		const timestamps = sessions.map((s) => s.timestamp);
+		const sortedDesc = [...timestamps].sort().reverse();
+		expect(timestamps).toEqual(sortedDesc);
+	});
 });
 
 function session(overrides: Partial<SessionSummary> & { sessionId: string }): SessionSummary {
