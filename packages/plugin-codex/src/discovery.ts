@@ -19,6 +19,8 @@ type CodexEvent = {
 	};
 };
 
+const SESSION_FILE_CONCURRENCY = 16;
+
 function discoverCodexProjects() {
 	return Effect.gen(function* () {
 		const sessions = yield* scanCodexSessions();
@@ -136,30 +138,32 @@ function listCodexSessions(nativeId: string) {
 		const allSessions = yield* scanCodexSessions();
 		const matching = allSessions.filter((s) => s.meta.cwd === nativeId);
 
-		const sessions: SessionSummary[] = [];
-		for (const s of matching) {
-			let firstMessage = s.meta.name ?? "";
-			if (!firstMessage) {
-				firstMessage = (yield* streamFirstUserMessage(s.filePath)) ?? "";
-				if (!firstMessage) {
-					const fullText = yield* readFileText(s.filePath).pipe(Effect.catchAll(() => Effect.succeed("")));
-					firstMessage = extractFirstUserMessageFromText(fullText) ?? "";
-				}
-				firstMessage ||= "Codex session";
-			}
-
-			const timestamp = epochSecondsToIso(s.meta.timestamps.created);
-
-			sessions.push({
-				sessionId: s.meta.uuid,
-				timestamp: timestamp,
-				slug: s.meta.uuid,
-				firstMessage: firstMessage,
-				model: s.meta.model || "unknown",
-				gitBranch: "",
-				pluginId: "codex-cli",
-			});
-		}
+		const sessions = yield* Effect.forEach(
+			matching,
+			(s) =>
+				Effect.gen(function* () {
+					let firstMessage = s.meta.name ?? "";
+					if (!firstMessage) {
+						firstMessage = (yield* streamFirstUserMessage(s.filePath)) ?? "";
+						if (!firstMessage) {
+							const fullText = yield* readFileText(s.filePath).pipe(Effect.catchAll(() => Effect.succeed("")));
+							firstMessage = extractFirstUserMessageFromText(fullText) ?? "";
+						}
+						firstMessage ||= "Codex session";
+					}
+					const timestamp = epochSecondsToIso(s.meta.timestamps.created);
+					return {
+						sessionId: s.meta.uuid,
+						timestamp: timestamp,
+						slug: s.meta.uuid,
+						firstMessage: firstMessage,
+						model: s.meta.model || "unknown",
+						gitBranch: "",
+						pluginId: "codex-cli",
+					} as SessionSummary;
+				}),
+			{ concurrency: SESSION_FILE_CONCURRENCY },
+		);
 
 		sortByIsoDesc(sessions, (session) => session.timestamp);
 		return sessions;
