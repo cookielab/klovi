@@ -70,4 +70,25 @@ describe("ProjectList (package)", () => {
 
 		expect(getByText("2 hidden projects")).toBeTruthy();
 	});
+
+	test("renders only a windowed slice for large filtered project lists", () => {
+		const projects = Array.from({ length: 400 }, (_, i) =>
+			makeProject({ encodedPath: `p-${i}`, name: `/Users/dev/proj-${i}` }),
+		);
+		const { container } = render(
+			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
+			<div style={{ height: 600, width: 320 }}>
+				<ProjectList
+					projects={projects}
+					hiddenIds={new Set()}
+					onSelect={mock()}
+					onHide={mock()}
+					onShowHidden={mock()}
+				/>
+			</div>,
+		);
+		const items = container.querySelectorAll("[data-project-encoded-path]");
+		expect(items.length).toBeLessThan(50);
+		expect(items.length).toBeGreaterThan(0);
+	});
 });

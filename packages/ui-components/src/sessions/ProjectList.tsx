@@ -1,6 +1,7 @@
 import { Button } from "@cookielab.io/klovi-design-system";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type React from "react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import type { Project } from "../types/index.ts";
 import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters.ts";
 
@@ -11,6 +12,7 @@ function projectDisplayName(project: Project): string {
 	return parts.slice(-2).join("/");
 }
 
+const SCROLL_CONTAINER_CLASSES = "h-full w-full overflow-auto";
 const FILTER_INPUT_CLASSES =
 	"mb-[8px] w-full border border-border bg-surface px-[12px] py-[8px] text-[0.85rem] text-foreground outline-none focus:border-accent";
 const SECTION_TITLE_CLASSES =
@@ -31,6 +33,8 @@ const LOADING_CLASSES = "flex items-center justify-center p-[40px] text-[0.9rem]
 const FETCH_ERROR_CLASSES =
 	"flex flex-col items-center justify-center gap-[12px] p-[40px] text-[0.9rem] text-foreground-muted";
 const FETCH_ERROR_MESSAGE_CLASSES = "text-error";
+
+const PROJECT_ROW_HEIGHT = 56;
 
 type ProjectListProps = {
 	projects: Project[];
@@ -117,6 +121,26 @@ function ProjectList({
 		(e: React.ChangeEvent<HTMLInputElement>) => onFilterChange?.(e.target.value),
 		[onFilterChange],
 	);
+	const parentRef = useRef<HTMLDivElement>(null);
+
+	// Compute the filtered list eagerly so the virtualizer always sees a count.
+	// Returning [] when loading/error keeps useVirtualizer call order stable across renders.
+	const filtered =
+		loading || error
+			? []
+			: projects.filter(
+					(p) =>
+						!hiddenIds.has(p.encodedPath) &&
+						(p.name.toLowerCase().includes(filter.toLowerCase()) ||
+							p.encodedPath.toLowerCase().includes(filter.toLowerCase())),
+				);
+
+	const virtualizer = useVirtualizer({
+		count: filtered.length,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => PROJECT_ROW_HEIGHT,
+		overscan: 8,
+	});
 
 	if (loading) {
 		return <div className={LOADING_CLASSES}>Loading projects...</div>;
@@ -134,15 +158,8 @@ function ProjectList({
 		);
 	}
 
-	const filtered = projects.filter(
-		(p) =>
-			!hiddenIds.has(p.encodedPath) &&
-			(p.name.toLowerCase().includes(filter.toLowerCase()) ||
-				p.encodedPath.toLowerCase().includes(filter.toLowerCase())),
-	);
-
 	return (
-		<div>
+		<div ref={parentRef} className={SCROLL_CONTAINER_CLASSES}>
 			<input
 				className={FILTER_INPUT_CLASSES}
 				placeholder="Filter projects..."
@@ -150,16 +167,41 @@ function ProjectList({
 				onChange={handleFilterChange}
 			/>
 			<div className={SECTION_TITLE_CLASSES}>Projects ({filtered.length})</div>
-			{filtered.map((project) => (
-				<ProjectItem
-					key={project.encodedPath}
-					project={project}
-					isActive={selectedId === project.encodedPath}
-					onSelect={onSelect}
-					onHide={onHide}
-				/>
-			))}
-			{filtered.length === 0 && <div className={EMPTY_MESSAGE_CLASSES}>No projects found</div>}
+			{filtered.length === 0 ? (
+				<div className={EMPTY_MESSAGE_CLASSES}>No projects found</div>
+			) : (
+				// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
+				<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+					{virtualizer.getVirtualItems().map((item) => {
+						const project = filtered[item.index];
+						if (!project) {
+							return null;
+						}
+						return (
+							<div
+								key={project.encodedPath}
+								data-project-encoded-path={project.encodedPath}
+								data-index={item.index}
+								// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
+								style={{
+									position: "absolute",
+									top: 0,
+									left: 0,
+									right: 0,
+									transform: `translateY(${item.start}px)`,
+								}}
+							>
+								<ProjectItem
+									project={project}
+									isActive={selectedId === project.encodedPath}
+									onSelect={onSelect}
+									onHide={onHide}
+								/>
+							</div>
+						);
+					})}
+				</div>
+			)}
 			{hiddenIds.size > 0 && (
 				<button type="button" className={HIDDEN_PROJECTS_LINK_CLASSES} onClick={onShowHidden}>
 					{hiddenIds.size} hidden project{hiddenIds.size === 1 ? "" : "s"}
