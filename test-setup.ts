@@ -42,3 +42,13 @@ for (const key of globals) {
 
 // Set up default RPC mock for all tests
 setupMockRPC();
+
+// Shim ResizeObserver for @tanstack/react-virtual measureElement under happy-dom
+if (!("ResizeObserver" in globalThis)) {
+	class ResizeObserverShim {
+		observe(): void {}
+		unobserve(): void {}
+		disconnect(): void {}
+	}
+	(globalThis as Record<string, unknown>)["ResizeObserver"] = ResizeObserverShim;
+}
