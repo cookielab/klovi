@@ -3,6 +3,7 @@ import type {
 	RegistryRequirements,
 	Session,
 	SessionSummary,
+	Turn,
 } from "@cookielab.io/klovi-plugin-core";
 import { encodeSessionId, makePluginConfigLayer, parseSessionId, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
@@ -16,10 +17,19 @@ import {
 import type { MergedProject } from "./plugin-types.ts";
 import type { PluginRegistry } from "./registry.ts";
 
+const DEFAULT_HEAD_SIZE = 100;
+
 type ProjectsResponse = { projects: MergedProject[] };
 type SessionsResponse = { sessions: SessionSummary[] };
 type SessionResponse = { session: Session };
 type SearchResponse = { sessions: GlobalSessionResult[] };
+type SessionHeadResponse = {
+	session: Session;
+	totalTurns: number;
+};
+type SessionTailResponse = {
+	turns: Turn[];
+};
 
 function getProjects(registry: PluginRegistry): Effect.Effect<ProjectsResponse, never, RegistryRequirements> {
 	return Effect.gen(function* () {
@@ -43,10 +53,10 @@ function getSessions(
 
 type GetSessionError = InvalidSessionIdError | ProjectNotFoundError | PluginSourceNotFoundError;
 
-function getSession(
+function loadSessionInternal(
 	registry: PluginRegistry,
 	params: { sessionId: string; project: string },
-): Effect.Effect<SessionResponse, GetSessionError, RegistryRequirements> {
+): Effect.Effect<{ session: Session; pluginId: string; rawSessionId: string }, GetSessionError, RegistryRequirements> {
 	return Effect.gen(function* () {
 		const parsed = parseSessionId(params.sessionId);
 		if (!(parsed.pluginId && parsed.rawSessionId)) {
@@ -93,7 +103,39 @@ function getSession(
 		session.implSessionId = sessionDetail?.implSessionId
 			? encodeSessionId(pluginId, sessionDetail.implSessionId)
 			: undefined;
-		return { session: session };
+		return { session: session, pluginId: pluginId, rawSessionId: rawSessionId };
+	});
+}
+
+function getSession(
+	registry: PluginRegistry,
+	params: { sessionId: string; project: string },
+): Effect.Effect<SessionResponse, GetSessionError, RegistryRequirements> {
+	return loadSessionInternal(registry, params).pipe(Effect.map(({ session }) => ({ session: session })));
+}
+
+function getSessionHead(
+	registry: PluginRegistry,
+	params: { sessionId: string; project: string; headSize?: number },
+): Effect.Effect<SessionHeadResponse, GetSessionError, RegistryRequirements> {
+	return Effect.gen(function* () {
+		const { session } = yield* loadSessionInternal(registry, params);
+		const headSize = params.headSize ?? DEFAULT_HEAD_SIZE;
+		const totalTurns = session.turns.length;
+		const headSession: Session = { ...session, turns: session.turns.slice(0, headSize) };
+		return { session: headSession, totalTurns: totalTurns };
+	});
+}
+
+function getSessionTail(
+	registry: PluginRegistry,
+	params: { sessionId: string; project: string; fromTurn: number },
+): Effect.Effect<SessionTailResponse, GetSessionError, RegistryRequirements> {
+	return Effect.gen(function* () {
+		const { session } = yield* loadSessionInternal(registry, params);
+		const fromTurn = Math.max(0, params.fromTurn);
+		const totalTurns = session.turns.length;
+		return { turns: fromTurn >= totalTurns ? [] : session.turns.slice(fromTurn) };
 	});
 }
 
@@ -157,4 +199,5 @@ function searchSessions(registry: PluginRegistry): Effect.Effect<SearchResponse,
 	});
 }
 
-export { getProjects, getSession, getSessions, getSubAgent, searchSessions };
+export type { SessionHeadResponse, SessionTailResponse };
+export { getProjects, getSession, getSessionHead, getSessions, getSessionTail, getSubAgent, searchSessions };
