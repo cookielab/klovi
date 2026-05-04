@@ -15,18 +15,22 @@ type FileWithMtime = {
 	mtime: string;
 };
 
+const STAT_CONCURRENCY = 32;
+
 export function readDirEntriesSafe(dir: string) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
-		const entries: DirEntry[] = [];
-		for (const name of names) {
-			const info = yield* fs.stat(join(dir, name)).pipe(Effect.catchAll(() => Effect.succeed(null)));
-			if (info) {
-				entries.push({ name: name, isDirectory: info.type === "Directory" });
-			}
-		}
-		return entries;
+		const entries = yield* Effect.forEach(
+			names,
+			(name) =>
+				Effect.gen(function* () {
+					const info = yield* fs.stat(join(dir, name)).pipe(Effect.catchAll(() => Effect.succeed(null)));
+					return info ? ({ name: name, isDirectory: info.type === "Directory" } as DirEntry) : null;
+				}),
+			{ concurrency: STAT_CONCURRENCY },
+		);
+		return entries.filter((entry): entry is DirEntry => entry !== null);
 	});
 }
 
@@ -41,14 +45,19 @@ export function listFilesBySuffix(dir: string, suffix: string) {
 export function getLatestMtime(dir: string, files: readonly string[]) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
+		const stats = yield* Effect.forEach(
+			files,
+			(file) =>
+				fs.stat(join(dir, file)).pipe(
+					Effect.map((info) => (info.mtime._tag === "Some" ? info.mtime.value.toISOString() : "")),
+					Effect.catchAll(() => Effect.succeed("")),
+				),
+			{ concurrency: STAT_CONCURRENCY },
+		);
 		let lastActivity = "";
-		for (const file of files) {
-			const info = yield* fs.stat(join(dir, file)).pipe(Effect.catchAll(() => Effect.succeed(null)));
-			if (info?.mtime._tag === "Some") {
-				const mtime = info.mtime.value.toISOString();
-				if (mtime > lastActivity) {
-					lastActivity = mtime;
-				}
+		for (const mtime of stats) {
+			if (mtime > lastActivity) {
+				lastActivity = mtime;
 			}
 		}
 		return lastActivity;
@@ -59,15 +68,18 @@ export function listFilesWithMtime(dir: string, suffix: string) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* listFilesBySuffix(dir, suffix);
-		const results: FileWithMtime[] = [];
-
-		for (const fileName of names) {
-			const info = yield* fs.stat(join(dir, fileName)).pipe(Effect.catchAll(() => Effect.succeed(null)));
-			if (info?.mtime._tag === "Some") {
-				results.push({ fileName: fileName, mtime: info.mtime.value.toISOString() });
-			}
-		}
-
+		const candidates = yield* Effect.forEach(
+			names,
+			(fileName) =>
+				Effect.gen(function* () {
+					const info = yield* fs.stat(join(dir, fileName)).pipe(Effect.catchAll(() => Effect.succeed(null)));
+					return info?.mtime._tag === "Some"
+						? ({ fileName: fileName, mtime: info.mtime.value.toISOString() } as FileWithMtime)
+						: null;
+				}),
+			{ concurrency: STAT_CONCURRENCY },
+		);
+		const results = candidates.filter((r): r is FileWithMtime => r !== null);
 		sortByIsoDesc(results, (item) => item.mtime);
 		return results;
 	});

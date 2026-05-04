@@ -9,18 +9,22 @@ type DirEntry = {
 	isDirectory: boolean;
 };
 
+const STAT_CONCURRENCY = 32;
+
 export function readDirEntriesSafe(dir: string) {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
-		const entries: DirEntry[] = [];
-		for (const name of names) {
-			const info = yield* fs.stat(join(dir, name)).pipe(Effect.catchAll(() => Effect.succeed(null)));
-			if (info) {
-				entries.push({ name: name, isDirectory: info.type === "Directory" });
-			}
-		}
-		return entries;
+		const entries = yield* Effect.forEach(
+			names,
+			(name) =>
+				Effect.gen(function* () {
+					const info = yield* fs.stat(join(dir, name)).pipe(Effect.catchAll(() => Effect.succeed(null)));
+					return info ? ({ name: name, isDirectory: info.type === "Directory" } as DirEntry) : null;
+				}),
+			{ concurrency: STAT_CONCURRENCY },
+		);
+		return entries.filter((entry): entry is DirEntry => entry !== null);
 	});
 }
 
