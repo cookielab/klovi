@@ -40,4 +40,30 @@ describe("MessageList virtualization", () => {
 		const indexes = Array.from(container.querySelectorAll("[data-index]")).map((el) => el.getAttribute("data-index"));
 		expect(indexes.includes("0")).toBe(true);
 	});
+
+	test("appending turns does not reset scrollTop", async () => {
+		const initial = Array.from({ length: 100 }, (_, i) => makeTurn(i));
+		const { container, rerender } = render(
+			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
+			<div style={{ height: 600, width: 800 }}>
+				<MessageList turns={initial} />
+			</div>,
+		);
+		const scrollEl = container.querySelector(".overflow-auto") as HTMLElement | null;
+		expect(scrollEl).not.toBeNull();
+		if (scrollEl) {
+			scrollEl.scrollTop = 500;
+		}
+
+		const appended = [...initial, ...Array.from({ length: 50 }, (_, i) => makeTurn(100 + i))];
+		rerender(
+			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
+			<div style={{ height: 600, width: 800 }}>
+				<MessageList turns={appended} />
+			</div>,
+		);
+
+		await new Promise((resolve) => requestAnimationFrame(resolve));
+		expect((scrollEl as HTMLElement).scrollTop).toBe(500);
+	});
 });

@@ -1,7 +1,7 @@
 import { TurnBox } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Turn } from "../types/index.ts";
 import { ErrorBoundary, formatFullDateTime, formatTimestamp } from "../utilities/index.ts";
 import { AssistantMessage } from "./AssistantMessage.tsx";
@@ -171,6 +171,34 @@ export function MessageList({
 
 	const totalSize = virtualizer.getTotalSize();
 	const items = virtualizer.getVirtualItems();
+
+	const previousCountRef = useRef(turns.length);
+	useEffect(() => {
+		const previous = previousCountRef.current;
+		if (turns.length > previous && parentRef.current) {
+			// Append happened (e.g., §3b tail). Preserve current scrollTop so the user
+			// is not jumped by the layout-size change.
+			const offset = parentRef.current.scrollTop;
+			// Wait for layout to flush, then restore.
+			requestAnimationFrame(() => {
+				if (parentRef.current) {
+					parentRef.current.scrollTop = offset;
+				}
+			});
+		}
+		previousCountRef.current = turns.length;
+	}, [turns.length]);
+
+	useEffect(() => {
+		if (!visibleSubSteps) {
+			return;
+		}
+		const lastIndex = turns.length - 1;
+		if (lastIndex < 0) {
+			return;
+		}
+		virtualizer.scrollToIndex(lastIndex, { align: "center" });
+	}, [visibleSubSteps, turns.length, virtualizer]);
 
 	return (
 		<div ref={parentRef} className={SCROLL_CONTAINER_CLASSES}>

@@ -27,6 +27,8 @@ const globals = [
 	"location",
 	"getComputedStyle",
 	"matchMedia",
+	"requestAnimationFrame",
+	"cancelAnimationFrame",
 	"localStorage",
 	"history",
 	"addEventListener",
