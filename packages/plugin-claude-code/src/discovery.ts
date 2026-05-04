@@ -17,16 +17,20 @@ import {
 } from "./shared/discovery-utils.ts";
 
 const BRACKETED_TEXT_REGEX = /^\[.+\]$/u;
+const PROJECT_DIR_CONCURRENCY = 16;
+const SESSION_FILE_CONCURRENCY = 16;
 
 function inspectProjectSessions(projectDir: string, sessionFiles: { fileName: string; mtime: string }[]) {
 	return Effect.gen(function* () {
 		const lastActivity = sessionFiles[0]?.mtime || "";
 		let resolvedPath = "";
 
+		// sessionFiles is sorted newest-first; try newest first, fall back only on empty result
 		for (const sessionFile of sessionFiles) {
 			const filePath = join(projectDir, sessionFile.fileName);
-			if (!resolvedPath) {
-				resolvedPath = yield* extractCwd(filePath);
+			resolvedPath = yield* extractCwd(filePath);
+			if (resolvedPath) {
+				break;
 			}
 		}
 
@@ -39,34 +43,36 @@ function discoverClaudeProjects() {
 		const config = yield* PluginConfig;
 		const projectsDir = join(config.dataDir, "projects");
 		const entries = yield* readDirEntriesSafe(projectsDir);
-		const projects: PluginProject[] = [];
+		const directories = entries.filter((entry) => entry.isDirectory);
 
-		for (const entry of entries) {
-			if (!entry.isDirectory) {
-				continue;
-			}
+		const projects = yield* Effect.forEach(
+			directories,
+			(entry) =>
+				Effect.gen(function* () {
+					const projectDir = join(projectsDir, entry.name);
+					const sessionFiles = yield* listFilesWithMtime(projectDir, ".jsonl");
+					if (sessionFiles.length === 0) {
+						return null;
+					}
 
-			const projectDir = join(projectsDir, entry.name);
-			const sessionFiles = yield* listFilesWithMtime(projectDir, ".jsonl");
-			if (sessionFiles.length === 0) {
-				continue;
-			}
+					const projectInfo = yield* inspectProjectSessions(projectDir, sessionFiles);
+					const resolvedPath = projectInfo.resolvedPath || decodeEncodedPath(entry.name);
 
-			const projectInfo = yield* inspectProjectSessions(projectDir, sessionFiles);
-			const resolvedPath = projectInfo.resolvedPath || decodeEncodedPath(entry.name);
+					return {
+						pluginId: "claude-code",
+						nativeId: entry.name,
+						resolvedPath: resolvedPath,
+						displayName: resolvedPath,
+						sessionCount: sessionFiles.length,
+						lastActivity: projectInfo.lastActivity,
+					} as PluginProject;
+				}),
+			{ concurrency: PROJECT_DIR_CONCURRENCY },
+		);
 
-			projects.push({
-				pluginId: "claude-code",
-				nativeId: entry.name,
-				resolvedPath: resolvedPath,
-				displayName: resolvedPath,
-				sessionCount: sessionFiles.length,
-				lastActivity: projectInfo.lastActivity,
-			});
-		}
-
-		sortByIsoDesc(projects, (project) => project.lastActivity);
-		return projects;
+		const filtered = projects.filter((p): p is PluginProject => p !== null);
+		sortByIsoDesc(filtered, (project) => project.lastActivity);
+		return filtered;
 	});
 }
 
@@ -77,19 +83,21 @@ function listClaudeSessions(nativeId: string) {
 		const config = yield* PluginConfig;
 		const projectDir = join(config.dataDir, "projects", nativeId);
 		const files = yield* listFilesBySuffix(projectDir, ".jsonl");
-		const sessions: SessionSummary[] = [];
 
-		for (const file of files) {
-			const filePath = join(projectDir, file);
-			const sessionId = file.replace(".jsonl", "");
-			const meta = yield* extractSessionMeta(filePath);
-			if (meta) {
-				sessions.push({ sessionId: sessionId, pluginId: "claude-code", ...meta });
-			}
-		}
+		const candidates = yield* Effect.forEach(
+			files,
+			(file) =>
+				Effect.gen(function* () {
+					const filePath = join(projectDir, file);
+					const sessionId = file.replace(".jsonl", "");
+					const meta = yield* extractSessionMeta(filePath);
+					return meta ? ({ sessionId: sessionId, pluginId: "claude-code", ...meta } as SessionSummary) : null;
+				}),
+			{ concurrency: SESSION_FILE_CONCURRENCY },
+		);
 
+		const sessions = candidates.filter((s): s is SessionSummary => s !== null);
 		classifySessionTypes(sessions);
-
 		sortByIsoDesc(sessions, (session) => session.timestamp);
 		return sessions;
 	});
