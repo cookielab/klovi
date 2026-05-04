@@ -3,6 +3,7 @@ import type {
 	RegistryRequirements,
 	Session,
 	SessionSummary,
+	Turn,
 } from "@cookielab.io/klovi-plugin-core";
 import type { FileSystem } from "@effect/platform";
 import { Context, Effect, Layer } from "effect";
@@ -18,7 +19,7 @@ import type {
 import { completeOnboarding, isFirstLaunch, resetSettings } from "../services/onboarding-service.ts";
 import type { MergedProject } from "../services/plugin-types.ts";
 import type { PluginRegistry } from "../services/registry.ts";
-import { getProjects, getSession, getSessions, getSubAgent, searchSessions } from "../services/sessions-service.ts";
+import { getProjects, getSession, getSessionHead, getSessions, getSessionTail, getSubAgent, searchSessions } from "../services/sessions-service.ts";
 import type { UpdateChannel } from "../services/settings.ts";
 import { loadSettings } from "../services/settings.ts";
 import {
@@ -48,6 +49,24 @@ export type KloviServicesShape = {
 		project: string;
 	}) => Effect.Effect<
 		{ session: Session },
+		InvalidSessionIdError | ProjectNotFoundError | PluginSourceNotFoundError,
+		RegistryRequirements
+	>;
+	readonly getSessionHead: (params: {
+		sessionId: string;
+		project: string;
+		headSize?: number;
+	}) => Effect.Effect<
+		{ session: Session; totalTurns: number },
+		InvalidSessionIdError | ProjectNotFoundError | PluginSourceNotFoundError,
+		RegistryRequirements
+	>;
+	readonly getSessionTail: (params: {
+		sessionId: string;
+		project: string;
+		fromTurn: number;
+	}) => Effect.Effect<
+		{ turns: Turn[] },
 		InvalidSessionIdError | ProjectNotFoundError | PluginSourceNotFoundError,
 		RegistryRequirements
 	>;
@@ -107,6 +126,8 @@ export const KloviServicesLive = Layer.effect(
 			getProjects: () => getProjects(registry),
 			getSessions: (params) => getSessions(registry, params),
 			getSession: (params) => getSession(registry, params),
+			getSessionHead: (params) => getSessionHead(registry, params),
+			getSessionTail: (params) => getSessionTail(registry, params),
 			getSubAgent: (params) => getSubAgent(registry, params),
 			searchSessions: () => searchSessions(registry),
 			getPluginSettings: () => getPluginSettings(settingsPath),
