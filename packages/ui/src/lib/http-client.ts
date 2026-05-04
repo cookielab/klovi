@@ -24,6 +24,8 @@ export function createHttpClient(baseUrl: string): KloviClient {
 		getProjects: () => rpcCall(baseUrl, "getProjects"),
 		getSessions: (params) => rpcCall(baseUrl, "getSessions", params),
 		getSession: (params) => rpcCall(baseUrl, "getSession", params),
+		getSessionHead: (params) => rpcCall(baseUrl, "getSessionHead", params),
+		getSessionTail: (params) => rpcCall(baseUrl, "getSessionTail", params),
 		getSubAgent: (params) => rpcCall(baseUrl, "getSubAgent", params),
 		searchSessions: () => rpcCall(baseUrl, "searchSessions"),
 		getPluginSettings: () => rpcCall(baseUrl, "getPluginSettings"),

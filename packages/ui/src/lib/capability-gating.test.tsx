@@ -46,6 +46,8 @@ function createMockClient(): KloviClient {
 		getProjects: () => Promise.resolve({ projects: [] }),
 		getSessions: () => Promise.resolve({ sessions: [] }),
 		getSession: () => Promise.resolve({ session: {} as never }),
+		getSessionHead: () => Promise.resolve({ session: {} as never, totalTurns: 0 }),
+		getSessionTail: () => Promise.resolve({ turns: [] }),
 		getSubAgent: () => Promise.resolve({ session: {} as never }),
 		searchSessions: () => Promise.resolve({ sessions: [] }),
 		getPluginSettings: () => Promise.resolve({ plugins: [] }),

@@ -19,7 +19,15 @@ import type {
 import { completeOnboarding, isFirstLaunch, resetSettings } from "../services/onboarding-service.ts";
 import type { MergedProject } from "../services/plugin-types.ts";
 import type { PluginRegistry } from "../services/registry.ts";
-import { getProjects, getSession, getSessionHead, getSessions, getSessionTail, getSubAgent, searchSessions } from "../services/sessions-service.ts";
+import {
+	getProjects,
+	getSession,
+	getSessionHead,
+	getSessions,
+	getSessionTail,
+	getSubAgent,
+	searchSessions,
+} from "../services/sessions-service.ts";
 import type { UpdateChannel } from "../services/settings.ts";
 import { loadSettings } from "../services/settings.ts";
 import {

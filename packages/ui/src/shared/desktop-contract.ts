@@ -1,5 +1,13 @@
 import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "./rpc-types.ts";
-import type { DashboardStats, GlobalSessionResult, Project, Session, SessionSummary, StatsResponse } from "./types.ts";
+import type {
+	DashboardStats,
+	GlobalSessionResult,
+	Project,
+	Session,
+	SessionSummary,
+	StatsResponse,
+	Turn,
+} from "./types.ts";
 
 type EmptyPayload = Record<string, never>;
 
@@ -35,6 +43,11 @@ type DesktopClientRequestMap = {
 	getProjects: DesktopRequestDefinition<EmptyPayload, { projects: Project[] }>;
 	getSessions: DesktopRequestDefinition<{ encodedPath: string }, { sessions: SessionSummary[] }>;
 	getSession: DesktopRequestDefinition<{ sessionId: string; project: string }, { session: Session }>;
+	getSessionHead: DesktopRequestDefinition<
+		{ sessionId: string; project: string; headSize?: number },
+		{ session: Session; totalTurns: number }
+	>;
+	getSessionTail: DesktopRequestDefinition<{ sessionId: string; project: string; fromTurn: number }, { turns: Turn[] }>;
 	getSubAgent: DesktopRequestDefinition<{ sessionId: string; project: string; agentId: string }, { session: Session }>;
 	searchSessions: DesktopRequestDefinition<EmptyPayload, { sessions: GlobalSessionResult[] }>;
 	getPluginSettings: DesktopRequestDefinition<EmptyPayload, { plugins: PluginSettingInfo[] }>;

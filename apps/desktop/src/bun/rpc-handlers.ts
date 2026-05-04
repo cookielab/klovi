@@ -6,7 +6,9 @@ import {
 import {
 	getProjects as getProjectsEffect,
 	getSession as getSessionEffect,
+	getSessionHead as getSessionHeadEffect,
 	getSessions as getSessionsEffect,
+	getSessionTail as getSessionTailEffect,
 	getSubAgent as getSubAgentEffect,
 	searchSessions as searchSessionsEffect,
 } from "@cookielab.io/klovi-server/services/sessions-service";
@@ -82,6 +84,18 @@ const getSessionHandler = (params: { sessionId: string; project: string }) =>
 	Effect.gen(function* () {
 		const registry = yield* currentRegistry;
 		return yield* getSessionEffect(registry, params);
+	});
+
+const getSessionHeadHandler = (params: { sessionId: string; project: string; headSize?: number }) =>
+	Effect.gen(function* () {
+		const registry = yield* currentRegistry;
+		return yield* getSessionHeadEffect(registry, params);
+	});
+
+const getSessionTailHandler = (params: { sessionId: string; project: string; fromTurn: number }) =>
+	Effect.gen(function* () {
+		const registry = yield* currentRegistry;
+		return yield* getSessionTailEffect(registry, params);
 	});
 
 const getSubAgentHandler = (params: { sessionId: string; project: string; agentId: string }) =>
@@ -167,7 +181,9 @@ export {
 	getPluginSettingsHandler,
 	getProjectsHandler,
 	getSessionHandler,
+	getSessionHeadHandler,
 	getSessionsHandler,
+	getSessionTailHandler,
 	getStatsHandler,
 	getSubAgentHandler,
 	getUpdateSettingsHandler,
