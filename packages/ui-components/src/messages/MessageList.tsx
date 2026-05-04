@@ -1,5 +1,7 @@
 import { TurnBox } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMemo, useRef } from "react";
 import type { Turn } from "../types/index.ts";
 import { ErrorBoundary, formatFullDateTime, formatTimestamp } from "../utilities/index.ts";
 import { AssistantMessage } from "./AssistantMessage.tsx";
@@ -9,7 +11,6 @@ import { UserMessage } from "./UserMessage.tsx";
 const STEP_FADE_IN_KEYFRAMES =
 	"@keyframes stepFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }";
 
-const MESSAGE_LIST_CLASSES = "mx-auto w-full max-w-[900px] p-5";
 const STEP_ENTER_CLASSES = "animate-[stepFadeIn_0.3s_ease_forwards]";
 const PARSE_ERROR_LINE_CLASSES = "ml-2 text-[0.8em] font-normal text-foreground-muted";
 const PARSE_ERROR_TYPE_CLASSES = "inline-block mb-1 text-[0.8em] font-semibold text-error";
@@ -130,6 +131,11 @@ function renderTurn(options: RenderTurnOptions) {
 
 const STATUS_RE = /^\[.+\]$/u;
 
+const SCROLL_CONTAINER_CLASSES = "h-full w-full overflow-auto";
+const SCROLL_INNER_CLASSES = "relative w-full mx-auto max-w-[900px] p-5";
+
+const ESTIMATED_TURN_HEIGHT = 200;
+
 export function MessageList({
 	turns,
 	visibleSubSteps,
@@ -143,38 +149,75 @@ export function MessageList({
 	onLinkClick,
 	getFrontendPlugin,
 }: MessageListProps) {
-	const firstUserTurnIndex = turns.findIndex((t) => {
-		if (t.kind !== "user") {
-			return false;
-		}
-		return !STATUS_RE.test(t.text.trim());
+	const parentRef = useRef<HTMLDivElement>(null);
+	const firstUserTurnIndex = useMemo(
+		() =>
+			turns.findIndex((t) => {
+				if (t.kind !== "user") {
+					return false;
+				}
+				return !STATUS_RE.test(t.text.trim());
+			}),
+		[turns],
+	);
+
+	const virtualizer = useVirtualizer({
+		count: turns.length,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => ESTIMATED_TURN_HEIGHT,
+		overscan: 5,
+		measureElement: (el) => el.getBoundingClientRect().height,
 	});
 
+	const totalSize = virtualizer.getTotalSize();
+	const items = virtualizer.getVirtualItems();
+
 	return (
-		<div className={MESSAGE_LIST_CLASSES}>
+		<div ref={parentRef} className={SCROLL_CONTAINER_CLASSES}>
 			<style>{STEP_FADE_IN_KEYFRAMES}</style>
-			{turns.map((turn, index) => {
-				const isActive = visibleSubSteps ? index === turns.length - 1 : false;
-				return (
-					<ErrorBoundary key={turn.uuid || index} inline={true}>
-						{renderTurn({
-							turn: turn,
-							index: index,
-							isActive: isActive,
-							visibleSubSteps: visibleSubSteps,
-							sessionId: sessionId,
-							project: project,
-							pluginId: pluginId,
-							isSubAgent: isSubAgent,
-							planSessionId: planSessionId,
-							implSessionId: index === firstUserTurnIndex ? implSessionId : undefined,
-							onSessionLink: onSessionLink,
-							onLinkClick: onLinkClick,
-							getFrontendPlugin: getFrontendPlugin,
-						})}
-					</ErrorBoundary>
-				);
-			})}
+			{/* biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning */}
+			<div className={SCROLL_INNER_CLASSES} style={{ height: totalSize }}>
+				{items.map((item) => {
+					const turn = turns[item.index];
+					if (!turn) {
+						return null;
+					}
+					const isActive = visibleSubSteps ? item.index === turns.length - 1 : false;
+					return (
+						<div
+							key={turn.uuid || item.index}
+							ref={virtualizer.measureElement}
+							data-index={item.index}
+							// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
+							style={{
+								position: "absolute",
+								top: 0,
+								left: 0,
+								width: "100%",
+								transform: `translateY(${item.start}px)`,
+							}}
+						>
+							<ErrorBoundary inline={true}>
+								{renderTurn({
+									turn: turn,
+									index: item.index,
+									isActive: isActive,
+									visibleSubSteps: visibleSubSteps,
+									sessionId: sessionId,
+									project: project,
+									pluginId: pluginId,
+									isSubAgent: isSubAgent,
+									planSessionId: planSessionId,
+									implSessionId: item.index === firstUserTurnIndex ? implSessionId : undefined,
+									onSessionLink: onSessionLink,
+									onLinkClick: onLinkClick,
+									getFrontendPlugin: getFrontendPlugin,
+								})}
+							</ErrorBoundary>
+						</div>
+					);
+				})}
+			</div>
 		</div>
 	);
 }
