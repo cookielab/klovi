@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Ref } from "effect";
-import { streamJsonlHead } from "./jsonl-stream.ts";
+import { streamJsonl, streamJsonlHead } from "./jsonl-stream.ts";
 
 const testDir = join(tmpdir(), `klovi-jsonl-stream-test-${Date.now()}`);
 const fsLayer = NodeFileSystem.layer;
@@ -142,5 +142,64 @@ describe("streamJsonlHead", () => {
 
 		expect(seen).toEqual([1, 3]);
 		expect(errors).toEqual([2]);
+	});
+});
+
+describe("streamJsonl", () => {
+	test("invokes visitor for every line in a large file without bailing", async () => {
+		const filePath = join(testDir, "big.jsonl");
+		const lineCount = 2000;
+		const lines = Array.from({ length: lineCount }, (_, i) => JSON.stringify({ i: i }));
+		await Bun.write(filePath, lines.join("\n"));
+
+		const seen: number[] = [];
+		await runFs(
+			streamJsonl(filePath, ({ parsed }) => {
+				seen.push((parsed as { i: number }).i);
+			}),
+		);
+
+		expect(seen).toHaveLength(lineCount);
+		expect(seen[0]).toBe(0);
+		expect(seen[lineCount - 1]).toBe(lineCount - 1);
+	});
+
+	test("preserves visit order across chunk boundaries", async () => {
+		const filePath = join(testDir, "ordered.jsonl");
+		const lines = Array.from({ length: 500 }, (_, i) => JSON.stringify({ i: i, pad: "x".repeat(50) }));
+		await Bun.write(filePath, lines.join("\n"));
+
+		const seen: number[] = [];
+		await runFs(
+			streamJsonl(filePath, ({ parsed }) => {
+				seen.push((parsed as { i: number }).i);
+			}),
+		);
+
+		expect(seen).toEqual(lines.map((_, i) => i));
+	});
+
+	test("calls onMalformed for bad lines and continues to the end", async () => {
+		const filePath = join(testDir, "messy.jsonl");
+		await Bun.write(
+			filePath,
+			[JSON.stringify({ a: 1 }), "{ broken", JSON.stringify({ a: 3 }), "also-broken", JSON.stringify({ a: 5 })].join(
+				"\n",
+			),
+		);
+
+		const seen: number[] = [];
+		const errs: number[] = [];
+		await runFs(
+			streamJsonl(
+				filePath,
+				({ parsed }) => {
+					seen.push((parsed as { a: number }).a);
+				},
+				{ onMalformed: (_l, n) => errs.push(n) },
+			),
+		);
+		expect(seen).toEqual([1, 3, 5]);
+		expect(errs).toEqual([2, 4]);
 	});
 });

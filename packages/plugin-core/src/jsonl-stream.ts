@@ -26,6 +26,8 @@ type LineProcessorState = {
 const KILOBYTE_BYTES = 1024;
 const DEFAULT_HEAD_CHUNK_KILOBYTES = 8;
 const DEFAULT_HEAD_CHUNK_SIZE = DEFAULT_HEAD_CHUNK_KILOBYTES * KILOBYTE_BYTES;
+const DEFAULT_FULL_CHUNK_KILOBYTES = 64;
+const DEFAULT_FULL_CHUNK_SIZE = DEFAULT_FULL_CHUNK_KILOBYTES * KILOBYTE_BYTES;
 
 function processLine(line: string, state: LineProcessorState): Effect.Effect<void> {
 	return Effect.gen(function* () {
@@ -80,5 +82,44 @@ function streamJsonlHead(
 	});
 }
 
-export type { JsonlLineContext, JsonlVisitor, StreamJsonlHeadOptions };
-export { streamJsonlHead };
+type StreamJsonlOptions = {
+	chunkSize?: number;
+	onMalformed?: (line: string, lineNumber: number, error: unknown) => void;
+};
+
+function streamJsonl(
+	filePath: string,
+	visitor: JsonlVisitor,
+	options: StreamJsonlOptions = {},
+): Effect.Effect<void, PlatformError.PlatformError, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		const indexRef = yield* Ref.make(0);
+		const chunkSize = options.chunkSize ?? DEFAULT_FULL_CHUNK_SIZE;
+
+		yield* fs
+			.stream(filePath, { chunkSize: chunkSize })
+			.pipe(Stream.decodeText("utf-8"), Stream.splitLines)
+			.pipe(
+				Stream.runForEach((line) =>
+					Effect.gen(function* () {
+						const lineIndex = yield* Ref.getAndUpdate(indexRef, (n) => n + 1);
+						const trimmed = line.trim();
+						if (!trimmed) {
+							return;
+						}
+						const lineNumber = lineIndex + 1;
+						try {
+							const parsed = JSON.parse(line);
+							visitor({ parsed: parsed, line: line, lineIndex: lineIndex, lineNumber: lineNumber });
+						} catch (error) {
+							options.onMalformed?.(line, lineNumber, error);
+						}
+					}),
+				),
+			);
+	});
+}
+
+export type { JsonlLineContext, JsonlVisitor, StreamJsonlHeadOptions, StreamJsonlOptions };
+export { streamJsonl, streamJsonlHead };
