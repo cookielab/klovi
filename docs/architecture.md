@@ -172,6 +172,16 @@ Plugins remain separate packages:
 
 `packages/plugin-core` provides the registry and canonical plugin contracts.
 
+Plugins are driver packages. They are responsible for reading provider-specific
+local storage and converting it into Klovi's canonical project, session, turn,
+and tool-call model. Plugin-specific data shapes should not leak into the UI
+layer. In particular, plugin packages must not export React components, JSX,
+CSS, DOM behavior, or UI class names, and reusable UI should not need to branch
+on provider ids or raw provider tool names.
+
+The stricter plugin boundary and the current remediation plan are documented in
+[`docs/plugins.md`](plugins.md).
+
 Settings are stored in JSON and include:
 
 - per-plugin `enabled` state
@@ -187,6 +197,10 @@ UI is split into two layers:
   shared app state, and wrapper components
 - `packages/ui-components` owns reusable rendering for messages, sessions,
   presentation mode, search, tools, and utility components
+
+Reusable UI renders the canonical model from `packages/plugin-core`. Provider
+translation belongs in plugins or in narrowly scoped migration shims while the
+tool-call model is being normalized.
 
 `packages/design-system` provides the global styles, tokens, and reusable
 primitives consumed by `packages/ui` and `packages/ui-components`.
