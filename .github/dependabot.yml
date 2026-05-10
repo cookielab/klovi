@@ -4,9 +4,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps(dev)"
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
     groups:
       production:
         dependency-type: production
@@ -17,5 +19,7 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     commit-message:
-      prefix: "ci"
+      prefix: "chore(ci)"
