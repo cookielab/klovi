@@ -185,14 +185,14 @@ function FontSizeControl({
 }): React.ReactNode {
 	return (
 		<div className={`${FONT_SIZE_CONTROL_BASE_CLASSES} ${disabled ? FONT_SIZE_CONTROL_DISABLED_CLASSES : ""}`}>
-			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size <= N_10} onClick={onDecrease}>
+			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled === true || size <= N_10} onClick={onDecrease}>
 				<Text>{T_A}</Text>
 			</button>
 			<span className={FONT_SIZE_VALUE_CLASSES}>{size}</span>
 			<button
 				type="button"
 				className={FONT_SIZE_BUTTON_CLASSES}
-				disabled={disabled || size >= MAX_FONT_SIZE}
+				disabled={disabled === true || size >= MAX_FONT_SIZE}
 				onClick={onIncrease}
 			>
 				<Text>{T_A_2}</Text>
