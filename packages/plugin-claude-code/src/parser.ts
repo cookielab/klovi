@@ -568,7 +568,7 @@ function normalizeToolCall(rawName: string, input: Record<string, unknown>): Nor
 	if (rawName.startsWith("mcp__")) {
 		const displayName = parseMcpDisplayName(rawName);
 		const parts = rawName.split("__");
-		const mcpSummary = parts.slice(1, -1).join(" > ") || displayName;
+		const mcpSummary = parts.slice(2).join(" > ") || displayName;
 		return { kind: "mcp", title: displayName, summary: mcpSummary };
 	}
 	const factory = TOOL_NORMALIZERS[rawName];

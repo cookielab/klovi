@@ -370,6 +370,7 @@ describe("buildTurns", () => {
 		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
 		expect(toolCall.kind).toBe("mcp");
 		expect(toolCall.title).toBe("read_file");
+		expect(toolCall.summary).toBe("read_file");
 		expect(toolCall.name).toBe("mcp__filesystem__read_file");
 		expect(toolCall.rawName).toBe("mcp__filesystem__read_file");
 	});
