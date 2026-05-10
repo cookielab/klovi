@@ -15,6 +15,10 @@ import type { DesktopMenuAction, DesktopRequestMethod } from "@cookielab.io/klov
 import { Electroview } from "electrobun/view";
 import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types";
 
+
+const N_120000 = 120_000;
+const N_60000 = 60_000;
+
 // Import design system globals (tokens, reset, fonts) via klovi-ui
 import "@cookielab.io/klovi-ui/styles";
 
@@ -29,12 +33,12 @@ type DesktopRpcMethod = DesktopRequestMethod;
 
 const DEFAULT_RPC_TIMEOUT = 30_000;
 const RPC_TIMEOUTS: Partial<Record<DesktopRpcMethod, number>> = {
-	getProjects: 120_000,
-	getSessions: 120_000,
-	searchSessions: 120_000,
-	getStats: 120_000,
-	getSession: 60_000,
-	getSubAgent: 60_000,
+	getProjects: N_120000,
+	getSessions: N_120000,
+	searchSessions: N_120000,
+	getStats: N_120000,
+	getSession: N_60000,
+	getSubAgent: N_60000,
 };
 
 let hostConnectionState: KloviHostConnectionState = "connecting";

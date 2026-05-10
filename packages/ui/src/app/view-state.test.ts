@@ -3,6 +3,9 @@ import type { KloviClient } from "../lib/client";
 import { createRpcTimeoutError } from "../lib/rpc-errors";
 import { getResumeCommand, restoreFromHash } from "./view-state";
 
+
+const N_120000 = 120_000;
+
 const baseProject = {
 	encodedPath: "project-one",
 	name: "workspace/project-one",
@@ -71,7 +74,7 @@ describe("restoreFromHash", () => {
 		globalThis.location.hash = "#/project-one";
 		const view = await restoreFromHash(
 			createClient({
-				getProjects: () => Promise.reject(createRpcTimeoutError("getProjects", 120_000)),
+				getProjects: () => Promise.reject(createRpcTimeoutError("getProjects", N_120000)),
 			}),
 		);
 
@@ -82,7 +85,7 @@ describe("restoreFromHash", () => {
 		globalThis.location.hash = "#/project-one/session-1";
 		const view = await restoreFromHash(
 			createClient({
-				getSessions: () => Promise.reject(createRpcTimeoutError("getSessions", 120_000)),
+				getSessions: () => Promise.reject(createRpcTimeoutError("getSessions", N_120000)),
 			}),
 		);
 

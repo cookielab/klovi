@@ -39,6 +39,11 @@ import { UpdateStatusRef } from "./services";
 import { makeThemePollingFiber } from "./theme-polling";
 import { cleanupUpdates, startUpdateSchedule } from "./updater-service";
 
+
+const N_6 = 6;
+const N_1400 = 1400;
+const N_900 = 900;
+
 const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
 const STATS_REFRESH_INTERVAL = "5 minutes";
 
@@ -102,13 +107,13 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 			},
 			getUpdateSettings: () => {
 				if (isLinux) {
-					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: false });
+					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: N_6, autoDownload: false });
 				}
 				return bridgeHandler(runtime, getUpdateSettingsHandler);
 			},
 			updateUpdateSettings: (params) => {
 				if (isLinux) {
-					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: 6, autoDownload: false });
+					return Promise.resolve({ channel: "stable" as const, checkIntervalHours: N_6, autoDownload: false });
 				}
 				return bridgeHandler(runtime, updateUpdateSettingsHandler(params));
 			},
@@ -155,7 +160,7 @@ const rpc = BrowserView.defineRPC<KloviRPC>({
 const win = new BrowserWindow({
 	title: "Klovi",
 	url: "views://main/index.html",
-	frame: { x: 0, y: 0, width: 1400, height: 900 },
+	frame: { x: 0, y: 0, width: N_1400, height: N_900 },
 	...(linuxRenderer ? { renderer: linuxRenderer } : {}),
 	rpc: rpc,
 });

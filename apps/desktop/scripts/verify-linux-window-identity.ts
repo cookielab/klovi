@@ -6,6 +6,12 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { resolveLinuxLauncherPath } from "./linux-bundle";
 
+
+const N_30000 = 30_000;
+const N_500 = 500;
+const N_5000 = 5000;
+const N_100 = 100;
+
 const EXPECTED_WM_CLASS = "Klovi";
 const FORBIDDEN_WM_CLASS = "ElectrobunKitchenSink";
 const PID_REGEX = /_NET_WM_PID\(CARDINAL\)\s*=\s*(?<pid>\d+)/u;
@@ -205,7 +211,7 @@ class WindowSearchTimeoutError extends Error {
 	}
 }
 
-async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise<WindowIdentity> {
+async function findWindowForLaunch(rootPid: number, timeoutMs = N_30000): Promise<WindowIdentity> {
 	const existingWindowIds = new Set(await listWindowIds());
 	let lastObservedWindows: WindowIdentity[] = [];
 	const deadline = Date.now() + timeoutMs;
@@ -222,7 +228,7 @@ async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise
 			return match;
 		}
 
-		const pollIntervalMs = 500;
+		const pollIntervalMs = N_500;
 		await Bun.sleep(pollIntervalMs);
 	}
 
@@ -249,13 +255,13 @@ async function killProcessTree(rootPid: number): Promise<void> {
 		}
 	}
 
-	const killWaitTimeoutMs = 5000;
+	const killWaitTimeoutMs = N_5000;
 	const deadline = Date.now() + killWaitTimeoutMs;
 	while (Date.now() < deadline) {
 		if (!pids.some((pid) => processExists(pid))) {
 			return;
 		}
-		const killPollIntervalMs = 100;
+		const killPollIntervalMs = N_100;
 		await Bun.sleep(killPollIntervalMs);
 	}
 

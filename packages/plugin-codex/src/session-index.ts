@@ -3,6 +3,9 @@ import { PluginConfig, streamJsonlHead } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 
+
+const N_256 = 256;
+
 type CodexSessionMeta = {
 	uuid: string;
 	name?: string;
@@ -114,7 +117,7 @@ function streamInferredModel(filePath: string) {
 				}
 				return undefined;
 			},
-			{ maxLines: 256 },
+			{ maxLines: N_256 },
 		).pipe(Effect.catchAll(() => Effect.void));
 		return model;
 	});

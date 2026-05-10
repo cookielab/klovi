@@ -7,6 +7,23 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { buildCodexTurns, type CodexEvent, loadCodexSession } from "./parser";
 
+
+const N_1706000000 = 1_706_000_000;
+const N_1706001000 = 1_706_001_000;
+const N_100 = 100;
+const N_50 = 50;
+const N_3 = 3;
+const N_20 = 20;
+const N_80 = 80;
+const N_30 = 30;
+const N_200 = 200;
+const N_4 = 4;
+const N_300 = 300;
+const N_150 = 150;
+const N_25 = 25;
+const N_500 = 500;
+const N_250 = 250;
+
 const testDir = join(tmpdir(), `klovi-codex-parser-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
@@ -41,7 +58,7 @@ const baseMeta = {
 	uuid: "test-uuid",
 	name: "Test session",
 	cwd: "/Users/dev/project",
-	timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+	timestamps: { created: N_1706000000, updated: N_1706001000 },
 	model: "o4-mini",
 	provider_id: "openai",
 };
@@ -72,7 +89,7 @@ describe("buildCodexTurns", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Hello, I can help!" } },
-			{ type: "turn.completed", usage: { input_tokens: 100, output_tokens: 50 } },
+			{ type: "turn.completed", usage: { input_tokens: N_100, output_tokens: N_50 } },
 		];
 
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
@@ -89,8 +106,8 @@ describe("buildCodexTurns", () => {
 		>;
 		expect(textBlock0.text).toBe("Hello, I can help!");
 		expect(assistant.usage).toEqual({
-			inputTokens: 100,
-			outputTokens: 50,
+			inputTokens: N_100,
+			outputTokens: N_50,
 			cacheReadTokens: undefined,
 		});
 	});
@@ -261,7 +278,7 @@ describe("buildCodexTurns", () => {
 
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
-		expect(turns).toHaveLength(3);
+		expect(turns).toHaveLength(N_3);
 		expect(turns[0]).toMatchObject({ kind: "assistant", uuid: "codex-assistant-1" });
 		expect(turns[1]).toMatchObject({ kind: "user", uuid: "codex-user-1" });
 		expect(turns[2]).toMatchObject({ kind: "assistant", uuid: "codex-assistant-2" });
@@ -271,16 +288,16 @@ describe("buildCodexTurns", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "First response" } },
-			{ type: "turn.completed", usage: { input_tokens: 50, output_tokens: 20 } },
+			{ type: "turn.completed", usage: { input_tokens: N_50, output_tokens: N_20 } },
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Second response" } },
-			{ type: "turn.completed", usage: { input_tokens: 80, output_tokens: 30 } },
+			{ type: "turn.completed", usage: { input_tokens: N_80, output_tokens: N_30 } },
 		];
 
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
 
 		// First turn is assistant, then user (empty, from second turn.started), then assistant
-		expect(turns).toHaveLength(3);
+		expect(turns).toHaveLength(N_3);
 		expect(turns[0]?.kind).toBe("assistant");
 		expect(turns[1]?.kind).toBe("user");
 		expect(turns[2]?.kind).toBe("assistant");
@@ -297,7 +314,7 @@ describe("buildCodexTurns", () => {
 			{ type: "item.completed", item: { type: "agent_message", text: "Response" } },
 			{
 				type: "turn.completed",
-				usage: { input_tokens: 200, output_tokens: 100, cached_input_tokens: 50 },
+				usage: { input_tokens: N_200, output_tokens: N_100, cached_input_tokens: N_50 },
 			},
 		];
 
@@ -305,9 +322,9 @@ describe("buildCodexTurns", () => {
 
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.usage).toEqual({
-			inputTokens: 200,
-			outputTokens: 100,
-			cacheReadTokens: 50,
+			inputTokens: N_200,
+			outputTokens: N_100,
+			cacheReadTokens: N_50,
 		});
 	});
 
@@ -333,11 +350,11 @@ describe("buildCodexTurns", () => {
 
 		expect(turns).toHaveLength(1);
 		const assistant = turns[0] as AssistantTurn;
-		expect(assistant.contentBlocks).toHaveLength(4);
+		expect(assistant.contentBlocks).toHaveLength(N_4);
 		expect(assistant.contentBlocks[0]?.type).toBe("thinking");
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 		expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
-		expect(assistant.contentBlocks[3]?.type).toBe("text");
+		expect(assistant.contentBlocks[N_3]?.type).toBe("text");
 	});
 
 	it("returns empty turns for empty events", () => {
@@ -362,7 +379,7 @@ describe("loadCodexSession", () => {
 					exit_code: 0,
 				},
 			},
-			{ type: "turn.completed", usage: { input_tokens: 300, output_tokens: 150 } },
+			{ type: "turn.completed", usage: { input_tokens: N_300, output_tokens: N_150 } },
 		]);
 
 		const session = await Effect.runPromise(
@@ -376,7 +393,7 @@ describe("loadCodexSession", () => {
 		const assistant = session.turns[0] as AssistantTurn;
 		expect(assistant.kind).toBe("assistant");
 		expect(assistant.model).toBe("o4-mini");
-		expect(assistant.contentBlocks).toHaveLength(3);
+		expect(assistant.contentBlocks).toHaveLength(N_3);
 		expect(assistant.contentBlocks[0]?.type).toBe("thinking");
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 		expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
@@ -452,7 +469,7 @@ describe("loadCodexSession", () => {
 			{ type: "item.completed", item: { type: "agent_message", text: "Response 1" } },
 			{
 				type: "turn.completed",
-				usage: { input_tokens: 100, output_tokens: 50, cached_input_tokens: 25 },
+				usage: { input_tokens: N_100, output_tokens: N_50, cached_input_tokens: N_25 },
 			},
 		]);
 
@@ -462,9 +479,9 @@ describe("loadCodexSession", () => {
 
 		const assistant = session.turns[0] as AssistantTurn;
 		expect(assistant.usage).toEqual({
-			inputTokens: 100,
-			outputTokens: 50,
-			cacheReadTokens: 25,
+			inputTokens: N_100,
+			outputTokens: N_50,
+			cacheReadTokens: N_25,
 		});
 	});
 });
@@ -496,7 +513,7 @@ describe("new envelope format", () => {
 				{
 					type: "event_msg",
 					timestamp: "2026-02-18T10:00:04.000Z",
-					payload: { type: "token_count", input_tokens: 200, output_tokens: 80 },
+					payload: { type: "token_count", input_tokens: N_200, output_tokens: N_80 },
 				},
 				{
 					type: "event_msg",
@@ -534,8 +551,8 @@ describe("new envelope format", () => {
 			>;
 			expect(textBlock.text).toBe("I found the issue.");
 			expect(assistant.usage).toEqual({
-				inputTokens: 200,
-				outputTokens: 80,
+				inputTokens: N_200,
+				outputTokens: N_80,
 				cacheReadTokens: undefined,
 			});
 		});
@@ -569,7 +586,7 @@ describe("new envelope format", () => {
 				{
 					type: "event_msg",
 					timestamp: "2026-02-18T10:00:03.000Z",
-					payload: { type: "token_count", input_tokens: 100, output_tokens: 50 },
+					payload: { type: "token_count", input_tokens: N_100, output_tokens: N_50 },
 				},
 				{
 					type: "event_msg",
@@ -652,9 +669,9 @@ describe("new envelope format", () => {
 							type: "token_count",
 							info: {
 								last_token_usage: {
-									input_tokens: 500,
-									cached_input_tokens: 100,
-									output_tokens: 250,
+									input_tokens: N_500,
+									cached_input_tokens: N_100,
+									output_tokens: N_250,
 								},
 							},
 						},
@@ -673,9 +690,9 @@ describe("new envelope format", () => {
 
 			const assistant = session.turns[0] as AssistantTurn;
 			expect(assistant.usage).toEqual({
-				inputTokens: 500,
-				outputTokens: 250,
-				cacheReadTokens: 100,
+				inputTokens: N_500,
+				outputTokens: N_250,
+				cacheReadTokens: N_100,
 			});
 		});
 
@@ -697,7 +714,7 @@ describe("new envelope format", () => {
 					{
 						type: "event_msg",
 						timestamp: "2026-02-18T10:00:03.000Z",
-						payload: { type: "token_count", input_tokens: 50, output_tokens: 20 },
+						payload: { type: "token_count", input_tokens: N_50, output_tokens: N_20 },
 					},
 					{
 						type: "event_msg",

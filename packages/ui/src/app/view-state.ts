@@ -7,6 +7,11 @@ import { isTransportRpcError } from "../lib/rpc-errors-effect";
 import type { Project, SessionSummary } from "../shared/types";
 import { getFrontendPlugin } from "./plugin-registry";
 
+
+const N_3 = 3;
+const N_60 = 60;
+const N_8 = 8;
+
 const HASH_PREFIX_REGEX = /^#\/?/u;
 
 type ViewState =
@@ -190,7 +195,7 @@ const restoreFromHashEffect = () =>
 
 		const parts = hash.split("/");
 		const [encodedPath, sessionId] = parts;
-		const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
+		const subAgentId = parts[2] === "subagent" ? parts[N_3] : undefined;
 		if (!encodedPath) {
 			return { kind: "home" } as ViewState;
 		}
@@ -212,7 +217,7 @@ async function restoreFromHash(client: KloviClient): Promise<ViewState> {
 
 	const parts = hash.split("/");
 	const [encodedPath, sessionId] = parts;
-	const subAgentId = parts[2] === "subagent" ? parts[3] : undefined;
+	const subAgentId = parts[2] === "subagent" ? parts[N_3] : undefined;
 	if (!encodedPath) {
 		return { kind: "home" };
 	}
@@ -267,14 +272,14 @@ function getHeaderInfo(view: ViewState): { title: string; breadcrumb: string } {
 	if (view.kind === "session") {
 		const parts = view.project.name.split("/").filter(Boolean);
 		let title = view.session.firstMessage || view.session.slug;
-		if (title.length > 60) {
-			title = `${title.slice(0, 60)}...`;
+		if (title.length > N_60) {
+			title = `${title.slice(0, N_60)}...`;
 		}
 		return { title: title, breadcrumb: parts.slice(-2).join("/") };
 	}
 	if (view.kind === "subagent") {
 		const parts = view.project.name.split("/").filter(Boolean);
-		const agentIdPrefixLength = 8;
+		const agentIdPrefixLength = N_8;
 		return {
 			title: `Sub-agent ${view.agentId.slice(0, agentIdPrefixLength)}`,
 			breadcrumb: parts.slice(-2).join("/"),

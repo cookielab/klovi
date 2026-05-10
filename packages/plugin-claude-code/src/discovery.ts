@@ -11,6 +11,11 @@ import { cleanCommandMessage } from "./command-message";
 import type { RawContentBlock, RawLine } from "./raw-types";
 import { decodeEncodedPath, listFilesBySuffix, listFilesWithMtime, readDirEntriesSafe } from "./shared/discovery-utils";
 
+
+const N_20 = 20;
+const N_200 = 200;
+const N_50 = 50;
+
 const BRACKETED_TEXT_REGEX = /^\[.+\]$/u;
 const PROJECT_DIR_CONCURRENCY = 16;
 const SESSION_FILE_CONCURRENCY = 16;
@@ -131,7 +136,7 @@ function extractCwd(filePath: string) {
 				}
 				return undefined;
 			},
-			{ maxLines: 20 },
+			{ maxLines: N_20 },
 		).pipe(Effect.catchAll(() => Effect.void));
 		return cwd;
 	});
@@ -186,7 +191,7 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 	if (!meta.firstMessage && obj.type === "user" && !obj.isMeta && obj.message) {
 		const raw = extractTextFromContent(obj.message.content);
 		if (raw && !isInternalMessage(raw)) {
-			const maxPreviewLength = 200;
+			const maxPreviewLength = N_200;
 			meta.firstMessage = cleanCommandMessage(raw).slice(0, maxPreviewLength);
 		}
 	}
@@ -213,7 +218,7 @@ function extractSessionMeta(filePath: string) {
 				return undefined;
 			},
 			{
-				maxLines: 50,
+				maxLines: N_50,
 				onMalformed: () => {
 					// Malformed lines skipped here; full errors reported by loadClaudeSession()
 				},

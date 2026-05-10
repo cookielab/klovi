@@ -1,5 +1,14 @@
 import { formatFullDateTime, formatRelativeTime, formatTime, formatTimestamp } from "./time";
 
+
+const N_5 = 5;
+const N_60000 = 60_000;
+const N_3 = 3;
+const N_3600000 = 3_600_000;
+const N_10 = 10;
+const N_86400000 = 86_400_000;
+const N_45 = 45;
+
 const FORMATTED_DATE_REGEX = /^[A-Z][a-z]+ \d+, \d{2}:\d{2}$/u;
 
 describe("formatTimestamp", () => {
@@ -9,12 +18,12 @@ describe("formatTimestamp", () => {
 	});
 
 	it("'Xm ago' for minutes", () => {
-		const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString();
+		const fiveMinAgo = new Date(Date.now() - N_5 * N_60000).toISOString();
 		expect(formatTimestamp(fiveMinAgo)).toBe("5m ago");
 	});
 
 	it("'Xh ago' for hours", () => {
-		const threeHoursAgo = new Date(Date.now() - 3 * 3_600_000).toISOString();
+		const threeHoursAgo = new Date(Date.now() - N_3 * N_3600000).toISOString();
 		expect(formatTimestamp(threeHoursAgo)).toBe("3h ago");
 	});
 
@@ -36,22 +45,22 @@ describe("formatRelativeTime", () => {
 	});
 
 	it("'Xm ago' for minutes", () => {
-		const tenMinAgo = new Date(Date.now() - 10 * 60_000).toISOString();
+		const tenMinAgo = new Date(Date.now() - N_10 * N_60000).toISOString();
 		expect(formatRelativeTime(tenMinAgo)).toBe("10m ago");
 	});
 
 	it("'Xh ago' for hours", () => {
-		const fiveHoursAgo = new Date(Date.now() - 5 * 3_600_000).toISOString();
+		const fiveHoursAgo = new Date(Date.now() - N_5 * N_3600000).toISOString();
 		expect(formatRelativeTime(fiveHoursAgo)).toBe("5h ago");
 	});
 
 	it("'Xd ago' for days", () => {
-		const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000).toISOString();
+		const threeDaysAgo = new Date(Date.now() - N_3 * N_86400000).toISOString();
 		expect(formatRelativeTime(threeDaysAgo)).toBe("3d ago");
 	});
 
 	it("date string for 30+ days", () => {
-		const old = new Date(Date.now() - 45 * 86_400_000).toISOString();
+		const old = new Date(Date.now() - N_45 * N_86400000).toISOString();
 		const result = formatRelativeTime(old);
 		// Should return toLocaleDateString output (not "Xd ago")
 		expect(result).not.toContain("d ago");
@@ -78,7 +87,7 @@ describe("formatFullDateTime", () => {
 		const result = formatFullDateTime("2024-06-15T14:30:45Z");
 		// Should contain year, month name, day, and time with seconds
 		expect(result).toContain("2024");
-		expect(result.length).toBeGreaterThan(10);
+		expect(result.length).toBeGreaterThan(N_10);
 	});
 
 	it("returns empty string for invalid date", () => {

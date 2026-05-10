@@ -2,6 +2,10 @@ import { act, renderHook } from "@testing-library/react";
 import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../types/index";
 import { usePresentationMode } from "./usePresentationMode";
 
+
+const N_4 = 4;
+const N_3 = 3;
+
 function userTurn(text = "hello"): UserTurn {
 	return {
 		kind: "user",
@@ -56,7 +60,7 @@ describe("usePresentationMode", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn({ thinking: 1, text: 1, tools: 2 })];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
-		expect(result.current.totalSteps).toBe(4);
+		expect(result.current.totalSteps).toBe(N_4);
 	});
 
 	it("handles empty turns list", () => {
@@ -128,7 +132,7 @@ describe("usePresentationMode", () => {
 		expect(result.current.visibleSubSteps.get(1)).toBe(2);
 
 		act(() => result.current.next());
-		expect(result.current.visibleSubSteps.get(1)).toBe(3);
+		expect(result.current.visibleSubSteps.get(1)).toBe(N_3);
 	});
 
 	it("toggleFullscreen switches mode", () => {

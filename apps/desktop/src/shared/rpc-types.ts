@@ -1,12 +1,12 @@
 import type { DesktopRequestMap, DesktopWebviewMessageMap } from "@cookielab.io/klovi-ui/shared/desktop-contract";
-import type { RpcSchema } from "electrobun/bun";
+import type { RPCSchema } from "electrobun/bun";
 
 type KloviRPC = {
-	bun: RpcSchema<{
+	bun: RPCSchema<{
 		requests: DesktopRequestMap;
 		messages: Record<string, never>;
 	}>;
-	webview: RpcSchema<{
+	webview: RPCSchema<{
 		requests: Record<string, never>;
 		messages: DesktopWebviewMessageMap;
 	}>;

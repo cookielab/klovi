@@ -2,6 +2,9 @@ import { Text } from "@cookielab.io/klovi-design-system";
 import { useCallback, useEffect, useState } from "react";
 
 
+
+const N_1500 = 1500;
+
 const T_LARR_BACK = "&larr; Back";
 const T_LARR_BACK_TO_SESSION = "&larr; Back to session";
 const T_NBSP = "/&nbsp;";
@@ -65,7 +68,7 @@ export function Header({
 		if (!copied) {
 			return;
 		}
-		const copiedResetDelay = 1500;
+		const copiedResetDelay = N_1500;
 		const timer = setTimeout(() => setCopied(false), copiedResetDelay);
 		return () => clearTimeout(timer);
 	}, [copied]);

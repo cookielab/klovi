@@ -1,6 +1,9 @@
 import type React from "react";
 import { useCallback, useEffect } from "react";
 
+
+const N_560 = 560;
+
 type ModalProps = {
 	open: boolean;
 	onClose: () => void;
@@ -12,7 +15,7 @@ function stopPropagation(e: React.MouseEvent): void {
 	e.stopPropagation();
 }
 
-export function Modal({ open, onClose, width = 560, children }: ModalProps): React.ReactNode {
+export function Modal({ open, onClose, width = N_560, children }: ModalProps): React.ReactNode {
 	const handleKeyDown = useCallback(
 		(e: KeyboardEvent) => {
 			if (e.key === "Escape") {

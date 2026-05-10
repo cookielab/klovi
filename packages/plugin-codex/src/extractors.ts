@@ -1,5 +1,8 @@
 import { truncate } from "./shared/text-utils";
 
+
+const N_60 = 60;
+
 const COMMAND_SUMMARY_MAX = 80;
 
 export const codexSummaryExtractors: Record<string, (input: Record<string, unknown>) => string> = {
@@ -11,7 +14,7 @@ export const codexSummaryExtractors: Record<string, (input: Record<string, unkno
 		}
 		return "";
 	},
-	web_search: (i) => truncate(String(i["query"] || ""), 60),
+	web_search: (i) => truncate(String(i["query"] || ""), N_60),
 };
 
 export const codexInputFormatters: Record<string, (input: Record<string, unknown>) => string> = {

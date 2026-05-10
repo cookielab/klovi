@@ -4,6 +4,11 @@ import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { SettingsSidebar, type SettingsTab } from "./SettingsSidebar";
 import { SettingsView } from "./SettingsView";
 
+
+const N_15 = 15;
+const N_20 = 20;
+const N_6 = 6;
+
 function makePlugin(overrides: Partial<PluginSettingInfo> = {}): PluginSettingInfo {
 	return {
 		id: "claude-code",
@@ -21,7 +26,7 @@ function defaultProps() {
 		activeTab: "general" as SettingsTab,
 		onNavigateHome: mock(),
 		theme: { setting: "system" as const, set: mock() },
-		fontSize: { size: 15, set: mock(), increase: mock(), decrease: mock() },
+		fontSize: { size: N_15, set: mock(), increase: mock(), decrease: mock() },
 		presentationTheme: {
 			setting: "system" as const,
 			sameAsGlobal: true,
@@ -29,7 +34,7 @@ function defaultProps() {
 			set: mock(),
 		},
 		presentationFontSize: {
-			size: 15,
+			size: N_15,
 			sameAsGlobal: true,
 			setSameAsGlobal: mock(),
 			set: mock(),
@@ -289,7 +294,7 @@ describe("SettingsView", () => {
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
-		props.fontSize.size = 20;
+		props.fontSize.size = N_20;
 		const { findByText } = render(<SettingsView {...props} />, { wrapper: MockProviders });
 		expect(await findByText("20")).toBeTruthy();
 	});
@@ -310,7 +315,7 @@ describe("SettingsView", () => {
 				getUpdateSettings: () =>
 					Promise.resolve({
 						channel: "stable" as const,
-						checkIntervalHours: 6,
+						checkIntervalHours: N_6,
 						autoDownload: true,
 					}),
 			},
@@ -325,7 +330,7 @@ describe("SettingsView", () => {
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 			hostBridge: {
 				getUpdateSettings: () =>
-					Promise.resolve({ channel: "beta" as const, checkIntervalHours: 6, autoDownload: true }),
+					Promise.resolve({ channel: "beta" as const, checkIntervalHours: N_6, autoDownload: true }),
 			},
 		});
 		const { findByDisplayValue } = render(<SettingsView {...defaultProps()} />, {
@@ -341,7 +346,7 @@ describe("SettingsView", () => {
 				getUpdateSettings: () =>
 					Promise.resolve({
 						channel: "stable" as const,
-						checkIntervalHours: 6,
+						checkIntervalHours: N_6,
 						autoDownload: true,
 					}),
 			},

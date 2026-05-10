@@ -22,9 +22,22 @@ import {
 } from "./parser";
 import type { RawLine } from "./raw-types";
 
+
+const N_36 = 36;
+const N_8 = 8;
+const N_5 = 5;
+const N_1500 = 1500;
+const N_300 = 300;
+const N_1200 = 1200;
+const N_100 = 100;
+const N_3 = 3;
+const N_1024 = 1024;
+const N_50000 = 50_000;
+const N_90 = 90;
+
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
 	return {
-		uuid: `uuid-${Math.random().toString(36).slice(2, 8)}`,
+		uuid: `uuid-${Math.random().toString(N_36).slice(2, N_8)}`,
 		timestamp: "2025-01-15T10:00:00Z",
 		...overrides,
 	} as RawLine;
@@ -585,7 +598,7 @@ describe("buildTurns", () => {
 		const turns = buildTurns(lines);
 		expect(turns).toHaveLength(1);
 		const turn = turns[0] as AssistantTurn;
-		expect(turn.contentBlocks).toHaveLength(5);
+		expect(turn.contentBlocks).toHaveLength(N_5);
 		expect(turn.contentBlocks.map((b) => b.type)).toEqual(["thinking", "text", "tool_call", "thinking", "text"]);
 	});
 
@@ -611,10 +624,10 @@ describe("buildTurns", () => {
 					model: "claude-sonnet-4-5-20250929",
 					content: [{ type: "text", text: "Done." }],
 					usage: {
-						input_tokens: 1500,
-						output_tokens: 300,
-						cache_read_input_tokens: 1200,
-						cache_creation_input_tokens: 100,
+						input_tokens: N_1500,
+						output_tokens: N_300,
+						cache_read_input_tokens: N_1200,
+						cache_creation_input_tokens: N_100,
 					},
 				},
 			}),
@@ -622,10 +635,10 @@ describe("buildTurns", () => {
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
 		expect(turn.usage).toBeDefined();
-		expect(turn.usage?.inputTokens).toBe(1500);
-		expect(turn.usage?.outputTokens).toBe(300);
-		expect(turn.usage?.cacheReadTokens).toBe(1200);
-		expect(turn.usage?.cacheCreationTokens).toBe(100);
+		expect(turn.usage?.inputTokens).toBe(N_1500);
+		expect(turn.usage?.outputTokens).toBe(N_300);
+		expect(turn.usage?.cacheReadTokens).toBe(N_1200);
+		expect(turn.usage?.cacheCreationTokens).toBe(N_100);
 	});
 
 	it("stop reason extraction", () => {
@@ -727,7 +740,7 @@ describe("buildTurns", () => {
 		const turns = buildTurns(lines);
 		expect(turns).toHaveLength(1);
 		const turn = turns[0] as AssistantTurn;
-		expect(turn.contentBlocks).toHaveLength(3);
+		expect(turn.contentBlocks).toHaveLength(N_3);
 		expect(turn.contentBlocks.map((b) => b.type)).toEqual(["thinking", "text", "text"]);
 	});
 
@@ -762,7 +775,7 @@ describe("buildTurns", () => {
 				kind: "parse_error",
 				uuid: "parse-error-line-5",
 				timestamp: "",
-				lineNumber: 5,
+				lineNumber: N_5,
 				rawLine: "{invalid json",
 				errorType: "json_parse",
 				errorDetails: "Unexpected token",
@@ -779,7 +792,7 @@ describe("buildTurns", () => {
 		expect(turns[0]?.kind).toBe("user");
 		expect(turns[1]?.kind).toBe("parse_error");
 		const error = turns[1] as ParseErrorTurn;
-		expect(error.lineNumber).toBe(5);
+		expect(error.lineNumber).toBe(N_5);
 		expect(error.rawLine).toBe("{invalid json");
 		expect(error.errorType).toBe("json_parse");
 	});
@@ -798,7 +811,7 @@ describe("buildTurns", () => {
 				kind: "parse_error",
 				uuid: "parse-error-line-3",
 				timestamp: "",
-				lineNumber: 3,
+				lineNumber: N_3,
 				rawLine: "{broken",
 				errorType: "json_parse",
 			},
@@ -1123,9 +1136,9 @@ describe("loadClaudeSession streaming memory", () => {
 			type: "user",
 			timestamp: "2025-01-15T10:00:00Z",
 			isMeta: false,
-			message: { role: "user", content: "x".repeat(1024) },
+			message: { role: "user", content: "x".repeat(N_1024) },
 		});
-		const lineCount = 50_000; // ~50 MB total
+		const lineCount = N_50000; // ~50 MB total
 		const lines = Array.from({ length: lineCount }, () => padLine);
 		await Bun.write(filePath, lines.join("\n"));
 
@@ -1141,6 +1154,6 @@ describe("loadClaudeSession streaming memory", () => {
 		// parsed-line array (~65 MB), for a worst-case delta of ~115 MB. Streaming drops the
 		// string layer, so the delta should stay under 90 MB.
 		const heapDelta = after - before;
-		expect(heapDelta).toBeLessThan(90 * 1024 * 1024);
+		expect(heapDelta).toBeLessThan(N_90 * N_1024 * N_1024);
 	});
 });

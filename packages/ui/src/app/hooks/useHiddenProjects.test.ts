@@ -1,6 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { useHiddenProjects } from "./useHiddenProjects";
 
+
+const N_99 = 99;
+
 const STORAGE_KEY = "klovi-hidden-projects";
 
 beforeEach(() => {
@@ -54,7 +57,7 @@ describe("useHiddenProjects", () => {
 	});
 
 	it("handles unknown version gracefully", () => {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 99, hiddenIds: ["a"] }));
+		localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: N_99, hiddenIds: ["a"] }));
 		const { result } = renderHook(() => useHiddenProjects());
 		expect(result.current.hiddenIds.size).toBe(0);
 	});

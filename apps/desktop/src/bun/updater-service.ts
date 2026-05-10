@@ -17,6 +17,11 @@ import {
 	validateUpdateInfo,
 } from "./updater";
 
+
+const N_500000 = 500_000;
+const N_100 = 100;
+const N_10 = 10;
+
 type Platform = "macos" | "linux" | "win";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cookielab/klovi/releases";
@@ -82,8 +87,8 @@ const streamChunksToFile = (state: StreamState) =>
 			});
 			bytesDownloaded += value.length;
 
-			const progressReportIntervalBytes = 500_000;
-			const percentageMultiplier = 100;
+			const progressReportIntervalBytes = N_500000;
+			const percentageMultiplier = N_100;
 			if (bytesDownloaded % progressReportIntervalBytes < value.length) {
 				const status: UpdateStatus = { status: "downloading", currentVersion: currentVersion, latestVersion: version };
 				if (totalBytes) {
@@ -107,7 +112,7 @@ const fetchAndSave = (url: string, destPath: string, version: string) =>
 		}
 
 		const contentLength = response.headers.get("content-length");
-		const totalBytes = contentLength ? Number.parseInt(contentLength, 10) : undefined;
+		const totalBytes = contentLength ? Number.parseInt(contentLength, N_10) : undefined;
 		const reader = response.body.getReader();
 		const writer = Bun.file(destPath).writer();
 

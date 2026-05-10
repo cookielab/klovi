@@ -5,6 +5,9 @@ import { type SessionFileInfo, scanCodexSessions } from "./session-index";
 import { readFileText } from "./shared/discovery-utils";
 import { iterateJsonl } from "./shared/jsonl-utils";
 
+
+const N_200 = 200;
+
 type CodexEvent = {
 	type: string;
 	item?: {
@@ -63,14 +66,14 @@ function discoverCodexProjects() {
 function visitForFirstUserMessage(parsed: unknown, captured: { value: string | null }): boolean {
 	const event = parsed as CodexEvent;
 	if (event.type === "item.completed" && event.item?.type === "agent_message" && event.item.text) {
-		const maxPreviewLength = 200;
+		const maxPreviewLength = N_200;
 		captured.value = event.item.text.slice(0, maxPreviewLength);
 		return true;
 	}
 	if (event.type === "event_msg" && event.payload?.type === "user_message") {
 		const payloadText = event.payload.message || event.payload.text;
 		if (typeof payloadText === "string" && payloadText) {
-			const maxMsgLength = 200;
+			const maxMsgLength = N_200;
 			captured.value = payloadText.slice(0, maxMsgLength);
 			return true;
 		}
@@ -92,7 +95,7 @@ function streamFirstUserMessage(filePath: string) {
 				}
 				return undefined;
 			},
-			{ maxLines: 200 },
+			{ maxLines: N_200 },
 		).pipe(Effect.catchAll(() => Effect.void));
 		return captured.value;
 	});
@@ -108,7 +111,7 @@ function extractFirstUserMessageFromText(text: string): string | null {
 
 			// Old format: item.completed with agent_message
 			if (event.type === "item.completed" && event.item?.type === "agent_message" && event.item.text) {
-				const maxPreviewLength = 200;
+				const maxPreviewLength = N_200;
 				message = event.item.text.slice(0, maxPreviewLength);
 				return false;
 			}
@@ -117,7 +120,7 @@ function extractFirstUserMessageFromText(text: string): string | null {
 			if (event.type === "event_msg" && event.payload?.type === "user_message") {
 				const payloadText = event.payload.message || event.payload.text;
 				if (typeof payloadText === "string" && payloadText) {
-					const maxMsgLength = 200;
+					const maxMsgLength = N_200;
 					message = payloadText.slice(0, maxMsgLength);
 					return false;
 				}

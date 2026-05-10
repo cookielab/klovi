@@ -17,6 +17,9 @@ import {
 	updatePluginSetting as updatePluginSettingEffect,
 } from "./settings-service";
 
+
+const N_4 = 4;
+
 function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
 }
@@ -69,7 +72,7 @@ describe("settings RPC handlers", () => {
 		await mkdir(testDir, { recursive: true });
 		await saveSettings(settingsPath, getDefaultSettings());
 		const result = await getPluginSettings(settingsPath);
-		expect(result.plugins).toHaveLength(4);
+		expect(result.plugins).toHaveLength(N_4);
 		expect(result.plugins.map((p) => p.id)).toEqual(["claude-code", "codex-cli", "opencode", "cursor"]);
 	});
 

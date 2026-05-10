@@ -11,6 +11,11 @@ import {
 } from "../services/errors";
 import { KloviServices, type KloviServicesShape } from "./server-services";
 
+
+const N_400 = 400;
+const N_404 = 404;
+const N_500 = 500;
+
 /** Methods on KloviServices that are callable via RPC (excludes internal fields). */
 type RpcMethodName = {
 	[K in keyof KloviServicesShape]: KloviServicesShape[K] extends (...args: never[]) => unknown ? K : never;
@@ -28,28 +33,28 @@ function isRpcMethod(method: string, services: KloviServicesShape): method is Rp
 
 function mapDomainErrorToStatus(err: unknown): { status: number; message: string } {
 	if (err instanceof InvalidSessionIdError) {
-		return { status: 400, message: "Invalid sessionId format" };
+		return { status: N_400, message: "Invalid sessionId format" };
 	}
 	if (err instanceof ProjectNotFoundError) {
-		return { status: 404, message: "Project not found" };
+		return { status: N_404, message: "Project not found" };
 	}
 	if (err instanceof PluginSourceNotFoundError) {
-		return { status: 404, message: "Plugin source not found" };
+		return { status: N_404, message: "Plugin source not found" };
 	}
 	if (err instanceof UnknownPluginError) {
-		return { status: 400, message: `Unknown plugin: ${err.pluginId}` };
+		return { status: N_400, message: `Unknown plugin: ${err.pluginId}` };
 	}
 	if (err instanceof SubAgentNotSupportedError) {
-		return { status: 400, message: `Sub-agent sessions are not supported by plugin: ${err.pluginId}` };
+		return { status: N_400, message: `Sub-agent sessions are not supported by plugin: ${err.pluginId}` };
 	}
 	if (err instanceof SettingsWriteError) {
-		return { status: 500, message: "Failed to write settings" };
+		return { status: N_500, message: "Failed to write settings" };
 	}
 	if (err instanceof RpcError) {
 		return { status: err.status, message: err.message };
 	}
 	const message = err instanceof Error ? err.message : "Internal server error";
-	return { status: 500, message: message };
+	return { status: N_500, message: message };
 }
 
 const rpcHandler = Effect.gen(function* () {
@@ -59,11 +64,11 @@ const rpcHandler = Effect.gen(function* () {
 
 	const method = routeParams["method"];
 	if (!method) {
-		return HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: 400 });
+		return HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: N_400 });
 	}
 
 	if (!isRpcMethod(method, services)) {
-		const httpNotFound = 404;
+		const httpNotFound = N_404;
 		return yield* Effect.fail(new RpcError(httpNotFound, `Unknown method: ${method}`));
 	}
 
@@ -73,7 +78,7 @@ const rpcHandler = Effect.gen(function* () {
 		try {
 			params = JSON.parse(bodyText) as Record<string, unknown>;
 		} catch {
-			return HttpServerResponse.unsafeJson({ error: "Invalid JSON body" }, { status: 400 });
+			return HttpServerResponse.unsafeJson({ error: "Invalid JSON body" }, { status: N_400 });
 		}
 	}
 
@@ -88,7 +93,7 @@ const rpcHandler = Effect.gen(function* () {
 );
 
 const emptyMethodHandler = Effect.succeed(
-	HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: 400 }),
+	HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: N_400 }),
 );
 
 const makeRpcRouter = () =>
@@ -97,7 +102,7 @@ const makeRpcRouter = () =>
 		HttpRouter.post("/api/rpc/:method", rpcHandler),
 	);
 
-const notFoundHandler = Effect.succeed(HttpServerResponse.unsafeJson({ error: "Not found" }, { status: 404 }));
+const notFoundHandler = Effect.succeed(HttpServerResponse.unsafeJson({ error: "Not found" }, { status: N_404 }));
 
 const makeHttpApp = () => makeRpcRouter().pipe(Effect.catchTag("RouteNotFound", () => notFoundHandler));
 

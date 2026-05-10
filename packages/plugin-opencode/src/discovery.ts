@@ -4,6 +4,9 @@ import { Effect } from "effect";
 import { openOpenCodeDb } from "./db";
 import { tryParseJson } from "./shared/json-utils";
 
+
+const N_200 = 200;
+
 // --- Schema introspection ---
 
 type TableColumn = {
@@ -287,7 +290,7 @@ function getFirstUserTextPart(db: SqliteDb, messageId: string): string {
 	for (const part of parts) {
 		const partData = tryParseJson<PartDataJson>(part.data);
 		if (partData?.type === "text" && partData.text) {
-			const maxPreviewLength = 200;
+			const maxPreviewLength = N_200;
 			return partData.text.slice(0, maxPreviewLength);
 		}
 	}

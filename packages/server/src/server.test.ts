@@ -1,5 +1,10 @@
 import { type KloviServer, startKloviServer } from "./server";
 
+
+const N_200 = 200;
+const N_404 = 404;
+const N_400 = 400;
+
 const URL_PATTERN = /^http:\/\/127\.0\.0\.1:\d+$/u;
 
 describe("startKloviServer", () => {
@@ -23,7 +28,7 @@ describe("startKloviServer", () => {
 			headers: { "Content-Type": "application/json" },
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { version: string; commit: string };
 		expect(data).toHaveProperty("version");
 		expect(data).toHaveProperty("commit");
@@ -34,7 +39,7 @@ describe("startKloviServer", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { ok: boolean };
 		expect(data.ok).toBe(true);
 	});
@@ -44,7 +49,7 @@ describe("startKloviServer", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 	});
 
 	it("POST /api/rpc/ without method returns 400", async () => {
@@ -52,7 +57,7 @@ describe("startKloviServer", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(400);
+		expect(res.status).toBe(N_400);
 	});
 
 	it("POST with invalid JSON returns 400", async () => {
@@ -60,11 +65,11 @@ describe("startKloviServer", () => {
 			method: "POST",
 			body: "not json{{{",
 		});
-		expect(res.status).toBe(400);
+		expect(res.status).toBe(N_400);
 	});
 
 	it("GET / returns 404", async () => {
 		const res = await fetch(server.url);
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 	});
 });

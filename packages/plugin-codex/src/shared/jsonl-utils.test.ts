@@ -1,5 +1,8 @@
 import { iterateJsonl } from "./jsonl-utils";
 
+
+const N_4 = 4;
+
 describe("iterateJsonl", () => {
 	it("skips blank lines and yields parsed records", () => {
 		const seen: unknown[] = [];
@@ -10,7 +13,7 @@ describe("iterateJsonl", () => {
 
 		expect(seen).toEqual([
 			{ parsed: { name: "one" }, lineNumber: 2 },
-			{ parsed: { name: "two" }, lineNumber: 4 },
+			{ parsed: { name: "two" }, lineNumber: N_4 },
 		]);
 	});
 

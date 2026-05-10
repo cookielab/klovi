@@ -2,6 +2,10 @@ import { cleanup, render } from "@testing-library/react";
 import type { SessionSummary } from "../types/index";
 import { SessionList } from "./SessionList";
 
+
+const N_500 = 500;
+const N_50 = 50;
+
 afterEach(cleanup);
 
 function makeSession(i: number): SessionSummary {
@@ -18,14 +22,14 @@ function makeSession(i: number): SessionSummary {
 
 describe("SessionList virtualization", () => {
 	it("renders only a windowed slice for large session lists", () => {
-		const sessions = Array.from({ length: 500 }, (_, i) => makeSession(i));
+		const sessions = Array.from({ length: N_500 }, (_, i) => makeSession(i));
 		const { container } = render(
 			<div>
 				<SessionList projectName="/Users/dev/x" sessions={sessions} onBack={mock()} onSelect={mock()} />
 			</div>,
 		);
 		const items = container.querySelectorAll("[data-session-id]");
-		expect(items.length).toBeLessThan(50);
+		expect(items.length).toBeLessThan(N_50);
 		expect(items.length).toBeGreaterThan(0);
 	});
 });

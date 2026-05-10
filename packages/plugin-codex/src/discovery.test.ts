@@ -6,6 +6,14 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { discoverCodexProjects, listCodexSessions } from "./discovery";
 
+
+const N_1706000000 = 1_706_000_000;
+const N_1706001000 = 1_706_001_000;
+const N_1706100000 = 1_706_100_000;
+const N_1706101000 = 1_706_101_000;
+const N_1700000000 = 1_700_000_000;
+const N_1700001000 = 1_700_001_000;
+
 const testDir = join(tmpdir(), `klovi-codex-discovery-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
@@ -53,7 +61,7 @@ describe("discoverCodexProjects", () => {
 			uuid: "uuid-1",
 			name: "Fix bug",
 			cwd: "/Users/dev/project-a",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -62,7 +70,7 @@ describe("discoverCodexProjects", () => {
 			uuid: "uuid-2",
 			name: "Add feature",
 			cwd: "/Users/dev/project-a",
-			timestamps: { created: 1_706_100_000, updated: 1_706_101_000 },
+			timestamps: { created: N_1706100000, updated: N_1706101000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -80,7 +88,7 @@ describe("discoverCodexProjects", () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			cwd: "/Users/dev/project-a",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -88,7 +96,7 @@ describe("discoverCodexProjects", () => {
 		await writeSession("openai", "2025-01-15", "uuid-2", {
 			uuid: "uuid-2",
 			cwd: "/Users/dev/project-b",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -118,7 +126,7 @@ describe("discoverCodexProjects", () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			cwd: "/Users/dev/project",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -126,7 +134,7 @@ describe("discoverCodexProjects", () => {
 		await writeSession("anthropic", "2025-01-15", "uuid-2", {
 			uuid: "uuid-2",
 			cwd: "/Users/dev/project",
-			timestamps: { created: 1_706_100_000, updated: 1_706_101_000 },
+			timestamps: { created: N_1706100000, updated: N_1706101000 },
 			model: "claude-4",
 			provider_id: "anthropic",
 		});
@@ -145,7 +153,7 @@ describe("listCodexSessions", () => {
 			uuid: "uuid-1",
 			name: "Fix the login bug",
 			cwd: "/Users/dev/project-a",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -154,7 +162,7 @@ describe("listCodexSessions", () => {
 			uuid: "uuid-2",
 			name: "Add tests",
 			cwd: "/Users/dev/project-a",
-			timestamps: { created: 1_706_100_000, updated: 1_706_101_000 },
+			timestamps: { created: N_1706100000, updated: N_1706101000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -164,7 +172,7 @@ describe("listCodexSessions", () => {
 			uuid: "uuid-3",
 			name: "Other project",
 			cwd: "/Users/dev/project-b",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -187,7 +195,7 @@ describe("listCodexSessions", () => {
 			{
 				uuid: "uuid-1",
 				cwd: "/Users/dev/project-a",
-				timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
 				provider_id: "openai",
 			},
@@ -214,7 +222,7 @@ describe("listCodexSessions", () => {
 			{
 				uuid: "uuid-1",
 				cwd: "/Users/dev/project-a",
-				timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
 				provider_id: "openai",
 			},
@@ -231,7 +239,7 @@ describe("listCodexSessions", () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			cwd: "/Users/dev/project-a",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -247,7 +255,7 @@ describe("listCodexSessions", () => {
 			uuid: "uuid-old",
 			name: "Old session",
 			cwd: "/Users/dev/project",
-			timestamps: { created: 1_700_000_000, updated: 1_700_001_000 },
+			timestamps: { created: N_1700000000, updated: N_1700001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -256,7 +264,7 @@ describe("listCodexSessions", () => {
 			uuid: "uuid-new",
 			name: "New session",
 			cwd: "/Users/dev/project",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		});
@@ -295,7 +303,7 @@ describe("new envelope format", () => {
 			await writeSession("openai", "2025-01-15", "old-uuid", {
 				uuid: "old-uuid",
 				cwd: "/Users/dev/project",
-				timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
 				provider_id: "openai",
 			});

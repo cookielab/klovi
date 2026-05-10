@@ -6,6 +6,9 @@ import type { Project } from "../types/index";
 import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
 
 
+
+const N_8 = 8;
+
 const T_SESSION = "session";
 const T_SP_1 = " ";
 const T_TEXT = "·";
@@ -150,7 +153,7 @@ function ProjectList({
 		count: filtered.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => PROJECT_ROW_HEIGHT,
-		overscan: 8,
+		overscan: N_8,
 	});
 
 	if (loading) {

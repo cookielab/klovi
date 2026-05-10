@@ -3,6 +3,9 @@ import { Effect } from "effect";
 import { MockProviders } from "../test-helpers/mock-rpc";
 import { useEffectQuery } from "./useEffectQuery";
 
+
+const N_42 = 42;
+
 describe("useEffectQuery", () => {
 	afterEach(() => {
 		cleanup();
@@ -17,11 +20,11 @@ describe("useEffectQuery", () => {
 	});
 
 	it("returns data on successful call", async () => {
-		const rpcCall = () => Effect.succeed({ value: 42 });
+		const rpcCall = () => Effect.succeed({ value: N_42 });
 		const { result } = renderHook(() => useEffectQuery(rpcCall, []), { wrapper: MockProviders });
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
-		expect(result.current.data).toEqual({ value: 42 });
+		expect(result.current.data).toEqual({ value: N_42 });
 		expect(result.current.error).toBeNull();
 	});
 

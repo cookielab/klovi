@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 
+
+const N_200 = 200;
+const N_800 = 800;
+const N_600 = 600;
+
 const OVERLAY_BASE =
 	"fixed inset-0 z-[9999] flex items-center justify-center cursor-pointer transition-colors duration-200 ease-[ease]";
 
@@ -9,7 +14,7 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 	const [visible, setVisible] = useState(false);
 
 	const handleClose = useCallback(() => {
-		const transitionDuration = 200;
+		const transitionDuration = N_200;
 		setVisible(false);
 		setTimeout(onClose, transitionDuration);
 	}, [onClose]);
@@ -42,8 +47,8 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 				className={`${IMAGE_BASE} ${visible ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
 				src={src}
 				alt="Full size preview"
-				width={800}
-				height={600}
+				width={N_800}
+				height={N_600}
 			/>
 		</div>
 	);

@@ -1,6 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
 import { useFontSize, usePresentationFontSize, usePresentationTheme, useTheme } from "./useTheme";
 
+
+const N_15 = 15;
+const N_20 = 20;
+const N_17 = 17;
+const N_13 = 13;
+const N_28 = 28;
+const N_10 = 10;
+const N_22 = 22;
+const N_5 = 5;
+const N_50 = 50;
+
 const THEME_KEY = "klovi-theme";
 const FONT_SIZE_KEY = "klovi-font-size";
 const PRES_THEME_KEY = "klovi-presentation-theme";
@@ -99,39 +110,39 @@ describe("useTheme", () => {
 describe("useFontSize", () => {
 	it("defaults to 15", () => {
 		const { result } = renderHook(() => useFontSize());
-		expect(result.current.size).toBe(15);
+		expect(result.current.size).toBe(N_15);
 	});
 
 	it("restores from localStorage", () => {
 		localStorage.setItem(FONT_SIZE_KEY, "20");
 		const { result } = renderHook(() => useFontSize());
-		expect(result.current.size).toBe(20);
+		expect(result.current.size).toBe(N_20);
 	});
 
 	it("increase adds 2", () => {
 		const { result } = renderHook(() => useFontSize());
 		act(() => result.current.increase());
-		expect(result.current.size).toBe(17);
+		expect(result.current.size).toBe(N_17);
 	});
 
 	it("decrease subtracts 2", () => {
 		const { result } = renderHook(() => useFontSize());
 		act(() => result.current.decrease());
-		expect(result.current.size).toBe(13);
+		expect(result.current.size).toBe(N_13);
 	});
 
 	it("does not exceed max of 28", () => {
 		localStorage.setItem(FONT_SIZE_KEY, "28");
 		const { result } = renderHook(() => useFontSize());
 		act(() => result.current.increase());
-		expect(result.current.size).toBe(28);
+		expect(result.current.size).toBe(N_28);
 	});
 
 	it("does not go below min of 10", () => {
 		localStorage.setItem(FONT_SIZE_KEY, "10");
 		const { result } = renderHook(() => useFontSize());
 		act(() => result.current.decrease());
-		expect(result.current.size).toBe(10);
+		expect(result.current.size).toBe(N_10);
 	});
 
 	it("sets CSS custom property", () => {
@@ -147,21 +158,21 @@ describe("useFontSize", () => {
 
 	it("set() updates size directly", () => {
 		const { result } = renderHook(() => useFontSize());
-		act(() => result.current.set(22));
-		expect(result.current.size).toBe(22);
+		act(() => result.current.set(N_22));
+		expect(result.current.size).toBe(N_22);
 		expect(localStorage.getItem(FONT_SIZE_KEY)).toBe("22");
 	});
 
 	it("set() clamps to min 10", () => {
 		const { result } = renderHook(() => useFontSize());
-		act(() => result.current.set(5));
-		expect(result.current.size).toBe(10);
+		act(() => result.current.set(N_5));
+		expect(result.current.size).toBe(N_10);
 	});
 
 	it("set() clamps to max 28", () => {
 		const { result } = renderHook(() => useFontSize());
-		act(() => result.current.set(50));
-		expect(result.current.size).toBe(28);
+		act(() => result.current.set(N_50));
+		expect(result.current.size).toBe(N_28);
 	});
 });
 
@@ -232,7 +243,7 @@ describe("usePresentationTheme", () => {
 describe("usePresentationFontSize", () => {
 	it("defaults to 15", () => {
 		const { result } = renderHook(() => usePresentationFontSize());
-		expect(result.current.size).toBe(15);
+		expect(result.current.size).toBe(N_15);
 	});
 
 	it("defaults sameAsGlobal to true", () => {
@@ -243,7 +254,7 @@ describe("usePresentationFontSize", () => {
 	it("restores size from localStorage", () => {
 		localStorage.setItem(PRES_FONT_SIZE_KEY, "22");
 		const { result } = renderHook(() => usePresentationFontSize());
-		expect(result.current.size).toBe(22);
+		expect(result.current.size).toBe(N_22);
 	});
 
 	it("restores sameAsGlobal false from localStorage", () => {
@@ -255,42 +266,42 @@ describe("usePresentationFontSize", () => {
 	it("increase adds 2", () => {
 		const { result } = renderHook(() => usePresentationFontSize());
 		act(() => result.current.increase());
-		expect(result.current.size).toBe(17);
+		expect(result.current.size).toBe(N_17);
 	});
 
 	it("decrease subtracts 2", () => {
 		const { result } = renderHook(() => usePresentationFontSize());
 		act(() => result.current.decrease());
-		expect(result.current.size).toBe(13);
+		expect(result.current.size).toBe(N_13);
 	});
 
 	it("does not exceed max of 28", () => {
 		localStorage.setItem(PRES_FONT_SIZE_KEY, "28");
 		const { result } = renderHook(() => usePresentationFontSize());
 		act(() => result.current.increase());
-		expect(result.current.size).toBe(28);
+		expect(result.current.size).toBe(N_28);
 	});
 
 	it("does not go below min of 10", () => {
 		localStorage.setItem(PRES_FONT_SIZE_KEY, "10");
 		const { result } = renderHook(() => usePresentationFontSize());
 		act(() => result.current.decrease());
-		expect(result.current.size).toBe(10);
+		expect(result.current.size).toBe(N_10);
 	});
 
 	it("set() updates size and persists", () => {
 		const { result } = renderHook(() => usePresentationFontSize());
-		act(() => result.current.set(20));
-		expect(result.current.size).toBe(20);
+		act(() => result.current.set(N_20));
+		expect(result.current.size).toBe(N_20);
 		expect(localStorage.getItem(PRES_FONT_SIZE_KEY)).toBe("20");
 	});
 
 	it("set() clamps to bounds", () => {
 		const { result } = renderHook(() => usePresentationFontSize());
-		act(() => result.current.set(5));
-		expect(result.current.size).toBe(10);
-		act(() => result.current.set(50));
-		expect(result.current.size).toBe(28);
+		act(() => result.current.set(N_5));
+		expect(result.current.size).toBe(N_10);
+		act(() => result.current.set(N_50));
+		expect(result.current.size).toBe(N_28);
 	});
 
 	it("setSameAsGlobal persists to localStorage", () => {

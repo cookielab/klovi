@@ -9,6 +9,9 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import { UserMessage } from "./UserMessage";
 
 
+
+const N_5 = 5;
+
 const T_LINE = "line";
 const T_SP_1 = " ";
 const T_RAW_CONTENT = "Raw content";
@@ -168,7 +171,7 @@ export function MessageList({
 		count: turns.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => ESTIMATED_TURN_HEIGHT,
-		overscan: 5,
+		overscan: N_5,
 		measureElement: (el) => el.getBoundingClientRect().height,
 	});
 

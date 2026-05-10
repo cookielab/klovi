@@ -7,6 +7,9 @@ import { useKeyboard } from "./useKeyboard";
 import { usePresentationMode } from "./usePresentationMode";
 
 
+
+const N_100 = 100;
+
 const T_STEP = "Step";
 const T_SP_1 = " ";
 const T_TEXT = "/";
@@ -74,7 +77,7 @@ export function PresentationShell({
 		}
 	}, [currentStep]);
 
-	const percentMultiplier = 100;
+	const percentMultiplier = N_100;
 	const progress =
 		presentation.totalSteps > 0 ? ((presentation.currentStep + 1) / presentation.totalSteps) * percentMultiplier : 0;
 

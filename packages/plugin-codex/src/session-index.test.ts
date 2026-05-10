@@ -6,6 +6,13 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { findCodexSessionFileById, isCodexSessionMeta, normalizeSessionMeta, scanCodexSessions } from "./session-index";
 
+
+const N_1000 = 1000;
+const N_2000 = 2000;
+const N_1706000000 = 1_706_000_000;
+const N_1706001000 = 1_706_001_000;
+const N_1800000000 = 1_800_000_000;
+
 const testDir = join(tmpdir(), `klovi-codex-session-index-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
@@ -24,7 +31,7 @@ describe("isCodexSessionMeta", () => {
 			isCodexSessionMeta({
 				uuid: "test",
 				cwd: "/tmp",
-				timestamps: { created: 1000, updated: 2000 },
+				timestamps: { created: N_1000, updated: N_2000 },
 				model: "o4-mini",
 				provider_id: "openai",
 			}),
@@ -51,7 +58,7 @@ describe("normalizeSessionMeta", () => {
 		const meta = {
 			uuid: "old-uuid",
 			cwd: "/tmp/project",
-			timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
 			provider_id: "openai",
 		};
@@ -79,7 +86,7 @@ describe("normalizeSessionMeta", () => {
 		expect(result?.cwd).toBe("/tmp/project");
 		expect(result?.model).toBe("o4-mini");
 		expect(result?.provider_id).toBe("openai");
-		expect(result?.timestamps.created).toBeCloseTo(new Date("2026-02-18T10:00:00.000Z").getTime() / 1000, 0);
+		expect(result?.timestamps.created).toBeCloseTo(new Date("2026-02-18T10:00:00.000Z").getTime() / N_1000, 0);
 	});
 
 	it("uses unknown as model when model absent", () => {
@@ -109,7 +116,7 @@ describe("normalizeSessionMeta", () => {
 			},
 		};
 
-		const fileMtime = 1_800_000_000;
+		const fileMtime = N_1800000000;
 		const result = normalizeSessionMeta(newFormat, fileMtime);
 		expect(result?.timestamps.updated).toBe(fileMtime);
 	});

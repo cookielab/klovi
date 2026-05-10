@@ -1,6 +1,10 @@
 import { GlobalWindow } from "happy-dom";
 import { setupMockRPC } from "./packages/ui/src/app/test-helpers/mock-rpc";
 
+
+const N_800 = 800;
+const N_600 = 600;
+
 const window = new GlobalWindow();
 
 // Register DOM globals
@@ -78,10 +82,10 @@ if (typeof HTMLElement !== "undefined") {
 			y: 0,
 			top: 0,
 			left: 0,
-			right: 800,
-			bottom: 600,
-			width: 800,
-			height: 600,
+			right: N_800,
+			bottom: N_600,
+			width: N_800,
+			height: N_600,
 			toJSON: () => ({}),
 		} as DOMRect;
 	};

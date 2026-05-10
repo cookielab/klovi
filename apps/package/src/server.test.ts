@@ -1,5 +1,9 @@
 import { type KloviPackageServer, startKloviPackageServer } from "./server";
 
+
+const N_200 = 200;
+const N_404 = 404;
+
 const URL_PATTERN = /^http:\/\/127\.0\.0\.1:\d+$/u;
 
 describe("startKloviPackageServer", () => {
@@ -22,7 +26,7 @@ describe("startKloviPackageServer", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { version: string; commit: string };
 		expect(data).toHaveProperty("version");
 		expect(data).toHaveProperty("commit");
@@ -33,11 +37,11 @@ describe("startKloviPackageServer", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 	});
 
 	it("GET / returns 404 when no staticDir", async () => {
 		const res = await fetch(server.url);
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 	});
 });

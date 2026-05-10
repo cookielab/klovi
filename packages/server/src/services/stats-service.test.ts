@@ -9,6 +9,10 @@ import type { ToolPlugin } from "./plugin-types";
 import { PluginRegistry } from "./registry";
 import { getStats, getStatsCachePath, invalidateStatsCache } from "./stats-service";
 
+
+const N_10 = 10;
+const N_5 = 5;
+
 const testLayer = Layer.merge(
 	NodeFileSystem.layer,
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
@@ -129,7 +133,7 @@ describe("stats-service", () => {
 	it("writes a stats cache file next to settings.json on cold load", async () => {
 		const settingsPath = await makeSettingsPath();
 		const registry = new PluginRegistry();
-		const session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 10, 5);
+		const session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", N_10, N_5);
 		const list: SessionSummary[] = [
 			{
 				sessionId: "s1",
@@ -145,7 +149,7 @@ describe("stats-service", () => {
 
 		const result = await runEffect(getStats(settingsPath, registry));
 		expect(result.refreshing).toBe(false);
-		expect(result.stats.inputTokens).toBe(10);
+		expect(result.stats.inputTokens).toBe(N_10);
 
 		const cachedRaw = await readFile(getStatsCachePath(settingsPath), "utf-8");
 		const cached = JSON.parse(cachedRaw) as {
@@ -156,7 +160,7 @@ describe("stats-service", () => {
 
 		expect(cached.version).toBe(1);
 		expect(typeof cached.cachedAt).toBe("string");
-		expect(cached.stats.inputTokens).toBe(10);
+		expect(cached.stats.inputTokens).toBe(N_10);
 	});
 
 	it("returns the sidecar cache first and refreshes it in the background", async () => {

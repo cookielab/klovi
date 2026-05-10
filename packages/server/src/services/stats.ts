@@ -11,6 +11,9 @@ import { Effect } from "effect";
 import type { MergedProject } from "./plugin-types";
 import type { PluginRegistry } from "./registry";
 
+
+const N_7 = 7;
+
 type SessionWithProject = {
 	project: MergedProject;
 	session: SessionSummary;
@@ -42,7 +45,7 @@ function countRecentSessions(sessions: SessionSummary[]): {
 } {
 	const today = toDateString(new Date());
 	const now = new Date();
-	const daysPerWeek = 7;
+	const daysPerWeek = N_7;
 	const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysPerWeek);
 	const weekAgoStr = toDateString(weekAgo);
 

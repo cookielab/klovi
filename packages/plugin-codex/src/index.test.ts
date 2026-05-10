@@ -6,6 +6,12 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index";
 
+
+const N_1706000000 = 1_706_000_000;
+const N_1706001000 = 1_706_001_000;
+const N_100 = 100;
+const N_40 = 40;
+
 const testDir = join(tmpdir(), `klovi-codex-index-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(
@@ -59,7 +65,7 @@ describe("codexCliPlugin", () => {
 				uuid: "uuid-1",
 				name: "Refactor plugin layer",
 				cwd: "/Users/dev/project-a",
-				timestamps: { created: 1_706_000_000, updated: 1_706_001_000 },
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
 				provider_id: "openai",
 			},
@@ -69,7 +75,7 @@ describe("codexCliPlugin", () => {
 					type: "item.completed",
 					item: { type: "agent_message", text: "I will refactor this safely." },
 				},
-				{ type: "turn.completed", usage: { input_tokens: 100, output_tokens: 40 } },
+				{ type: "turn.completed", usage: { input_tokens: N_100, output_tokens: N_40 } },
 			],
 		);
 

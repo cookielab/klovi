@@ -2,12 +2,17 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { Project } from "../types/index";
 import { ProjectList } from "./ProjectList";
 
+
+const N_12 = 12;
+const N_400 = 400;
+const N_50 = 50;
+
 function makeProject(overrides: Partial<Project> = {}): Project {
 	return {
 		encodedPath: "p1",
 		name: "/Users/dev/klovi",
 		fullPath: "/Users/dev/klovi",
-		sessionCount: 12,
+		sessionCount: N_12,
 		lastActivity: "2025-01-01T10:00:00Z",
 		...overrides,
 	};
@@ -71,7 +76,7 @@ describe("ProjectList (package)", () => {
 	});
 
 	it("renders only a windowed slice for large filtered project lists", () => {
-		const projects = Array.from({ length: 400 }, (_, i) =>
+		const projects = Array.from({ length: N_400 }, (_, i) =>
 			makeProject({ encodedPath: `p-${i}`, name: `/Users/dev/proj-${i}` }),
 		);
 		const { container } = render(
@@ -86,7 +91,7 @@ describe("ProjectList (package)", () => {
 			</div>,
 		);
 		const items = container.querySelectorAll("[data-project-encoded-path]");
-		expect(items.length).toBeLessThan(50);
+		expect(items.length).toBeLessThan(N_50);
 		expect(items.length).toBeGreaterThan(0);
 	});
 });

@@ -1,3 +1,13 @@
+const N_30000 = 30_000;
+const N_500 = 500;
+const N_200 = 200;
+const N_5000 = 5000;
+const N_404 = 404;
+const N_400 = 400;
+const N_15000 = 15_000;
+const N_10000 = 10_000;
+const N_60000 = 60_000;
+
 /**
  * Verify the packed npm artifact for @cookielab.io/klovi under both Node and Bun.
  *
@@ -34,18 +44,18 @@ function fail(_label: string, _err: unknown): void {
 	failed += 1;
 }
 
-async function waitForServer(url: string, timeoutMs = 30_000): Promise<boolean> {
+async function waitForServer(url: string, timeoutMs = N_30000): Promise<boolean> {
 	const start = Date.now();
 	while (Date.now() - start < timeoutMs) {
 		try {
 			const res = await fetch(url);
-			if (res.ok || res.status < 500) {
+			if (res.ok || res.status < N_500) {
 				return true;
 			}
 		} catch {
 			// Server not ready yet
 		}
-		await new Promise((r) => setTimeout(r, 200));
+		await new Promise((r) => setTimeout(r, N_200));
 	}
 	return false;
 }
@@ -62,7 +72,7 @@ function killProcess(proc: ReturnType<typeof spawn>): Promise<void> {
 			if (proc.exitCode === null) {
 				proc.kill("SIGKILL");
 			}
-		}, 5000);
+		}, N_5000);
 	});
 }
 
@@ -70,7 +80,7 @@ async function verifyServerBehavior(serverUrl: string, label: string): Promise<v
 	// GET / serves the app (index.html)
 	try {
 		const res = await fetch(serverUrl);
-		if (res.status !== 200) {
+		if (res.status !== N_200) {
 			throw new Error(`Expected 200, got ${res.status}`);
 		}
 		const text = await res.text();
@@ -85,7 +95,7 @@ async function verifyServerBehavior(serverUrl: string, label: string): Promise<v
 	// SPA fallback: deep link returns index.html
 	try {
 		const res = await fetch(`${serverUrl}/some/deep/route`);
-		if (res.status !== 200) {
+		if (res.status !== N_200) {
 			throw new Error(`Expected 200, got ${res.status}`);
 		}
 		const text = await res.text();
@@ -103,7 +113,7 @@ async function verifyServerBehavior(serverUrl: string, label: string): Promise<v
 			method: "POST",
 			body: "{}",
 		});
-		if (res.status !== 200) {
+		if (res.status !== N_200) {
 			throw new Error(`Expected 200, got ${res.status}`);
 		}
 		const data = (await res.json()) as Record<string, unknown>;
@@ -121,7 +131,7 @@ async function verifyServerBehavior(serverUrl: string, label: string): Promise<v
 			method: "POST",
 			body: "{}",
 		});
-		if (res.status !== 404) {
+		if (res.status !== N_404) {
 			throw new Error(`Expected 404, got ${res.status}`);
 		}
 		ok(`${label}: unknown RPC method returns 404`);
@@ -135,7 +145,7 @@ async function verifyServerBehavior(serverUrl: string, label: string): Promise<v
 			method: "POST",
 			body: "{}",
 		});
-		if (res.status < 400) {
+		if (res.status < N_400) {
 			throw new Error(`Expected 4xx, got ${res.status}`);
 		}
 		ok(`${label}: empty RPC method returns error`);
@@ -163,7 +173,7 @@ console.log("import-ok");
 		const result = execFileSync(cmd, ["test-import.mjs"], {
 			cwd: installDir,
 			encoding: "utf-8",
-			timeout: 15_000,
+			timeout: N_15000,
 			env: { ...Bun.env, NODE_NO_WARNINGS: "1" },
 		});
 		if (!result.includes("import-ok")) {
@@ -182,7 +192,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 		return;
 	}
 
-	const port = 30_000 + Math.floor(Math.random() * 10_000);
+	const port = N_30000 + Math.floor(Math.random() * N_10000);
 	const cmd = runtime === "bun" ? "bun" : "node";
 	const settingsPath = createHermeticSettingsFile(installDir);
 
@@ -222,7 +232,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 				method: "POST",
 				body: "{}",
 			});
-			if (res.status === 200) {
+			if (res.status === N_200) {
 				ok(`${runtime}: bind address is localhost`);
 			}
 		} catch (e) {
@@ -242,7 +252,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 	} catch (e) {
 		fail(`${runtime}: graceful shutdown`, e);
 	}
-	const blockerPort = 30_000 + Math.floor(Math.random() * 10_000);
+	const blockerPort = N_30000 + Math.floor(Math.random() * N_10000);
 	const { createServer } = await import("node:net");
 	const blocker = createServer();
 	await new Promise<void>((res) => blocker.listen(blockerPort, "127.0.0.1", () => res()));
@@ -264,7 +274,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 			const timeout = setTimeout(() => {
 				conflictProc.kill("SIGKILL");
 				res(null);
-			}, 10_000);
+			}, N_10000);
 			conflictProc.on("exit", (code) => {
 				clearTimeout(timeout);
 				res(code);
@@ -287,7 +297,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 
 async function testEnvOverrides(installDir: string): Promise<void> {
 	const cliPath = join(installDir, "node_modules/.bin/klovi");
-	const customPort = 30_000 + Math.floor(Math.random() * 10_000);
+	const customPort = N_30000 + Math.floor(Math.random() * N_10000);
 	const settingsPath = createHermeticSettingsFile(installDir);
 
 	const proc = spawn("node", [cliPath, "--no-browser"], {
@@ -418,7 +428,7 @@ async function main(): Promise<void> {
 		execFileSync("npm", ["install", tarball, "--install-strategy=nested"], {
 			cwd: installDir,
 			encoding: "utf-8",
-			timeout: 60_000,
+			timeout: N_60000,
 		});
 		ok("npm install from tarball succeeded");
 	} catch (e) {

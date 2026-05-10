@@ -9,6 +9,23 @@ import { Effect, Layer } from "effect";
 import { buildOpenCodeTurns, loadOpenCodeSession, type OpenCodeMessage } from "./parser";
 import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
+
+const N_1706000000 = 1_706_000_000;
+const N_100 = 100;
+const N_50 = 50;
+const N_10 = 10;
+const N_5 = 5;
+const N_1706000001 = 1_706_000_001;
+const N_1706000002 = 1_706_000_002;
+const N_300 = 300;
+const N_150 = 150;
+const N_4 = 4;
+const N_3 = 3;
+const N_200 = 200;
+const N_1706000003 = 1_706_000_003;
+const N_0_01 = 0.01;
+const N_500 = 500;
+
 const testDir = join(tmpdir(), `klovi-opencode-parser-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(
@@ -142,8 +159,8 @@ describe("buildOpenCodeTurns", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
-				data: { role: "user", time: { created: 1_706_000_000 } },
-				timeCreated: 1_706_000_000,
+				data: { role: "user", time: { created: N_1706000000 } },
+				timeCreated: N_1706000000,
 				parts: [{ type: "text", text: "Hello, help me fix a bug" }],
 			},
 		];
@@ -165,9 +182,9 @@ describe("buildOpenCodeTurns", () => {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
 					providerID: "anthropic",
-					tokens: { input: 100, output: 50, cache: { read: 10, write: 5 } },
+					tokens: { input: N_100, output: N_50, cache: { read: N_10, write: N_5 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [{ type: "text", text: "I can help you with that!" }],
 			},
 		];
@@ -183,10 +200,10 @@ describe("buildOpenCodeTurns", () => {
 		const textBlock = assistant.contentBlocks[0] as Extract<(typeof assistant.contentBlocks)[number], { type: "text" }>;
 		expect(textBlock.text).toBe("I can help you with that!");
 		expect(assistant.usage).toEqual({
-			inputTokens: 100,
-			outputTokens: 50,
-			cacheReadTokens: 10,
-			cacheCreationTokens: 5,
+			inputTokens: N_100,
+			outputTokens: N_50,
+			cacheReadTokens: N_10,
+			cacheCreationTokens: N_5,
 		});
 	});
 
@@ -197,9 +214,9 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{ type: "reasoning", text: "Let me think about this..." },
 					{ type: "text", text: "Here is my answer." },
@@ -228,9 +245,9 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{
 						type: "tool",
@@ -242,7 +259,7 @@ describe("buildOpenCodeTurns", () => {
 							output: "file contents here",
 							title: "Read file",
 							metadata: {},
-							time: { start: 1_706_000_001, end: 1_706_000_002 },
+							time: { start: N_1706000001, end: N_1706000002 },
 						},
 					},
 				],
@@ -271,9 +288,9 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "gpt-4o",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{
 						type: "tool",
@@ -283,7 +300,7 @@ describe("buildOpenCodeTurns", () => {
 							status: "error",
 							input: { path: "/root/secret" },
 							error: "Permission denied",
-							time: { start: 1_706_000_001, end: 1_706_000_002 },
+							time: { start: N_1706000001, end: N_1706000002 },
 						},
 					},
 				],
@@ -307,9 +324,9 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "gpt-4o",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{
 						type: "tool",
@@ -341,9 +358,9 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{ type: "text", text: "system instructions", ignored: true },
 					{ type: "text", text: "Visible response" },
@@ -370,9 +387,9 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 300, output: 150, cache: { read: 0, write: 0 } },
+					tokens: { input: N_300, output: N_150, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{ type: "reasoning", text: "Thinking about the problem..." },
 					{ type: "text", text: "Let me check the file." },
@@ -398,19 +415,19 @@ describe("buildOpenCodeTurns", () => {
 
 		expect(turns).toHaveLength(1);
 		const assistant = turns[0] as AssistantTurn;
-		expect(assistant.contentBlocks).toHaveLength(4);
+		expect(assistant.contentBlocks).toHaveLength(N_4);
 		expect(assistant.contentBlocks[0]?.type).toBe("thinking");
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 		expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
-		expect(assistant.contentBlocks[3]?.type).toBe("text");
+		expect(assistant.contentBlocks[N_3]?.type).toBe("text");
 	});
 
 	it("handles multiple user-assistant turn pairs", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
-				data: { role: "user", time: { created: 1_706_000_000 } },
-				timeCreated: 1_706_000_000,
+				data: { role: "user", time: { created: N_1706000000 } },
+				timeCreated: N_1706000000,
 				parts: [{ type: "text", text: "Fix the bug" }],
 			},
 			{
@@ -418,15 +435,15 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_001,
+				timeCreated: N_1706000001,
 				parts: [{ type: "text", text: "I found the issue." }],
 			},
 			{
 				id: "msg-3",
-				data: { role: "user", time: { created: 1_706_000_002 } },
-				timeCreated: 1_706_000_002,
+				data: { role: "user", time: { created: N_1706000002 } },
+				timeCreated: N_1706000002,
 				parts: [{ type: "text", text: "Great, apply the fix" }],
 			},
 			{
@@ -434,20 +451,20 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 200, output: 100, cache: { read: 0, write: 0 } },
+					tokens: { input: N_200, output: N_100, cache: { read: 0, write: 0 } },
 				},
-				timeCreated: 1_706_000_003,
+				timeCreated: N_1706000003,
 				parts: [{ type: "text", text: "Done!" }],
 			},
 		];
 
 		const turns = buildOpenCodeTurns(messages);
 
-		expect(turns).toHaveLength(4);
+		expect(turns).toHaveLength(N_4);
 		expect(turns[0]?.kind).toBe("user");
 		expect(turns[1]?.kind).toBe("assistant");
 		expect(turns[2]?.kind).toBe("user");
-		expect(turns[3]?.kind).toBe("assistant");
+		expect(turns[N_3]?.kind).toBe("assistant");
 	});
 
 	it("returns empty turns for empty messages", () => {
@@ -464,18 +481,18 @@ describe("buildOpenCodeTurns", () => {
 					modelID: "claude-sonnet-4-20250514",
 					// No tokens field at message level
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [
 					{ type: "text", text: "Response" },
 					{
 						type: "step-finish",
 						reason: "stop",
-						cost: 0.01,
+						cost: N_0_01,
 						tokens: {
-							input: 500,
-							output: 200,
+							input: N_500,
+							output: N_200,
 							reasoning: 0,
-							cache: { read: 100, write: 50 },
+							cache: { read: N_100, write: N_50 },
 						},
 					},
 				],
@@ -486,10 +503,10 @@ describe("buildOpenCodeTurns", () => {
 
 		const assistant = turns[0] as AssistantTurn;
 		expect(assistant.usage).toEqual({
-			inputTokens: 500,
-			outputTokens: 200,
-			cacheReadTokens: 100,
-			cacheCreationTokens: 50,
+			inputTokens: N_500,
+			outputTokens: N_200,
+			cacheReadTokens: N_100,
+			cacheCreationTokens: N_50,
 		});
 	});
 
@@ -500,10 +517,10 @@ describe("buildOpenCodeTurns", () => {
 				data: {
 					role: "assistant",
 					modelID: "claude-sonnet-4-20250514",
-					tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 					finish: "end_turn",
 				},
-				timeCreated: 1_706_000_000,
+				timeCreated: N_1706000000,
 				parts: [{ type: "text", text: "Done" }],
 			},
 		];
@@ -528,9 +545,9 @@ describe("loadOpenCodeSession", () => {
 			"sess-1",
 			{
 				role: "user",
-				time: { created: 1_706_000_000 },
+				time: { created: N_1706000000 },
 			},
-			1_706_000_000,
+			N_1706000000,
 		);
 		insertPart(db, "part-1", "msg-1", "sess-1", {
 			type: "text",
@@ -546,10 +563,10 @@ describe("loadOpenCodeSession", () => {
 				role: "assistant",
 				modelID: "claude-sonnet-4-20250514",
 				providerID: "anthropic",
-				tokens: { input: 300, output: 150, cache: { read: 50, write: 10 } },
+				tokens: { input: N_300, output: N_150, cache: { read: N_50, write: N_10 } },
 				finish: "end_turn",
 			},
-			1_706_000_001,
+			N_1706000001,
 		);
 		insertPart(db, "part-2", "msg-2", "sess-1", {
 			type: "reasoning",
@@ -569,7 +586,7 @@ describe("loadOpenCodeSession", () => {
 				output: "File updated",
 				title: "Edit file",
 				metadata: {},
-				time: { start: 1_706_000_002, end: 1_706_000_003 },
+				time: { start: N_1706000002, end: N_1706000003 },
 			},
 		});
 
@@ -589,15 +606,15 @@ describe("loadOpenCodeSession", () => {
 		const assistant = session.turns[1] as AssistantTurn;
 		expect(assistant.kind).toBe("assistant");
 		expect(assistant.model).toBe("claude-sonnet-4-20250514");
-		expect(assistant.contentBlocks).toHaveLength(3);
+		expect(assistant.contentBlocks).toHaveLength(N_3);
 		expect(assistant.contentBlocks[0]?.type).toBe("thinking");
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 		expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
 		expect(assistant.usage).toEqual({
-			inputTokens: 300,
-			outputTokens: 150,
-			cacheReadTokens: 50,
-			cacheCreationTokens: 10,
+			inputTokens: N_300,
+			outputTokens: N_150,
+			cacheReadTokens: N_50,
+			cacheCreationTokens: N_10,
 		});
 	});
 
@@ -635,9 +652,9 @@ describe("loadOpenCodeSession", () => {
 			{
 				role: "assistant",
 				modelID: "gpt-4o",
-				tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 			},
-			1_706_000_000,
+			N_1706000000,
 		);
 		insertPart(db, "part-1", "msg-1", "sess-1", {
 			type: "tool",
@@ -647,7 +664,7 @@ describe("loadOpenCodeSession", () => {
 				status: "error",
 				input: { command: "rm -rf /" },
 				error: "Operation not permitted",
-				time: { start: 1_706_000_001, end: 1_706_000_002 },
+				time: { start: N_1706000001, end: N_1706000002 },
 			},
 		});
 
@@ -687,7 +704,7 @@ describe("loadOpenCodeSession", () => {
 			{
 				role: "assistant",
 				modelID: "gpt-4o",
-				tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 			},
 			now + 1,
 		);

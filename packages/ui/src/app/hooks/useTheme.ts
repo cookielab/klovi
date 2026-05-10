@@ -3,6 +3,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
 import { kloviHostBridge } from "../../lib/rpc-client";
 
+
+const N_10 = 10;
+
 const DEFAULT_PRESENTATION_FONT_SIZE = 15;
 const PRESENTATION_FONT_SIZE_STEP = 2;
 const MAX_PRESENTATION_FONT_SIZE = 28;
@@ -81,7 +84,7 @@ export function usePresentationTheme() {
 export function usePresentationFontSize() {
 	const [size, setSize] = useState(() => {
 		const stored = localStorage.getItem("klovi-presentation-font-size");
-		return stored ? Number.parseInt(stored, 10) : DEFAULT_PRESENTATION_FONT_SIZE;
+		return stored ? Number.parseInt(stored, N_10) : DEFAULT_PRESENTATION_FONT_SIZE;
 	});
 
 	const [sameAsGlobal, setSameAsGlobalState] = useState(

@@ -4,6 +4,9 @@ import { Effect } from "effect";
 import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog";
 import { SettingsWriteError } from "./errors";
 
+
+const N_6 = 6;
+
 type UpdateChannel = "stable" | "candidate" | "beta";
 
 type UpdateSettings = {
@@ -46,7 +49,7 @@ function getDefaultSettings(): PluginSettings {
 		},
 		updates: {
 			channel: "stable",
-			checkIntervalHours: 6,
+			checkIntervalHours: N_6,
 			autoDownload: true,
 		},
 	};

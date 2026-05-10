@@ -8,6 +8,22 @@ import { Effect, Layer } from "effect";
 import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery";
 import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
+
+const N_1706000000000 = 1_706_000_000_000;
+const N_1706000005000 = 1_706_000_005_000;
+const N_1706000010000 = 1_706_000_010_000;
+const N_1706000015000 = 1_706_000_015_000;
+const N_1706000020000 = 1_706_000_020_000;
+const N_1706000025000 = 1_706_000_025_000;
+const N_1706000001000 = 1_706_000_001_000;
+const N_1706000000 = 1_706_000_000;
+const N_1706100000 = 1_706_100_000;
+const N_100 = 100;
+const N_50 = 50;
+const N_200 = 200;
+const N_1700000000 = 1_700_000_000;
+const N_1706000000001 = 1_706_000_000_001;
+
 const testDir = join(tmpdir(), `klovi-opencode-discovery-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(
@@ -259,22 +275,22 @@ describe("discoverOpenCodeProjects", () => {
 			"sess-1",
 			"legacy-project",
 			"/Users/dev/legacy-a",
-			1_706_000_000_000,
-			1_706_000_005_000,
+			N_1706000000000,
+			N_1706000005000,
 		]);
 		db.run("INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)", [
 			"sess-2",
 			"legacy-project",
 			"/Users/dev/legacy-a",
-			1_706_000_010_000,
-			1_706_000_015_000,
+			N_1706000010000,
+			N_1706000015000,
 		]);
 		db.run("INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)", [
 			"sess-3",
 			"legacy-project-b",
 			"/Users/dev/legacy-b",
-			1_706_000_020_000,
-			1_706_000_025_000,
+			N_1706000020000,
+			N_1706000025000,
 		]);
 		db.close();
 
@@ -328,15 +344,15 @@ describe("discoverOpenCodeProjects", () => {
 		db.run("INSERT INTO project (id, name, time_created, time_updated) VALUES (?, ?, ?, ?)", [
 			"proj-no-worktree",
 			"No Worktree",
-			1_706_000_000_000,
-			1_706_000_000_000,
+			N_1706000000000,
+			N_1706000000000,
 		]);
 		db.run("INSERT INTO session (id, project_id, directory, time_created, time_updated) VALUES (?, ?, ?, ?, ?)", [
 			"sess-1",
 			"proj-no-worktree",
 			"/Users/dev/fallback",
-			1_706_000_000_000,
-			1_706_000_001_000,
+			N_1706000000000,
+			N_1706000001000,
 		]);
 		db.close();
 
@@ -355,12 +371,12 @@ describe("listOpenCodeSessions", () => {
 		insertSession(db, "sess-1", "proj-1", {
 			title: "Fix the login bug",
 			directory: "/Users/dev/project-a",
-			timeCreated: 1_706_000_000,
+			timeCreated: N_1706000000,
 		});
 		insertSession(db, "sess-2", "proj-1", {
 			title: "Add tests",
 			directory: "/Users/dev/project-a",
-			timeCreated: 1_706_100_000,
+			timeCreated: N_1706100000,
 		});
 
 		// Add an assistant message to get model info
@@ -368,13 +384,13 @@ describe("listOpenCodeSessions", () => {
 			role: "assistant",
 			modelID: "claude-sonnet-4-20250514",
 			providerID: "anthropic",
-			tokens: { input: 100, output: 50, cache: { read: 0, write: 0 } },
+			tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 		});
 		insertMessage(db, "msg-2", "sess-2", {
 			role: "assistant",
 			modelID: "gpt-4o",
 			providerID: "openai",
-			tokens: { input: 200, output: 100, cache: { read: 0, write: 0 } },
+			tokens: { input: N_200, output: N_100, cache: { read: 0, write: 0 } },
 		});
 		db.close();
 
@@ -398,7 +414,7 @@ describe("listOpenCodeSessions", () => {
 		insertSession(db, "sess-1", "proj-1", {
 			title: "",
 			directory: "/Users/dev/project-a",
-			timeCreated: 1_706_000_000,
+			timeCreated: N_1706000000,
 		});
 
 		// Add user message with text part
@@ -408,9 +424,9 @@ describe("listOpenCodeSessions", () => {
 			"sess-1",
 			{
 				role: "user",
-				time: { created: 1_706_000_000 },
+				time: { created: N_1706000000 },
 			},
-			1_706_000_000,
+			N_1706000000,
 		);
 		insertPart(db, "part-1", "msg-1", "sess-1", {
 			type: "text",
@@ -463,12 +479,12 @@ describe("listOpenCodeSessions", () => {
 		insertSession(db, "sess-old", "proj-1", {
 			title: "Old session",
 			directory: "/Users/dev/project-a",
-			timeCreated: 1_700_000_000,
+			timeCreated: N_1700000000,
 		});
 		insertSession(db, "sess-new", "proj-1", {
 			title: "New session",
 			directory: "/Users/dev/project-a",
-			timeCreated: 1_706_000_000,
+			timeCreated: N_1706000000,
 		});
 		db.close();
 
@@ -512,20 +528,20 @@ describe("listOpenCodeSessions", () => {
 			"legacy-sess-1",
 			"legacy-proj",
 			"/Users/dev/legacy-app",
-			1_706_000_000_000,
-			1_706_000_000_000,
+			N_1706000000000,
+			N_1706000000000,
 		]);
 		db.run("INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)", [
 			"legacy-msg-1",
 			"legacy-sess-1",
-			1_706_000_000_000,
-			JSON.stringify({ role: "user", time: { created: 1_706_000_000_000 } }),
+			N_1706000000000,
+			JSON.stringify({ role: "user", time: { created: N_1706000000000 } }),
 		]);
 		db.run("INSERT INTO part (id, message_id, session_id, time_created, data) VALUES (?, ?, ?, ?, ?)", [
 			"legacy-part-1",
 			"legacy-msg-1",
 			"legacy-sess-1",
-			1_706_000_000_001,
+			N_1706000000001,
 			JSON.stringify({ type: "text", text: "Legacy fallback message" }),
 		]);
 		db.close();

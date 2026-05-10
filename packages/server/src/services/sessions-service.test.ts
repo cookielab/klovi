@@ -9,6 +9,11 @@ import { Effect, Layer } from "effect";
 import { PluginRegistry } from "./registry";
 import { getSessionHead, getSessionTail } from "./sessions-service";
 
+
+const N_30 = 30;
+const N_10 = 10;
+const N_5 = 5;
+
 const testDir = join(tmpdir(), `klovi-sessions-service-test-${Date.now()}`);
 
 const testLayer = Layer.merge(
@@ -47,7 +52,7 @@ afterEach(async () => {
 
 describe("getSessionHead / getSessionTail", () => {
 	it("head returns first headSize turns and totalTurns", async () => {
-		await writeSession("-Users-x", "s1", 30);
+		await writeSession("-Users-x", "s1", N_30);
 		const registry = new PluginRegistry();
 		registry.register(claudeCodePlugin, { dataDir: testDir });
 
@@ -55,15 +60,15 @@ describe("getSessionHead / getSessionTail", () => {
 			getSessionHead(registry, {
 				sessionId: "claude-code::s1",
 				project: "-Users-x",
-				headSize: 10,
+				headSize: N_10,
 			}),
 		);
-		expect(result.totalTurns).toBe(30);
-		expect(result.session.turns.length).toBe(10);
+		expect(result.totalTurns).toBe(N_30);
+		expect(result.session.turns.length).toBe(N_10);
 	});
 
 	it("tail returns turns after fromTurn", async () => {
-		await writeSession("-Users-x", "s1", 30);
+		await writeSession("-Users-x", "s1", N_30);
 		const registry = new PluginRegistry();
 		registry.register(claudeCodePlugin, { dataDir: testDir });
 
@@ -78,7 +83,7 @@ describe("getSessionHead / getSessionTail", () => {
 	});
 
 	it("tail returns empty array when fromTurn >= totalTurns", async () => {
-		await writeSession("-Users-x", "s1", 5);
+		await writeSession("-Users-x", "s1", N_5);
 		const registry = new PluginRegistry();
 		registry.register(claudeCodePlugin, { dataDir: testDir });
 

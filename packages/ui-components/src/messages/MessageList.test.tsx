@@ -2,6 +2,11 @@ import { cleanup, render } from "@testing-library/react";
 import type { Turn } from "../types/index";
 import { MessageList } from "./MessageList";
 
+
+const N_500 = 500;
+const N_50 = 50;
+const N_100 = 100;
+
 afterEach(cleanup);
 
 function makeTurn(i: number): Turn {
@@ -15,7 +20,7 @@ function makeTurn(i: number): Turn {
 
 describe("MessageList virtualization", () => {
 	it("renders only a windowed slice when many turns are passed", () => {
-		const turns = Array.from({ length: 500 }, (_, i) => makeTurn(i));
+		const turns = Array.from({ length: N_500 }, (_, i) => makeTurn(i));
 		const { container } = render(
 			<div>
 				<MessageList turns={turns} />
@@ -23,7 +28,7 @@ describe("MessageList virtualization", () => {
 		);
 		const items = container.querySelectorAll("[data-index]");
 		// Window + overscan should be far less than 500.
-		expect(items.length).toBeLessThan(50);
+		expect(items.length).toBeLessThan(N_50);
 		expect(items.length).toBeGreaterThan(0);
 	});
 
@@ -39,7 +44,7 @@ describe("MessageList virtualization", () => {
 	});
 
 	it("appending turns does not reset scrollTop", async () => {
-		const initial = Array.from({ length: 100 }, (_, i) => makeTurn(i));
+		const initial = Array.from({ length: N_100 }, (_, i) => makeTurn(i));
 		const { container, rerender } = render(
 			<div>
 				<MessageList turns={initial} />
@@ -48,10 +53,10 @@ describe("MessageList virtualization", () => {
 		const scrollEl = container.querySelector(".overflow-auto") as HTMLElement | null;
 		expect(scrollEl).not.toBeNull();
 		if (scrollEl) {
-			scrollEl.scrollTop = 500;
+			scrollEl.scrollTop = N_500;
 		}
 
-		const appended = [...initial, ...Array.from({ length: 50 }, (_, i) => makeTurn(100 + i))];
+		const appended = [...initial, ...Array.from({ length: N_50 }, (_, i) => makeTurn(N_100 + i))];
 		rerender(
 			<div>
 				<MessageList turns={appended} />
@@ -59,6 +64,6 @@ describe("MessageList virtualization", () => {
 		);
 
 		await new Promise((resolve) => requestAnimationFrame(resolve));
-		expect((scrollEl as HTMLElement).scrollTop).toBe(500);
+		expect((scrollEl as HTMLElement).scrollTop).toBe(N_500);
 	});
 });

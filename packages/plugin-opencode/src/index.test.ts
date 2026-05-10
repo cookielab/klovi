@@ -8,6 +8,13 @@ import { Effect, Layer } from "effect";
 import { openCodePlugin } from "./index";
 import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
+
+const N_1706000000000 = 1_706_000_000_000;
+const N_1706001000000 = 1_706_001_000_000;
+const N_1706000000001 = 1_706_000_000_001;
+const N_1706000001000 = 1_706_000_001_000;
+const N_1706000001001 = 1_706_000_001_001;
+
 const testDir = join(tmpdir(), `klovi-opencode-index-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(
@@ -71,36 +78,36 @@ function createDbWithSingleSession(): void {
 
 	db.run(
 		"INSERT INTO project (id, worktree, name, time_created, time_updated, sandboxes) VALUES (?, ?, ?, ?, ?, '[]')",
-		["project-1", "/Users/dev/opencode-project", "OpenCode Project", 1_706_000_000_000, 1_706_001_000_000],
+		["project-1", "/Users/dev/opencode-project", "OpenCode Project", N_1706000000000, N_1706001000000],
 	);
 
 	db.run(
 		"INSERT INTO session (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, 'v2', ?, ?)",
-		["session-1", "project-1", "session-1", "/Users/dev/opencode-project", "", 1_706_000_000_000, 1_706_001_000_000],
+		["session-1", "project-1", "session-1", "/Users/dev/opencode-project", "", N_1706000000000, N_1706001000000],
 	);
 
 	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
 		"msg-1",
 		"session-1",
-		1_706_000_000_000,
-		1_706_000_000_000,
-		JSON.stringify({ role: "user", time: { created: 1_706_000_000_000 } }),
+		N_1706000000000,
+		N_1706000000000,
+		JSON.stringify({ role: "user", time: { created: N_1706000000000 } }),
 	]);
 
 	db.run("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)", [
 		"part-1",
 		"msg-1",
 		"session-1",
-		1_706_000_000_001,
-		1_706_000_000_001,
+		N_1706000000001,
+		N_1706000000001,
 		JSON.stringify({ type: "text", text: "Please help me debug" }),
 	]);
 
 	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
 		"msg-2",
 		"session-1",
-		1_706_000_001_000,
-		1_706_000_001_000,
+		N_1706000001000,
+		N_1706000001000,
 		JSON.stringify({ role: "assistant", modelID: "gpt-5", finish: "stop" }),
 	]);
 
@@ -108,8 +115,8 @@ function createDbWithSingleSession(): void {
 		"part-2",
 		"msg-2",
 		"session-1",
-		1_706_000_001_001,
-		1_706_000_001_001,
+		N_1706000001001,
+		N_1706000001001,
 		JSON.stringify({ type: "text", text: "Sure, I can help." }),
 	]);
 

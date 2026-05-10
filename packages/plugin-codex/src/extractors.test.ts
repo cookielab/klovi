@@ -1,5 +1,12 @@
 import { codexInputFormatters, codexSummaryExtractors } from "./extractors";
 
+
+const N_100 = 100;
+const N_83 = 83;
+const N_20 = 20;
+const N_63 = 63;
+const N_123 = 123;
+
 function requireHandler(
 	handlers: Record<string, (input: Record<string, unknown>) => string>,
 	key: string,
@@ -13,7 +20,7 @@ function requireHandler(
 
 describe("codexSummaryExtractors", () => {
 	it("command_execution summary truncates long command", () => {
-		const longCommand = "x".repeat(100);
+		const longCommand = "x".repeat(N_100);
 		const summary = requireHandler(
 			codexSummaryExtractors,
 			"command_execution",
@@ -21,7 +28,7 @@ describe("codexSummaryExtractors", () => {
 			command: longCommand,
 		});
 
-		expect(summary.length).toBe(83);
+		expect(summary.length).toBe(N_83);
 		expect(summary.endsWith("...")).toBe(true);
 	});
 
@@ -44,10 +51,10 @@ describe("codexSummaryExtractors", () => {
 	});
 
 	it("web_search summary truncates long query", () => {
-		const query = "search ".repeat(20);
+		const query = "search ".repeat(N_20);
 		const summary = requireHandler(codexSummaryExtractors, "web_search")({ query: query });
 
-		expect(summary.length).toBe(63);
+		expect(summary.length).toBe(N_63);
 		expect(summary.endsWith("...")).toBe(true);
 	});
 });
@@ -77,7 +84,7 @@ describe("codexInputFormatters", () => {
 			"file_change",
 		)({
 			changes: "oops",
-			id: 123,
+			id: N_123,
 		});
 		expect(formatted).toContain('"changes": "oops"');
 		expect(formatted).toContain('"id": 123');

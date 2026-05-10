@@ -1,5 +1,9 @@
 import { iterateJsonl } from "./jsonl-utils";
 
+
+const N_3 = 3;
+const N_5 = 5;
+
 describe("iterateJsonl", () => {
 	it("visits parsed lines with line metadata", () => {
 		const seen: unknown[] = [];
@@ -24,7 +28,7 @@ describe("iterateJsonl", () => {
 				parsed: { b: 2 },
 				line: '{"b":2}',
 				lineIndex: 2,
-				lineNumber: 3,
+				lineNumber: N_3,
 			},
 		]);
 	});
@@ -51,7 +55,7 @@ describe("iterateJsonl", () => {
 			(ctx) => {
 				values.push(ctx.parsed);
 			},
-			{ startAt: -5, maxLines: 1 },
+			{ startAt: -N_5, maxLines: 1 },
 		);
 
 		expect(values).toEqual([{ x: 1 }]);

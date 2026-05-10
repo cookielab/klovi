@@ -7,6 +7,9 @@ import { FetchError } from "../utilities/FetchError";
 import { formatFullDateTime, formatTime } from "../utilities/formatters";
 
 
+
+const N_8 = 8;
+
 const T_SP_1 = " ";
 const T_LOADING_SESSIONS = "Loading sessions...";
 const T_PROJECTS = "← Projects";
@@ -118,7 +121,7 @@ function SessionList({
 		count: sessions.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => SESSION_ROW_HEIGHT,
-		overscan: 8,
+		overscan: N_8,
 	});
 
 	if (loading) {

@@ -2,6 +2,14 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { useFontSize } from "./useFontSize";
 import { resolveTheme, useTheme } from "./useTheme";
 
+
+const N_15 = 15;
+const N_28 = 28;
+const N_26 = 26;
+const N_5 = 5;
+const N_10 = 10;
+const N_50 = 50;
+
 const THEME_KEY = "klovi-theme";
 const FONT_SIZE_KEY = "klovi-font-size";
 const originalMatchMedia = globalThis.matchMedia;
@@ -209,7 +217,7 @@ describe("useFontSize", () => {
 	it("defaults to 15 and writes css var + storage", () => {
 		const { result } = renderHook(() => useFontSize());
 
-		expect(result.current.size).toBe(15);
+		expect(result.current.size).toBe(N_15);
 		expect(document.documentElement.style.getPropertyValue("--font-size-base")).toBe("15px");
 		expect(localStorage.getItem(FONT_SIZE_KEY)).toBe("15");
 	});
@@ -218,18 +226,18 @@ describe("useFontSize", () => {
 		localStorage.setItem(FONT_SIZE_KEY, "28");
 		const { result } = renderHook(() => useFontSize());
 
-		expect(result.current.size).toBe(28);
+		expect(result.current.size).toBe(N_28);
 
 		act(() => result.current.increase());
-		expect(result.current.size).toBe(28);
+		expect(result.current.size).toBe(N_28);
 
 		act(() => result.current.decrease());
-		expect(result.current.size).toBe(26);
+		expect(result.current.size).toBe(N_26);
 
-		act(() => result.current.set(5));
-		expect(result.current.size).toBe(10);
+		act(() => result.current.set(N_5));
+		expect(result.current.size).toBe(N_10);
 
-		act(() => result.current.set(50));
-		expect(result.current.size).toBe(28);
+		act(() => result.current.set(N_50));
+		expect(result.current.size).toBe(N_28);
 	});
 });

@@ -6,6 +6,9 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
 import { extractFirstHeading, loadCursorPlanSession, parsePlanFrontmatter, readPlanDisplayName } from "./plans";
 
+
+const N_1706000000000 = 1_706_000_000_000;
+
 const testDir = join(tmpdir(), `klovi-cursor-plans-test-${Date.now()}`);
 
 function runEffect<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>) {
@@ -52,8 +55,8 @@ describe("cursor plans", () => {
 				projectPath: "/tmp/project",
 				planId: "plan-1",
 				filePath: planPath,
-				createdAtMs: 1_706_000_000_000,
-				lastUpdatedAtMs: 1_706_000_000_000,
+				createdAtMs: N_1706000000000,
+				lastUpdatedAtMs: N_1706000000000,
 				createdBy: "composer-1",
 				timestamp: "2024-01-11T19:06:40.000Z",
 				firstMessage: "Auth rollout",

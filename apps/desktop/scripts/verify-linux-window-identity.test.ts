@@ -1,5 +1,16 @@
 import { formatLaunchFailure, parseArgs, parsePidList, selectWindowCandidate } from "./verify-linux-window-identity";
 
+
+const N_123 = 123;
+const N_456 = 456;
+const N_789 = 789;
+const N_999 = 999;
+const N_321 = 321;
+const N_654 = 654;
+const N_777 = 777;
+const N_127 = 127;
+const N_1234 = 1234;
+
 describe("parseArgs", () => {
 	it("accepts a single bundle path", () => {
 		expect(parseArgs(["bun", "verify-linux-window-identity.ts", "/tmp/Klovi"])).toEqual({
@@ -10,7 +21,7 @@ describe("parseArgs", () => {
 
 describe("parsePidList", () => {
 	it("parses ps output with mixed whitespace", () => {
-		expect(parsePidList(" 123\n456 \n\n 789\n")).toEqual([123, 456, 789]);
+		expect(parsePidList(" 123\n456 \n\n 789\n")).toEqual([N_123, N_456, N_789]);
 	});
 });
 
@@ -20,18 +31,18 @@ describe("selectWindowCandidate", () => {
 			[
 				{
 					id: "0x1",
-					pid: 999,
+					pid: N_999,
 					wmClass: '"Klovi", "Klovi"',
 					name: "Klovi",
 				},
 				{
 					id: "0x2",
-					pid: 321,
+					pid: N_321,
 					wmClass: '"Klovi", "Klovi"',
 					name: "Klovi",
 				},
 			],
-			new Set([321]),
+			new Set([N_321]),
 			new Set<string>(),
 		);
 
@@ -43,12 +54,12 @@ describe("selectWindowCandidate", () => {
 			[
 				{
 					id: "0x1",
-					pid: 999,
+					pid: N_999,
 					wmClass: '"Klovi", "Klovi"',
 					name: "Klovi",
 				},
 			],
-			new Set([321]),
+			new Set([N_321]),
 			new Set(["0x0"]),
 		);
 
@@ -60,24 +71,24 @@ describe("selectWindowCandidate", () => {
 			[
 				{
 					id: "0x1",
-					pid: 321,
+					pid: N_321,
 					wmClass: '"ElectrobunKitchenSink", "ElectrobunKitchenSink"',
 					name: "Klovi",
 				},
 				{
 					id: "0x2",
-					pid: 654,
+					pid: N_654,
 					wmClass: '"Klovi", "Klovi"',
 					name: "Browser",
 				},
 				{
 					id: "0x3",
-					pid: 777,
+					pid: N_777,
 					wmClass: '"Klovi", "Klovi"',
 					name: "Klovi",
 				},
 			],
-			new Set([321]),
+			new Set([N_321]),
 			new Set(["0x3"]),
 		);
 
@@ -89,10 +100,10 @@ describe("formatLaunchFailure", () => {
 	it("includes launcher exit diagnostics when the process exits early", () => {
 		const message = formatLaunchFailure({
 			lastObservedWindows: [],
-			launchExitCode: 127,
+			launchExitCode: N_127,
 			launchStderr: "error while loading shared libraries: libwebkit2gtk-4.1.so.0",
 			launchStdout: "Launcher starting on linux...",
-			rootPid: 1234,
+			rootPid: N_1234,
 		});
 
 		expect(message).toContain("Timed out waiting for a Klovi window after launching pid 1234.");
@@ -107,7 +118,7 @@ describe("formatLaunchFailure", () => {
 			lastObservedWindows: [
 				{
 					id: "0x9",
-					pid: 321,
+					pid: N_321,
 					wmClass: '"Browser", "Browser"',
 					name: "Browser",
 				},
@@ -115,7 +126,7 @@ describe("formatLaunchFailure", () => {
 			launchExitCode: null,
 			launchStderr: "",
 			launchStdout: "",
-			rootPid: 456,
+			rootPid: N_456,
 		});
 
 		expect(message).toContain('0x9 pid=321 wmClass="Browser", "Browser" name=Browser');

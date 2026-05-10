@@ -2,6 +2,9 @@ import { act, renderHook } from "@testing-library/react";
 import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../../shared/types";
 import { usePresentationMode } from "./usePresentationMode";
 
+
+const N_3 = 3;
+
 function userTurn(text = "hello"): UserTurn {
 	return {
 		kind: "user",
@@ -71,9 +74,9 @@ describe("usePresentationMode", () => {
 		});
 
 		it("assistant turn with thinking + text + tool calls = N steps", () => {
-			const turns: Turn[] = [assistantTurn({ thinking: 1, text: 1, tools: 3 })];
+			const turns: Turn[] = [assistantTurn({ thinking: 1, text: 1, tools: N_3 })];
 			const { result } = renderHook(() => usePresentationMode(turns));
-			expect(result.current.totalSteps).toBe(3); // thinking + text + 3 tools grouped
+			expect(result.current.totalSteps).toBe(N_3); // thinking + text + 3 tools grouped
 		});
 
 		it("empty assistant turn = minimum 1 step", () => {
@@ -214,7 +217,7 @@ describe("usePresentationMode", () => {
 
 			// step 3: third sub-step (tool call)
 			act(() => result.current.next());
-			expect(result.current.visibleSubSteps.get(1)).toBe(3);
+			expect(result.current.visibleSubSteps.get(1)).toBe(N_3);
 		});
 	});
 

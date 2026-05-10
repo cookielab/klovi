@@ -1,6 +1,10 @@
 import { resolve } from "node:path";
 import { parsePort, resolveCliConfig, resolveStaticDir } from "./cli-config";
 
+
+const N_4444 = 4444;
+const N_9999 = 9999;
+
 describe("cli-config", () => {
 	const baseDir = resolve(import.meta.dir, "src-under-test");
 
@@ -19,7 +23,7 @@ describe("cli-config", () => {
 	});
 
 	it("parsePort prefers --port over env", () => {
-		expect(parsePort(["bun", "cli.ts", "--port", "4444"], { KLOVI_PORT: "5555" })).toBe(4444);
+		expect(parsePort(["bun", "cli.ts", "--port", "4444"], { KLOVI_PORT: "5555" })).toBe(N_4444);
 	});
 
 	it("resolveCliConfig reads host, static dir, and settings env overrides", () => {
@@ -36,7 +40,7 @@ describe("cli-config", () => {
 		});
 
 		expect(config.host).toBe("0.0.0.0");
-		expect(config.port).toBe(9999);
+		expect(config.port).toBe(N_9999);
 		expect(config.staticDir).toBe("/tmp/custom-static");
 		expect(config.settingsPath).toBe("/tmp/custom-settings.json");
 		expect(config.openBrowser).toBe(true);

@@ -12,6 +12,10 @@ import { buildCursorIndex, discoverCursorProjects, listCursorSessions } from "./
 import { cursorPlugin } from "./index";
 import { buildTurnsFromBubbles, loadCursorSession } from "./parser";
 
+
+const N_7 = 7;
+const N_1000 = 1000;
+
 const TEST_SQLITE_LAYER = Layer.succeed(SqliteClientTag, {
 	open: (dbPath: string, options?: { readonly: boolean }) =>
 		Effect.try({
@@ -148,7 +152,7 @@ describe("cursor plugin", () => {
 			[
 				{ bubbleId: "user-1", type: 1, text: "Inspect the auth flow" },
 				{ bubbleId: "assistant-1", type: 2, text: "I checked the main handler." },
-				{ bubbleId: "assistant-2", type: 2, capabilityType: 7, thinking: { text: "Need to compare routes." } },
+				{ bubbleId: "assistant-2", type: 2, capabilityType: N_7, thinking: { text: "Need to compare routes." } },
 				{
 					bubbleId: "assistant-3",
 					type: 2,
@@ -193,7 +197,7 @@ describe("cursor plugin", () => {
 				composerId: "composer-1",
 				name: "Auth implementation",
 				createdAt: CREATED_AT_MS,
-				lastUpdatedAt: CREATED_AT_MS + 1000,
+				lastUpdatedAt: CREATED_AT_MS + N_1000,
 				unifiedMode: "agent",
 			},
 		]);
@@ -369,7 +373,7 @@ describe("cursor plugin", () => {
 				"bubbleId:composer-1:assistant-2": JSON.stringify({
 					bubbleId: "assistant-2",
 					type: 2,
-					capabilityType: 7,
+					capabilityType: N_7,
 					thinking: { text: "Need to compare middleware branches." },
 				}),
 				"bubbleId:composer-1:assistant-3": JSON.stringify({

@@ -6,6 +6,9 @@ import { ImageLightbox } from "../utilities/ImageLightbox";
 import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults";
 
 
+
+const N_200 = 200;
+
 const T_OUTPUT = "Output";
 const T_TRUNCATED = "... (truncated)";
 
@@ -35,7 +38,7 @@ function ToolResultImageButton({
 
 	return (
 		<button type="button" className="group inline-block cursor-pointer [all:unset]" onClick={handleClick}>
-			<img className={IMAGE_CLASSES} src={src} alt={`Tool result ${index + 1}`} width={200} height={200} />
+			<img className={IMAGE_CLASSES} src={src} alt={`Tool result ${index + 1}`} width={N_200} height={N_200} />
 		</button>
 	);
 }

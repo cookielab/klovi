@@ -27,6 +27,10 @@ import {
 } from "./updater";
 import { cleanupUpdates, downloadUpdate, getCurrentStatus } from "./updater-service";
 
+
+const N_4 = 4;
+const N_3 = 3;
+
 const { semver } = Bun;
 
 describe("semver.order", () => {
@@ -119,7 +123,7 @@ describe("filterReleasesByChannel", () => {
 
 	it("beta returns all releases", () => {
 		const filtered = filterReleasesByChannel(releases, "beta");
-		expect(filtered).toHaveLength(4);
+		expect(filtered).toHaveLength(N_4);
 	});
 });
 
@@ -165,7 +169,7 @@ describe("filterReleasesByChannel ignores GitHub prerelease flag", () => {
 	it("all tags accepted by beta regardless of prerelease flag", () => {
 		const releases = [makeRelease("1.2.3", true), makeRelease("1.2.3-rc.1", false), makeRelease("1.2.3-beta.1", false)];
 		const filtered = filterReleasesByChannel(releases, "beta");
-		expect(filtered).toHaveLength(3);
+		expect(filtered).toHaveLength(N_3);
 	});
 });
 

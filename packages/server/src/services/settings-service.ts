@@ -5,6 +5,10 @@ import { type SettingsWriteError, UnknownPluginError } from "./errors";
 import type { PluginSettings, UpdateChannel } from "./settings";
 import { loadSettings, saveSettings } from "./settings";
 
+
+const N_6 = 6;
+const N_24 = 24;
+
 type PluginSettingInfo = {
 	id: string;
 	displayName: string;
@@ -124,13 +128,13 @@ function updateUpdateSettings(
 	return Effect.gen(function* () {
 		const settings = yield* loadSettings(settingsPath);
 		if (!settings.updates) {
-			settings.updates = { channel: "stable", checkIntervalHours: 6, autoDownload: true };
+			settings.updates = { channel: "stable", checkIntervalHours: N_6, autoDownload: true };
 		}
 		if (params.channel !== undefined) {
 			settings.updates.channel = params.channel;
 		}
 		if (params.checkIntervalHours !== undefined) {
-			const clamped = Math.max(1, Math.min(24, Math.round(params.checkIntervalHours)));
+			const clamped = Math.max(1, Math.min(N_24, Math.round(params.checkIntervalHours)));
 			settings.updates.checkIntervalHours = clamped;
 		}
 		if (params.autoDownload !== undefined) {

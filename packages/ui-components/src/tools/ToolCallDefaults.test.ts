@@ -8,6 +8,11 @@ import {
 	truncateOutput,
 } from "./ToolCallDefaults";
 
+
+const N_10 = 10;
+const N_7 = 7;
+const N_2050 = 2050;
+
 function call(name: string, input: Record<string, unknown> = {}): ToolCallWithResult {
 	return {
 		toolUseId: "tool-1",
@@ -37,7 +42,7 @@ describe("truncateOutput", () => {
 	});
 
 	it("truncates output at MAX_OUTPUT_LENGTH", () => {
-		const long = "x".repeat(MAX_OUTPUT_LENGTH + 10);
+		const long = "x".repeat(MAX_OUTPUT_LENGTH + N_10);
 		const truncated = truncateOutput(long);
 
 		expect(truncated.length).toBe(MAX_OUTPUT_LENGTH);
@@ -55,7 +60,7 @@ describe("getToolSummary", () => {
 
 	it("falls back to built-in extractors", () => {
 		expect(getToolSummary(call("Read", { file_path: "/tmp/file.ts" }))).toBe("/tmp/file.ts");
-		expect(getToolSummary(call("TaskUpdate", { taskId: 7, status: "done" }))).toBe("#7 → done");
+		expect(getToolSummary(call("TaskUpdate", { taskId: N_7, status: "done" }))).toBe("#7 → done");
 		expect(getToolSummary(call("AskUserQuestion", { questions: [{ question: "What now?" }] }))).toBe("What now?");
 	});
 
@@ -112,7 +117,7 @@ describe("formatToolInput", () => {
 		const writeText = formatToolInput(
 			call("Write", {
 				file_path: "/tmp/b.ts",
-				content: "x".repeat(2050),
+				content: "x".repeat(N_2050),
 			}),
 		);
 

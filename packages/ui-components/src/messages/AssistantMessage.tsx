@@ -8,6 +8,9 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ThinkingBlock } from "./ThinkingBlock";
 
 
+
+const N_40 = 40;
+
 const T_IN = "in /";
 const T_SP_1 = " ";
 const T_OUT = "out";
@@ -38,7 +41,7 @@ function contentBlockKey(block: ContentBlock, index: number): string {
 		return `tool-${block.call.toolUseId}`;
 	}
 	if (block.type === "thinking") {
-		const thinkingKeyLength = 40;
+		const thinkingKeyLength = N_40;
 		return `thinking-${block.block.text.slice(0, thinkingKeyLength)}-${index}`;
 	}
 	return `text-${index}`;

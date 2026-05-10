@@ -3,15 +3,24 @@ import type { DashboardStats } from "../../../shared/types";
 import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { PackageDashboardStats } from "./PackageDashboardStats";
 
+
+const N_3 = 3;
+const N_10 = 10;
+const N_5 = 5;
+const N_4 = 4;
+const N_7 = 7;
+const N_2500 = 2500;
+const N_9 = 9;
+
 function makeStats(projects: number): DashboardStats {
 	return {
 		projects: projects,
 		sessions: 2,
-		messages: 3,
+		messages: N_3,
 		todaySessions: 1,
 		thisWeekSessions: 2,
-		inputTokens: 10,
-		outputTokens: 5,
+		inputTokens: N_10,
+		outputTokens: N_5,
 		cacheReadTokens: 0,
 		cacheCreationTokens: 0,
 		toolCalls: 1,
@@ -42,9 +51,9 @@ describe("PackageDashboardStats", () => {
 			getStats: () => {
 				getStatsCalls += 1;
 				if (getStatsCalls === 1) {
-					return Promise.resolve({ stats: makeStats(4), refreshing: true, cachedAt: "2026-04-22T10:00:00.000Z" });
+					return Promise.resolve({ stats: makeStats(N_4), refreshing: true, cachedAt: "2026-04-22T10:00:00.000Z" });
 				}
-				return Promise.resolve({ stats: makeStats(7), refreshing: false, cachedAt: "2026-04-22T10:00:01.000Z" });
+				return Promise.resolve({ stats: makeStats(N_7), refreshing: false, cachedAt: "2026-04-22T10:00:01.000Z" });
 			},
 		});
 
@@ -63,7 +72,7 @@ describe("PackageDashboardStats", () => {
 				expect(projectsLabel.previousSibling?.textContent).toBe("7");
 				expect(screen.queryByText("Refreshing stats...")).toBeNull();
 			},
-			{ timeout: 2500 },
+			{ timeout: N_2500 },
 		);
 	});
 
@@ -93,7 +102,7 @@ describe("PackageDashboardStats", () => {
 		});
 
 		await act(async () => {
-			listener?.(makeStats(9));
+			listener?.(makeStats(N_9));
 			await Promise.resolve();
 		});
 

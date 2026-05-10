@@ -14,6 +14,9 @@ import { SidebarButton } from "./Layout/SidebarButton";
 import { Modal } from "./Modal/Modal";
 
 
+
+const N_640 = 640;
+
 const T_SAVE = "Save";
 const T_HIDDEN_CONTENT = "Hidden content";
 const T_INNER = "Inner";
@@ -68,7 +71,7 @@ describe("design-system components", () => {
 		const onClose = mock(() => undefined);
 
 		const { getByRole, getByText, rerender } = render(
-			<Modal open={true} onClose={onClose} width={640}>
+			<Modal open={true} onClose={onClose} width={N_640}>
 				<button type="button"><Text>{T_INNER}</Text></button>
 			</Modal>,
 		);

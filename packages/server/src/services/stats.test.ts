@@ -6,6 +6,16 @@ import type { ToolPlugin } from "./plugin-types";
 import { PluginRegistry } from "./registry";
 import { scanStats } from "./stats";
 
+
+const N_100 = 100;
+const N_40 = 40;
+const N_8 = 8;
+const N_60 = 60;
+const N_20 = 20;
+const N_4 = 4;
+const N_160 = 160;
+const N_6 = 6;
+
 const testLayer = Layer.merge(
 	NodeFileSystem.layer,
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
@@ -120,8 +130,8 @@ describe("scanStats", () => {
 	it("aggregates multi-tool style stats from registry sessions", async () => {
 		const registry = new PluginRegistry();
 
-		const s1 = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 100, 40);
-		const s2 = makeSession("s2", "project-1", isoDaysAgo(8), "gpt-5", 60, 20);
+		const s1 = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", N_100, N_40);
+		const s2 = makeSession("s2", "project-1", isoDaysAgo(N_8), "gpt-5", N_60, N_20);
 
 		const list: SessionSummary[] = [
 			{
@@ -149,14 +159,14 @@ describe("scanStats", () => {
 		expect(stats.sessions).toBe(2);
 		expect(stats.todaySessions).toBe(1);
 		expect(stats.thisWeekSessions).toBe(1);
-		expect(stats.messages).toBe(4);
+		expect(stats.messages).toBe(N_4);
 		expect(stats.toolCalls).toBe(2);
-		expect(stats.inputTokens).toBe(160);
-		expect(stats.outputTokens).toBe(60);
-		expect(stats.cacheReadTokens).toBe(6);
-		expect(stats.cacheCreationTokens).toBe(4);
-		expect(stats.models["claude-opus"]?.inputTokens).toBe(100);
-		expect(stats.models["gpt-5"]?.outputTokens).toBe(20);
+		expect(stats.inputTokens).toBe(N_160);
+		expect(stats.outputTokens).toBe(N_60);
+		expect(stats.cacheReadTokens).toBe(N_6);
+		expect(stats.cacheCreationTokens).toBe(N_4);
+		expect(stats.models["claude-opus"]?.inputTokens).toBe(N_100);
+		expect(stats.models["gpt-5"]?.outputTokens).toBe(N_20);
 	});
 
 	it("keeps project/session counts when session loading fails", async () => {

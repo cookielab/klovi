@@ -6,6 +6,9 @@ import { Effect } from "effect";
 import type { PluginSettings } from "./settings";
 import { getDefaultSettings, loadSettings, saveSettings } from "./settings";
 
+
+const N_6 = 6;
+
 const testDir = join(tmpdir(), `klovi-settings-test-${Date.now()}`);
 
 function settingsPath(): string {
@@ -72,7 +75,7 @@ describe("settings", () => {
 		const settings = getDefaultSettings();
 		expect(settings.updates).toEqual({
 			channel: "stable",
-			checkIntervalHours: 6,
+			checkIntervalHours: N_6,
 			autoDownload: true,
 		});
 	});

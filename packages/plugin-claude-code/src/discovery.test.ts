@@ -7,6 +7,13 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { classifySessionTypes, discoverClaudeProjects, listClaudeSessions } from "./discovery";
 
+
+const N_30 = 30;
+const N_15 = 15;
+const N_14 = 14;
+const N_3 = 3;
+const N_4 = 4;
+
 const testDir = join(tmpdir(), `klovi-claude-discovery-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(
@@ -146,8 +153,8 @@ describe("claude-code discovery", () => {
 		const projectId = "-Users-dev-many";
 		// Create 30 sessions with interleaved (non-monotonic) timestamps in line 1.
 		// Writes run in parallel — listClaudeSessions sorts by line-1 `timestamp`, not mtime.
-		const writes = Array.from({ length: 30 }, (_, i) => {
-			const ts = `2025-01-${(15 - (i % 14)).toString().padStart(2, "0")}T10:${i.toString().padStart(2, "0")}:00.000Z`;
+		const writes = Array.from({ length: N_30 }, (_, i) => {
+			const ts = `2025-01-${(N_15 - (i % N_14)).toString().padStart(2, "0")}T10:${i.toString().padStart(2, "0")}:00.000Z`;
 			return writeSession(projectId, `session-${i.toString().padStart(2, "0")}`, [
 				JSON.stringify({
 					type: "user",
@@ -245,7 +252,7 @@ describe("classifySessionTypes", () => {
 		expect(sessions[0]?.sessionType).toBe("plan");
 		expect(sessions[1]?.sessionType).toBe("implementation");
 		expect(sessions[2]?.sessionType).toBe("plan");
-		expect(sessions[3]?.sessionType).toBe("implementation");
-		expect(sessions[4]?.sessionType).toBeUndefined();
+		expect(sessions[N_3]?.sessionType).toBe("implementation");
+		expect(sessions[N_4]?.sessionType).toBeUndefined();
 	});
 });

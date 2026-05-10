@@ -1,6 +1,10 @@
 import { RpcError } from "./rpc-error";
 import { type KloviServer, startKloviServer } from "./server";
 
+
+const N_200 = 200;
+const N_404 = 404;
+
 describe("RPC dispatch", () => {
 	let server: KloviServer;
 
@@ -22,7 +26,7 @@ describe("RPC dispatch", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { version: string; commit: string };
 		expect(data).toHaveProperty("version");
 		expect(data).toHaveProperty("commit");
@@ -33,7 +37,7 @@ describe("RPC dispatch", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 		const data = (await res.json()) as { error: string };
 		expect(data.error).toContain("Unknown method");
 	});
@@ -43,7 +47,7 @@ describe("RPC dispatch", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { ok: boolean };
 		expect(data).toEqual({ ok: true });
 	});
@@ -51,8 +55,8 @@ describe("RPC dispatch", () => {
 
 describe("RpcError", () => {
 	it("has status and message", () => {
-		const err = new RpcError(404, "Not found");
-		expect(err.status).toBe(404);
+		const err = new RpcError(N_404, "Not found");
+		expect(err.status).toBe(N_404);
 		expect(err.message).toBe("Not found");
 		expect(err).toBeInstanceOf(Error);
 	});

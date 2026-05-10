@@ -3,6 +3,9 @@ import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
 import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
 import { useTheme } from "../../hooks/useTheme";
 
+
+const N_1_5 = 1.5;
+
 const TRAILING_NEWLINE_REGEX = /\n$/u;
 
 type CodeBoxProps = {
@@ -18,7 +21,7 @@ const CUSTOM_STYLE = {
 	padding: "12px 16px",
 	background: "var(--color-surface-code)",
 	fontSize: "0.85em",
-	lineHeight: 1.5,
+	lineHeight: N_1_5,
 };
 
 export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps): React.ReactNode {

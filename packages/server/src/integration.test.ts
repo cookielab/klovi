@@ -1,5 +1,9 @@
 import { type KloviServer, startKloviServer } from "./server";
 
+
+const N_200 = 200;
+const N_404 = 404;
+
 /**
  * Integration test: real server + HTTP client round-trip.
  * This tests the seam between packages/server and packages/ui's createHttpClient.
@@ -26,7 +30,7 @@ describe("server + HTTP client integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { version: string; commit: string };
 		expect(data.version).toBe("1.2.3");
 		expect(data.commit).toBe("abc123");
@@ -37,7 +41,7 @@ describe("server + HTTP client integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { firstLaunch: boolean };
 		expect(typeof data.firstLaunch).toBe("boolean");
 	});
@@ -47,7 +51,7 @@ describe("server + HTTP client integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { projects: unknown[] };
 		expect(Array.isArray(data.projects)).toBe(true);
 	});
@@ -57,7 +61,7 @@ describe("server + HTTP client integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { plugins: unknown[] };
 		expect(Array.isArray(data.plugins)).toBe(true);
 	});
@@ -67,7 +71,7 @@ describe("server + HTTP client integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { showSecurityWarning: boolean };
 		expect(typeof data.showSecurityWarning).toBe("boolean");
 	});
@@ -76,7 +80,7 @@ describe("server + HTTP client integration", () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "GET",
 		});
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 	});
 
 	it("CORS headers not required for same-origin requests", async () => {
@@ -84,6 +88,6 @@ describe("server + HTTP client integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 	});
 });

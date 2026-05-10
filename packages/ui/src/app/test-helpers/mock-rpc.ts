@@ -3,6 +3,9 @@ import type { KloviClient } from "../../lib/client";
 import { KloviRuntimeProvider } from "../../lib/context";
 import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "../../lib/host-bridge";
 
+
+const N_6 = 6;
+
 type MockClientOverrides = {
 	[K in keyof KloviClient]?: KloviClient[K];
 };
@@ -83,13 +86,13 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
 		getUpdateSettings: () =>
 			Promise.resolve({
 				channel: "stable" as const,
-				checkIntervalHours: 6,
+				checkIntervalHours: N_6,
 				autoDownload: true,
 			}),
 		updateUpdateSettings: () =>
 			Promise.resolve({
 				channel: "stable" as const,
-				checkIntervalHours: 6,
+				checkIntervalHours: N_6,
 				autoDownload: true,
 			}),
 		checkForUpdate: () => Promise.resolve({ status: "up-to-date" as const, currentVersion: "test" }),

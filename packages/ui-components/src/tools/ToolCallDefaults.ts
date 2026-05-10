@@ -1,6 +1,9 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type { ToolCallWithResult } from "../types/index";
 
+
+const N_60 = 60;
+
 const MAX_OUTPUT_LENGTH = 5000;
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_THINKING_PREVIEW = 100;
@@ -28,7 +31,7 @@ function truncateOutput(s: string): string {
 function getAskUserQuestionSummary(input: Input): string {
 	if (Array.isArray(input["questions"]) && input["questions"].length > 0) {
 		const q = input["questions"][0] as Record<string, unknown>;
-		return truncate(String(q["question"] || ""), 60);
+		return truncate(String(q["question"] || ""), N_60);
 	}
 	return "";
 }
@@ -38,7 +41,7 @@ const fileSummaryExtractors: Record<string, SummaryExtractor> = {
 	Write: (i) => String(i["file_path"] || ""),
 	Edit: (i) => String(i["file_path"] || ""),
 	Glob: (i) => String(i["pattern"] || ""),
-	Grep: (i) => truncate(String(i["pattern"] || ""), 60),
+	Grep: (i) => truncate(String(i["pattern"] || ""), N_60),
 	NotebookEdit: (i) => String(i["notebook_path"] || ""),
 	NotebookRead: (i) => String(i["notebook_path"] || ""),
 };
@@ -50,8 +53,8 @@ const shellSummaryExtractors: Record<string, SummaryExtractor> = {
 };
 
 const agentSummaryExtractors: Record<string, SummaryExtractor> = {
-	Task: (i) => truncate(String(i["description"] || ""), 60),
-	TaskCreate: (i) => truncate(String(i["subject"] || ""), 60),
+	Task: (i) => truncate(String(i["description"] || ""), N_60),
+	TaskCreate: (i) => truncate(String(i["subject"] || ""), N_60),
 	TaskUpdate: (i) => `#${i["taskId"] || "?"}${i["status"] ? ` → ${i["status"]}` : ""}`,
 	TaskList: () => "List all tasks",
 	TaskGet: (i) => `#${i["taskId"] || "?"}`,
@@ -60,12 +63,12 @@ const agentSummaryExtractors: Record<string, SummaryExtractor> = {
 	KillShell: (i) => String(i["task_id"] || i["shell_id"] || ""),
 	EnterPlanMode: () => "Enter plan mode",
 	ExitPlanMode: () => "Exit plan mode",
-	TodoWrite: (i) => truncate(String(i["subject"] || ""), 60),
+	TodoWrite: (i) => truncate(String(i["subject"] || ""), N_60),
 };
 
 const webSummaryExtractors: Record<string, SummaryExtractor> = {
-	WebFetch: (i) => truncate(String(i["url"] || ""), 60),
-	WebSearch: (i) => truncate(String(i["query"] || ""), 60),
+	WebFetch: (i) => truncate(String(i["url"] || ""), N_60),
+	WebSearch: (i) => truncate(String(i["query"] || ""), N_60),
 };
 
 const interactionSummaryExtractors: Record<string, SummaryExtractor> = {

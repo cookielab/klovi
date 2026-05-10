@@ -10,6 +10,13 @@ import { PluginRow } from "./PluginRow";
 import type { SettingsTab } from "./SettingsSidebar";
 
 
+
+const N_10 = 10;
+const N_3 = 3;
+const N_6 = 6;
+const N_12 = 12;
+const N_24 = 24;
+
 const T_A = "A-";
 const T_A_2 = "A+";
 const T_UPDATES = "Updates";
@@ -178,7 +185,7 @@ function FontSizeControl({
 }): React.ReactNode {
 	return (
 		<div className={`${FONT_SIZE_CONTROL_BASE_CLASSES} ${disabled ? FONT_SIZE_CONTROL_DISABLED_CLASSES : ""}`}>
-			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size <= 10} onClick={onDecrease}>
+			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size <= N_10} onClick={onDecrease}>
 				<Text>{T_A}</Text>
 			</button>
 			<span className={FONT_SIZE_VALUE_CLASSES}>{size}</span>
@@ -320,10 +327,10 @@ function UpdatesTab({
 								onChange={handleIntervalChange}
 							>
 								<option value={1}><Text>{T_EVERY_HOUR}</Text></option>
-								<option value={3}><Text>{T_EVERY_3_HOURS}</Text></option>
-								<option value={6}><Text>{T_EVERY_6_HOURS}</Text></option>
-								<option value={12}><Text>{T_EVERY_12_HOURS}</Text></option>
-								<option value={24}><Text>{T_EVERY_24_HOURS}</Text></option>
+								<option value={N_3}><Text>{T_EVERY_3_HOURS}</Text></option>
+								<option value={N_6}><Text>{T_EVERY_6_HOURS}</Text></option>
+								<option value={N_12}><Text>{T_EVERY_12_HOURS}</Text></option>
+								<option value={N_24}><Text>{T_EVERY_24_HOURS}</Text></option>
 							</select>
 						</div>
 

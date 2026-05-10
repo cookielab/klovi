@@ -1,7 +1,10 @@
 import { HttpServerRequest, HttpServerResponse } from "@effect/platform";
 import { Effect } from "effect";
 
-const notFound = HttpServerResponse.unsafeJson({ error: "Not found" }, { status: 404 });
+
+const N_404 = 404;
+
+const notFound = HttpServerResponse.unsafeJson({ error: "Not found" }, { status: N_404 });
 
 /**
  * A request is a page navigation (SPA route) when its last path segment has no

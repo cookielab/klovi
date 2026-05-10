@@ -1,5 +1,9 @@
 import { createHttpClient } from "./http-client";
 
+
+const N_500 = 500;
+const N_404 = 404;
+
 // Use a minimal mock server for testing
 let mockServer: ReturnType<typeof Bun.serve>;
 let baseUrl: string;
@@ -14,9 +18,9 @@ beforeAll(() => {
 				return Response.json({ version: "1.0.0", commit: "abc123" });
 			}
 			if (url.pathname === "/api/rpc/failMethod") {
-				return Response.json({ error: "Something went wrong" }, { status: 500 });
+				return Response.json({ error: "Something went wrong" }, { status: N_500 });
 			}
-			return Response.json({ error: "Not found" }, { status: 404 });
+			return Response.json({ error: "Not found" }, { status: N_404 });
 		},
 	});
 	baseUrl = `http://127.0.0.1:${mockServer.port}`;

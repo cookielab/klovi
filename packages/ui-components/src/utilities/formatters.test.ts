@@ -7,12 +7,21 @@ import {
 	shortModel,
 } from "./formatters";
 
+
+const N_5 = 5;
+const N_60000 = 60_000;
+const N_3 = 3;
+const N_3600000 = 3_600_000;
+const N_10 = 10;
+const N_86400000 = 86_400_000;
+const N_45 = 45;
+
 const DATE_WITH_TIME_REGEX = /^[A-Z][a-z]{2} \d{1,2}, \d{2}:\d{2}$/u;
 
 describe("formatTimestamp", () => {
 	it("returns relative output for recent minutes and hours", () => {
-		const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString();
-		const threeHoursAgo = new Date(Date.now() - 3 * 3_600_000).toISOString();
+		const fiveMinAgo = new Date(Date.now() - N_5 * N_60000).toISOString();
+		const threeHoursAgo = new Date(Date.now() - N_3 * N_3600000).toISOString();
 
 		expect(formatTimestamp(fiveMinAgo)).toBe("5m ago");
 		expect(formatTimestamp(threeHoursAgo)).toBe("3h ago");
@@ -20,7 +29,7 @@ describe("formatTimestamp", () => {
 
 	it("returns just now for current and future timestamps", () => {
 		expect(formatTimestamp(new Date().toISOString())).toBe("just now");
-		expect(formatTimestamp(new Date(Date.now() + 60_000).toISOString())).toBe("just now");
+		expect(formatTimestamp(new Date(Date.now() + N_60000).toISOString())).toBe("just now");
 	});
 
 	it("returns formatted date for older timestamps", () => {
@@ -35,13 +44,13 @@ describe("formatTimestamp", () => {
 
 describe("formatRelativeTime", () => {
 	it("handles minute, hour, and day thresholds", () => {
-		expect(formatRelativeTime(new Date(Date.now() - 10 * 60_000).toISOString())).toBe("10m ago");
-		expect(formatRelativeTime(new Date(Date.now() - 5 * 3_600_000).toISOString())).toBe("5h ago");
-		expect(formatRelativeTime(new Date(Date.now() - 3 * 86_400_000).toISOString())).toBe("3d ago");
+		expect(formatRelativeTime(new Date(Date.now() - N_10 * N_60000).toISOString())).toBe("10m ago");
+		expect(formatRelativeTime(new Date(Date.now() - N_5 * N_3600000).toISOString())).toBe("5h ago");
+		expect(formatRelativeTime(new Date(Date.now() - N_3 * N_86400000).toISOString())).toBe("3d ago");
 	});
 
 	it("returns localized date for old timestamps", () => {
-		const old = new Date(Date.now() - 45 * 86_400_000).toISOString();
+		const old = new Date(Date.now() - N_45 * N_86400000).toISOString();
 		const result = formatRelativeTime(old);
 		expect(result).not.toContain("d ago");
 		expect(result.length).toBeGreaterThan(0);
@@ -67,7 +76,7 @@ describe("formatFullDateTime", () => {
 	it("returns full date and time string", () => {
 		const result = formatFullDateTime("2024-06-15T14:30:45Z");
 		expect(result).toContain("2024");
-		expect(result.length).toBeGreaterThan(10);
+		expect(result.length).toBeGreaterThan(N_10);
 	});
 });
 

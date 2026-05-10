@@ -12,6 +12,10 @@ import type {
 } from "./plugin-types";
 import { SqliteClientTag } from "./sqlite-service";
 
+
+const N_3 = 3;
+const N_6 = 6;
+
 interface TestSessionSummary extends RegistrySessionSummary {
 	slug: string;
 	firstMessage: string;
@@ -496,7 +500,7 @@ describe("t3code worktree merging", () => {
 					nativeId: "a",
 					resolvedPath: "/Users/dev/Workspace/Deltro",
 					displayName: "Deltro",
-					sessionCount: 3,
+					sessionCount: N_3,
 					lastActivity: "2026-02-20T08:00:00Z",
 				},
 			]),
@@ -528,8 +532,8 @@ describe("t3code worktree merging", () => {
 
 		expect(merged).toHaveLength(1);
 		expect(merged[0]?.resolvedPath).toBe("/Users/dev/Workspace/Deltro");
-		expect(merged[0]?.sessionCount).toBe(6);
-		expect(merged[0]?.sources).toHaveLength(3);
+		expect(merged[0]?.sessionCount).toBe(N_6);
+		expect(merged[0]?.sources).toHaveLength(N_3);
 	});
 
 	it("merges t3code worktrees together when no main repo project exists", async () => {

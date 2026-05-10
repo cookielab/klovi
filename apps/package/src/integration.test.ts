@@ -2,6 +2,10 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type KloviPackageServer, startKloviPackageServer } from "./server";
 
+
+const N_200 = 200;
+const N_404 = 404;
+
 const tmpStaticDir = resolve(import.meta.dir, "../.test-integration-static");
 
 describe("apps/package integration", () => {
@@ -31,7 +35,7 @@ describe("apps/package integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const data = (await res.json()) as { version: string; commit: string };
 		expect(data.version).toBe("1.0.0");
 		expect(data.commit).toBe("test123");
@@ -42,26 +46,26 @@ describe("apps/package integration", () => {
 			method: "POST",
 			body: "{}",
 		});
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 	});
 
 	it("static: GET / serves index.html", async () => {
 		const res = await fetch(server.url);
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const text = await res.text();
 		expect(text).toContain("Klovi");
 	});
 
 	it("static: GET /app.js serves JS file", async () => {
 		const res = await fetch(`${server.url}/app.js`);
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const text = await res.text();
 		expect(text).toContain("console.log");
 	});
 
 	it("static: SPA fallback for unknown route serves index.html", async () => {
 		const res = await fetch(`${server.url}/some/deep/route`);
-		expect(res.status).toBe(200);
+		expect(res.status).toBe(N_200);
 		const text = await res.text();
 		expect(text).toContain("Klovi");
 	});
@@ -73,13 +77,13 @@ describe("apps/package integration", () => {
 	// the "broken CSS" symptom that prompted this fix.
 	it("static: missing .css asset returns 404 (no index.html fallback)", async () => {
 		const res = await fetch(`${server.url}/chunk-missing.css`);
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 		expect(res.headers.get("content-type")).not.toContain("text/html");
 	});
 
 	it("static: missing .js asset returns 404 (no index.html fallback)", async () => {
 		const res = await fetch(`${server.url}/chunk-missing.js`);
-		expect(res.status).toBe(404);
+		expect(res.status).toBe(N_404);
 		expect(res.headers.get("content-type")).not.toContain("text/html");
 	});
 });
