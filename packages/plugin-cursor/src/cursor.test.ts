@@ -191,6 +191,8 @@ describe("cursor plugin", () => {
 		expect(toolBlock.call.input).toEqual({ path: "/tmp/auth.ts" });
 		expect(toolBlock.call.result).toContain('"ok": true');
 		expect(toolBlock.call.isError).toBe(false);
+		expect(toolBlock.call.summary).toBe("/tmp/auth.ts");
+		expect(toolBlock.call.formattedInput).toBe("File: /tmp/auth.ts");
 	});
 
 	it("discovers composer sessions from workspace Cursor state", async () => {

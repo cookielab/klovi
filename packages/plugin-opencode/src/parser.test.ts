@@ -282,6 +282,8 @@ describe("buildOpenCodeTurns", () => {
 		expect(toolBlock.call.input).toEqual({ path: "/src/main.ts" });
 		expect(toolBlock.call.result).toBe("file contents here");
 		expect(toolBlock.call.isError).toBe(false);
+		expect(toolBlock.call.summary).toBe("/src/main.ts");
+		expect(toolBlock.call.formattedInput).toBe("File: /src/main.ts");
 	});
 
 	it("builds error tool call from errored tool part", () => {

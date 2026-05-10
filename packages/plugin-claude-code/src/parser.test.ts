@@ -317,6 +317,8 @@ describe("buildTurns", () => {
 		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
 		expect(toolCall.kind).toBe("skill");
 		expect(toolCall.title).toBe("verify");
+		expect(toolCall.summary).toBe("verify");
+		expect(toolCall.formattedInput).toBe("Skill: verify");
 	});
 
 	it("tool call normalization: Skill without skill → 'Skill' title", () => {
@@ -342,6 +344,7 @@ describe("buildTurns", () => {
 		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
 		expect(toolCall.kind).toBe("skill");
 		expect(toolCall.title).toBe("Skill");
+		expect(toolCall.summary).toBe("");
 	});
 
 	it("tool call normalization: mcp__server__tool → mcp kind with display name", () => {
