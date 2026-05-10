@@ -31,6 +31,7 @@ export type {
 	ToolPluginSessionDetail,
 	ToolPluginSubAgentParams,
 } from "./plugin-types";
+export { parseMcpDisplayName } from "./mcp-utils";
 export { stripT3CodeSuffix } from "./resolve-worktree";
 export type { ParsedSessionId } from "./session-id";
 export { encodeSessionId, parseSessionId } from "./session-id";

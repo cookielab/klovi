@@ -294,7 +294,7 @@ describe("buildTurns", () => {
 		expect(toolCall.title).toBe("WebFetch");
 	});
 
-	it("tool call normalization: Skill with skill_name → skill kind", () => {
+	it("tool call normalization: Skill with skill → skill kind", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -306,7 +306,7 @@ describe("buildTurns", () => {
 							type: "tool_use",
 							id: "tool_skill",
 							name: "Skill",
-							input: { ["skill_name"]: "verify" },
+							input: { ["skill"]: "verify" },
 						},
 					],
 				},
@@ -319,7 +319,7 @@ describe("buildTurns", () => {
 		expect(toolCall.title).toBe("verify");
 	});
 
-	it("tool call normalization: Skill without skill_name → 'Skill' title", () => {
+	it("tool call normalization: Skill without skill → 'Skill' title", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",

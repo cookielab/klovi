@@ -8,7 +8,7 @@ import type {
 	Turn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
-import { epochSecondsToIso } from "@cookielab.io/klovi-plugin-core";
+import { epochSecondsToIso, parseMcpDisplayName } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
 import { type CodexSessionMeta, findCodexSessionFileById, normalizeSessionMeta } from "./session-index";
 import { readFileText } from "./shared/discovery-utils";
@@ -235,20 +235,6 @@ function normalizeEvent(raw: unknown): CodexEvent | null {
 
 const COMMAND_SUMMARY_MAX = 80;
 const WEB_SEARCH_SUMMARY_MAX = 60;
-
-/**
- * Parse an MCP raw name like `mcp__<server>__<tool>` into a human-readable label.
- */
-function parseMcpDisplayName(rawName: string): string {
-	const parts = rawName.split("__");
-	if (parts.length >= 3) {
-		return parts.slice(2).join("_");
-	}
-	if (parts.length === 2 && parts[1]) {
-		return parts[1];
-	}
-	return rawName;
-}
 
 function truncate(s: string, max: number): string {
 	return s.length <= max ? s : `${s.slice(0, max)}...`;

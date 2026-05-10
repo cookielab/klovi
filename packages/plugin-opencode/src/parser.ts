@@ -9,7 +9,7 @@ import type {
 	Turn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
-import { epochMsToIso } from "@cookielab.io/klovi-plugin-core";
+import { epochMsToIso, parseMcpDisplayName } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
 import { openOpenCodeDb } from "./db";
 import { tryParseJson } from "./shared/json-utils";
@@ -145,20 +145,6 @@ type PartData =
 	| PartDataOther;
 
 // --- Normalization ---
-
-/**
- * Parse an MCP raw name like `mcp__<server>__<tool>` into a human-readable label.
- */
-function parseMcpDisplayName(rawName: string): string {
-	const parts = rawName.split("__");
-	if (parts.length >= 3) {
-		return parts.slice(2).join("_");
-	}
-	if (parts.length === 2 && parts[1]) {
-		return parts[1];
-	}
-	return rawName;
-}
 
 function normalizeToolCall(rawName: string): {
 	kind: ToolCallKind;

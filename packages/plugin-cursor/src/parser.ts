@@ -8,6 +8,7 @@ import type {
 	Turn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
+import { parseMcpDisplayName } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
 import { openCursorGlobalDb } from "./db";
 import { buildCursorProjectIndex } from "./discovery";
@@ -89,20 +90,6 @@ function makeSystemTurn(uuid: string, timestamp: string, text: string): SystemTu
 
 function synthesizedTimestamp(baseTimestampMs: number, index: number): string {
 	return new Date(baseTimestampMs + index).toISOString();
-}
-
-/**
- * Parse an MCP raw name like `mcp__<server>__<tool>` into a human-readable label.
- */
-function parseMcpDisplayName(rawName: string): string {
-	const parts = rawName.split("__");
-	if (parts.length >= 3) {
-		return parts.slice(2).join("_");
-	}
-	if (parts.length === 2 && parts[1]) {
-		return parts[1];
-	}
-	return rawName;
 }
 
 function normalizeToolCall(rawName: string): {
