@@ -1,5 +1,4 @@
 import { CodeBox, Collapsible, Text } from "@cookielab.io/klovi-design-system";
-import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type React from "react";
 import type { ToolCallWithResult } from "../types/index";
 import { BashToolContent } from "./BashToolContent";
@@ -35,8 +34,6 @@ type ToolCallProps = {
 	defaultOpen?: boolean | undefined;
 	sessionId?: string | undefined;
 	project?: string | undefined;
-	pluginId?: string | undefined;
-	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
 function isEditWithDiff(call: ToolCallWithResult): boolean {
@@ -64,17 +61,9 @@ function getMcpServer(call: ToolCallWithResult): string | null {
 	return null;
 }
 
-function DefaultToolContent({
-	call,
-	pluginId,
-	getFrontendPlugin: getFrontendPluginFn,
-}: {
-	call: ToolCallWithResult;
-	pluginId?: string | undefined;
-	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
-}): React.ReactNode {
-	const formattedInput = formatToolInput(call, getFrontendPluginFn, pluginId);
-	const jsonInput = !hasInputFormatter(call, getFrontendPluginFn, pluginId);
+function DefaultToolContent({ call }: { call: ToolCallWithResult }): React.ReactNode {
+	const formattedInput = formatToolInput(call);
+	const jsonInput = !hasInputFormatter(call);
 
 	return (
 		<>
@@ -91,30 +80,15 @@ function DefaultToolContent({
 	);
 }
 
-function ToolContentBody({
-	call,
-	pluginId,
-	getFrontendPlugin: getFrontendPluginFn,
-}: {
-	call: ToolCallWithResult;
-	pluginId?: string | undefined;
-	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
-}): React.ReactNode {
+function ToolContentBody({ call }: { call: ToolCallWithResult }): React.ReactNode {
 	if (call.kind === "shell") {
 		return <BashToolContent call={call} />;
 	}
-	return <DefaultToolContent call={call} pluginId={pluginId} getFrontendPlugin={getFrontendPluginFn} />;
+	return <DefaultToolContent call={call} />;
 }
 
-export function ToolCall({
-	call,
-	defaultOpen,
-	sessionId,
-	project,
-	pluginId,
-	getFrontendPlugin: getFrontendPluginFn,
-}: ToolCallProps): React.ReactNode {
-	const summary = getToolSummary(call, getFrontendPluginFn, pluginId);
+export function ToolCall({ call, defaultOpen, sessionId, project }: ToolCallProps): React.ReactNode {
+	const summary = getToolSummary(call);
 	const mcpServer = getMcpServer(call);
 	const isSkill = call.kind === "skill";
 	const hasSubAgent = call.kind === "subagent" && call.subAgentId && sessionId && project;
@@ -164,7 +138,7 @@ export function ToolCall({
 						newString={String(call.input["new_string"])}
 					/>
 				) : (
-					<ToolContentBody call={call} pluginId={pluginId} getFrontendPlugin={getFrontendPluginFn} />
+					<ToolContentBody call={call} />
 				)}
 			</Collapsible>
 		</div>

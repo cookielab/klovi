@@ -59,7 +59,6 @@ export const openCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
 export { DEFAULT_OPENCODE_DIR, getOpenCodeDir, setOpenCodeDir } from "./config";
 export { getOpenCodeDbPath, openOpenCodeDb } from "./db";
 export { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery";
-export { openCodeInputFormatters, openCodeSummaryExtractors } from "./extractors";
 export { openCodeFrontendPlugin } from "./frontend";
 export type { OpenCodeMessage } from "./parser";
 export { buildOpenCodeTurns, loadOpenCodeSession } from "./parser";

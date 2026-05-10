@@ -3,14 +3,12 @@ import { useCallback } from "react";
 import { useRunKloviEffect } from "../../../lib/context";
 import { kloviHostBridge } from "../../../lib/rpc-client";
 import type { Turn } from "../../../shared/types";
-import { getFrontendPlugin } from "../../plugin-registry";
 
 type PackagePresentationShellProps = {
 	turns: Turn[];
 	onExit: () => void;
 	sessionId: string;
 	project: string;
-	pluginId?: string | undefined;
 	isSubAgent?: boolean | undefined;
 };
 
@@ -19,7 +17,6 @@ export function PackagePresentationShell({
 	onExit,
 	sessionId,
 	project,
-	pluginId,
 	isSubAgent,
 }: PackagePresentationShellProps): React.ReactNode {
 	const runKloviEffect = useRunKloviEffect();
@@ -35,10 +32,8 @@ export function PackagePresentationShell({
 			onExit={onExit}
 			sessionId={sessionId}
 			project={project}
-			pluginId={pluginId}
 			isSubAgent={isSubAgent}
 			onLinkClick={handleLinkClick}
-			getFrontendPlugin={getFrontendPlugin}
 		/>
 	);
 }

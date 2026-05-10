@@ -44,7 +44,6 @@ export function SessionView({ sessionId, project, gitBranch }: SessionViewProps)
 				turns={session.turns}
 				sessionId={sessionId}
 				project={project}
-				pluginId={session.pluginId}
 				planSessionId={session.planSessionId}
 				implSessionId={session.implSessionId}
 			/>

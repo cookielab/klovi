@@ -4,7 +4,6 @@ import { useRunKloviEffect } from "../../../lib/context";
 import { kloviHostBridge } from "../../../lib/rpc-client";
 import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect";
 import { useSubAgentSessionData } from "../../hooks/useSessionData";
-import { getFrontendPlugin } from "../../plugin-registry";
 
 type PackageSubAgentViewProps = {
 	sessionId: string;
@@ -28,12 +27,10 @@ export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubA
 			turns={turns}
 			sessionId={sessionId}
 			project={project}
-			pluginId={data?.session?.pluginId}
 			loading={loading}
 			error={error ? getRpcErrorMessage(error) : undefined}
 			onRetry={retry}
 			onLinkClick={handleLinkClick}
-			getFrontendPlugin={getFrontendPlugin}
 		/>
 	);
 }

@@ -1,8 +1,4 @@
-export type {
-	FrontendInputFormatter,
-	FrontendPlugin,
-	FrontendSummaryExtractor,
-} from "./frontend-plugin-types";
+export type { FrontendPlugin } from "./frontend-plugin-types";
 export type { BuiltinKloviPluginId, KloviPluginPackageName } from "./ids";
 export {
 	BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES,

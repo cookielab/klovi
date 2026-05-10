@@ -1,4 +1,3 @@
-import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type { ToolCallWithResult } from "../types/index";
 import {
 	formatToolInput,
@@ -8,10 +7,13 @@ import {
 	truncateOutput,
 } from "./ToolCallDefaults";
 
-
 const N_10 = 10;
 
-function call(name: string, input: Record<string, unknown> = {}, overrides: Partial<ToolCallWithResult> = {}): ToolCallWithResult {
+function call(
+	name: string,
+	input: Record<string, unknown> = {},
+	overrides: Partial<ToolCallWithResult> = {},
+): ToolCallWithResult {
 	return {
 		toolUseId: "tool-1",
 		kind: "generic",
@@ -40,23 +42,6 @@ function callWithCanonical(
 	return call(name, input, overrides);
 }
 
-function createFrontendPlugin(): FrontendPlugin {
-	return {
-		id: "test-plugin",
-		displayName: "Test Plugin",
-		summaryExtractors: {
-			["CustomTool"]: (input) => `summary:${String(input["k"] ?? "")}`,
-		},
-		inputFormatters: {
-			["CustomTool"]: (input) => `input:${String(input["k"] ?? "")}`,
-		},
-	};
-}
-
-function makeGetPlugin(plugin: FrontendPlugin): (id: string) => FrontendPlugin | undefined {
-	return (id: string): FrontendPlugin | undefined => (id === plugin.id ? plugin : undefined);
-}
-
 describe("truncateOutput", () => {
 	it("returns output unchanged when under limit", () => {
 		expect(truncateOutput("short")).toBe("short");
@@ -77,13 +62,6 @@ describe("getToolSummary", () => {
 		expect(getToolSummary(c)).toBe("/tmp/file.ts");
 	});
 
-	it("falls back to plugin summary extractor when call.summary not set", () => {
-		const plugin = createFrontendPlugin();
-		const getPlugin = makeGetPlugin(plugin);
-
-		expect(getToolSummary(call("CustomTool", { k: "v" }), getPlugin, plugin.id)).toBe("summary:v");
-	});
-
 	it("falls back to mcp rawName derivation for mcp kind without summary", () => {
 		const c = call("mcp__filesystem__read_file", {}, { kind: "mcp", rawName: "mcp__filesystem__read_file" });
 		expect(getToolSummary(c)).toBe("read_file");
@@ -91,13 +69,6 @@ describe("getToolSummary", () => {
 
 	it("returns empty string for unknown tool without summary", () => {
 		expect(getToolSummary(call("UnknownTool"))).toBe("");
-	});
-
-	it("canonical summary takes precedence over plugin extractor", () => {
-		const plugin = createFrontendPlugin();
-		const getPlugin = makeGetPlugin(plugin);
-		const c = callWithCanonical("CustomTool", { k: "v" }, "canonical-summary");
-		expect(getToolSummary(c, getPlugin, plugin.id)).toBe("canonical-summary");
 	});
 });
 
@@ -107,23 +78,8 @@ describe("hasInputFormatter", () => {
 		expect(hasInputFormatter(c)).toBe(true);
 	});
 
-	it("reports true for plugin formatter when formattedInput not set", () => {
-		const plugin = createFrontendPlugin();
-		const getPlugin = makeGetPlugin(plugin);
-
-		expect(hasInputFormatter(call("CustomTool"), getPlugin, plugin.id)).toBe(true);
-	});
-
-	it("reports false for unknown tools without formattedInput or plugin formatter", () => {
+	it("reports false for unknown tools without formattedInput", () => {
 		expect(hasInputFormatter(call("NoFormatter"))).toBe(false);
-	});
-
-	it("canonical formattedInput takes precedence over plugin formatter check", () => {
-		const plugin = createFrontendPlugin();
-		const getPlugin = makeGetPlugin(plugin);
-		// Even for a tool name the plugin knows, canonical field wins (is true)
-		const c = callWithCanonical("CustomTool", { k: "v" }, undefined, "already formatted");
-		expect(hasInputFormatter(c, getPlugin, plugin.id)).toBe(true);
 	});
 });
 
@@ -133,23 +89,9 @@ describe("formatToolInput", () => {
 		expect(formatToolInput(c)).toBe("canonical format");
 	});
 
-	it("uses plugin formatter when formattedInput not set", () => {
-		const plugin = createFrontendPlugin();
-		const getPlugin = makeGetPlugin(plugin);
-
-		expect(formatToolInput(call("CustomTool", { k: "v" }), getPlugin, plugin.id)).toBe("input:v");
-	});
-
-	it("falls back to JSON for unknown tools without formattedInput or plugin formatter", () => {
+	it("falls back to JSON for unknown tools without formattedInput", () => {
 		const text = formatToolInput(call("Unknown", { a: 1 }));
 		expect(text).toContain('"a": 1');
-	});
-
-	it("canonical formattedInput takes precedence over plugin formatter", () => {
-		const plugin = createFrontendPlugin();
-		const getPlugin = makeGetPlugin(plugin);
-		const c = callWithCanonical("CustomTool", { k: "v" }, undefined, "canonical beats plugin");
-		expect(formatToolInput(c, getPlugin, plugin.id)).toBe("canonical beats plugin");
 	});
 
 	it("formattedInput with Edit tool uses canonical value end-to-end", () => {

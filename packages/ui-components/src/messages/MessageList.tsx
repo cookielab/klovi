@@ -1,5 +1,4 @@
 import { Text, TurnBox } from "@cookielab.io/klovi-design-system";
-import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef } from "react";
 import type { Turn } from "../types/index";
@@ -31,13 +30,11 @@ type MessageListProps = {
 	visibleSubSteps?: Map<number, number> | undefined;
 	sessionId?: string | undefined;
 	project?: string | undefined;
-	pluginId?: string | undefined;
 	isSubAgent?: boolean | undefined;
 	planSessionId?: string | undefined;
 	implSessionId?: string | undefined;
 	onSessionLink?: ((sessionId: string) => void) | undefined;
 	onLinkClick?: ((url: string) => void) | undefined;
-	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
 type RenderTurnOptions = {
@@ -47,13 +44,11 @@ type RenderTurnOptions = {
 	visibleSubSteps: Map<number, number> | undefined;
 	sessionId: string | undefined;
 	project: string | undefined;
-	pluginId: string | undefined;
 	isSubAgent: boolean | undefined;
 	planSessionId: string | undefined;
 	implSessionId: string | undefined;
 	onSessionLink: ((targetSessionId: string) => void) | undefined;
 	onLinkClick: ((url: string) => void) | undefined;
-	getFrontendPlugin: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
 function renderTurn(options: RenderTurnOptions) {
@@ -82,9 +77,7 @@ function renderTurn(options: RenderTurnOptions) {
 						visibleSubSteps={options.visibleSubSteps?.get(options.index)}
 						sessionId={options.sessionId}
 						project={options.project}
-						pluginId={options.pluginId}
 						onLinkClick={options.onLinkClick}
-						getFrontendPlugin={options.getFrontendPlugin}
 					/>
 				</div>
 			);
@@ -147,13 +140,11 @@ export function MessageList({
 	visibleSubSteps,
 	sessionId,
 	project,
-	pluginId,
 	isSubAgent,
 	planSessionId,
 	implSessionId,
 	onSessionLink,
 	onLinkClick,
-	getFrontendPlugin,
 }: MessageListProps): React.ReactNode {
 	const parentRef = useRef<HTMLDivElement>(null);
 	const firstUserTurnIndex = useMemo(
@@ -226,13 +217,11 @@ export function MessageList({
 									visibleSubSteps: visibleSubSteps,
 									sessionId: sessionId,
 									project: project,
-									pluginId: pluginId,
 									isSubAgent: isSubAgent,
 									planSessionId: planSessionId,
 									implSessionId: item.index === firstUserTurnIndex ? implSessionId : undefined,
 									onSessionLink: onSessionLink,
 									onLinkClick: onLinkClick,
-									getFrontendPlugin: getFrontendPlugin,
 								})}
 							</ErrorBoundary>
 						</div>

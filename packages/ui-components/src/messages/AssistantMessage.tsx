@@ -1,5 +1,4 @@
 import { Text, TurnBox } from "@cookielab.io/klovi-design-system";
-import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { ToolCall } from "../tools/index";
 import type { AssistantTurn, ContentBlock, TokenUsage } from "../types/index";
 import { groupContentBlocks } from "../types/index";
@@ -31,9 +30,7 @@ type AssistantMessageProps = {
 	visibleSubSteps?: number | undefined;
 	sessionId?: string | undefined;
 	project?: string | undefined;
-	pluginId?: string | undefined;
 	onLinkClick?: ((url: string) => void) | undefined;
-	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
 function contentBlockKey(block: ContentBlock, index: number): string {
@@ -57,9 +54,7 @@ type RenderGroupOptions = {
 	group: ContentBlock[];
 	sessionId: string | undefined;
 	project: string | undefined;
-	pluginId: string | undefined;
 	onLinkClick: ((url: string) => void) | undefined;
-	getFrontendPlugin: ((id: string) => FrontendPlugin | undefined) | undefined;
 };
 
 function renderGroup(options: RenderGroupOptions) {
@@ -77,8 +72,6 @@ function renderGroup(options: RenderGroupOptions) {
 				call={block.call}
 				sessionId={options.sessionId}
 				project={options.project}
-				pluginId={options.pluginId}
-				getFrontendPlugin={options.getFrontendPlugin}
 			/>
 		);
 	});
@@ -103,9 +96,7 @@ export function AssistantMessage({
 	visibleSubSteps,
 	sessionId,
 	project,
-	pluginId,
 	onLinkClick,
-	getFrontendPlugin,
 }: AssistantMessageProps): React.ReactNode {
 	const groups = groupContentBlocks(turn.contentBlocks);
 	const limit = visibleSubSteps ?? groups.length;
@@ -149,9 +140,7 @@ export function AssistantMessage({
 						group: introGroup,
 						sessionId: sessionId,
 						project: project,
-						pluginId: pluginId,
 						onLinkClick: onLinkClick,
-						getFrontendPlugin: getFrontendPlugin,
 					})}
 				</div>
 			) : null}
@@ -166,9 +155,7 @@ export function AssistantMessage({
 								group: group,
 								sessionId: sessionId,
 								project: project,
-								pluginId: pluginId,
 								onLinkClick: onLinkClick,
-								getFrontendPlugin: getFrontendPlugin,
 							})}
 						</div>
 					))}
@@ -180,9 +167,7 @@ export function AssistantMessage({
 						group: group,
 						sessionId: sessionId,
 						project: project,
-						pluginId: pluginId,
 						onLinkClick: onLinkClick,
-						getFrontendPlugin: getFrontendPlugin,
 					})}
 				</div>
 			))}
