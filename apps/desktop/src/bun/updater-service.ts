@@ -8,7 +8,7 @@ import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "
 import {
 	findLatestUsableRelease,
 	findReleaseAsset,
-	type GitHubRelease,
+	type GithubRelease,
 	getReleaseBundleAssetName,
 	getUpdateJsonAssetName,
 	getZstdBinaryPath,
@@ -50,7 +50,7 @@ const fetchReleasesEffect = Effect.tryPromise({
 		if (!response.ok) {
 			throw new Error(`GitHub API error: HTTP ${response.status}`);
 		}
-		return (await response.json()) as GitHubRelease[];
+		return (await response.json()) as GithubRelease[];
 	},
 	catch: (error) => new Error(error instanceof Error ? error.message : "Failed to fetch releases"),
 });
@@ -148,7 +148,7 @@ const fetchWithRetry = (url: string, destPath: string, version: string) =>
 
 // ────── Mutable state shared across check/download/apply ──────
 let lastCheckTimestamp = 0;
-let latestRelease: GitHubRelease | null = null;
+let latestRelease: GithubRelease | null = null;
 let downloadedAssetPath: string | null = null;
 
 // ────── Check ──────

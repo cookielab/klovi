@@ -11,9 +11,9 @@ import type {
 
 type EmptyPayload = Record<string, never>;
 
-type DesktopRequestDefinition<TParams, TResponse> = {
-	params: TParams;
-	response: TResponse;
+type DesktopRequestDefinition<Tparams, Tresponse> = {
+	params: Tparams;
+	response: Tresponse;
 };
 
 type DesktopRequestArgs<T extends DesktopRequestDefinition<unknown, unknown>> = T["params"] extends EmptyPayload

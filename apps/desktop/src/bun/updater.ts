@@ -5,14 +5,14 @@ import type { UpdateChannel } from "../shared/rpc-types";
 
 const { semver } = Bun;
 
-type GitHubRelease = {
+type GithubRelease = {
 	tag_name: string;
 	prerelease: boolean;
 	draft: boolean;
-	assets: GitHubAsset[];
+	assets: GithubAsset[];
 };
 
-type GitHubAsset = {
+type GithubAsset = {
 	name: string;
 	browser_download_url: string;
 };
@@ -27,7 +27,7 @@ type UpdateInfo = {
 type Platform = "macos" | "linux" | "win";
 type Arch = "arm64" | "x64";
 
-function filterReleasesByChannel(releases: GitHubRelease[], channel: UpdateChannel): GitHubRelease[] {
+function filterReleasesByChannel(releases: GithubRelease[], channel: UpdateChannel): GithubRelease[] {
 	return releases.filter((r) => {
 		if (r.draft) {
 			return false;
@@ -101,7 +101,7 @@ function validateUpdateInfo(data: UpdateInfo, tagName: string, platform: Platfor
 	return null;
 }
 
-function findReleaseAsset(release: GitHubRelease, name: string): GitHubAsset | null {
+function findReleaseAsset(release: GithubRelease, name: string): GithubAsset | null {
 	return release.assets.find((asset) => asset.name === name) ?? null;
 }
 
@@ -171,7 +171,7 @@ async function validateExtractedBundle(platform: Platform, stagingDir: string): 
 }
 
 /** Check whether a release has both the updater tarball and update.json assets. */
-function releaseHasUpdaterAssets(release: GitHubRelease, platform: Platform, arch: Arch): boolean {
+function releaseHasUpdaterAssets(release: GithubRelease, platform: Platform, arch: Arch): boolean {
 	const tarball = getReleaseBundleAssetName(platform, arch);
 	const updateJson = getUpdateJsonAssetName(platform, arch);
 	return findReleaseAsset(release, tarball) !== null && findReleaseAsset(release, updateJson) !== null;
@@ -184,12 +184,12 @@ function releaseHasUpdaterAssets(release: GitHubRelease, platform: Platform, arc
  * 3. Has both updater tarball and update.json assets
  */
 function findLatestUsableRelease(options: {
-	releases: GitHubRelease[];
+	releases: GithubRelease[];
 	channel: UpdateChannel;
 	currentVersion: string;
 	platform: Platform;
 	arch: Arch;
-}): GitHubRelease | null {
+}): GithubRelease | null {
 	const filtered = filterReleasesByChannel(options.releases, options.channel);
 
 	// Sort newest-first
@@ -209,12 +209,12 @@ function findLatestUsableRelease(options: {
 
 /** @deprecated Use findLatestUsableRelease instead. Kept for backward compatibility in tests. */
 function findLatestRelease(
-	releases: GitHubRelease[],
+	releases: GithubRelease[],
 	channel: UpdateChannel,
 	currentVersion: string,
-): GitHubRelease | null {
+): GithubRelease | null {
 	const filtered = filterReleasesByChannel(releases, channel);
-	let best: GitHubRelease | null = null;
+	let best: GithubRelease | null = null;
 	for (const release of filtered) {
 		if (
 			semver.order(release.tag_name, currentVersion) > 0 &&
@@ -226,7 +226,7 @@ function findLatestRelease(
 	return best;
 }
 
-export type { Arch, GitHubAsset, GitHubRelease, Platform, UpdateInfo };
+export type { Arch, GithubAsset, GithubRelease, Platform, UpdateInfo };
 export {
 	filterReleasesByChannel,
 	findExtractedAppBundlePath,

@@ -11,7 +11,7 @@ import {
 	findLatestRelease,
 	findLatestUsableRelease,
 	findReleaseAsset,
-	type GitHubRelease,
+	type GithubRelease,
 	getElectrobunTarballName,
 	getReleaseBundleAssetName,
 	getReleaseChannel,
@@ -63,7 +63,7 @@ describe("semver.order", () => {
 	});
 });
 
-function makeRelease(tag: string, prerelease: boolean): GitHubRelease {
+function makeRelease(tag: string, prerelease: boolean): GithubRelease {
 	return {
 		tag_name: tag,
 		prerelease: prerelease,
@@ -78,10 +78,10 @@ function makeReleaseWithAssets(
 	platform: "macos" | "linux" | "win",
 	arch: "arm64" | "x64",
 	opts?: { missingTarball?: boolean; missingUpdateJson?: boolean },
-): GitHubRelease {
+): GithubRelease {
 	const tarballName = getReleaseBundleAssetName(platform, arch);
 	const updateJsonName = getUpdateJsonAssetName(platform, arch);
-	const assets: GitHubRelease["assets"] = [];
+	const assets: GithubRelease["assets"] = [];
 	if (!opts?.missingTarball) {
 		assets.push({ name: tarballName, browser_download_url: `https://example.com/${tarballName}` });
 	}
@@ -100,7 +100,7 @@ function makeReleaseWithAssets(
 }
 
 describe("filterReleasesByChannel", () => {
-	const releases: GitHubRelease[] = [
+	const releases: GithubRelease[] = [
 		makeRelease("2.0.0", false),
 		makeRelease("2.1.0-rc.1", true),
 		makeRelease("2.1.0-beta.1", true),
@@ -367,7 +367,7 @@ describe("releaseHasUpdaterAssets", () => {
 
 describe("findReleaseAsset", () => {
 	it("ignores user-facing installer assets and returns normalized tarball", () => {
-		const release: GitHubRelease = {
+		const release: GithubRelease = {
 			...makeRelease("2.1.0-rc.1", true),
 			assets: [
 				{
@@ -387,7 +387,7 @@ describe("findReleaseAsset", () => {
 	});
 
 	it("returns null when the tarball asset is missing", () => {
-		const release: GitHubRelease = {
+		const release: GithubRelease = {
 			...makeRelease("2.0.0", false),
 			assets: [
 				{
@@ -402,7 +402,7 @@ describe("findReleaseAsset", () => {
 });
 
 describe("findLatestRelease", () => {
-	const releases: GitHubRelease[] = [
+	const releases: GithubRelease[] = [
 		{
 			...makeRelease("2.1.0-beta.1", true),
 			assets: [
@@ -461,7 +461,7 @@ describe("findLatestRelease", () => {
 
 describe("findLatestUsableRelease", () => {
 	it("skips incomplete newer release and picks newest usable", () => {
-		const releases: GitHubRelease[] = [
+		const releases: GithubRelease[] = [
 			// Newer but missing update.json
 			makeReleaseWithAssets("2.2.0", false, "macos", "arm64", { missingUpdateJson: true }),
 			// Complete release
@@ -481,7 +481,7 @@ describe("findLatestUsableRelease", () => {
 	});
 
 	it("skips release missing normalized tarball", () => {
-		const releases: GitHubRelease[] = [
+		const releases: GithubRelease[] = [
 			makeReleaseWithAssets("2.1.0", false, "macos", "arm64", { missingTarball: true }),
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
 		];
@@ -497,7 +497,7 @@ describe("findLatestUsableRelease", () => {
 	});
 
 	it("returns null when no usable release is newer", () => {
-		const releases: GitHubRelease[] = [
+		const releases: GithubRelease[] = [
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64", { missingUpdateJson: true }),
 		];
 		const result = findLatestUsableRelease({
@@ -511,7 +511,7 @@ describe("findLatestUsableRelease", () => {
 	});
 
 	it("returns null when current is latest", () => {
-		const releases: GitHubRelease[] = [makeReleaseWithAssets("2.0.0", false, "macos", "arm64")];
+		const releases: GithubRelease[] = [makeReleaseWithAssets("2.0.0", false, "macos", "arm64")];
 		const result = findLatestUsableRelease({
 			releases: releases,
 			channel: "stable",
@@ -524,7 +524,7 @@ describe("findLatestUsableRelease", () => {
 
 	it("user-facing installer assets are ignored for selection", () => {
 		// Release only has a DMG (user-facing), no updater assets
-		const release: GitHubRelease = {
+		const release: GithubRelease = {
 			...makeRelease("2.1.0", false),
 			assets: [
 				{
@@ -544,7 +544,7 @@ describe("findLatestUsableRelease", () => {
 	});
 
 	it("respects channel filtering for usable releases", () => {
-		const releases: GitHubRelease[] = [
+		const releases: GithubRelease[] = [
 			makeReleaseWithAssets("2.1.0-beta.1", true, "macos", "arm64"),
 			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
 		];
@@ -570,7 +570,7 @@ describe("findLatestUsableRelease", () => {
 	});
 
 	it("rejects legacy beta-prefixed updater assets under the future-only contract", () => {
-		const legacyBetaRelease: GitHubRelease = {
+		const legacyBetaRelease: GithubRelease = {
 			...makeRelease("2.1.0-beta.1", true),
 			assets: [
 				{

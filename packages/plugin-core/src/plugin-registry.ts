@@ -6,7 +6,7 @@ import type { MergedProject, PluginProject, RegistrySession, RegistrySessionSumm
 import { resolveT3CodePaths } from "./resolve-worktree";
 import { encodeSessionId } from "./session-id";
 
-type SessionIdEncoder<TPluginId extends string> = (pluginId: TPluginId, rawSessionId: string) => string;
+type SessionIdEncoder<TpluginId extends string> = (pluginId: TpluginId, rawSessionId: string) => string;
 
 function encodeResolvedPath(resolvedPath: string): string {
 	// Convert /Users/foo/bar -> -Users-foo-bar (same scheme as Claude Code)
@@ -17,50 +17,50 @@ function encodeResolvedPath(resolvedPath: string): string {
 	return resolvedPath.replace(/[/\\:]/gu, "-");
 }
 
-type RegistryOptions<TPluginId extends string> = {
-	encodeSessionId?: SessionIdEncoder<TPluginId>;
+type RegistryOptions<TpluginId extends string> = {
+	encodeSessionId?: SessionIdEncoder<TpluginId>;
 };
 
 type RegisteredPlugin<
-	TPluginId extends string,
-	TSessionSummary extends RegistrySessionSummary,
-	TSession extends RegistrySession,
+	TpluginId extends string,
+	TsessionSummary extends RegistrySessionSummary,
+	Tsession extends RegistrySession,
 > = {
-	plugin: ToolPlugin<TPluginId, TSessionSummary, TSession>;
+	plugin: ToolPlugin<TpluginId, TsessionSummary, Tsession>;
 	config: PluginConfigShape;
 	configLayer: Layer.Layer<PluginConfig>;
 };
 
 type DiscoveredPluginState<
-	TPluginId extends string,
-	TSessionSummary extends RegistrySessionSummary,
-	TSession extends RegistrySession,
+	TpluginId extends string,
+	TsessionSummary extends RegistrySessionSummary,
+	Tsession extends RegistrySession,
 > = {
-	entry: RegisteredPlugin<TPluginId, TSessionSummary, TSession>;
-	projects: PluginProject<TPluginId>[];
-	sessionsByNativeId?: Map<string, TSessionSummary[]>;
+	entry: RegisteredPlugin<TpluginId, TsessionSummary, Tsession>;
+	projects: PluginProject<TpluginId>[];
+	sessionsByNativeId?: Map<string, TsessionSummary[]>;
 };
 
-type DiscoveredProjectsWithSessions<TPluginId extends string, TSessionSummary extends RegistrySessionSummary> = {
-	projects: MergedProject<TPluginId>[];
-	sessionsByEncodedPath: Map<string, TSessionSummary[]>;
+type DiscoveredProjectsWithSessions<TpluginId extends string, TsessionSummary extends RegistrySessionSummary> = {
+	projects: MergedProject<TpluginId>[];
+	sessionsByEncodedPath: Map<string, TsessionSummary[]>;
 };
 
 class PluginRegistry<
-	TPluginId extends string = string,
-	TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
-	TSession extends RegistrySession = RegistrySession,
+	TpluginId extends string = string,
+	TsessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
+	Tsession extends RegistrySession = RegistrySession,
 > {
-	private readonly plugins = new Map<TPluginId, RegisteredPlugin<TPluginId, TSessionSummary, TSession>>();
+	private readonly plugins = new Map<TpluginId, RegisteredPlugin<TpluginId, TsessionSummary, Tsession>>();
 
-	private readonly sessionIdEncoder: SessionIdEncoder<TPluginId>;
+	private readonly sessionIdEncoder: SessionIdEncoder<TpluginId>;
 
-	public constructor(options: RegistryOptions<TPluginId> = {}) {
+	public constructor(options: RegistryOptions<TpluginId> = {}) {
 		this.sessionIdEncoder =
 			options.encodeSessionId ?? ((pluginId, rawSessionId) => encodeSessionId(pluginId, rawSessionId));
 	}
 
-	public register(plugin: ToolPlugin<TPluginId, TSessionSummary, TSession>, config: PluginConfigShape): void {
+	public register(plugin: ToolPlugin<TpluginId, TsessionSummary, Tsession>, config: PluginConfigShape): void {
 		this.plugins.set(plugin.id, {
 			plugin: plugin,
 			config: config,
@@ -68,8 +68,8 @@ class PluginRegistry<
 		});
 	}
 
-	public getPlugin(id: string): ToolPlugin<TPluginId, TSessionSummary, TSession> {
-		const entry = this.plugins.get(id as TPluginId);
+	public getPlugin(id: string): ToolPlugin<TpluginId, TsessionSummary, Tsession> {
+		const entry = this.plugins.get(id as TpluginId);
 		if (!entry) {
 			throw new Error(`Plugin not found: ${id}`);
 		}
@@ -77,20 +77,20 @@ class PluginRegistry<
 	}
 
 	public getPluginConfig(id: string): PluginConfigShape {
-		const entry = this.plugins.get(id as TPluginId);
+		const entry = this.plugins.get(id as TpluginId);
 		if (!entry) {
 			throw new Error(`Plugin not found: ${id}`);
 		}
 		return entry.config;
 	}
 
-	public getAllPlugins(): ToolPlugin<TPluginId, TSessionSummary, TSession>[] {
+	public getAllPlugins(): ToolPlugin<TpluginId, TsessionSummary, Tsession>[] {
 		return [...this.plugins.values()].map((entry) => entry.plugin);
 	}
 
 	private discoverPluginStates(
 		includeSessions: boolean,
-	): Effect.Effect<DiscoveredPluginState<TPluginId, TSessionSummary, TSession>[], never, RegistryRequirements> {
+	): Effect.Effect<DiscoveredPluginState<TpluginId, TsessionSummary, Tsession>[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
 			const entries = [...this.plugins.values()];
 			return yield* Effect.forEach(
@@ -109,14 +109,14 @@ class PluginRegistry<
 							discoveredIndex?.projects ??
 							(yield* entry.plugin.discoverProjects.pipe(
 								Effect.provide(entry.configLayer),
-								Effect.catchAll(() => Effect.succeed([] as PluginProject<TPluginId>[])),
+								Effect.catchAll(() => Effect.succeed([] as PluginProject<TpluginId>[])),
 							));
 
 						return {
 							entry: entry,
 							projects: projects,
 							...(discoveredIndex ? { sessionsByNativeId: discoveredIndex.sessionsByNativeId } : {}),
-						} as DiscoveredPluginState<TPluginId, TSessionSummary, TSession>;
+						} as DiscoveredPluginState<TpluginId, TsessionSummary, Tsession>;
 					}),
 				{ concurrency: "unbounded" },
 			);
@@ -124,12 +124,12 @@ class PluginRegistry<
 	}
 
 	private mergeProjects(
-		allProjects: PluginProject<TPluginId>[],
-	): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
+		allProjects: PluginProject<TpluginId>[],
+	): Effect.Effect<MergedProject<TpluginId>[], never, RegistryRequirements> {
 		return Effect.gen(function* () {
 			yield* resolveT3CodePaths(allProjects);
 
-			const projectsByPath = new Map<string, PluginProject<TPluginId>[]>();
+			const projectsByPath = new Map<string, PluginProject<TpluginId>[]>();
 			for (const project of allProjects) {
 				const current = projectsByPath.get(project.resolvedPath);
 				if (current) {
@@ -139,7 +139,7 @@ class PluginRegistry<
 				}
 			}
 
-			const merged: MergedProject<TPluginId>[] = [];
+			const merged: MergedProject<TpluginId>[] = [];
 			for (const [resolvedPath, projects] of projectsByPath) {
 				merged.push({
 					encodedPath: encodeResolvedPath(resolvedPath),
@@ -160,21 +160,21 @@ class PluginRegistry<
 		});
 	}
 
-	private encodeSessions(pluginId: TPluginId, sessions: TSessionSummary[]): TSessionSummary[] {
+	private encodeSessions(pluginId: TpluginId, sessions: TsessionSummary[]): TsessionSummary[] {
 		return sessions.map(
 			(session) =>
 				({
 					...session,
 					sessionId: this.sessionIdEncoder(pluginId, session.sessionId),
 					pluginId: pluginId,
-				}) as TSessionSummary,
+				}) as TsessionSummary,
 		);
 	}
 
 	private loadSourceSessions(
-		state: DiscoveredPluginState<TPluginId, TSessionSummary, TSession>,
-		source: MergedProject<TPluginId>["sources"][number],
-	): Effect.Effect<TSessionSummary[], never, RegistryRequirements> {
+		state: DiscoveredPluginState<TpluginId, TsessionSummary, Tsession>,
+		source: MergedProject<TpluginId>["sources"][number],
+	): Effect.Effect<TsessionSummary[], never, RegistryRequirements> {
 		const discoveredSessions = state.sessionsByNativeId?.get(source.nativeId);
 		if (discoveredSessions) {
 			return Effect.succeed(this.encodeSessions(source.pluginId, discoveredSessions));
@@ -182,12 +182,12 @@ class PluginRegistry<
 
 		return state.entry.plugin.listSessions(source.nativeId).pipe(
 			Effect.provide(state.entry.configLayer),
-			Effect.catchAll(() => Effect.succeed([] as TSessionSummary[])),
+			Effect.catchAll(() => Effect.succeed([] as TsessionSummary[])),
 			Effect.map((sessions) => this.encodeSessions(source.pluginId, sessions)),
 		);
 	}
 
-	public discoverAllProjects(): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
+	public discoverAllProjects(): Effect.Effect<MergedProject<TpluginId>[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
 			const states = yield* this.discoverPluginStates(false);
 			return yield* this.mergeProjects(states.flatMap((state) => state.projects));
@@ -195,7 +195,7 @@ class PluginRegistry<
 	}
 
 	public discoverAllProjectsWithSessions(): Effect.Effect<
-		DiscoveredProjectsWithSessions<TPluginId, TSessionSummary>,
+		DiscoveredProjectsWithSessions<TpluginId, TsessionSummary>,
 		never,
 		RegistryRequirements
 	> {
@@ -203,10 +203,10 @@ class PluginRegistry<
 			const states = yield* this.discoverPluginStates(true);
 			const mergedProjects = yield* this.mergeProjects(states.flatMap((state) => state.projects));
 			const statesByPluginId = new Map(states.map((state) => [state.entry.plugin.id, state] as const));
-			const sessionsByEncodedPath = new Map<string, TSessionSummary[]>();
+			const sessionsByEncodedPath = new Map<string, TsessionSummary[]>();
 
 			for (const project of mergedProjects) {
-				const allSessions: TSessionSummary[] = [];
+				const allSessions: TsessionSummary[] = [];
 
 				for (const source of project.sources) {
 					const state = statesByPluginId.get(source.pluginId);
@@ -228,9 +228,9 @@ class PluginRegistry<
 		});
 	}
 
-	public listAllSessions(project: MergedProject<TPluginId>): Effect.Effect<TSessionSummary[], never, RegistryRequirements> {
+	public listAllSessions(project: MergedProject<TpluginId>): Effect.Effect<TsessionSummary[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
-			const allSessions: TSessionSummary[] = [];
+			const allSessions: TsessionSummary[] = [];
 
 			for (const source of project.sources) {
 				const entry = this.plugins.get(source.pluginId);
@@ -241,7 +241,7 @@ class PluginRegistry<
 				allSessions.push(
 					...(yield* entry.plugin.listSessions(source.nativeId).pipe(
 						Effect.provide(entry.configLayer),
-						Effect.catchAll(() => Effect.succeed([] as TSessionSummary[])),
+						Effect.catchAll(() => Effect.succeed([] as TsessionSummary[])),
 						Effect.map((sessions) => this.encodeSessions(source.pluginId, sessions)),
 					)),
 				);

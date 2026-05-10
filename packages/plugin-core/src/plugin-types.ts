@@ -2,8 +2,8 @@ import type { Effect } from "effect";
 import type { PluginError } from "./plugin-errors";
 import type { PluginRequirements } from "./plugin-runtime";
 
-export type PluginProject<TPluginId extends string = string> = {
-	pluginId: TPluginId;
+export type PluginProject<TpluginId extends string = string> = {
+	pluginId: TpluginId;
 	nativeId: string;
 	resolvedPath: string;
 	displayName: string;
@@ -12,26 +12,26 @@ export type PluginProject<TPluginId extends string = string> = {
 };
 
 export type PluginDiscoveryIndex<
-	TPluginId extends string = string,
-	TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
+	TpluginId extends string = string,
+	TsessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
 > = {
-	projects: PluginProject<TPluginId>[];
-	sessionsByNativeId: Map<string, TSessionSummary[]>;
+	projects: PluginProject<TpluginId>[];
+	sessionsByNativeId: Map<string, TsessionSummary[]>;
 };
 
-export type ProjectSource<TPluginId extends string = string> = {
-	pluginId: TPluginId;
+export type ProjectSource<TpluginId extends string = string> = {
+	pluginId: TpluginId;
 	nativeId: string;
 };
 
-export type MergedProject<TPluginId extends string = string> = {
+export type MergedProject<TpluginId extends string = string> = {
 	encodedPath: string;
 	resolvedPath: string;
 	name: string;
 	fullPath: string;
 	sessionCount: number;
 	lastActivity: string;
-	sources: ProjectSource<TPluginId>[];
+	sources: ProjectSource<TpluginId>[];
 };
 
 export type Badge = {
@@ -49,8 +49,8 @@ export type RegistrySession = {
 	sessionId: string;
 };
 
-export type ToolPluginSessionDetail<TSession extends RegistrySession = RegistrySession> = {
-	session: TSession;
+export type ToolPluginSessionDetail<Tsession extends RegistrySession = RegistrySession> = {
+	session: Tsession;
 	planSessionId?: string | undefined;
 	implSessionId?: string | undefined;
 };
@@ -62,29 +62,29 @@ export type ToolPluginSubAgentParams = {
 };
 
 export type ToolPlugin<
-	TPluginId extends string = string,
-	TSessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
-	TSession extends RegistrySession = RegistrySession,
+	TpluginId extends string = string,
+	TsessionSummary extends RegistrySessionSummary = RegistrySessionSummary,
+	Tsession extends RegistrySession = RegistrySession,
 > = {
-	readonly id: TPluginId;
+	readonly id: TpluginId;
 	readonly displayName: string;
 
 	getDefaultDataDir: () => string | null;
 	readonly isDataAvailable: Effect.Effect<boolean, never, PluginRequirements>;
-	readonly discoverProjects: Effect.Effect<PluginProject<TPluginId>[], PluginError, PluginRequirements>;
+	readonly discoverProjects: Effect.Effect<PluginProject<TpluginId>[], PluginError, PluginRequirements>;
 	readonly discoverIndex?: Effect.Effect<
-		PluginDiscoveryIndex<TPluginId, TSessionSummary>,
+		PluginDiscoveryIndex<TpluginId, TsessionSummary>,
 		PluginError,
 		PluginRequirements
 	>;
-	listSessions: (nativeId: string) => Effect.Effect<TSessionSummary[], PluginError, PluginRequirements>;
-	loadSession: (nativeId: string, sessionId: string) => Effect.Effect<TSession, PluginError, PluginRequirements>;
+	listSessions: (nativeId: string) => Effect.Effect<TsessionSummary[], PluginError, PluginRequirements>;
+	loadSession: (nativeId: string, sessionId: string) => Effect.Effect<Tsession, PluginError, PluginRequirements>;
 	loadSessionDetail?: (
 		nativeId: string,
 		sessionId: string,
-	) => Effect.Effect<ToolPluginSessionDetail<TSession>, PluginError, PluginRequirements>;
-	loadSubAgentSession?: (params: ToolPluginSubAgentParams) => Effect.Effect<TSession, PluginError, PluginRequirements>;
+	) => Effect.Effect<ToolPluginSessionDetail<Tsession>, PluginError, PluginRequirements>;
+	loadSubAgentSession?: (params: ToolPluginSubAgentParams) => Effect.Effect<Tsession, PluginError, PluginRequirements>;
 
 	getResumeCommand?: (sessionId: string) => string | null;
-	getSessionBadges?: (session: TSessionSummary) => Badge[];
+	getSessionBadges?: (session: TsessionSummary) => Badge[];
 };
