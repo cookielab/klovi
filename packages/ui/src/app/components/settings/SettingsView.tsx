@@ -1,3 +1,4 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { Effect } from "effect";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -7,6 +8,38 @@ import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus
 import type { ThemeSetting } from "../../hooks/useTheme";
 import { PluginRow } from "./PluginRow";
 import type { SettingsTab } from "./SettingsSidebar";
+
+
+const T_A = "A-";
+const T_A_2 = "A+";
+const T_UPDATES = "Updates";
+const T_LOADING = "Loading...";
+const T_UPDATE_CHANNEL = "Update Channel";
+const T_STABLE = "Stable";
+const T_RELEASE_CANDIDATE = "Release Candidate";
+const T_BETA = "Beta";
+const T_CHECK_INTERVAL = "Check Interval";
+const T_EVERY_HOUR = "Every hour";
+const T_EVERY_3_HOURS = "Every 3 hours";
+const T_EVERY_6_HOURS = "Every 6 hours";
+const T_EVERY_12_HOURS = "Every 12 hours";
+const T_EVERY_24_HOURS = "Every 24 hours";
+const T_AUTO_DOWNLOAD_UPDATES = "Auto-download updates";
+const T_WHEN_ENABLED_UPDATES_ARE_DOWNL = "When enabled, updates are downloaded in the background automatically.";
+const T_PLUGINS = "Plugins";
+const T_GENERAL = "General";
+const T_SHOW_SECURITY_WARNING_ON_START = "Show security warning on startup";
+const T_WHEN_ENABLED_THE_SECURITY_WARN = "When enabled, the security warning is shown each time Klovi launches.";
+const T_GLOBAL = "Global";
+const T_THEME = "Theme";
+const T_FONT_SIZE = "Font Size";
+const T_PRESENTATION = "Presentation";
+const T_SAME_AS_GLOBAL = "Same as global";
+const T_RESET = "Reset";
+const T_RESET_ALL_SETTINGS_TO_DEFAULTS = "Reset all settings to defaults? This cannot be undone.";
+const T_CANCEL = "Cancel";
+const T_RESET_TO_DEFAULTS = "Reset to defaults";
+const T_DELETES_ALL_SETTINGS_AND_RETUR = "Deletes all settings and returns to the home screen.";
 
 type ThemeProps = {
 	setting: ThemeSetting;
@@ -146,7 +179,7 @@ function FontSizeControl({
 	return (
 		<div className={`${FONT_SIZE_CONTROL_BASE_CLASSES} ${disabled ? FONT_SIZE_CONTROL_DISABLED_CLASSES : ""}`}>
 			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size <= 10} onClick={onDecrease}>
-				A-
+				<Text>{T_A}</Text>
 			</button>
 			<span className={FONT_SIZE_VALUE_CLASSES}>{size}</span>
 			<button
@@ -155,7 +188,7 @@ function FontSizeControl({
 				disabled={disabled || size >= MAX_FONT_SIZE}
 				onClick={onIncrease}
 			>
-				A+
+				<Text>{T_A_2}</Text>
 			</button>
 		</div>
 	);
@@ -264,33 +297,33 @@ function UpdatesTab({
 
 	return (
 		<>
-			<h4 className={SUBSECTION_TITLE_CLASSES}>Updates</h4>
+			<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_UPDATES}</Text></h4>
 			{loading ? (
-				<div className={LOADING_CLASSES}>Loading...</div>
+				<div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>
 			) : (
 				updateSettings && (
 					<>
 						<div className={CONTROL_ROW_CLASSES}>
-							<span className={CONTROL_LABEL_CLASSES}>Update Channel</span>
+							<span className={CONTROL_LABEL_CLASSES}><Text>{T_UPDATE_CHANNEL}</Text></span>
 							<select className={SELECT_CLASSES} value={updateSettings.channel} onChange={handleChannelChange}>
-								<option value="stable">Stable</option>
-								<option value="candidate">Release Candidate</option>
-								<option value="beta">Beta</option>
+								<option value="stable"><Text>{T_STABLE}</Text></option>
+								<option value="candidate"><Text>{T_RELEASE_CANDIDATE}</Text></option>
+								<option value="beta"><Text>{T_BETA}</Text></option>
 							</select>
 						</div>
 
 						<div className={CONTROL_ROW_CLASSES}>
-							<span className={CONTROL_LABEL_CLASSES}>Check Interval</span>
+							<span className={CONTROL_LABEL_CLASSES}><Text>{T_CHECK_INTERVAL}</Text></span>
 							<select
 								className={SELECT_CLASSES}
 								value={updateSettings.checkIntervalHours}
 								onChange={handleIntervalChange}
 							>
-								<option value={1}>Every hour</option>
-								<option value={3}>Every 3 hours</option>
-								<option value={6}>Every 6 hours</option>
-								<option value={12}>Every 12 hours</option>
-								<option value={24}>Every 24 hours</option>
+								<option value={1}><Text>{T_EVERY_HOUR}</Text></option>
+								<option value={3}><Text>{T_EVERY_3_HOURS}</Text></option>
+								<option value={6}><Text>{T_EVERY_6_HOURS}</Text></option>
+								<option value={12}><Text>{T_EVERY_12_HOURS}</Text></option>
+								<option value={24}><Text>{T_EVERY_24_HOURS}</Text></option>
 							</select>
 						</div>
 
@@ -303,10 +336,10 @@ function UpdatesTab({
 										checked={updateSettings.autoDownload}
 										onChange={handleAutoDownloadChange}
 									/>
-									Auto-download updates
+									<Text>{T_AUTO_DOWNLOAD_UPDATES}</Text>
 								</label>
 								<p className={GENERAL_HINT_CLASSES}>
-									When enabled, updates are downloaded in the background automatically.
+									<Text>{T_WHEN_ENABLED_UPDATES_ARE_DOWNL}</Text>
 								</p>
 							</div>
 						</div>
@@ -498,9 +531,9 @@ export function SettingsView({
 			<div className={CONTENT_CLASSES}>
 				{activeTab === "plugins" && (
 					<>
-						<h3 className={SECTION_TITLE_CLASSES}>Plugins</h3>
+						<h3 className={SECTION_TITLE_CLASSES}><Text>{T_PLUGINS}</Text></h3>
 						{loading ? (
-							<div className={LOADING_CLASSES}>Loading...</div>
+							<div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>
 						) : (
 							<div className={PLUGIN_LIST_CLASSES}>
 								{plugins.map((plugin) => (
@@ -520,9 +553,9 @@ export function SettingsView({
 				)}
 				{activeTab === "general" && (
 					<>
-						<h3 className={SECTION_TITLE_CLASSES}>General</h3>
+						<h3 className={SECTION_TITLE_CLASSES}><Text>{T_GENERAL}</Text></h3>
 						{loading ? (
-							<div className={LOADING_CLASSES}>Loading...</div>
+							<div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>
 						) : (
 							<>
 								<div className={CONTROL_ROW_CLASSES}>
@@ -534,30 +567,30 @@ export function SettingsView({
 												checked={showSecurityWarning}
 												onChange={handleSecurityWarningChange}
 											/>
-											Show security warning on startup
+											<Text>{T_SHOW_SECURITY_WARNING_ON_START}</Text>
 										</label>
 										<p className={GENERAL_HINT_CLASSES}>
-											When enabled, the security warning is shown each time Klovi launches.
+											<Text>{T_WHEN_ENABLED_THE_SECURITY_WARN}</Text>
 										</p>
 									</div>
 								</div>
 
-								<h4 className={SUBSECTION_TITLE_CLASSES}>Global</h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_GLOBAL}</Text></h4>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}>Theme</span>
+									<span className={CONTROL_LABEL_CLASSES}><Text>{T_THEME}</Text></span>
 									<ThemeSelector value={theme.setting} onChange={theme.set} />
 								</div>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}>Font Size</span>
+									<span className={CONTROL_LABEL_CLASSES}><Text>{T_FONT_SIZE}</Text></span>
 									<FontSizeControl size={fontSize.size} onIncrease={fontSize.increase} onDecrease={fontSize.decrease} />
 								</div>
 
-								<h4 className={SUBSECTION_TITLE_CLASSES}>Presentation</h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_PRESENTATION}</Text></h4>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}>Theme</span>
+									<span className={CONTROL_LABEL_CLASSES}><Text>{T_THEME}</Text></span>
 									<div className={CONTROL_GROUP_CLASSES}>
 										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
@@ -566,7 +599,7 @@ export function SettingsView({
 												checked={presentationTheme.sameAsGlobal}
 												onChange={handlePresentationThemeSameChange}
 											/>
-											Same as global
+											<Text>{T_SAME_AS_GLOBAL}</Text>
 										</label>
 										<ThemeSelector
 											value={presentationTheme.setting}
@@ -577,7 +610,7 @@ export function SettingsView({
 								</div>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}>Font Size</span>
+									<span className={CONTROL_LABEL_CLASSES}><Text>{T_FONT_SIZE}</Text></span>
 									<div className={CONTROL_GROUP_CLASSES}>
 										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
@@ -586,7 +619,7 @@ export function SettingsView({
 												checked={presentationFontSize.sameAsGlobal}
 												onChange={handlePresentationFontSizeSameChange}
 											/>
-											Same as global
+											<Text>{T_SAME_AS_GLOBAL}</Text>
 										</label>
 										<FontSizeControl
 											size={presentationFontSize.size}
@@ -606,12 +639,12 @@ export function SettingsView({
 									/>
 								) : null}
 
-								<h4 className={SUBSECTION_TITLE_CLASSES}>Reset</h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_RESET}</Text></h4>
 								<div className={CONTROL_ROW_CLASSES}>
 									{confirmingReset ? (
 										<div className={CONTROL_GROUP_CLASSES}>
 											<p className={RESET_CONFIRM_TEXT_CLASSES}>
-												Reset all settings to defaults? This cannot be undone.
+												<Text>{T_RESET_ALL_SETTINGS_TO_DEFAULTS}</Text>
 											</p>
 											<div className={RESET_CONFIRM_ACTIONS_CLASSES}>
 												<button
@@ -628,7 +661,7 @@ export function SettingsView({
 													disabled={resetting}
 													onClick={cancelReset}
 												>
-													Cancel
+													<Text>{T_CANCEL}</Text>
 												</button>
 											</div>
 										</div>
@@ -640,9 +673,9 @@ export function SettingsView({
 												disabled={resetting}
 												onClick={startReset}
 											>
-												Reset to defaults
+												<Text>{T_RESET_TO_DEFAULTS}</Text>
 											</button>
-											<p className={GENERAL_HINT_CLASSES}>Deletes all settings and returns to the home screen.</p>
+											<p className={GENERAL_HINT_CLASSES}><Text>{T_DELETES_ALL_SETTINGS_AND_RETUR}</Text></p>
 										</div>
 									)}
 								</div>

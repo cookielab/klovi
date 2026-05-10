@@ -1,9 +1,17 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { useCallback, useEffect, useState } from "react";
 import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context";
 import { kloviHostBridge } from "../../../lib/rpc-client";
 import type { PluginSettingInfo } from "../../../shared/rpc-types";
 import { PluginRow } from "../settings/PluginRow";
 import { SecurityNoticeContent } from "./SecurityWarning";
+
+
+const T_PLUGINS = "Plugins";
+const T_CHOOSE_WHICH_AI_CODING_TOOLS_T = "Choose which AI coding tools to monitor";
+const T_LOADING = "Loading...";
+const T_GET_STARTED = "Get Started";
+const T_BACK = "Back";
 
 const WRAPPER_CLASSES = "flex min-h-screen items-center justify-center bg-surface p-[20px]";
 const CONTENT_CLASSES = "w-full max-w-[480px] text-center leading-[1.6] text-foreground-muted";
@@ -111,11 +119,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 				{step === 2 && (
 					<>
 						<h1 id="onboarding-heading" className={HEADING_CLASSES}>
-							Plugins
+							<Text>{T_PLUGINS}</Text>
 						</h1>
-						<p className={SUBTITLE_CLASSES}>Choose which AI coding tools to monitor</p>
+						<p className={SUBTITLE_CLASSES}><Text>{T_CHOOSE_WHICH_AI_CODING_TOOLS_T}</Text></p>
 						{loading ? (
-							<div>Loading...</div>
+							<div><Text>{T_LOADING}</Text></div>
 						) : (
 							<div className={PLUGINS_CLASSES}>
 								{plugins.map((plugin) => (
@@ -132,10 +140,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 							</div>
 						)}
 						<button type="button" className={BUTTON_CLASSES} onClick={onComplete}>
-							Get Started
+							<Text>{T_GET_STARTED}</Text>
 						</button>
 						<button type="button" className={BACK_CLASSES} onClick={handleBackToStep1}>
-							Back
+							<Text>{T_BACK}</Text>
 						</button>
 					</>
 				)}

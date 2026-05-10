@@ -1,7 +1,16 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Button } from "../components/Button/Button";
 import { Modal } from "../components/Modal/Modal";
+
+
+const T_OPEN_MODAL = "Open Modal";
+const T_MODAL_TITLE = "Modal Title";
+const T_THIS_IS_MODAL_CONTENT_PRESS_ES = "This is modal content. Press Escape or click outside to close.";
+const T_CLOSE = "Close";
+const T_STATIC_MODAL = "Static Modal";
+const T_THIS_MODAL_IS_ALWAYS_OPEN_IN_T = "This modal is always open in this story.";
 
 const meta: Meta<typeof Modal> = {
 	title: "Components/Modal",
@@ -16,14 +25,14 @@ function ModalDemo() {
 	const [open, setOpen] = useState(false);
 	return (
 		<div>
-			<Button onClick={() => setOpen(true)}>Open Modal</Button>
+			<Button onClick={() => setOpen(true)}><Text>{T_OPEN_MODAL}</Text></Button>
 			<Modal open={open} onClose={() => setOpen(false)}>
 				<div>
-					<h2>Modal Title</h2>
-					<p>This is modal content. Press Escape or click outside to close.</p>
+					<h2><Text>{T_MODAL_TITLE}</Text></h2>
+					<p><Text>{T_THIS_IS_MODAL_CONTENT_PRESS_ES}</Text></p>
 					<div>
 						<Button variant="primary" onClick={() => setOpen(false)}>
-							Close
+							<Text>{T_CLOSE}</Text>
 						</Button>
 					</div>
 				</div>
@@ -42,8 +51,8 @@ export const Open: Story = {
 		onClose: () => undefined,
 		children: (
 			<div>
-				<h2>Static Modal</h2>
-				<p>This modal is always open in this story.</p>
+				<h2><Text>{T_STATIC_MODAL}</Text></h2>
+				<p><Text>{T_THIS_MODAL_IS_ALWAYS_OPEN_IN_T}</Text></p>
 			</div>
 		),
 	},

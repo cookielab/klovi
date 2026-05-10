@@ -1,6 +1,11 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types";
+
+
+const T_BROWSE = "Browse";
+const T_RESET = "Reset";
 
 type PluginRowProps = {
 	plugin: PluginSettingInfo;
@@ -87,12 +92,12 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrows
 				/>
 				{canBrowse ? (
 					<button type="button" className={BROWSE_BTN_CLASSES} onClick={handleBrowse} disabled={!plugin.enabled}>
-						Browse
+						<Text>{T_BROWSE}</Text>
 					</button>
 				) : null}
 				{plugin.isCustomDir ? (
 					<button type="button" className={RESET_LINK_CLASSES} onClick={handleReset} disabled={!plugin.enabled}>
-						Reset
+						<Text>{T_RESET}</Text>
 					</button>
 				) : null}
 			</div>

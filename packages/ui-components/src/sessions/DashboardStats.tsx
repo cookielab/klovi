@@ -1,5 +1,24 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { ModelTokenUsage, DashboardStats as Stats } from "../types/index";
 import { FetchError } from "../utilities/FetchError";
+
+
+const T_LOADING_STATS = "Loading stats...";
+const T_REFRESHING_STATS = "Refreshing stats...";
+const T_PROJECTS = "Projects";
+const T_SESSIONS = "Sessions";
+const T_MESSAGES = "Messages";
+const T_TODAY_SESSIONS = "Today Sessions";
+const T_THIS_WEEK = "This Week";
+const T_TOOL_CALLS = "Tool Calls";
+const T_TOKENS = "Tokens";
+const T_INPUT = "Input";
+const T_OUTPUT = "Output";
+const T_CACHE_READ = "Cache Read";
+const T_CACHE_CREATION = "Cache Creation";
+const T_MODELS = "Models";
+const T_TOKENS_2 = "tokens";
+const T_SP_1 = " ";
 
 const fmt = new Intl.NumberFormat();
 const CLAUDE_MODEL_NAME_REGEX = /claude-(?<modelId>\w+-[\d-]+?)(?:-\d{8})?$/u;
@@ -67,7 +86,7 @@ export function DashboardStats({ stats, loading, refreshing, error, onRetry }: D
 	if (loading) {
 		return (
 			<div className={DASHBOARD_STATS_CLASSES} aria-busy="true" role="status" aria-label="Loading stats">
-				<div className={STATS_STATUS_CLASSES}>Loading stats...</div>
+				<div className={STATS_STATUS_CLASSES}><Text>{T_LOADING_STATS}</Text></div>
 				<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
 					{["skeleton-0", "skeleton-1", "skeleton-2"].map((key) => (
 						<div key={key} className={`${STAT_CARD_CLASSES} ${STAT_CARD_SKELETON_CLASSES}`}>
@@ -122,67 +141,67 @@ export function DashboardStats({ stats, loading, refreshing, error, onRetry }: D
 
 	return (
 		<div className={DASHBOARD_STATS_CLASSES}>
-			{refreshing ? <div className={STATS_STATUS_CLASSES}>Refreshing stats...</div> : null}
+			{refreshing ? <div className={STATS_STATUS_CLASSES}><Text>{T_REFRESHING_STATS}</Text></div> : null}
 			<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.projects)}</div>
-					<div className={STAT_LABEL_CLASSES}>Projects</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_PROJECTS}</Text></div>
 				</div>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.sessions)}</div>
-					<div className={STAT_LABEL_CLASSES}>Sessions</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_SESSIONS}</Text></div>
 				</div>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.messages)}</div>
-					<div className={STAT_LABEL_CLASSES}>Messages</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_MESSAGES}</Text></div>
 				</div>
 			</div>
 
 			<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_3_CLASSES}`}>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.todaySessions)}</div>
-					<div className={STAT_LABEL_CLASSES}>Today Sessions</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_TODAY_SESSIONS}</Text></div>
 				</div>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.thisWeekSessions)}</div>
-					<div className={STAT_LABEL_CLASSES}>This Week</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_THIS_WEEK}</Text></div>
 				</div>
 				<div className={STAT_CARD_CLASSES}>
 					<div className={STAT_VALUE_CLASSES}>{fmt.format(stats.toolCalls)}</div>
-					<div className={STAT_LABEL_CLASSES}>Tool Calls</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_TOOL_CALLS}</Text></div>
 				</div>
 			</div>
 
 			<div className={STAT_CARD_CLASSES}>
-				<div className={STAT_LABEL_CLASSES}>Tokens</div>
+				<div className={STAT_LABEL_CLASSES}><Text>{T_TOKENS}</Text></div>
 				<div className={`${STATS_ROW_CLASSES} ${STATS_ROW_4_CLASSES} ${TOKEN_ROW_CLASSES}`}>
 					<div title={fmt.format(stats.inputTokens)}>
 						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.inputTokens)}</div>
-						<div className={STAT_SUBLABEL_CLASSES}>Input</div>
+						<div className={STAT_SUBLABEL_CLASSES}><Text>{T_INPUT}</Text></div>
 					</div>
 					<div title={fmt.format(stats.outputTokens)}>
 						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.outputTokens)}</div>
-						<div className={STAT_SUBLABEL_CLASSES}>Output</div>
+						<div className={STAT_SUBLABEL_CLASSES}><Text>{T_OUTPUT}</Text></div>
 					</div>
 					<div title={fmt.format(stats.cacheReadTokens)}>
 						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.cacheReadTokens)}</div>
-						<div className={STAT_SUBLABEL_CLASSES}>Cache Read</div>
+						<div className={STAT_SUBLABEL_CLASSES}><Text>{T_CACHE_READ}</Text></div>
 					</div>
 					<div title={fmt.format(stats.cacheCreationTokens)}>
 						<div className={STAT_VALUE_CLASSES}>{compactNumber(stats.cacheCreationTokens)}</div>
-						<div className={STAT_SUBLABEL_CLASSES}>Cache Creation</div>
+						<div className={STAT_SUBLABEL_CLASSES}><Text>{T_CACHE_CREATION}</Text></div>
 					</div>
 				</div>
 			</div>
 
 			{sortedModels.length > 0 && (
 				<div className={STAT_CARD_CLASSES}>
-					<div className={STAT_LABEL_CLASSES}>Models</div>
+					<div className={STAT_LABEL_CLASSES}><Text>{T_MODELS}</Text></div>
 					<ul className={MODEL_LIST_CLASSES}>
 						{sortedModels.map(([model, usage]) => (
 							<li key={model} className={MODEL_LIST_ITEM_CLASSES}>
 								<span className={MODEL_NAME_CLASSES}>{simplifyModelName(model)}</span>
-								<span className={MODEL_COUNT_CLASSES}>{compactNumber(totalTokens(usage))} tokens</span>
+								<span className={MODEL_COUNT_CLASSES}>{compactNumber(totalTokens(usage))}<Text>{T_SP_1}</Text><Text>{T_TOKENS_2}</Text></span>
 							</li>
 						))}
 					</ul>

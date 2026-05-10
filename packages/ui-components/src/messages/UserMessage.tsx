@@ -1,9 +1,15 @@
-import { TurnBox } from "@cookielab.io/klovi-design-system";
+import { Text, TurnBox } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import type { UserTurn } from "../types/index";
 import { formatFullDateTime, formatTimestamp } from "../utilities/index";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { UserBashContent } from "./UserBashContent";
+
+
+const T_OPENED = "Opened";
+const T_SP_1 = " ";
+const T_SKILL = "skill";
+const T_IMAGE = "image/";
 
 const IMAGE_MEDIA_TYPE_PREFIX_REGEX = /^image\//u;
 const STATUS_RE = /^\[.+\]$/u;
@@ -89,7 +95,7 @@ export function UserMessage({
 	if (turn.ideOpenedFile !== undefined) {
 		return (
 			<div className={IDE_OPENED_FILE_NOTICE_CLASSES}>
-				Opened <code className={IDE_OPENED_FILE_PATH_CLASSES}>{turn.ideOpenedFile}</code>
+				<Text>{T_OPENED}</Text><Text>{T_SP_1}</Text><code className={IDE_OPENED_FILE_PATH_CLASSES}>{turn.ideOpenedFile}</code>
 			</div>
 		);
 	}
@@ -130,7 +136,7 @@ export function UserMessage({
 		>
 			{turn.command ? (
 				<div className={COMMAND_CALL_CLASSES}>
-					<span className={SKILL_BADGE_CLASSES}>skill</span>
+					<span className={SKILL_BADGE_CLASSES}><Text>{T_SKILL}</Text></span>
 					<span className={COMMAND_CALL_LABEL_CLASSES}>{turn.command.name}</span>
 				</div>
 			) : null}
@@ -139,7 +145,7 @@ export function UserMessage({
 				<div className={ATTACHMENTS_CLASSES}>
 					{turn.attachments.map((a, i) => (
 						<span key={i} className={ATTACHMENT_BADGE_CLASSES}>
-							image/{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
+							<Text>{T_IMAGE}</Text>{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
 						</span>
 					))}
 				</div>

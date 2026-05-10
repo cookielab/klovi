@@ -1,6 +1,13 @@
-import { Button } from "@cookielab.io/klovi-design-system";
+import { Button, Text } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import { Component } from "react";
+
+
+const T_FAILED_TO_RENDER = "Failed to render";
+const T_RETRY = "Retry";
+const T_ERROR_DETAILS = "Error details";
+const T_SOMETHING_WENT_WRONG = "Something went wrong";
+const T_TRY_AGAIN = "Try Again";
 
 type ErrorBoundaryProps = {
 	children: React.ReactNode;
@@ -33,13 +40,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 			return (
 				<div className="my-2 border border-error border-l-4 bg-surface px-4 py-3 text-[0.85rem]">
 					<div className="flex items-center justify-between gap-2">
-						<span className="font-semibold text-error">Failed to render</span>
+						<span className="font-semibold text-error"><Text>{T_FAILED_TO_RENDER}</Text></span>
 						<Button size="sm" onClick={this.retry}>
-							Retry
+							<Text>{T_RETRY}</Text>
 						</Button>
 					</div>
 					<details className="mt-2">
-						<summary className="cursor-pointer select-none text-[0.8em] text-foreground-subtle">Error details</summary>
+						<summary className="cursor-pointer select-none text-[0.8em] text-foreground-subtle"><Text>{T_ERROR_DETAILS}</Text></summary>
 						<pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all bg-surface-sunken p-2 text-[0.8em]">
 							{error.stack || error.message}
 						</pre>
@@ -50,10 +57,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 		return (
 			<div className="flex flex-col items-center justify-center p-10 text-center">
-				<div className="mb-2 font-semibold text-[1.1rem] text-error">Something went wrong</div>
+				<div className="mb-2 font-semibold text-[1.1rem] text-error"><Text>{T_SOMETHING_WENT_WRONG}</Text></div>
 				<div className="mb-4 text-[0.9rem] text-foreground-muted">{error.message}</div>
 				<Button variant="primary" onClick={this.retry}>
-					Try Again
+					<Text>{T_TRY_AGAIN}</Text>
 				</Button>
 			</div>
 		);

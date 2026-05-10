@@ -1,8 +1,18 @@
-import { Button } from "@cookielab.io/klovi-design-system";
+import { Button, Text } from "@cookielab.io/klovi-design-system";
 import { useCallback } from "react";
 import type { Project } from "../types/index";
 import { FetchError } from "../utilities/FetchError";
 import { projectDisplayName } from "./ProjectList";
+
+
+const T_SESSION = "session";
+const T_SP_1 = " ";
+const T_UNHIDE = "Unhide";
+const T_LOADING = "Loading...";
+const T_BACK_TO_PROJECTS = "← Back to projects";
+const T_HIDDEN_PROJECTS = "Hidden Projects";
+const T_NO_HIDDEN_PROJECTS = "No hidden projects";
+const T_PROJECTS_YOU_HIDE_WILL_APPEAR_ = "Projects you hide will appear here";
 
 const HIDDEN_PROJECTS_PAGE_CLASSES = "mx-auto w-full max-w-[600px] p-[20px]";
 const BACK_BTN_CLASSES =
@@ -26,11 +36,11 @@ function HiddenProjectItem({ project, onUnhide }: { project: Project; onUnhide: 
 			<div className={LIST_ITEM_CONTENT_CLASSES}>
 				<div className={LIST_ITEM_TITLE_CLASSES}>{projectDisplayName(project)}</div>
 				<div className={LIST_ITEM_META_CLASSES}>
-					{project.sessionCount} session{project.sessionCount === 1 ? "" : "s"}
+					{project.sessionCount}<Text>{T_SP_1}</Text><Text>{T_SESSION}</Text>{project.sessionCount === 1 ? "" : "s"}
 				</div>
 			</div>
 			<Button size="sm" onClick={handleUnhide}>
-				Unhide
+				<Text>{T_UNHIDE}</Text>
 			</Button>
 		</div>
 	);
@@ -56,7 +66,7 @@ export function HiddenProjectList({
 	onBack,
 }: HiddenProjectListProps) {
 	if (loading) {
-		return <div className={LOADING_CLASSES}>Loading...</div>;
+		return <div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>;
 	}
 	if (error) {
 		return <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} />;
@@ -67,13 +77,13 @@ export function HiddenProjectList({
 	return (
 		<div className={HIDDEN_PROJECTS_PAGE_CLASSES}>
 			<button type="button" className={BACK_BTN_CLASSES} onClick={onBack}>
-				← Back to projects
+				<Text>{T_BACK_TO_PROJECTS}</Text>
 			</button>
-			<h2 className={HEADING_CLASSES}>Hidden Projects</h2>
+			<h2 className={HEADING_CLASSES}><Text>{T_HIDDEN_PROJECTS}</Text></h2>
 			{hidden.length === 0 ? (
 				<div className={EMPTY_STATE_CLASSES}>
-					<div className={EMPTY_STATE_TITLE_CLASSES}>No hidden projects</div>
-					<p>Projects you hide will appear here</p>
+					<div className={EMPTY_STATE_TITLE_CLASSES}><Text>{T_NO_HIDDEN_PROJECTS}</Text></div>
+					<p><Text>{T_PROJECTS_YOU_HIDE_WILL_APPEAR_}</Text></p>
 				</div>
 			) : (
 				hidden.map((project) => <HiddenProjectItem key={project.encodedPath} project={project} onUnhide={onUnhide} />)

@@ -1,6 +1,9 @@
-import { CodeBox } from "@cookielab.io/klovi-design-system";
+import { CodeBox, Text } from "@cookielab.io/klovi-design-system";
 import { SmartToolOutput } from "../tools/index";
 import type { UserTurn } from "../types/index";
+
+
+const T_COMMAND = "Command";
 
 type UserBashContentProps = {
 	turn: UserTurn;
@@ -16,7 +19,7 @@ export function UserBashContent({ turn }: UserBashContentProps) {
 		<>
 			{turn.bashInput !== undefined && (
 				<div className={output ? "mb-2" : ""}>
-					<div className={LABEL_CLASSES}>Command</div>
+					<div className={LABEL_CLASSES}><Text>{T_COMMAND}</Text></div>
 					<CodeBox language="bash">{turn.bashInput}</CodeBox>
 				</div>
 			)}

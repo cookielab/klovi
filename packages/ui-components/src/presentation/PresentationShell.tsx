@@ -1,9 +1,16 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useEffect, useRef } from "react";
 import { MessageList } from "../messages/index";
 import type { Turn } from "../types/index";
 import { useKeyboard } from "./useKeyboard";
 import { usePresentationMode } from "./usePresentationMode";
+
+
+const T_STEP = "Step";
+const T_SP_1 = " ";
+const T_TEXT = "/";
+const T_STEP_MESSAGE_ESC_EXIT_F_FULLSC = "← → step · ↑ ↓ message · Esc exit · F fullscreen";
 
 type PresentationShellProps = {
 	turns: Turn[];
@@ -87,12 +94,12 @@ export function PresentationShell({
 			/>
 			<div className={PROGRESS_CLASSES}>
 				<span>
-					Step {presentation.currentStep + 1} / {presentation.totalSteps}
+					<Text>{T_STEP}</Text><Text>{T_SP_1}</Text>{presentation.currentStep + 1}<Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{presentation.totalSteps}
 				</span>
 				<div className={PROGRESS_BAR_CLASSES}>
 					<div className={PROGRESS_FILL_CLASSES} style={{ width: `${progress}%` }} />
 				</div>
-				<span className={HINT_CLASSES}>← → step · ↑ ↓ message · Esc exit · F fullscreen</span>
+				<span className={HINT_CLASSES}><Text>{T_STEP_MESSAGE_ESC_EXIT_F_FULLSC}</Text></span>
 			</div>
 		</div>
 	);

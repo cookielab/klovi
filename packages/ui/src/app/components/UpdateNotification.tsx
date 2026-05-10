@@ -1,7 +1,11 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { useCallback, useState } from "react";
 import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
 import { kloviHostBridge } from "../../lib/rpc-client";
 import type { UpdateStatus } from "../../shared/rpc-types";
+
+
+const T_TIMES = "&times;";
 
 const NOTIFICATION_CLASSES =
 	"flex items-center gap-[12px] border-border-muted border-b bg-accent-subtle px-[12px] py-[6px] text-[0.85rem]";
@@ -56,7 +60,7 @@ function UpdateNotification({
 			<div className={NOTIFICATION_CLASSES}>
 				<span className={TEXT_CLASSES}>{formatManualCheckResult(manualCheckResult)}</span>
 				<button type="button" className={DISMISS_CLASSES} aria-label="Dismiss" onClick={onDismissManualCheck}>
-					&times;
+					<Text>{T_TIMES}</Text>
 				</button>
 			</div>
 		);
@@ -96,7 +100,7 @@ function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDi
 				{applying ? "Restarting…" : "Restart to update"}
 			</button>
 			<button type="button" className={DISMISS_CLASSES} aria-label="Dismiss" onClick={onDismiss}>
-				&times;
+				<Text>{T_TIMES}</Text>
 			</button>
 		</div>
 	);

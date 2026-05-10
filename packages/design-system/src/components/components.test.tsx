@@ -1,3 +1,4 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { Badge } from "./Badge/Badge";
 import { Button } from "./Button/Button";
@@ -12,6 +13,19 @@ import { Sidebar } from "./Layout/Sidebar";
 import { SidebarButton } from "./Layout/SidebarButton";
 import { Modal } from "./Modal/Modal";
 
+
+const T_SAVE = "Save";
+const T_HIDDEN_CONTENT = "Hidden content";
+const T_INNER = "Inner";
+const T_CLOSED = "Closed";
+const T_NAME = "Name";
+const T_THEME = "Theme";
+const T_MENU = "Menu";
+const T_MAIN_CONTENT = "Main content";
+const T_SEARCH = "Search";
+const T_DEFAULT = "Default";
+const T_PLAN = "Plan";
+
 const DETAILS_BUTTON_NAME = /details/iu;
 
 afterEach(cleanup);
@@ -22,7 +36,7 @@ describe("design-system components", () => {
 
 		const { getByRole } = render(
 			<Button variant="primary" size="sm" icon={true} className="custom" onClick={onClick}>
-				Save
+				<Text>{T_SAVE}</Text>
 			</Button>,
 		);
 
@@ -37,7 +51,7 @@ describe("design-system components", () => {
 	it("Collapsible toggles content visibility", () => {
 		const { queryByText, getByRole } = render(
 			<Collapsible title="Details">
-				<div>Hidden content</div>
+				<div><Text>{T_HIDDEN_CONTENT}</Text></div>
 			</Collapsible>,
 		);
 
@@ -55,7 +69,7 @@ describe("design-system components", () => {
 
 		const { getByRole, getByText, rerender } = render(
 			<Modal open={true} onClose={onClose} width={640}>
-				<button type="button">Inner</button>
+				<button type="button"><Text>{T_INNER}</Text></button>
 			</Modal>,
 		);
 
@@ -77,7 +91,7 @@ describe("design-system components", () => {
 
 		rerender(
 			<Modal open={false} onClose={onClose}>
-				<div>Closed</div>
+				<div><Text>{T_CLOSED}</Text></div>
 			</Modal>,
 		);
 
@@ -125,7 +139,7 @@ describe("design-system components", () => {
 
 		const { getByLabelText, getByRole } = render(
 			<div>
-				<label htmlFor="name">Name</label>
+				<label htmlFor="name"><Text>{T_NAME}</Text></label>
 				<Input
 					id="name"
 					value="Jane"
@@ -134,7 +148,7 @@ describe("design-system components", () => {
 					}}
 				/>
 
-				<label htmlFor="theme">Theme</label>
+				<label htmlFor="theme"><Text>{T_THEME}</Text></label>
 				<Select
 					id="theme"
 					value="light"
@@ -169,13 +183,13 @@ describe("design-system components", () => {
 			<AppLayout
 				sidebar={
 					<Sidebar header="Top" footer="Bottom">
-						Menu
+						<Text>{T_MENU}</Text>
 					</Sidebar>
 				}
 				hideSidebar={true}
 			>
 				<ContentHeader left="Left" right="Right" />
-				<div>Main content</div>
+				<div><Text>{T_MAIN_CONTENT}</Text></div>
 			</AppLayout>,
 		);
 
@@ -191,7 +205,7 @@ describe("design-system components", () => {
 		const onClick = mock(() => undefined);
 		const { getByRole } = render(
 			<SidebarButton onClick={onClick} title="Search">
-				Search
+				<Text>{T_SEARCH}</Text>
 			</SidebarButton>,
 		);
 
@@ -204,12 +218,12 @@ describe("design-system components", () => {
 	});
 
 	it("Badge renders content for multiple variants", () => {
-		const { getByText, rerender } = render(<Badge>Default</Badge>);
+		const { getByText, rerender } = render(<Badge><Text>{T_DEFAULT}</Text></Badge>);
 		expect(getByText("Default")).toBeTruthy();
 
 		rerender(
 			<Badge variant="plan" mono={true}>
-				Plan
+				<Text>{T_PLAN}</Text>
 			</Badge>,
 		);
 

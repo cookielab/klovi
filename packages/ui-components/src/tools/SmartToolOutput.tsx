@@ -1,9 +1,13 @@
-import { CodeBox } from "@cookielab.io/klovi-design-system";
+import { CodeBox, Text } from "@cookielab.io/klovi-design-system";
 import { useCallback, useState } from "react";
 import type { ToolResultImage } from "../types/index";
 import { detectOutputFormat } from "../utilities/format-detector";
 import { ImageLightbox } from "../utilities/ImageLightbox";
 import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults";
+
+
+const T_OUTPUT = "Output";
+const T_TRUNCATED = "... (truncated)";
 
 const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
 const OUTPUT_BASE_CLASSES =
@@ -50,12 +54,12 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 
 	return (
 		<div>
-			<div className={SECTION_LABEL_CLASSES}>Output</div>
+			<div className={SECTION_LABEL_CLASSES}><Text>{T_OUTPUT}</Text></div>
 			{output && detectedLang && !isError ? <CodeBox language={detectedLang}>{truncated}</CodeBox> : null}
 			{output && !(detectedLang && !isError) ? (
 				<div className={`${OUTPUT_BASE_CLASSES}${isError ? "text-error" : ""}`}>{truncated}</div>
 			) : null}
-			{wasTruncated && <div className="py-1 text-[0.75rem] text-foreground-subtle italic">... (truncated)</div>}
+			{wasTruncated && <div className="py-1 text-[0.75rem] text-foreground-subtle italic"><Text>{T_TRUNCATED}</Text></div>}
 			{resultImages && resultImages.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{resultImages.map((img, i) => (

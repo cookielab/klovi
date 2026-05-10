@@ -1,4 +1,4 @@
-import { CodeBox, Collapsible } from "@cookielab.io/klovi-design-system";
+import { CodeBox, Collapsible, Text } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type React from "react";
 import type { ToolCallWithResult } from "../types/index";
@@ -6,6 +6,14 @@ import { BashToolContent } from "./BashToolContent";
 import { DiffView } from "./DiffView";
 import { SmartToolOutput } from "./SmartToolOutput";
 import { formatToolInput, getToolSummary, hasInputFormatter } from "./ToolCallDefaults";
+
+
+const T_INPUT = "Input";
+const T_SKILL = "skill";
+const T_TEXT = "—";
+const T_SP_1 = " ";
+const T_ERROR = "(error)";
+const T_OPEN_CONVERSATION = "Open conversation";
 
 const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
 const INPUT_CLASSES = "font-mono text-[0.78rem] leading-[1.5] whitespace-pre-wrap break-words text-foreground-muted";
@@ -52,7 +60,7 @@ function DefaultToolContent({
 	return (
 		<>
 			<div className="mb-2">
-				<div className={SECTION_LABEL_CLASSES}>Input</div>
+				<div className={SECTION_LABEL_CLASSES}><Text>{T_INPUT}</Text></div>
 				{jsonInput ? (
 					<CodeBox language="json">{formattedInput}</CodeBox>
 				) : (
@@ -123,17 +131,17 @@ export function ToolCall({
 				title={
 					<span>
 						{mcpServer ? <span className={MCP_BADGE_CLASSES}>{mcpServer}</span> : null}
-						{skillName ? <span className={SKILL_BADGE_CLASSES}>skill</span> : null}
+						{skillName ? <span className={SKILL_BADGE_CLASSES}><Text>{T_SKILL}</Text></span> : null}
 						<span className={TOOL_NAME_CLASSES}>{displayName}</span>
-						{summary && !skillName ? <span className={TOOL_SUMMARY_CLASSES}> — {summary}</span> : null}
-						{call.isError ? <span className="text-error"> (error)</span> : null}
+						{summary && !skillName ? <span className={TOOL_SUMMARY_CLASSES}><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{summary}</span> : null}
+						{call.isError ? <span className="text-error"><Text>{T_SP_1}</Text><Text>{T_ERROR}</Text></span> : null}
 						{hasSubAgent ? (
 							<a
 								className={SUBAGENT_LINK_CLASSES}
 								href={`#/${project}/${sessionId}/subagent/${call.subAgentId}`}
 								onClick={stopPropagation}
 							>
-								Open conversation
+								<Text>{T_OPEN_CONVERSATION}</Text>
 							</a>
 						) : null}
 					</span>

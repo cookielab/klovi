@@ -1,7 +1,19 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GlobalSessionResult } from "../types/index";
 import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
+
+
+const T_SP_1 = " ";
+const T_MIDDOT = "&middot;";
+const T_NO_RESULTS_FOUND = "No results found";
+const T_8593_8595 = "&#8593;&#8595;";
+const T_NAVIGATE = "navigate";
+const T_8629 = "&#8629;";
+const T_OPEN = "open";
+const T_ESC = "esc";
+const T_CLOSE = "close";
 
 function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
@@ -94,11 +106,11 @@ function SearchResultItem({
 				{result.projectName}
 				{result.pluginId ? (
 					<>
-						{" "}
+						<Text>{T_SP_1}</Text>
 						<span className={PLUGIN_BADGE_CLASSES}>{pluginDisplayName(result.pluginId)}</span>
 					</>
-				) : null}{" "}
-				&middot;{" "}
+				) : null}<Text>{T_SP_1}</Text>
+				<Text>{T_MIDDOT}</Text><Text>{T_SP_1}</Text>
 				<time dateTime={result.timestamp} title={formatFullDateTime(result.timestamp)}>
 					{formatRelativeTime(result.timestamp)}
 				</time>
@@ -215,7 +227,7 @@ function SearchModal({
 				</div>
 				<div className={RESULTS_CLASSES} role="listbox" ref={resultsRef}>
 					{filtered.length === 0 ? (
-						<div className={EMPTY_CLASSES}>No results found</div>
+						<div className={EMPTY_CLASSES}><Text>{T_NO_RESULTS_FOUND}</Text></div>
 					) : (
 						filtered.map((result, index) => (
 							<SearchResultItem
@@ -232,13 +244,13 @@ function SearchModal({
 				</div>
 				<div className={FOOTER_CLASSES}>
 					<span>
-						<kbd>&#8593;&#8595;</kbd> navigate
+						<kbd><Text>{T_8593_8595}</Text></kbd><Text>{T_SP_1}</Text><Text>{T_NAVIGATE}</Text>
 					</span>
 					<span>
-						<kbd>&#8629;</kbd> open
+						<kbd><Text>{T_8629}</Text></kbd><Text>{T_SP_1}</Text><Text>{T_OPEN}</Text>
 					</span>
 					<span>
-						<kbd>esc</kbd> close
+						<kbd><Text>{T_ESC}</Text></kbd><Text>{T_SP_1}</Text><Text>{T_CLOSE}</Text>
 					</span>
 				</div>
 			</div>

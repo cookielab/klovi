@@ -1,9 +1,21 @@
-import { Button } from "@cookielab.io/klovi-design-system";
+import { Button, Text } from "@cookielab.io/klovi-design-system";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type React from "react";
 import { useCallback, useRef } from "react";
 import type { Project } from "../types/index";
 import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
+
+
+const T_SESSION = "session";
+const T_SP_1 = " ";
+const T_TEXT = "·";
+const T_TEXT_2 = "×";
+const T_LOADING_PROJECTS = "Loading projects...";
+const T_RETRY = "Retry";
+const T_PROJECTS = "Projects (";
+const T_TEXT_3 = ")";
+const T_NO_PROJECTS_FOUND = "No projects found";
+const T_HIDDEN_PROJECT = "hidden project";
 
 const PATH_SEPARATOR_REGEX = /[/\\]/u;
 
@@ -90,14 +102,14 @@ function ProjectItem({
 			<div className={LIST_ITEM_CONTENT_CLASSES}>
 				<div className={LIST_ITEM_TITLE_CLASSES}>{projectDisplayName(project)}</div>
 				<div className={LIST_ITEM_META_CLASSES}>
-					{project.sessionCount} session{project.sessionCount === 1 ? "" : "s"} ·{" "}
+					{project.sessionCount}<Text>{T_SP_1}</Text><Text>{T_SESSION}</Text>{project.sessionCount === 1 ? "" : "s"}<Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>
 					<time dateTime={project.lastActivity} title={formatFullDateTime(project.lastActivity)}>
 						{formatRelativeTime(project.lastActivity)}
 					</time>
 				</div>
 			</div>
 			<button type="button" className={BTN_HIDE_CLASSES} title="Hide project" onClick={handleHide}>
-				×
+				<Text>{T_TEXT_2}</Text>
 			</button>
 		</div>
 	);
@@ -142,7 +154,7 @@ function ProjectList({
 	});
 
 	if (loading) {
-		return <div className={LOADING_CLASSES}>Loading projects...</div>;
+		return <div className={LOADING_CLASSES}><Text>{T_LOADING_PROJECTS}</Text></div>;
 	}
 	if (error) {
 		return (
@@ -150,7 +162,7 @@ function ProjectList({
 				<span className={FETCH_ERROR_MESSAGE_CLASSES}>{error}</span>
 				{onRetry ? (
 					<Button size="sm" onClick={onRetry}>
-						Retry
+						<Text>{T_RETRY}</Text>
 					</Button>
 				) : null}
 			</div>
@@ -165,9 +177,9 @@ function ProjectList({
 				value={filter}
 				onChange={handleFilterChange}
 			/>
-			<div className={SECTION_TITLE_CLASSES}>Projects ({filtered.length})</div>
+			<div className={SECTION_TITLE_CLASSES}><Text>{T_PROJECTS}</Text>{filtered.length}<Text>{T_TEXT_3}</Text></div>
 			{filtered.length === 0 ? (
-				<div className={EMPTY_MESSAGE_CLASSES}>No projects found</div>
+				<div className={EMPTY_MESSAGE_CLASSES}><Text>{T_NO_PROJECTS_FOUND}</Text></div>
 			) : (
 				<div>
 					{virtualizer.getVirtualItems().map((item) => {
@@ -190,7 +202,7 @@ function ProjectList({
 			)}
 			{hiddenIds.size > 0 && (
 				<button type="button" className={HIDDEN_PROJECTS_LINK_CLASSES} onClick={onShowHidden}>
-					{hiddenIds.size} hidden project{hiddenIds.size === 1 ? "" : "s"}
+					{hiddenIds.size}<Text>{T_SP_1}</Text><Text>{T_HIDDEN_PROJECT}</Text>{hiddenIds.size === 1 ? "" : "s"}
 				</button>
 			)}
 		</div>

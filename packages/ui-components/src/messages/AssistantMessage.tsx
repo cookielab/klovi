@@ -1,4 +1,4 @@
-import { TurnBox } from "@cookielab.io/klovi-design-system";
+import { Text, TurnBox } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { ToolCall } from "../tools/index";
 import type { AssistantTurn, ContentBlock, TokenUsage } from "../types/index";
@@ -6,6 +6,14 @@ import { groupContentBlocks } from "../types/index";
 import { formatFullDateTime, formatTimestamp, shortModel } from "../utilities/index";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ThinkingBlock } from "./ThinkingBlock";
+
+
+const T_IN = "in /";
+const T_SP_1 = " ";
+const T_OUT = "out";
+const T_TEXT = "·";
+const T_CACHE_READ = "cache read";
+const T_CACHE_WRITE = "cache write";
 
 const EXEC_TREE_CLASSES =
 	"relative mt-3 pl-5 before:content-[''] before:absolute before:left-[7px] before:top-0 before:bottom-0 before:w-px before:bg-tree-line";
@@ -70,12 +78,12 @@ function renderGroup(options: RenderGroupOptions) {
 function UsageFooter({ usage }: { usage: TokenUsage }) {
 	return (
 		<div className={TOKEN_USAGE_CLASSES}>
-			{usage.inputTokens.toLocaleString()} in / {usage.outputTokens.toLocaleString()} out
+			{usage.inputTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_IN}</Text><Text>{T_SP_1}</Text>{usage.outputTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_OUT}</Text>
 			{usage.cacheReadTokens && usage.cacheReadTokens > 0 && (
-				<span> · {usage.cacheReadTokens.toLocaleString()} cache read</span>
+				<span><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{usage.cacheReadTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_CACHE_READ}</Text></span>
 			)}
 			{usage.cacheCreationTokens && usage.cacheCreationTokens > 0 && (
-				<span> · {usage.cacheCreationTokens.toLocaleString()} cache write</span>
+				<span><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{usage.cacheCreationTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_CACHE_WRITE}</Text></span>
 			)}
 		</div>
 	);

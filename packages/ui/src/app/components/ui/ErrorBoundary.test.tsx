@@ -1,12 +1,18 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { cleanup, fireEvent, render } from "@testing-library/react";
+
+
+const T_SAFE_CONTENT = "Safe content";
+const T_RECOVERED = "Recovered";
+const T_RECOVERED_INLINE = "Recovered inline";
 
 function ThrowingComponent({ message }: { message: string }): never {
 	throw new Error(message);
 }
 
 function SafeComponent() {
-	return <div>Safe content</div>;
+	return <div><Text>{T_SAFE_CONTENT}</Text></div>;
 }
 
 describe("ErrorBoundary", () => {
@@ -64,7 +70,7 @@ describe("ErrorBoundary", () => {
 			if (shouldThrow) {
 				throw new Error("boom");
 			}
-			return <div>Recovered</div>;
+			return <div><Text>{T_RECOVERED}</Text></div>;
 		}
 
 		const { getByText } = render(
@@ -86,7 +92,7 @@ describe("ErrorBoundary", () => {
 			if (shouldThrow) {
 				throw new Error("boom");
 			}
-			return <div>Recovered inline</div>;
+			return <div><Text>{T_RECOVERED_INLINE}</Text></div>;
 		}
 
 		const { getByText } = render(

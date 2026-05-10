@@ -1,6 +1,9 @@
-import { Button } from "@cookielab.io/klovi-design-system";
+import { Button, Text } from "@cookielab.io/klovi-design-system";
 import type { RpcError } from "../../../lib/rpc-errors-effect";
 import "./TypedErrorDisplay.css";
+
+
+const T_RETRY = "Retry";
 
 type TypedErrorDisplayProps = {
 	error: RpcError;
@@ -40,7 +43,7 @@ export function TypedErrorDisplay({ error, onRetry }: TypedErrorDisplayProps) {
 			<span className="typed-error-detail">{detail}</span>
 			{onRetry ? (
 				<Button size="sm" onClick={onRetry}>
-					Retry
+					<Text>{T_RETRY}</Text>
 				</Button>
 			) : null}
 		</div>

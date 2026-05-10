@@ -1,5 +1,11 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Collapsible } from "../components/Collapsible/Collapsible";
+
+
+const T_CONTENT_FOR_SECTION_1 = "Content for section 1";
+const T_CONTENT_FOR_SECTION_2_STARTS_O = "Content for section 2 (starts open)";
+const T_CONTENT_FOR_SECTION_3 = "Content for section 3";
 
 const meta: Meta<typeof Collapsible> = {
 	title: "Components/Collapsible",
@@ -28,11 +34,11 @@ export const Open: Story = {
 export const Multiple: Story = {
 	render: () => (
 		<div>
-			<Collapsible title="Section 1">Content for section 1</Collapsible>
+			<Collapsible title="Section 1"><Text>{T_CONTENT_FOR_SECTION_1}</Text></Collapsible>
 			<Collapsible title="Section 2" defaultOpen={true}>
-				Content for section 2 (starts open)
+				<Text>{T_CONTENT_FOR_SECTION_2_STARTS_O}</Text>
 			</Collapsible>
-			<Collapsible title="Section 3">Content for section 3</Collapsible>
+			<Collapsible title="Section 3"><Text>{T_CONTENT_FOR_SECTION_3}</Text></Collapsible>
 		</div>
 	),
 };

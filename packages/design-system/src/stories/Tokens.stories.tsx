@@ -1,4 +1,8 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { Meta, StoryObj } from "@storybook/react";
+
+
+const T_TEXT = "--";
 
 const TOKEN_GROUPS = {
 	Surfaces: [
@@ -20,7 +24,7 @@ function Swatch({ name }: { name: string }) {
 	return (
 		<div>
 			<div />
-			<code>--{name}</code>
+			<code><Text>{T_TEXT}</Text>{name}</code>
 		</div>
 	);
 }

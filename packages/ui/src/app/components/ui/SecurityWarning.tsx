@@ -1,6 +1,15 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import { useCallback, useState } from "react";
 import faviconUrl from "../../../../favicon.svg";
+
+
+const T_SESSION_DATA_NOTICE = "Session Data Notice";
+const T_KLOVI_READS_AI_CODING_SESSION_ = "Klovi reads AI coding session history from your local machine. Session data may contain sensitive information\n\t\t\t\tsuch as API keys, credentials, or private code snippets.";
+const T_KLOVI_IS_FULLY_LOCAL_YOUR_DATA = "Klovi is fully local — your data never leaves your machine. Klovi is open source, so you can verify this\n\t\t\t\tyourself.";
+const T_BE_MINDFUL_WHEN_SCREEN_SHARING = "Be mindful when screen sharing or using Klovi in public settings.";
+const T_DON_T_SHOW_THIS_AGAIN = " Don't show this again";
+const T_ACCEPT_CONTINUE = "Accept & Continue";
 
 const WRAPPER_CLASSES = "flex min-h-screen items-center justify-center bg-surface p-[20px]";
 const CONTENT_CLASSES = "w-full max-w-[480px] text-center leading-[1.6] text-foreground-muted";
@@ -36,23 +45,21 @@ function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: Securit
 		<>
 			<img src={faviconUrl} alt="" width="64" height="64" className={LOGO_CLASSES} />
 			<h1 id={headingId} className={HEADING_CLASSES}>
-				Session Data Notice
+				<Text>{T_SESSION_DATA_NOTICE}</Text>
 			</h1>
 			<p>
-				Klovi reads AI coding session history from your local machine. Session data may contain sensitive information
-				such as API keys, credentials, or private code snippets.
+				<Text>{T_KLOVI_READS_AI_CODING_SESSION_}</Text>
 			</p>
 			<p>
-				Klovi is fully local — your data never leaves your machine. Klovi is open source, so you can verify this
-				yourself.
+				<Text>{T_KLOVI_IS_FULLY_LOCAL_YOUR_DATA}</Text>
 			</p>
-			<p className={MUTED_CLASSES}>Be mindful when screen sharing or using Klovi in public settings.</p>
+			<p className={MUTED_CLASSES}><Text>{T_BE_MINDFUL_WHEN_SCREEN_SHARING}</Text></p>
 			<label className={CHECKBOX_LABEL_CLASSES}>
 				<input type="checkbox" className="custom-checkbox" checked={dontShow} onChange={handleDontShowChange} />
-				{" Don't show this again"}
+				<Text>{T_DON_T_SHOW_THIS_AGAIN}</Text>
 			</label>
 			<button type="button" className={BUTTON_CLASSES} onClick={handleAccept}>
-				Accept & Continue
+				<Text>{T_ACCEPT_CONTINUE}</Text>
 			</button>
 		</>
 	);

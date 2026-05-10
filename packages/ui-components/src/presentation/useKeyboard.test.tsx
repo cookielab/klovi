@@ -1,9 +1,13 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { useKeyboard } from "./useKeyboard";
 
+
+const T_KEYBOARD_HARNESS = "keyboard harness";
+
 function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }) {
 	useKeyboard(props.handlers, props.active);
-	return <div>keyboard harness</div>;
+	return <div><Text>{T_KEYBOARD_HARNESS}</Text></div>;
 }
 
 function fireKey(key: string, opts: KeyboardEventInit = {}) {

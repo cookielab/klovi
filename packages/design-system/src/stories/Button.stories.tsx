@@ -1,5 +1,13 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "../components/Button/Button";
+
+
+const T_DEFAULT = "Default";
+const T_PRIMARY = "Primary";
+const T_SMALL = "Small";
+const T_PRIMARY_SM = "Primary SM";
+const T_X = "X";
 
 const meta: Meta<typeof Button> = {
 	title: "Components/Button",
@@ -48,13 +56,13 @@ export const Icon: Story = {
 export const AllVariants: Story = {
 	render: () => (
 		<div>
-			<Button>Default</Button>
-			<Button variant="primary">Primary</Button>
-			<Button size="sm">Small</Button>
+			<Button><Text>{T_DEFAULT}</Text></Button>
+			<Button variant="primary"><Text>{T_PRIMARY}</Text></Button>
+			<Button size="sm"><Text>{T_SMALL}</Text></Button>
 			<Button variant="primary" size="sm">
-				Primary SM
+				<Text>{T_PRIMARY_SM}</Text>
 			</Button>
-			<Button icon={true}>X</Button>
+			<Button icon={true}><Text>{T_X}</Text></Button>
 		</div>
 	),
 };

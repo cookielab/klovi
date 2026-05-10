@@ -1,4 +1,4 @@
-import { TurnBox } from "@cookielab.io/klovi-design-system";
+import { Text, TurnBox } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef } from "react";
@@ -7,6 +7,11 @@ import { ErrorBoundary, formatFullDateTime, formatTimestamp } from "../utilities
 import { AssistantMessage } from "./AssistantMessage";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { UserMessage } from "./UserMessage";
+
+
+const T_LINE = "line";
+const T_SP_1 = " ";
+const T_RAW_CONTENT = "Raw content";
 
 const STEP_FADE_IN_KEYFRAMES =
 	"@keyframes stepFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }";
@@ -105,7 +110,7 @@ function renderTurn(options: RenderTurnOptions) {
 						badge="Parse Error"
 						timestamp={
 							options.turn.lineNumber > 0 ? (
-								<span className={PARSE_ERROR_LINE_CLASSES}>line {options.turn.lineNumber}</span>
+								<span className={PARSE_ERROR_LINE_CLASSES}><Text>{T_LINE}</Text><Text>{T_SP_1}</Text>{options.turn.lineNumber}</span>
 							) : undefined
 						}
 					>
@@ -116,7 +121,7 @@ function renderTurn(options: RenderTurnOptions) {
 							<div className={PARSE_ERROR_DETAILS_CLASSES}>{options.turn.errorDetails}</div>
 						) : null}
 						<details className={PARSE_ERROR_RAW_CLASSES}>
-							<summary>Raw content</summary>
+							<summary><Text>{T_RAW_CONTENT}</Text></summary>
 							<pre>{options.turn.rawLine}</pre>
 						</details>
 					</TurnBox>

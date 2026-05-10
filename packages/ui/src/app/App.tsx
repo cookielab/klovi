@@ -1,3 +1,4 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
@@ -32,6 +33,13 @@ import { useUpdateStatus } from "./hooks/useUpdateStatus";
 import { useViewState } from "./hooks/useViewState";
 import { getSidebarContent } from "./sidebar-content";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSessionEffect } from "./view-state";
+
+
+const T_LOADING = "Loading...";
+const T_WELCOME_TO_KLOVI = "Welcome to Klovi";
+const T_SELECT_A_PROJECT_FROM_THE_SIDE = "Select a project from the sidebar to browse your AI coding sessions";
+const T_SELECT_A_SESSION = "Select a session";
+const T_CHOOSE_A_CONVERSATION_FROM_THE = "Choose a conversation from the sidebar";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
 const EMPTY_STATE_CLASSES =
@@ -194,7 +202,7 @@ function App() {
 	]);
 
 	if (!ready) {
-		return <div className={LOADING_CLASSES}>Loading...</div>;
+		return <div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>;
 	}
 
 	return (
@@ -297,8 +305,8 @@ function AppMainContent({
 				<>
 					<div className={EMPTY_STATE_CLASSES}>
 						<img src={faviconUrl} alt="" width="64" height="64" className={EMPTY_STATE_LOGO_CLASSES} />
-						<div className={EMPTY_STATE_TITLE_CLASSES}>Welcome to Klovi</div>
-						<p>Select a project from the sidebar to browse your AI coding sessions</p>
+						<div className={EMPTY_STATE_TITLE_CLASSES}><Text>{T_WELCOME_TO_KLOVI}</Text></div>
+						<p><Text>{T_SELECT_A_PROJECT_FROM_THE_SIDE}</Text></p>
 					</div>
 					<PackageDashboardStats />
 				</>
@@ -316,8 +324,8 @@ function AppMainContent({
 			)}
 			{view.kind === "project" && (
 				<div className={EMPTY_STATE_CLASSES}>
-					<div className={EMPTY_STATE_TITLE_CLASSES}>Select a session</div>
-					<p>Choose a conversation from the sidebar</p>
+					<div className={EMPTY_STATE_TITLE_CLASSES}><Text>{T_SELECT_A_SESSION}</Text></div>
+					<p><Text>{T_CHOOSE_A_CONVERSATION_FROM_THE}</Text></p>
 				</div>
 			)}
 			{view.kind === "session" &&

@@ -1,9 +1,16 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useRef } from "react";
 import type { SessionSummary } from "../types/index";
 import { FetchError } from "../utilities/FetchError";
 import { formatFullDateTime, formatTime } from "../utilities/formatters";
+
+
+const T_SP_1 = " ";
+const T_LOADING_SESSIONS = "Loading sessions...";
+const T_PROJECTS = "← Projects";
+const T_NO_SESSIONS_FOUND = "No sessions found";
 
 function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
@@ -73,7 +80,7 @@ function SessionItem({
 		<button type="button" className={itemClasses} onClick={handleClick}>
 			<div className={LIST_ITEM_TITLE_CLASSES}>{session.firstMessage || session.slug}</div>
 			<div className={LIST_ITEM_META_CLASSES}>
-				{session.pluginId ? <span className={PLUGIN_BADGE_CLASSES}>{pluginDisplayName(session.pluginId)}</span> : null}{" "}
+				{session.pluginId ? <span className={PLUGIN_BADGE_CLASSES}>{pluginDisplayName(session.pluginId)}</span> : null}<Text>{T_SP_1}</Text>
 				{session.sessionType ? (
 					<span
 						className={`${SESSION_TYPE_BADGE_CLASSES} ${
@@ -84,7 +91,7 @@ function SessionItem({
 					>
 						{session.sessionType === "plan" ? "Plan" : "Impl"}
 					</span>
-				) : null}{" "}
+				) : null}<Text>{T_SP_1}</Text>
 				<time dateTime={session.timestamp} title={formatFullDateTime(session.timestamp)}>
 					{formatTime(session.timestamp)}
 				</time>
@@ -115,7 +122,7 @@ function SessionList({
 	});
 
 	if (loading) {
-		return <div className={LOADING_CLASSES}>Loading sessions...</div>;
+		return <div className={LOADING_CLASSES}><Text>{T_LOADING_SESSIONS}</Text></div>;
 	}
 	if (error) {
 		return <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} />;
@@ -124,11 +131,11 @@ function SessionList({
 	return (
 		<div ref={parentRef} className={SCROLL_CONTAINER_CLASSES}>
 			<button type="button" className={BACK_BTN_CLASSES} onClick={onBack}>
-				← Projects
+				<Text>{T_PROJECTS}</Text>
 			</button>
 			<div className={SECTION_TITLE_CLASSES}>{displayName}</div>
 			{sessions.length === 0 ? (
-				<div className={EMPTY_MESSAGE_CLASSES}>No sessions found</div>
+				<div className={EMPTY_MESSAGE_CLASSES}><Text>{T_NO_SESSIONS_FOUND}</Text></div>
 			) : (
 				<div>
 					{virtualizer.getVirtualItems().map((item) => {

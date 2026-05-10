@@ -1,4 +1,11 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { useCallback, useEffect, useState } from "react";
+
+
+const T_LARR_BACK = "&larr; Back";
+const T_LARR_BACK_TO_SESSION = "&larr; Back to session";
+const T_NBSP = "/&nbsp;";
+const T_SP_1 = " ";
 
 type HeaderProps = {
 	title: string;
@@ -68,15 +75,15 @@ export function Header({
 			<div className={TITLE_CLASSES}>
 				{onBack ? (
 					<button type="button" className={BACK_BTN_CLASSES} onClick={onBack}>
-						&larr; Back
+						<Text>{T_LARR_BACK}</Text>
 					</button>
 				) : null}
 				{!onBack && backHref ? (
 					<a className={BACK_BTN_CLASSES} href={backHref}>
-						&larr; Back to session
+						<Text>{T_LARR_BACK_TO_SESSION}</Text>
 					</a>
 				) : null}
-				{breadcrumb ? <span className={BREADCRUMB_CLASSES}>{breadcrumb} /&nbsp;</span> : null}
+				{breadcrumb ? <span className={BREADCRUMB_CLASSES}>{breadcrumb}<Text>{T_SP_1}</Text><Text>{T_NBSP}</Text></span> : null}
 				{title}
 				{sessionType ? (
 					<span

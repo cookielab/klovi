@@ -1,4 +1,12 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import { useCallback } from "react";
+
+
+const T_LARR = "&larr;";
+const T_SP_1 = " ";
+const T_BACK = "Back";
+const T_GENERAL = "General";
+const T_PLUGINS = "Plugins";
 
 type SettingsTab = "general" | "plugins";
 
@@ -23,7 +31,7 @@ function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProp
 		<nav className={NAV_CLASSES}>
 			{onBack ? (
 				<button type="button" className={NAV_BACK_CLASSES} onClick={onBack}>
-					<span aria-hidden="true">&larr; </span>Back
+					<span aria-hidden="true"><Text>{T_LARR}</Text><Text>{T_SP_1}</Text></span><Text>{T_BACK}</Text>
 				</button>
 			) : null}
 			<button
@@ -31,14 +39,14 @@ function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProp
 				className={`${NAV_ITEM_BASE_CLASSES} ${activeTab === "general" ? `active ${NAV_ITEM_ACTIVE_CLASSES}` : ""}`}
 				onClick={handleGeneralClick}
 			>
-				General
+				<Text>{T_GENERAL}</Text>
 			</button>
 			<button
 				type="button"
 				className={`${NAV_ITEM_BASE_CLASSES} ${activeTab === "plugins" ? `active ${NAV_ITEM_ACTIVE_CLASSES}` : ""}`}
 				onClick={handlePluginsClick}
 			>
-				Plugins
+				<Text>{T_PLUGINS}</Text>
 			</button>
 		</nav>
 	);

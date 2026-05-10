@@ -1,7 +1,12 @@
+import { Text } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type { Turn } from "../types/index";
 import { FetchError } from "../utilities/index";
 import { MessageList } from "./MessageList";
+
+
+const T_LOADING_SUB_AGENT_CONVERSATION = "Loading sub-agent conversation...";
+const T_NO_SUB_AGENT_CONVERSATION_DATA = "No sub-agent conversation data available.";
 
 type SubAgentViewProps = {
 	turns: Turn[];
@@ -30,13 +35,13 @@ export function SubAgentView({
 	getFrontendPlugin,
 }: SubAgentViewProps) {
 	if (loading) {
-		return <div className={LOADING_CLASSES}>Loading sub-agent conversation...</div>;
+		return <div className={LOADING_CLASSES}><Text>{T_LOADING_SUB_AGENT_CONVERSATION}</Text></div>;
 	}
 	if (error) {
 		return <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} showPrefix={true} />;
 	}
 	if (turns.length === 0) {
-		return <div className={EMPTY_CLASSES}>No sub-agent conversation data available.</div>;
+		return <div className={EMPTY_CLASSES}><Text>{T_NO_SUB_AGENT_CONVERSATION_DATA}</Text></div>;
 	}
 
 	return (
