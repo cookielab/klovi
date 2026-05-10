@@ -174,7 +174,7 @@ console.log("import-ok");
 			cwd: installDir,
 			encoding: "utf-8",
 			timeout: N_15000,
-			env: { ...Bun.env, NODE_NO_WARNINGS: "1" },
+			env: { ...Bun.env, ["NODE_NO_WARNINGS"]: "1" },
 		});
 		if (!result.includes("import-ok")) {
 			throw new Error("Import test did not produce expected output");
@@ -200,10 +200,10 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 		cwd: installDir,
 		env: {
 			...Bun.env,
-			KLOVI_PORT: String(port),
-			KLOVI_HOST: "127.0.0.1",
-			KLOVI_SETTINGS_PATH: settingsPath,
-			NODE_NO_WARNINGS: "1",
+			["KLOVI_PORT"]: String(port),
+			["KLOVI_HOST"]: "127.0.0.1",
+			["KLOVI_SETTINGS_PATH"]: settingsPath,
+			["NODE_NO_WARNINGS"]: "1",
 		},
 		stdio: ["pipe", "pipe", "pipe"],
 	});
@@ -262,10 +262,10 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 			cwd: installDir,
 			env: {
 				...Bun.env,
-				KLOVI_PORT: String(blockerPort),
-				KLOVI_HOST: "127.0.0.1",
-				KLOVI_SETTINGS_PATH: settingsPath,
-				NODE_NO_WARNINGS: "1",
+				["KLOVI_PORT"]: String(blockerPort),
+				["KLOVI_HOST"]: "127.0.0.1",
+				["KLOVI_SETTINGS_PATH"]: settingsPath,
+				["NODE_NO_WARNINGS"]: "1",
 			},
 			stdio: ["pipe", "pipe", "pipe"],
 		});
@@ -304,10 +304,10 @@ async function testEnvOverrides(installDir: string): Promise<void> {
 		cwd: installDir,
 		env: {
 			...Bun.env,
-			KLOVI_PORT: String(customPort),
-			KLOVI_HOST: "127.0.0.1",
-			KLOVI_SETTINGS_PATH: settingsPath,
-			NODE_NO_WARNINGS: "1",
+			["KLOVI_PORT"]: String(customPort),
+			["KLOVI_HOST"]: "127.0.0.1",
+			["KLOVI_SETTINGS_PATH"]: settingsPath,
+			["NODE_NO_WARNINGS"]: "1",
 		},
 		stdio: ["pipe", "pipe", "pipe"],
 	});

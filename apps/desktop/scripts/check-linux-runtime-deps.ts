@@ -85,7 +85,7 @@ async function checkLinuxRuntimeDeps(
 	const libraryDirs = await collectLinuxLibrarySearchPaths(bundlePath);
 	const env = {
 		...Bun.env,
-		LD_LIBRARY_PATH: buildLdLibraryPath(libraryDirs, Bun.env["LD_LIBRARY_PATH"]),
+		["LD_LIBRARY_PATH"]: buildLdLibraryPath(libraryDirs, Bun.env["LD_LIBRARY_PATH"]),
 	};
 
 	const failures: string[] = [];

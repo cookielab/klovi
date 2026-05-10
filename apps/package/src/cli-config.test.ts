@@ -23,7 +23,7 @@ describe("cli-config", () => {
 	});
 
 	it("parsePort prefers --port over env", () => {
-		expect(parsePort(["bun", "cli.ts", "--port", "4444"], { KLOVI_PORT: "5555" })).toBe(N_4444);
+		expect(parsePort(["bun", "cli.ts", "--port", "4444"], { ["KLOVI_PORT"]: "5555" })).toBe(N_4444);
 	});
 
 	it("resolveCliConfig reads host, static dir, and settings env overrides", () => {
@@ -31,10 +31,10 @@ describe("cli-config", () => {
 			baseDir: baseDir,
 			argv: ["bun", "cli.ts"],
 			env: {
-				KLOVI_HOST: "0.0.0.0",
-				KLOVI_PORT: "9999",
-				KLOVI_STATIC_DIR: "/tmp/custom-static",
-				KLOVI_SETTINGS_PATH: "/tmp/custom-settings.json",
+				["KLOVI_HOST"]: "0.0.0.0",
+				["KLOVI_PORT"]: "9999",
+				["KLOVI_STATIC_DIR"]: "/tmp/custom-static",
+				["KLOVI_SETTINGS_PATH"]: "/tmp/custom-settings.json",
 			},
 			pathExists: () => false,
 		});

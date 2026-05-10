@@ -30,10 +30,10 @@ const TEST_SQLITE_LAYER = Layer.succeed(SqliteClientTag, {
 const CREATED_AT_MS = 1_706_000_000_000;
 
 const ORIGINAL_ENV = {
-	HOME: Bun.env["HOME"],
-	USERPROFILE: Bun.env["USERPROFILE"],
-	XDG_CONFIG_HOME: Bun.env["XDG_CONFIG_HOME"],
-	APPDATA: Bun.env["APPDATA"],
+	["HOME"]: Bun.env["HOME"],
+	["USERPROFILE"]: Bun.env["USERPROFILE"],
+	["XDG_CONFIG_HOME"]: Bun.env["XDG_CONFIG_HOME"],
+	["APPDATA"]: Bun.env["APPDATA"],
 };
 
 let testDir = "";

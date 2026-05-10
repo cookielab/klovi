@@ -204,7 +204,7 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 	await run(["chmod", "+x", toolPath]);
 	await ensureDir(dirname(outputPath));
 
-	const appImageToolEnv = { ...Bun.env, ARCH: appImageArch };
+	const appImageToolEnv = { ...Bun.env, ["ARCH"]: appImageArch };
 	const buildProc = Bun.spawn([toolPath, appDir, outputPath], {
 		cwd: workDir,
 		stdout: "inherit",

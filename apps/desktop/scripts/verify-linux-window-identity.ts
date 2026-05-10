@@ -286,8 +286,8 @@ async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
 		stderr: "pipe",
 		env: {
 			...Bun.env,
-			HOME: tempHome,
-			KLOVI_SETTINGS_PATH: settingsPath,
+			["HOME"]: tempHome,
+			["KLOVI_SETTINGS_PATH"]: settingsPath,
 		},
 	});
 	const stdoutPromise = new Response(proc.stdout).text();

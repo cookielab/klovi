@@ -11,10 +11,10 @@ describe("cursor config", () => {
 		const windowsHome = ["C:", "Users", "tester"].join("\\");
 		const windowsAppData = [windowsHome, "AppData", "Roaming"].join("\\");
 		const env = {
-			HOME: "/Users/tester",
-			USERPROFILE: windowsHome,
-			XDG_CONFIG_HOME: "/tmp/xdg",
-			APPDATA: windowsAppData,
+			["HOME"]: "/Users/tester",
+			["USERPROFILE"]: windowsHome,
+			["XDG_CONFIG_HOME"]: "/tmp/xdg",
+			["APPDATA"]: windowsAppData,
 		};
 
 		expect(getDefaultCursorDir({ platform: "darwin", env: env })).toBe("/Users/tester/.cursor");
@@ -31,8 +31,8 @@ describe("cursor config", () => {
 
 	it("derives default directories on Linux", () => {
 		const env = {
-			HOME: "/home/tester",
-			XDG_CONFIG_HOME: "/home/tester/.config-custom",
+			["HOME"]: "/home/tester",
+			["XDG_CONFIG_HOME"]: "/home/tester/.config-custom",
 		};
 
 		expect(getDefaultCursorDir({ platform: "linux", env: env })).toBe("/home/tester/.cursor");
@@ -49,8 +49,8 @@ describe("cursor config", () => {
 		const windowsHome = ["C:", "Users", "tester"].join("\\");
 		const windowsAppData = [windowsHome, "AppData", "Roaming"].join("\\");
 		const env = {
-			USERPROFILE: windowsHome,
-			APPDATA: windowsAppData,
+			["USERPROFILE"]: windowsHome,
+			["APPDATA"]: windowsAppData,
 		};
 
 		expect(getDefaultCursorDir({ platform: "win32", env: env })).toBe([windowsHome, ".cursor"].join("\\"));

@@ -19,8 +19,8 @@ describe("resolveLinuxRenderer", () => {
 	});
 
 	it("allows CEF override only on Linux", () => {
-		expect(resolveLinuxRenderer("linux", { KLOVI_LINUX_RENDERER: "cef" })).toBe("cef");
-		expect(resolveLinuxRenderer("darwin", { KLOVI_LINUX_RENDERER: "cef" })).toBeUndefined();
+		expect(resolveLinuxRenderer("linux", { ["KLOVI_LINUX_RENDERER"]: "cef" })).toBe("cef");
+		expect(resolveLinuxRenderer("darwin", { ["KLOVI_LINUX_RENDERER"]: "cef" })).toBeUndefined();
 	});
 });
 
@@ -31,15 +31,15 @@ describe("detectLinuxSystemTheme", () => {
 	});
 
 	it("detects dark from GTK_THEME with -dark suffix", async () => {
-		expect(await runDetect("linux", { GTK_THEME: "Adwaita-dark" })).toBe("dark");
+		expect(await runDetect("linux", { ["GTK_THEME"]: "Adwaita-dark" })).toBe("dark");
 	});
 
 	it("detects dark from GTK_THEME with :dark variant", async () => {
-		expect(await runDetect("linux", { GTK_THEME: "Adwaita:dark" })).toBe("dark");
+		expect(await runDetect("linux", { ["GTK_THEME"]: "Adwaita:dark" })).toBe("dark");
 	});
 
 	it("detects light from GTK_THEME without dark", async () => {
-		expect(await runDetect("linux", { GTK_THEME: "Adwaita" })).toBe("light");
+		expect(await runDetect("linux", { ["GTK_THEME"]: "Adwaita" })).toBe("light");
 	});
 });
 
