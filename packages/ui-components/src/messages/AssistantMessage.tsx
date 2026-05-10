@@ -44,7 +44,13 @@ function contentBlockKey(block: ContentBlock, index: number): string {
 		const thinkingKeyLength = N_40;
 		return `thinking-${block.block.text.slice(0, thinkingKeyLength)}-${index}`;
 	}
-	return `text-${index}`;
+	return `text-${block.text.slice(0, N_40)}-${index}`;
+}
+
+function groupKey(group: ContentBlock[], index: number): string {
+	const first = group[0];
+	if (!first) return `empty-${index}`;
+	return `group-${contentBlockKey(first, index)}`;
 }
 
 type RenderGroupOptions = {
@@ -153,7 +159,7 @@ export function AssistantMessage({
 				<div className={EXEC_TREE_CLASSES}>
 					{treeGroups.map((group, i) => (
 						<div
-							key={`tree-${i}`}
+							key={`tree-${groupKey(group, i)}`}
 							className={`${TREE_NODE_CLASSES}${isPresentation && i === treeGroups.length - 1 ? ` ${STEP_ENTER_CLASSES}` : ""}`}
 						>
 							{renderGroup({
@@ -169,7 +175,7 @@ export function AssistantMessage({
 				</div>
 			)}
 			{flatGroups.map((group, i) => (
-				<div key={`flat-${i}`} className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}>
+				<div key={`flat-${groupKey(group, i)}`} className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}>
 					{renderGroup({
 						group: group,
 						sessionId: sessionId,

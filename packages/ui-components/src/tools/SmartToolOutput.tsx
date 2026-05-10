@@ -66,7 +66,7 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 			{resultImages && resultImages.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{resultImages.map((img, i) => (
-						<ToolResultImageButton key={i} img={img} index={i} onSelect={setLightboxSrc} />
+						<ToolResultImageButton key={`${img.mediaType}-${img.data.slice(0, 32)}`} img={img} index={i} onSelect={setLightboxSrc} />
 					))}
 				</div>
 			)}

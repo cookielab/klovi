@@ -143,8 +143,8 @@ export function UserMessage({
 			<MarkdownRenderer content={turn.text} onLinkClick={onLinkClick} />
 			{turn.attachments && turn.attachments.length > 0 ? (
 				<div className={ATTACHMENTS_CLASSES}>
-					{turn.attachments.map((a, i) => (
-						<span key={i} className={ATTACHMENT_BADGE_CLASSES}>
+					{turn.attachments.map((a) => (
+						<span key={a.mediaType} className={ATTACHMENT_BADGE_CLASSES}>
 							<Text>{T_IMAGE}</Text>{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
 						</span>
 					))}
