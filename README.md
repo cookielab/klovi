@@ -129,7 +129,8 @@ Linux note:
 | `bun run test:node-smoke` | Run the Node plugin runtime smoke test |
 | `bun run typecheck` | Run TypeScript type checking |
 | `bun run lint` | Run Biome lint/format checks |
-| `bun run storybook` | Start the design-system Storybook |
+| `bun run ladle` | Start the design-system Ladle dev server |
+| `bun run ladle:build` | Build the design-system Ladle static site |
 
 ## Documentation
 

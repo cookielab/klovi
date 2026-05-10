@@ -6,5 +6,29 @@
 		"parser": {
 			"tailwindDirectives": true
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["vite.config.ts", ".ladle/config.mjs"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/stories/**/*.stories.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off",
+						"useComponentExportOnlyModules": "off",
+						"useExportsLast": "off"
+					}
+				}
+			}
+		}
+	]
 }

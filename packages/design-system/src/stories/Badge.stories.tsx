@@ -1,8 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Story, StoryDefault } from "@ladle/react";
 import { Badge } from "../components/Badge/Badge";
 import type { BadgeVariant } from "../types";
-
-type Story = StoryObj<typeof Badge>;
 
 const VARIANTS: BadgeVariant[] = [
 	"user",
@@ -17,31 +15,24 @@ const VARIANTS: BadgeVariant[] = [
 	"default",
 ];
 
-export const AllVariants: Story = {
-	render: () => (
-		<div>
-			{VARIANTS.map((v) => (
-				<Badge key={v} variant={v}>
-					{v}
-				</Badge>
-			))}
-		</div>
-	),
-};
+export const AllVariants: Story = () => (
+	<div>
+		{VARIANTS.map((v) => (
+			<Badge key={v} variant={v}>
+				{v}
+			</Badge>
+		))}
+	</div>
+);
 
-export const Mono: Story = {
-	render: () => (
-		<div>
-			{VARIANTS.map((v) => (
-				<Badge key={v} variant={v} mono={true}>
-					{v}
-				</Badge>
-			))}
-		</div>
-	),
-};
+export const Mono: Story = () => (
+	<div>
+		{VARIANTS.map((v) => (
+			<Badge key={v} variant={v} mono={true}>
+				{v}
+			</Badge>
+		))}
+	</div>
+);
 
-export const meta: Meta<typeof Badge> = {
-	title: "Components/Badge",
-	component: Badge,
-};
+export default { title: "Components/Badge" } satisfies StoryDefault;

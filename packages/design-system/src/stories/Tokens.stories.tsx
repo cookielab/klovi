@@ -1,6 +1,5 @@
+import type { Story, StoryDefault } from "@ladle/react";
 import { Text } from "../index";
-import type { Meta, StoryObj } from "@storybook/react";
-
 
 const T_TEXT = "--";
 
@@ -24,32 +23,25 @@ function Swatch({ name }: { name: string }): React.ReactNode {
 	return (
 		<div>
 			<div />
-			<code><Text>{T_TEXT}</Text>{name}</code>
+			<code>
+				<Text>{T_TEXT}</Text>
+				{name}
+			</code>
 		</div>
 	);
 }
 
-function TokenPalette(): React.ReactNode {
-	return (
-		<div>
-			{Object.entries(TOKEN_GROUPS).map(([group, tokens]) => (
-				<div key={group}>
-					<h3>{group}</h3>
-					{tokens.map((t) => (
-						<Swatch key={t} name={t} />
-					))}
-				</div>
-			))}
-		</div>
-	);
-}
+export const ColorPalette: Story = () => (
+	<div>
+		{Object.entries(TOKEN_GROUPS).map(([group, tokens]) => (
+			<div key={group}>
+				<h3>{group}</h3>
+				{tokens.map((t) => (
+					<Swatch key={t} name={t} />
+				))}
+			</div>
+		))}
+	</div>
+);
 
-type Story = StoryObj;
-
-export const ColorPalette: Story = {};
-
-export const meta: Meta = {
-	title: "Foundations/Tokens",
-	component: TokenPalette,
-};
-
+export default { title: "Foundations/Tokens" } satisfies StoryDefault;

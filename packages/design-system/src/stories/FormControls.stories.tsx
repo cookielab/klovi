@@ -1,35 +1,29 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Story, StoryDefault } from "@ladle/react";
 import { useState } from "react";
 import { Input } from "../components/FormControls/Input";
 import { SegmentedControl } from "../components/FormControls/SegmentedControl";
 import { Select } from "../components/FormControls/Select";
 import { Toggle } from "../components/FormControls/Toggle";
 
-type Story = StoryObj;
+export const InputStory: Story = () => (
+	<div>
+		<Input placeholder="Type here..." />
+	</div>
+);
+InputStory.storyName = "Input";
 
-export const InputStory: Story = {
-	name: "Input",
-	render: () => (
-		<div>
-			<Input placeholder="Type here..." />
-		</div>
-	),
-};
-
-export const SelectStory: Story = {
-	name: "Select",
-	render: () => (
-		<div>
-			<Select
-				options={[
-					{ value: "opt1", label: "Option 1" },
-					{ value: "opt2", label: "Option 2" },
-					{ value: "opt3", label: "Option 3" },
-				]}
-			/>
-		</div>
-	),
-};
+export const SelectStory: Story = () => (
+	<div>
+		<Select
+			options={[
+				{ value: "opt1", label: "Option 1" },
+				{ value: "opt2", label: "Option 2" },
+				{ value: "opt3", label: "Option 3" },
+			]}
+		/>
+	</div>
+);
+SelectStory.storyName = "Select";
 
 function ToggleDemo(): React.ReactNode {
 	const [checked, setChecked] = useState(false);
@@ -40,10 +34,8 @@ function ToggleDemo(): React.ReactNode {
 	);
 }
 
-export const ToggleStory: Story = {
-	name: "Toggle",
-	render: () => <ToggleDemo />,
-};
+export const ToggleStory: Story = () => <ToggleDemo />;
+ToggleStory.storyName = "Toggle";
 
 function SegmentedDemo(): React.ReactNode {
 	const [value, setValue] = useState<"system" | "light" | "dark">("system");
@@ -62,12 +54,7 @@ function SegmentedDemo(): React.ReactNode {
 	);
 }
 
-export const SegmentedStory: Story = {
-	name: "SegmentedControl",
-	render: () => <SegmentedDemo />,
-};
+export const SegmentedStory: Story = () => <SegmentedDemo />;
+SegmentedStory.storyName = "SegmentedControl";
 
-export const meta: Meta = {
-	title: "Components/FormControls",
-};
-
+export default { title: "Components/FormControls" } satisfies StoryDefault;

@@ -18,7 +18,8 @@
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
-		"storybook": "storybook dev -p 6006"
+		"ladle": "ladle serve --port 6006",
+		"ladle:build": "ladle build"
 	},
 	"peerDependencies": {
 		"react": ">=19",
@@ -30,11 +31,10 @@
 		"react-syntax-highlighter": "16.1.1"
 	},
 	"devDependencies": {
+		"@ladle/react": "5.1.0",
 		"@tailwindcss/vite": "4.2.4",
 		"@testing-library/react": "16.3.2",
-		"@storybook/react": "10.3.6",
-		"@storybook/react-vite": "10.3.6",
 		"@types/react-syntax-highlighter": "15.5.13",
-		"storybook": "10.3.6"
+		"vite": "6.4.0"
 	}
 }

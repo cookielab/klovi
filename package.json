@@ -22,7 +22,8 @@
 		"format": "biome format --write .",
 		"lint": "bun run --filter '*' lint",
 		"lint:fix": "bun run --filter '*' lint:fix",
-		"storybook": "bun run --filter @cookielab.io/klovi-design-system storybook"
+		"ladle": "bun run --filter @cookielab.io/klovi-design-system ladle",
+		"ladle:build": "bun run --filter @cookielab.io/klovi-design-system ladle:build"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.15",
@@ -40,6 +41,7 @@
 		"typescript": "6.0.3"
 	},
 	"patchedDependencies": {
-		"electrobun@1.18.0": "patches/electrobun@1.18.0.patch"
+		"electrobun@1.18.0": "patches/electrobun@1.18.0.patch",
+		"@cookielab.io/typescript-config@0.1.0": "patches/@cookielab.io%2Ftypescript-config@0.1.0.patch"
 	}
 }
