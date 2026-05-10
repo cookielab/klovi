@@ -12,13 +12,6 @@ const T_CLOSE = "Close";
 const T_STATIC_MODAL = "Static Modal";
 const T_THIS_MODAL_IS_ALWAYS_OPEN_IN_T = "This modal is always open in this story.";
 
-const meta: Meta<typeof Modal> = {
-	title: "Components/Modal",
-	component: Modal,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof Modal>;
 
 function ModalDemo(): React.ReactNode {
@@ -57,3 +50,9 @@ export const Open: Story = {
 		),
 	},
 };
+
+export const meta: Meta<typeof Modal> = {
+	title: "Components/Modal",
+	component: Modal,
+};
+

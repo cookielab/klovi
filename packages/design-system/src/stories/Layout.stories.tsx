@@ -16,13 +16,6 @@ const T_HIDDEN_SIDEBAR = "Hidden sidebar";
 const T_FULL_WIDTH = "Full Width";
 const T_CONTENT_TAKES_FULL_WIDTH_WHEN_ = "Content takes full width when sidebar is hidden";
 
-const meta: Meta<typeof AppLayout> = {
-	title: "Components/Layout",
-	component: AppLayout,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof AppLayout>;
 
 export const Default: Story = {
@@ -55,3 +48,9 @@ export const HiddenSidebar: Story = {
 		</AppLayout>
 	),
 };
+
+export const meta: Meta<typeof AppLayout> = {
+	title: "Components/Layout",
+	component: AppLayout,
+};
+

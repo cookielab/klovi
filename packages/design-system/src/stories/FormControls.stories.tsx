@@ -5,12 +5,6 @@ import { SegmentedControl } from "../components/FormControls/SegmentedControl";
 import { Select } from "../components/FormControls/Select";
 import { Toggle } from "../components/FormControls/Toggle";
 
-const meta: Meta = {
-	title: "Components/FormControls",
-};
-
-export default meta;
-
 type Story = StoryObj;
 
 export const InputStory: Story = {
@@ -72,3 +66,8 @@ export const SegmentedStory: Story = {
 	name: "SegmentedControl",
 	render: () => <SegmentedDemo />,
 };
+
+export const meta: Meta = {
+	title: "Components/FormControls",
+};
+

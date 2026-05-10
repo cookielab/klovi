@@ -12,7 +12,7 @@ type KloviCliConfig = {
 	openBrowser: boolean;
 };
 
-export function resolveStaticDir(baseDir: string, pathExists: (path: string) => boolean = existsSync): string {
+function resolveStaticDir(baseDir: string, pathExists: (path: string) => boolean = existsSync): string {
 	// Built artifact: __dir = dist/ -> dist/web
 	const builtPath = resolve(baseDir, "web");
 	if (pathExists(builtPath)) {
@@ -23,7 +23,7 @@ export function resolveStaticDir(baseDir: string, pathExists: (path: string) => 
 	return resolve(baseDir, "../../../packages/ui/dist");
 }
 
-export function parsePort(argv: readonly string[], env: Record<string, string | undefined>): number {
+function parsePort(argv: readonly string[], env: Record<string, string | undefined>): number {
 	const portArgIndex = argv.indexOf("--port");
 	if (portArgIndex !== -1) {
 		const value = argv[portArgIndex + 1];
@@ -42,7 +42,7 @@ type ResolveCliConfigInput = {
 	pathExists?: (path: string) => boolean;
 };
 
-export function resolveCliConfig(input: ResolveCliConfigInput): KloviCliConfig {
+function resolveCliConfig(input: ResolveCliConfigInput): KloviCliConfig {
 	const { baseDir, argv, env, pathExists } = input;
 	return {
 		host: env["KLOVI_HOST"] ?? DEFAULT_HOST,
@@ -52,3 +52,5 @@ export function resolveCliConfig(input: ResolveCliConfigInput): KloviCliConfig {
 		openBrowser: !argv.includes("--no-browser"),
 	};
 }
+
+export { parsePort, resolveCliConfig, resolveStaticDir };

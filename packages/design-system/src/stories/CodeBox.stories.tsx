@@ -1,13 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CodeBox } from "../components/CodeBox/CodeBox";
 
-const meta: Meta<typeof CodeBox> = {
-	title: "Components/CodeBox",
-	component: CodeBox,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof CodeBox>;
 
 export const TypeScript: Story = {
@@ -44,3 +37,9 @@ export const WithLineNumbers: Story = {
 }`,
 	},
 };
+
+export const meta: Meta<typeof CodeBox> = {
+	title: "Components/CodeBox",
+	component: CodeBox,
+};
+

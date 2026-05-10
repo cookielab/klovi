@@ -2,13 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Badge } from "../components/Badge/Badge";
 import type { BadgeVariant } from "../types";
 
-const meta: Meta<typeof Badge> = {
-	title: "Components/Badge",
-	component: Badge,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof Badge>;
 
 const VARIANTS: BadgeVariant[] = [
@@ -46,4 +39,9 @@ export const Mono: Story = {
 			))}
 		</div>
 	),
+};
+
+export const meta: Meta<typeof Badge> = {
+	title: "Components/Badge",
+	component: Badge,
 };

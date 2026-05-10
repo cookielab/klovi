@@ -44,13 +44,12 @@ function TokenPalette(): React.ReactNode {
 	);
 }
 
-const meta: Meta = {
+type Story = StoryObj;
+
+export const ColorPalette: Story = {};
+
+export const meta: Meta = {
 	title: "Foundations/Tokens",
 	component: TokenPalette,
 };
 
-export default meta;
-
-type Story = StoryObj;
-
-export const ColorPalette: Story = {};

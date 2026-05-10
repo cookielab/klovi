@@ -12,13 +12,6 @@ const T_JUST_NOW = "just now";
 const T_THIS_ASSISTANT_MESSAGE_INCLUDE = "This assistant message includes a model badge.";
 const T_CUSTOM_BADGE_TEXT_OVERRIDES_TH = "Custom badge text overrides the default role label.";
 
-const meta: Meta<typeof TurnBox> = {
-	title: "Components/TurnBox",
-	component: TurnBox,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof TurnBox>;
 
 const ROLES: TurnRole[] = ["user", "assistant", "agent", "sub-agent", "system", "error"];
@@ -54,3 +47,9 @@ export const CustomBadge: Story = {
 		</div>
 	),
 };
+
+export const meta: Meta<typeof TurnBox> = {
+	title: "Components/TurnBox",
+	component: TurnBox,
+};
+

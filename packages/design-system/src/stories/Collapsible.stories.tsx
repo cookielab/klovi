@@ -7,13 +7,6 @@ const T_CONTENT_FOR_SECTION_1 = "Content for section 1";
 const T_CONTENT_FOR_SECTION_2_STARTS_O = "Content for section 2 (starts open)";
 const T_CONTENT_FOR_SECTION_3 = "Content for section 3";
 
-const meta: Meta<typeof Collapsible> = {
-	title: "Components/Collapsible",
-	component: Collapsible,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof Collapsible>;
 
 export const Closed: Story = {
@@ -42,3 +35,9 @@ export const Multiple: Story = {
 		</div>
 	),
 };
+
+export const meta: Meta<typeof Collapsible> = {
+	title: "Components/Collapsible",
+	component: Collapsible,
+};
+

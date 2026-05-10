@@ -9,13 +9,6 @@ const T_SMALL = "Small";
 const T_PRIMARY_SM = "Primary SM";
 const T_X = "X";
 
-const meta: Meta<typeof Button> = {
-	title: "Components/Button",
-	component: Button,
-};
-
-export default meta;
-
 type Story = StoryObj<typeof Button>;
 
 export const Default: Story = {
@@ -66,3 +59,9 @@ export const AllVariants: Story = {
 		</div>
 	),
 };
+
+export const meta: Meta<typeof Button> = {
+	title: "Components/Button",
+	component: Button,
+};
+
