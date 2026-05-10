@@ -158,7 +158,6 @@ describe("buildCodexTurns", () => {
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.rawName).toBe("command_execution");
-		expect(toolBlock.call.rawName).toBe("command_execution");
 		expect(toolBlock.call.kind).toBe("shell");
 		expect(toolBlock.call.title).toBe("Command");
 		expect(toolBlock.call.summary).toBe("ls -la");
@@ -215,7 +214,6 @@ describe("buildCodexTurns", () => {
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.rawName).toBe("file_change");
-		expect(toolBlock.call.rawName).toBe("file_change");
 		expect(toolBlock.call.kind).toBe("file_edit");
 		expect(toolBlock.call.title).toBe("File Change");
 		expect(toolBlock.call.summary).toBe("src/main.ts");
@@ -252,7 +250,6 @@ describe("buildCodexTurns", () => {
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.rawName).toBe("search_docs");
-		expect(toolBlock.call.rawName).toBe("search_docs");
 		expect(toolBlock.call.kind).toBe("mcp");
 		expect(toolBlock.call.title).toBe("search_docs");
 		expect(toolBlock.call.input).toEqual({ query: "authentication" });
@@ -275,7 +272,6 @@ describe("buildCodexTurns", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.rawName).toBe("web_search");
 		expect(toolBlock.call.rawName).toBe("web_search");
 		expect(toolBlock.call.kind).toBe("web");
 		expect(toolBlock.call.title).toBe("Web Search");

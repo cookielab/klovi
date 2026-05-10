@@ -160,7 +160,6 @@ describe("buildTurns", () => {
 		expect(call?.type).toBe("tool_call");
 		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
 		expect(toolCall.call.rawName).toBe("Read");
-		expect(toolCall.call.rawName).toBe("Read");
 		expect(toolCall.call.kind).toBe("file_read");
 		expect(toolCall.call.title).toBe("Read");
 		expect(toolCall.call.result).toBe("file contents here");

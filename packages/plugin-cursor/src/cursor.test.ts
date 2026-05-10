@@ -184,7 +184,6 @@ describe("cursor plugin", () => {
 			{ type: "tool_call" }
 		>;
 		expect(toolBlock.call.rawName).toBe("read_file");
-		expect(toolBlock.call.rawName).toBe("read_file");
 		expect(toolBlock.call.kind).toBe("file_read");
 		expect(toolBlock.call.title).toBe("read_file");
 		expect(toolBlock.call.toolUseId).toBe("tool-1");
