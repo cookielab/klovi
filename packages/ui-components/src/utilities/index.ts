@@ -1,6 +1,6 @@
-export { ErrorBoundary } from "./ErrorBoundary.tsx";
-export { FetchError } from "./FetchError.tsx";
-export { detectOutputFormat } from "./format-detector.ts";
+export { ErrorBoundary } from "./ErrorBoundary";
+export { FetchError } from "./FetchError";
+export { detectOutputFormat } from "./format-detector";
 export {
 	formatFullDateTime,
 	formatRelativeTime,
@@ -8,6 +8,6 @@ export {
 	formatTimestamp,
 	isClaudeModel,
 	shortModel,
-} from "./formatters.ts";
-export { ImageLightbox } from "./ImageLightbox.tsx";
-export { formatShortcut } from "./shortcut.ts";
+} from "./formatters";
+export { ImageLightbox } from "./ImageLightbox";
+export { formatShortcut } from "./shortcut";

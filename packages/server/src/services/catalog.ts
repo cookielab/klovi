@@ -2,7 +2,7 @@ import { claudeCodePlugin, DEFAULT_CLAUDE_CODE_DIR } from "@cookielab.io/klovi-p
 import { codexCliPlugin, DEFAULT_CODEX_CLI_DIR } from "@cookielab.io/klovi-plugin-codex";
 import { cursorPlugin, DEFAULT_CURSOR_DIR } from "@cookielab.io/klovi-plugin-cursor";
 import { DEFAULT_OPENCODE_DIR, openCodePlugin } from "@cookielab.io/klovi-plugin-opencode";
-import type { ToolPlugin } from "./plugin-types.ts";
+import type { ToolPlugin } from "./plugin-types";
 
 export type BuiltinPluginDescriptor = {
 	plugin: ToolPlugin;

@@ -7,14 +7,9 @@ import {
 	streamJsonlHead,
 } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { cleanCommandMessage } from "./command-message.ts";
-import type { RawContentBlock, RawLine } from "./raw-types.ts";
-import {
-	decodeEncodedPath,
-	listFilesBySuffix,
-	listFilesWithMtime,
-	readDirEntriesSafe,
-} from "./shared/discovery-utils.ts";
+import { cleanCommandMessage } from "./command-message";
+import type { RawContentBlock, RawLine } from "./raw-types";
+import { decodeEncodedPath, listFilesBySuffix, listFilesWithMtime, readDirEntriesSafe } from "./shared/discovery-utils";
 
 const BRACKETED_TEXT_REGEX = /^\[.+\]$/u;
 const PROJECT_DIR_CONCURRENCY = 16;
@@ -134,7 +129,6 @@ function extractCwd(filePath: string) {
 					({ cwd } = obj);
 					return false;
 				}
-				// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
 				return undefined;
 			},
 			{ maxLines: 20 },
@@ -216,7 +210,6 @@ function extractSessionMeta(filePath: string) {
 				if (isMetaComplete(meta)) {
 					return false;
 				}
-				// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
 				return undefined;
 			},
 			{

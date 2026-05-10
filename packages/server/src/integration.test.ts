@@ -1,5 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { type KloviServer, startKloviServer } from "./server.ts";
+import { type KloviServer, startKloviServer } from "./server";
 
 /**
  * Integration test: real server + HTTP client round-trip.
@@ -22,7 +21,7 @@ describe("server + HTTP client integration", () => {
 		server?.stop();
 	});
 
-	test("getVersion round-trip returns set version", async () => {
+	it("getVersion round-trip returns set version", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "POST",
 			body: "{}",
@@ -33,7 +32,7 @@ describe("server + HTTP client integration", () => {
 		expect(data.commit).toBe("abc123");
 	});
 
-	test("isFirstLaunch returns firstLaunch boolean", async () => {
+	it("isFirstLaunch returns firstLaunch boolean", async () => {
 		const res = await fetch(`${server.url}/api/rpc/isFirstLaunch`, {
 			method: "POST",
 			body: "{}",
@@ -43,7 +42,7 @@ describe("server + HTTP client integration", () => {
 		expect(typeof data.firstLaunch).toBe("boolean");
 	});
 
-	test("getProjects returns projects array", async () => {
+	it("getProjects returns projects array", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getProjects`, {
 			method: "POST",
 			body: "{}",
@@ -53,7 +52,7 @@ describe("server + HTTP client integration", () => {
 		expect(Array.isArray(data.projects)).toBe(true);
 	});
 
-	test("getPluginSettings returns plugins array", async () => {
+	it("getPluginSettings returns plugins array", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getPluginSettings`, {
 			method: "POST",
 			body: "{}",
@@ -63,7 +62,7 @@ describe("server + HTTP client integration", () => {
 		expect(Array.isArray(data.plugins)).toBe(true);
 	});
 
-	test("getGeneralSettings returns showSecurityWarning", async () => {
+	it("getGeneralSettings returns showSecurityWarning", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getGeneralSettings`, {
 			method: "POST",
 			body: "{}",
@@ -73,14 +72,14 @@ describe("server + HTTP client integration", () => {
 		expect(typeof data.showSecurityWarning).toBe("boolean");
 	});
 
-	test("GET method returns 404 for RPC endpoint", async () => {
+	it("GET method returns 404 for RPC endpoint", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "GET",
 		});
 		expect(res.status).toBe(404);
 	});
 
-	test("CORS headers not required for same-origin requests", async () => {
+	it("CORS headers not required for same-origin requests", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "POST",
 			body: "{}",

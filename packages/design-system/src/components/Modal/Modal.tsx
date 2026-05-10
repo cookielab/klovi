@@ -36,16 +36,10 @@ export function Modal({ open, onClose, width = 560, children }: ModalProps) {
 	}
 
 	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: overlay click handled via keyboard Escape
-		// biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop
-		// biome-ignore lint/a11y/noNoninteractiveElementInteractions: overlay backdrop dismisses modal
 		<div className="fixed inset-0 z-[200] flex justify-center bg-black/40 pt-[15vh]" onClick={onClose}>
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: inner click stop propagation */}
-			{/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: dialog stops click propagation */}
 			<div
 				className="flex max-h-[480px] flex-col overflow-hidden border border-border bg-surface shadow-lg"
 				role="dialog"
-				// biome-ignore lint/nursery/noInlineStyles: width is a dynamic prop value
 				style={{ width: width }}
 				onClick={stopPropagation}
 			>

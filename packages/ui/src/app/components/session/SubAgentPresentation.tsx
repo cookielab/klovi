@@ -1,6 +1,6 @@
-import { useSubAgentSessionData } from "../../hooks/useSessionData.ts";
-import { TypedErrorDisplay } from "../ui/TypedErrorDisplay.tsx";
-import { PackagePresentationShell } from "./PackagePresentationShell.tsx";
+import { useSubAgentSessionData } from "../../hooks/useSessionData";
+import { TypedErrorDisplay } from "../ui/TypedErrorDisplay";
+import { PackagePresentationShell } from "./PackagePresentationShell";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
 

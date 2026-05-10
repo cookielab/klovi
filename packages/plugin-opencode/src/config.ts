@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
 const DEFAULT_OPENCODE_DIR = join(
-	process.env["HOME"] ?? process.env["USERPROFILE"] ?? "",
+	Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "",
 	".local",
 	"share",
 	"opencode",

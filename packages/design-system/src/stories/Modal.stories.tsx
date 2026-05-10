@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { Button } from "../components/Button/Button.tsx";
-import { Modal } from "../components/Modal/Modal.tsx";
+import { Button } from "../components/Button/Button";
+import { Modal } from "../components/Modal/Modal";
 
 const meta: Meta<typeof Modal> = {
 	title: "Components/Modal",
@@ -12,19 +12,18 @@ export default meta;
 
 type Story = StoryObj<typeof Modal>;
 
-// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function ModalDemo() {
 	const [open, setOpen] = useState(false);
 	return (
-		<div style={{ padding: 20 }}>
+		<div>
 			{/* biome-ignore lint/nursery/noJsxPropsBind: story demo */}
 			<Button onClick={() => setOpen(true)}>Open Modal</Button>
 			{/* biome-ignore lint/nursery/noJsxPropsBind: story demo */}
 			<Modal open={open} onClose={() => setOpen(false)}>
-				<div style={{ padding: 24 }}>
-					<h2 style={{ marginBottom: 12 }}>Modal Title</h2>
+				<div>
+					<h2>Modal Title</h2>
 					<p>This is modal content. Press Escape or click outside to close.</p>
-					<div style={{ marginTop: 16 }}>
+					<div>
 						{/* biome-ignore lint/nursery/noJsxPropsBind: story demo */}
 						<Button variant="primary" onClick={() => setOpen(false)}>
 							Close
@@ -43,10 +42,10 @@ export const Interactive: Story = {
 export const Open: Story = {
 	args: {
 		open: true,
-		onClose: () => {},
+		onClose: () => undefined,
 		children: (
-			<div style={{ padding: 24 }}>
-				<h2 style={{ marginBottom: 12 }}>Static Modal</h2>
+			<div>
+				<h2>Static Modal</h2>
 				<p>This modal is always open in this story.</p>
 			</div>
 		),

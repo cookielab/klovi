@@ -1,8 +1,7 @@
-import { describe, expect, test } from "bun:test";
-import { formatLaunchFailure, parseArgs, parsePidList, selectWindowCandidate } from "./verify-linux-window-identity.ts";
+import { formatLaunchFailure, parseArgs, parsePidList, selectWindowCandidate } from "./verify-linux-window-identity";
 
 describe("parseArgs", () => {
-	test("accepts a single bundle path", () => {
+	it("accepts a single bundle path", () => {
 		expect(parseArgs(["bun", "verify-linux-window-identity.ts", "/tmp/Klovi"])).toEqual({
 			bundlePath: "/tmp/Klovi",
 		});
@@ -10,13 +9,13 @@ describe("parseArgs", () => {
 });
 
 describe("parsePidList", () => {
-	test("parses ps output with mixed whitespace", () => {
+	it("parses ps output with mixed whitespace", () => {
 		expect(parsePidList(" 123\n456 \n\n 789\n")).toEqual([123, 456, 789]);
 	});
 });
 
 describe("selectWindowCandidate", () => {
-	test("prefers a matching window owned by the launcher process family", () => {
+	it("prefers a matching window owned by the launcher process family", () => {
 		const result = selectWindowCandidate(
 			[
 				{
@@ -39,7 +38,7 @@ describe("selectWindowCandidate", () => {
 		expect(result?.id).toBe("0x2");
 	});
 
-	test("falls back to a new matching window when the owner pid changed", () => {
+	it("falls back to a new matching window when the owner pid changed", () => {
 		const result = selectWindowCandidate(
 			[
 				{
@@ -56,13 +55,12 @@ describe("selectWindowCandidate", () => {
 		expect(result?.id).toBe("0x1");
 	});
 
-	test("ignores stale or incorrectly branded windows", () => {
+	it("ignores stale or incorrectly branded windows", () => {
 		const result = selectWindowCandidate(
 			[
 				{
 					id: "0x1",
 					pid: 321,
-					// biome-ignore lint/security/noSecrets: test fixture uses the known upstream WM_CLASS string
 					wmClass: '"ElectrobunKitchenSink", "ElectrobunKitchenSink"',
 					name: "Klovi",
 				},
@@ -88,7 +86,7 @@ describe("selectWindowCandidate", () => {
 });
 
 describe("formatLaunchFailure", () => {
-	test("includes launcher exit diagnostics when the process exits early", () => {
+	it("includes launcher exit diagnostics when the process exits early", () => {
 		const message = formatLaunchFailure({
 			lastObservedWindows: [],
 			launchExitCode: 127,
@@ -104,7 +102,7 @@ describe("formatLaunchFailure", () => {
 		expect(message).toContain("Launcher stdout tail:");
 	});
 
-	test("includes the last observed windows in timeout output", () => {
+	it("includes the last observed windows in timeout output", () => {
 		const message = formatLaunchFailure({
 			lastObservedWindows: [
 				{

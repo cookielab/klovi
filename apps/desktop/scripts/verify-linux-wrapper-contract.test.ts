@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,7 +11,7 @@ import {
 	parseArgs,
 	parseDesktopEntry,
 	verifyLinuxWrapperContract,
-} from "./verify-linux-wrapper-contract.ts";
+} from "./verify-linux-wrapper-contract";
 
 const tempPaths: string[] = [];
 const STARTUP_WM_CLASS_LINE = ["StartupWMClass", "Klovi"].join("=");
@@ -24,7 +23,6 @@ afterEach(async () => {
 	while (tempPaths.length > 0) {
 		const path = tempPaths.pop();
 		if (path) {
-			// biome-ignore lint/performance/noAwaitInLoops: sequential cleanup of temp directories
 			await rm(path, { recursive: true, force: true });
 		}
 	}
@@ -53,7 +51,7 @@ async function writeBundle(root: string, metadataFilename = "version.json"): Pro
 }
 
 describe("parseArgs", () => {
-	test("accepts a single bundle path", () => {
+	it("accepts a single bundle path", () => {
 		expect(parseArgs(["bun", "verify-linux-wrapper-contract.ts", "/tmp/Klovi"])).toEqual({
 			bundlePath: "/tmp/Klovi",
 		});
@@ -61,8 +59,7 @@ describe("parseArgs", () => {
 });
 
 describe("parseDesktopEntry", () => {
-	test("parses desktop keys and values", () => {
-		// biome-ignore lint/security/noSecrets: not a real secret
+	it("parses desktop keys and values", () => {
 		const entry = parseDesktopEntry("[Desktop Entry]\nName=Klovi\nStartupWMClass=Klovi\n");
 		expect(entry.get("Name")).toBe("Klovi");
 		expect(entry.get("StartupWMClass")).toBe("Klovi");
@@ -71,7 +68,7 @@ describe("parseDesktopEntry", () => {
 
 describe("detectLayout", () => {
 	for (const metadataFilename of METADATA_FILENAMES) {
-		test(`detects a normalized Linux bundle with ${metadataFilename}`, async () => {
+		it(`detects a normalized Linux bundle with ${metadataFilename}`, async () => {
 			const root = await makeTempDir("klovi-linux-bundle-");
 			await writeBundle(root, metadataFilename);
 
@@ -83,7 +80,7 @@ describe("detectLayout", () => {
 			});
 		});
 
-		test(`detects an AppDir layout with ${metadataFilename}`, async () => {
+		it(`detects an AppDir layout with ${metadataFilename}`, async () => {
 			const root = await makeTempDir("klovi-linux-appdir-");
 			const bundleRoot = join(root, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
 			await writeBundle(bundleRoot, metadataFilename);
@@ -103,14 +100,14 @@ describe("detectLayout", () => {
 
 describe("linux wrapper contract", () => {
 	for (const metadataFilename of METADATA_FILENAMES) {
-		test(`accepts a normalized bundle with ${metadataFilename}`, async () => {
+		it(`accepts a normalized bundle with ${metadataFilename}`, async () => {
 			const root = await makeTempDir("klovi-linux-contract-");
 			await writeBundle(root, metadataFilename);
 
 			await expect(verifyLinuxWrapperContract({ bundlePath: root })).resolves.toBeUndefined();
 		});
 
-		test(`accepts an AppDir with ${metadataFilename}`, async () => {
+		it(`accepts an AppDir with ${metadataFilename}`, async () => {
 			const root = await makeTempDir("klovi-linux-appdir-contract-");
 			const bundleRoot = join(root, "usr", "lib", EXPECTED_LINUX_ICON_BASENAME);
 			await writeBundle(bundleRoot, metadataFilename);

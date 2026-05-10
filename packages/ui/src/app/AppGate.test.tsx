@@ -1,11 +1,9 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { act } from "react";
-import { AppGate } from "./App.tsx";
-import { MockProviders, setMockHostConnectionState, setupMockRPC } from "./test-helpers/mock-rpc.ts";
+import { AppGate } from "./App";
+import { MockProviders, setMockHostConnectionState, setupMockRPC } from "./test-helpers/mock-rpc";
 
 describe("AppGate", () => {
-	// biome-ignore lint/suspicious/noConsole: test-only console filtering
 	const originalError = console.error;
 
 	beforeEach(() => {
@@ -32,7 +30,7 @@ describe("AppGate", () => {
 
 	// --- First launch (isFirstLaunch=true): show full Onboarding ---
 
-	test("shows full onboarding on first launch", async () => {
+	it("shows full onboarding on first launch", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 		});
@@ -40,7 +38,7 @@ describe("AppGate", () => {
 		expect(await findByText("Session Data Notice")).toBeTruthy();
 	});
 
-	test("first launch: completing onboarding shows App", async () => {
+	it("first launch: completing onboarding shows App", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 			acceptRisks: () => Promise.resolve({ ok: true }),
@@ -56,7 +54,7 @@ describe("AppGate", () => {
 		expect(await findByText("Welcome to Klovi")).toBeTruthy();
 	});
 
-	test("first launch: does not disable warning unless checkbox is checked", async () => {
+	it("first launch: does not disable warning unless checkbox is checked", async () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
@@ -75,7 +73,7 @@ describe("AppGate", () => {
 		expect(updateGeneralSettings).not.toHaveBeenCalled();
 	});
 
-	test("first launch: checking dont-show in step 1 saves setting", async () => {
+	it("first launch: checking dont-show in step 1 saves setting", async () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
@@ -96,7 +94,7 @@ describe("AppGate", () => {
 
 	// --- Returning user + showSecurityWarning=true: show SecurityWarning ---
 
-	test("returning user with warning enabled sees security warning", async () => {
+	it("returning user with warning enabled sees security warning", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
@@ -105,7 +103,7 @@ describe("AppGate", () => {
 		expect(await findByRole("button", { name: "Accept & Continue" })).toBeTruthy();
 	});
 
-	test("returning user: Accept & Continue shows App", async () => {
+	it("returning user: Accept & Continue shows App", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
@@ -117,7 +115,7 @@ describe("AppGate", () => {
 		expect(await findByText("Welcome to Klovi")).toBeTruthy();
 	});
 
-	test("returning user: checking dont-show saves setting", async () => {
+	it("returning user: checking dont-show saves setting", async () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
@@ -139,7 +137,7 @@ describe("AppGate", () => {
 
 	// --- Returning user + showSecurityWarning=false: skip straight to App ---
 
-	test("returning user with warning disabled skips to App", async () => {
+	it("returning user with warning disabled skips to App", async () => {
 		const acceptRisks = mock(() => Promise.resolve({ ok: true }));
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
@@ -153,7 +151,7 @@ describe("AppGate", () => {
 
 	// --- Error handling ---
 
-	test("shows onboarding when isFirstLaunch fails", async () => {
+	it("shows onboarding when isFirstLaunch fails", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.reject(new Error("RPC failed")),
 		});
@@ -161,7 +159,7 @@ describe("AppGate", () => {
 		expect(await findByText("Session Data Notice")).toBeTruthy();
 	});
 
-	test("shows onboarding when getGeneralSettings fails for returning user", async () => {
+	it("shows onboarding when getGeneralSettings fails for returning user", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.reject(new Error("RPC failed")),
@@ -170,7 +168,7 @@ describe("AppGate", () => {
 		expect(await findByText("Session Data Notice")).toBeTruthy();
 	});
 
-	test("App renders even if acceptRisks RPC fails", async () => {
+	it("App renders even if acceptRisks RPC fails", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 			acceptRisks: () => Promise.reject(new Error("RPC failed")),
@@ -186,7 +184,7 @@ describe("AppGate", () => {
 		expect(await findByText("Welcome to Klovi")).toBeTruthy();
 	});
 
-	test("shows desktop reconnect state on transport failure instead of onboarding", async () => {
+	it("shows desktop reconnect state on transport failure instead of onboarding", async () => {
 		setupMockRPC({
 			isFirstLaunch: () => Promise.reject(new Error("RPC request timed out.")),
 		});
@@ -197,7 +195,7 @@ describe("AppGate", () => {
 		expect(queryByText("Session Data Notice")).toBeNull();
 	});
 
-	test("desktop reconnect screen retries into the app after host recovery", async () => {
+	it("desktop reconnect screen retries into the app after host recovery", async () => {
 		const isFirstLaunch = mock<() => Promise<{ firstLaunch: boolean }>>(() =>
 			Promise.reject(new Error("RPC request timed out.")),
 		);

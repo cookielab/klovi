@@ -1,11 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
-import { extractFirstHeading, loadCursorPlanSession, parsePlanFrontmatter, readPlanDisplayName } from "./plans.ts";
+import { extractFirstHeading, loadCursorPlanSession, parsePlanFrontmatter, readPlanDisplayName } from "./plans";
 
 const testDir = join(tmpdir(), `klovi-cursor-plans-test-${Date.now()}`);
 
@@ -23,14 +22,14 @@ describe("cursor plans", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("parsePlanFrontmatter strips YAML frontmatter and extracts name", () => {
+	it("parsePlanFrontmatter strips YAML frontmatter and extracts name", () => {
 		const parsed = parsePlanFrontmatter("---\nname: Auth rollout\nowner: platform\n---\n\n# Heading\n\nBody text");
 
 		expect(parsed.name).toBe("Auth rollout");
 		expect(parsed.body).toBe("# Heading\n\nBody text");
 	});
 
-	test("readPlanDisplayName falls back from frontmatter name to heading to file stem", async () => {
+	it("readPlanDisplayName falls back from frontmatter name to heading to file stem", async () => {
 		const headingPlanPath = join(testDir, "heading-only.plan.md");
 		const stemPlanPath = join(testDir, "fallback-name.plan.md");
 
@@ -42,7 +41,7 @@ describe("cursor plans", () => {
 		expect(extractFirstHeading("# Direct heading\n\nBody")).toBe("Direct heading");
 	});
 
-	test("loadCursorPlanSession returns a single system turn without frontmatter", async () => {
+	it("loadCursorPlanSession returns a single system turn without frontmatter", async () => {
 		const planPath = join(testDir, "auth-rollout.plan.md");
 		await writeFile(planPath, "---\nname: Auth rollout\n---\n\n# Tasks\n\n- Build it");
 

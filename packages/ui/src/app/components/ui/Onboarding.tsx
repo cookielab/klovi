@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context.ts";
-import { kloviHostBridge } from "../../../lib/rpc-client.ts";
-import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
-import { PluginRow } from "../settings/PluginRow.tsx";
-import { SecurityNoticeContent } from "./SecurityWarning.tsx";
+import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context";
+import { kloviHostBridge } from "../../../lib/rpc-client";
+import type { PluginSettingInfo } from "../../../shared/rpc-types";
+import { PluginRow } from "../settings/PluginRow";
+import { SecurityNoticeContent } from "./SecurityWarning";
 
 const WRAPPER_CLASSES = "flex min-h-screen items-center justify-center bg-surface p-[20px]";
 const CONTENT_CLASSES = "w-full max-w-[480px] text-center leading-[1.6] text-foreground-muted";
@@ -46,7 +46,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 		(pluginId: string, enabled: boolean) => {
 			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, enabled: enabled }))
 				.then((data) => setPlugins(data.plugins))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);
@@ -60,7 +60,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 				}
 				const updated = await runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: data.path }));
 				setPlugins(updated.plugins);
-			} catch {}
+			} catch {
+				// swallow browseDirectory errors (e.g. user cancelled)
+			}
 		},
 		[client, runKloviEffect],
 	);
@@ -69,7 +71,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 		(pluginId: string, dataDir: string) => {
 			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: dataDir }))
 				.then((data) => setPlugins(data.plugins))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);
@@ -78,14 +80,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 		(pluginId: string) => {
 			runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: null }))
 				.then((data) => setPlugins(data.plugins))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);
 
 	const handleAcceptStep1 = useCallback(() => setStep(2), []);
 	const handleDontShowAgain = useCallback(() => {
-		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
+		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => undefined);
 	}, [client, runKloviEffect]);
 	const handleBackToStep1 = useCallback(() => setStep(1), []);
 

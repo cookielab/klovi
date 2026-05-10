@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,10 +5,10 @@ import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
 import type { FileSystem } from "@effect/platform";
 import { BunContext } from "@effect/platform-bun";
 import { Effect, Layer } from "effect";
-import { getDefaultSettings, saveSettings as saveSettingsEffect } from "../services/settings.ts";
-import { BunPluginLayer } from "./platform-bun.ts";
-import { ServerConfig } from "./server-config.ts";
-import { KloviServices, KloviServicesLive } from "./server-services.ts";
+import { getDefaultSettings, saveSettings as saveSettingsEffect } from "../services/settings";
+import { BunPluginLayer } from "./platform-bun";
+import { ServerConfig } from "./server-config";
+import { KloviServices, KloviServicesLive } from "./server-services";
 
 function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]) {
 	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
@@ -85,7 +84,7 @@ describe("KloviServicesLive registry refresh", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("initial registry reflects startup settings", async () => {
+	it("initial registry reflects startup settings", async () => {
 		await mkdir(testDir, { recursive: true });
 		const settings = getDefaultSettings();
 		// Disable claude-code at startup
@@ -104,7 +103,7 @@ describe("KloviServicesLive registry refresh", () => {
 		});
 	});
 
-	test("updatePluginSetting refreshes registry so subsequent reads use new state", async () => {
+	it("updatePluginSetting refreshes registry so subsequent reads use new state", async () => {
 		await mkdir(testDir, { recursive: true });
 		await saveSettings(settingsPath, getDefaultSettings());
 
@@ -125,7 +124,7 @@ describe("KloviServicesLive registry refresh", () => {
 		});
 	});
 
-	test("resetSettings refreshes registry and restores default plugin availability", async () => {
+	it("resetSettings refreshes registry and restores default plugin availability", async () => {
 		await mkdir(testDir, { recursive: true });
 		const settings = getDefaultSettings();
 		// Disable ALL plugins in saved settings
@@ -158,7 +157,7 @@ describe("KloviServicesLive registry refresh", () => {
 		});
 	});
 
-	test("updatePluginSetting with dataDir change affects subsequent registry-backed reads", async () => {
+	it("updatePluginSetting with dataDir change affects subsequent registry-backed reads", async () => {
 		await mkdir(testDir, { recursive: true });
 		await saveSettings(settingsPath, getDefaultSettings());
 
@@ -187,7 +186,7 @@ describe("KloviServicesLive registry refresh", () => {
 		});
 	});
 
-	test("failed updatePluginSetting does not report success", async () => {
+	it("failed updatePluginSetting does not report success", async () => {
 		await mkdir(testDir, { recursive: true });
 		await saveSettings(settingsPath, getDefaultSettings());
 
@@ -205,7 +204,7 @@ describe("KloviServicesLive registry refresh", () => {
 		});
 	});
 
-	test("getRegistry returns current mutable registry, not stale snapshot", async () => {
+	it("getRegistry returns current mutable registry, not stale snapshot", async () => {
 		await mkdir(testDir, { recursive: true });
 		await saveSettings(settingsPath, getDefaultSettings());
 

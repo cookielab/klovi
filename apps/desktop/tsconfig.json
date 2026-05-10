@@ -1,7 +1,4 @@
 {
-	"extends": "../../tsconfig.fe.json",
-	"compilerOptions": {
-		"noEmit": true
-	},
-	"include": ["src/**/*.ts", "src/**/*.tsx", "electrobun.config.ts"]
+	"extends": "../../tsconfig.json",
+	"include": ["src/**/*.ts", "src/**/*.tsx", "electrobun.config.ts", "package.json", "../../test-globals.d.ts"]
 }

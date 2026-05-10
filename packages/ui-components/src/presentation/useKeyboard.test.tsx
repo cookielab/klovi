@@ -1,8 +1,6 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { useKeyboard } from "./useKeyboard.ts";
+import { useKeyboard } from "./useKeyboard";
 
-// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }) {
 	useKeyboard(props.handlers, props.active);
 	return <div>keyboard harness</div>;
@@ -15,11 +13,11 @@ function fireKey(key: string, opts: KeyboardEventInit = {}) {
 afterEach(cleanup);
 
 describe("useKeyboard", () => {
-	test("maps arrow and space keys to step handlers", () => {
-		const onNext = mock(() => {});
-		const onPrev = mock(() => {});
-		const onNextTurn = mock(() => {});
-		const onPrevTurn = mock(() => {});
+	it("maps arrow and space keys to step handlers", () => {
+		const onNext = mock(() => undefined);
+		const onPrev = mock(() => undefined);
+		const onNextTurn = mock(() => undefined);
+		const onPrevTurn = mock(() => undefined);
 
 		render(
 			<KeyboardHarness
@@ -40,9 +38,9 @@ describe("useKeyboard", () => {
 		expect(onPrevTurn).toHaveBeenCalledTimes(1);
 	});
 
-	test("handles escape and fullscreen shortcuts", () => {
-		const onEscape = mock(() => {});
-		const onFullscreen = mock(() => {});
+	it("handles escape and fullscreen shortcuts", () => {
+		const onEscape = mock(() => undefined);
+		const onFullscreen = mock(() => undefined);
 
 		render(<KeyboardHarness active={true} handlers={{ onEscape: onEscape, onFullscreen: onFullscreen }} />);
 
@@ -55,9 +53,9 @@ describe("useKeyboard", () => {
 		expect(onFullscreen).toHaveBeenCalledTimes(1);
 	});
 
-	test("does nothing when inactive", () => {
-		const onNext = mock(() => {});
-		const onEscape = mock(() => {});
+	it("does nothing when inactive", () => {
+		const onNext = mock(() => undefined);
+		const onEscape = mock(() => undefined);
 
 		render(<KeyboardHarness active={false} handlers={{ onNext: onNext, onEscape: onEscape }} />);
 
@@ -68,8 +66,8 @@ describe("useKeyboard", () => {
 		expect(onEscape).toHaveBeenCalledTimes(0);
 	});
 
-	test("ignores key events from input and textarea", () => {
-		const onNext = mock(() => {});
+	it("ignores key events from input and textarea", () => {
+		const onNext = mock(() => undefined);
 
 		const { container } = render(
 			<div>
@@ -91,8 +89,8 @@ describe("useKeyboard", () => {
 		expect(onNext).toHaveBeenCalledTimes(0);
 	});
 
-	test("safely skips missing handlers and cleans up on unmount", () => {
-		const onNext = mock(() => {});
+	it("safely skips missing handlers and cleans up on unmount", () => {
+		const onNext = mock(() => undefined);
 		const { unmount } = render(<KeyboardHarness active={true} handlers={{ onNext: onNext }} />);
 
 		unmount();

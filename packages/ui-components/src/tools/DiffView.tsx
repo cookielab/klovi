@@ -1,6 +1,7 @@
 import { useTheme } from "@cookielab.io/klovi-design-system";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
+import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
 
 const LINE_NUMBER_THRESHOLD = 3;
 const HEADER_CLASSES =
@@ -12,7 +13,6 @@ type DiffViewProps = {
 	newString: string;
 };
 
-// biome-ignore lint/style/useComponentExportOnlyModules: co-located diff formatting utility used alongside the component
 export function formatDiff(oldString: string, newString: string): string {
 	const lines: string[] = [];
 

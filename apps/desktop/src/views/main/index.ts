@@ -13,7 +13,7 @@ import {
 } from "@cookielab.io/klovi-ui/bootstrap";
 import type { DesktopMenuAction, DesktopRequestMethod } from "@cookielab.io/klovi-ui/shared/desktop-contract";
 import { Electroview } from "electrobun/view";
-import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types.ts";
+import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types";
 
 // Import design system globals (tokens, reset, fonts) via klovi-ui
 import "@cookielab.io/klovi-ui/styles";
@@ -353,8 +353,10 @@ const desktopHostBridge: KloviHostBridge = {
 };
 
 // Mount shared app
-// biome-ignore lint/style/noNonNullAssertion: root element is guaranteed to exist in index.html
-const container = document.querySelector<HTMLElement>("#root")!;
+const container = document.querySelector<HTMLElement>("#root");
+if (!container) {
+	throw new Error("Root element #root not found in DOM");
+}
 mountKloviApp({
 	container: container,
 	client: desktopClient,

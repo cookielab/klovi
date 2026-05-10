@@ -1,11 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index.ts";
+import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index";
 
 const testDir = join(tmpdir(), `klovi-codex-index-test-${Date.now()}`);
 
@@ -46,14 +45,14 @@ describe("codexCliPlugin", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("exposes plugin identity and resume command", () => {
+	it("exposes plugin identity and resume command", () => {
 		expect(codexCliPlugin.id).toBe("codex-cli");
 		expect(codexCliPlugin.displayName).toBe("Codex");
 		expect(codexCliPlugin.getDefaultDataDir()).toBeNull();
 		expect(codexCliPlugin.getResumeCommand?.("session-123")).toBe("codex resume session-123");
 	});
 
-	test("discovers, lists, and loads sessions through plugin interface", async () => {
+	it("discovers, lists, and loads sessions through plugin interface", async () => {
 		await writeSession(
 			"uuid-1",
 			{
@@ -90,7 +89,7 @@ describe("codexCliPlugin", () => {
 		expect(session.turns).toHaveLength(1);
 	});
 
-	test("returns empty lists for unknown projects", async () => {
+	it("returns empty lists for unknown projects", async () => {
 		const sessions = await run(codexCliPlugin.listSessions("/Users/dev/missing"));
 		expect(sessions).toEqual([]);
 	});

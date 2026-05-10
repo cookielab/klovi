@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findNamedFiles, resolveLinuxLauncherPath } from "./linux-bundle.ts";
+import { findNamedFiles, resolveLinuxLauncherPath } from "./linux-bundle";
 
 const tempRoots: string[] = [];
 
@@ -12,7 +11,6 @@ afterEach(async () => {
 		if (!root) {
 			continue;
 		}
-		// biome-ignore lint/performance/noAwaitInLoops: sequential cleanup of temp directories
 		await Bun.$`rm -rf ${root}`;
 	}
 });
@@ -24,7 +22,7 @@ async function createTempRoot(prefix: string): Promise<string> {
 }
 
 describe("findNamedFiles", () => {
-	test("matches symbolic links to Linux wrapper libraries", async () => {
+	it("matches symbolic links to Linux wrapper libraries", async () => {
 		const root = await createTempRoot("klovi-linux-bundle-");
 		await mkdir(join(root, "bin"), { recursive: true });
 		await writeFile(join(root, "bin", "libNativeWrapper.real.so"), "wrapper");
@@ -37,7 +35,7 @@ describe("findNamedFiles", () => {
 });
 
 describe("resolveLinuxLauncherPath", () => {
-	test("accepts a dist directory with launcher at the root", async () => {
+	it("accepts a dist directory with launcher at the root", async () => {
 		const root = await createTempRoot("klovi-linux-dist-");
 		await writeFile(join(root, "launcher"), "#!/bin/sh\n");
 

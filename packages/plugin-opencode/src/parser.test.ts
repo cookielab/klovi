@@ -1,5 +1,4 @@
 import { Database } from "bun:sqlite";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,8 +6,8 @@ import type { AssistantTurn, UserTurn } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { buildOpenCodeTurns, loadOpenCodeSession, type OpenCodeMessage } from "./parser.ts";
-import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
+import { buildOpenCodeTurns, loadOpenCodeSession, type OpenCodeMessage } from "./parser";
+import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
 const testDir = join(tmpdir(), `klovi-opencode-parser-test-${Date.now()}`);
 
@@ -95,7 +94,6 @@ function insertSession(db: Database, id: string, projectId: string, directory: s
 	);
 }
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertMessage(
 	db: Database,
 	id: string,
@@ -113,7 +111,6 @@ function insertMessage(
 	]);
 }
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertPart(
 	db: Database,
 	id: string,
@@ -141,7 +138,7 @@ afterEach(async () => {
 });
 
 describe("buildOpenCodeTurns", () => {
-	test("builds user turn from user message with text parts", () => {
+	it("builds user turn from user message with text parts", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -160,7 +157,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(user.uuid).toBe("msg-1");
 	});
 
-	test("builds assistant turn with text content block", () => {
+	it("builds assistant turn with text content block", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -193,7 +190,7 @@ describe("buildOpenCodeTurns", () => {
 		});
 	});
 
-	test("builds thinking block from reasoning part", () => {
+	it("builds thinking block from reasoning part", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -224,7 +221,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 	});
 
-	test("builds tool call from completed tool part", () => {
+	it("builds tool call from completed tool part", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -267,7 +264,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(toolBlock.call.isError).toBe(false);
 	});
 
-	test("builds error tool call from errored tool part", () => {
+	it("builds error tool call from errored tool part", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -303,7 +300,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(toolBlock.call.result).toBe("Permission denied");
 	});
 
-	test("handles pending tool parts as interrupted", () => {
+	it("handles pending tool parts as interrupted", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -337,7 +334,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(toolBlock.call.result).toBe("[Tool execution was interrupted]");
 	});
 
-	test("ignores text parts marked as ignored", () => {
+	it("ignores text parts marked as ignored", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -366,7 +363,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(visibleBlock.text).toBe("Visible response");
 	});
 
-	test("handles mixed content in a single assistant message", () => {
+	it("handles mixed content in a single assistant message", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -408,7 +405,7 @@ describe("buildOpenCodeTurns", () => {
 		expect(assistant.contentBlocks[3]?.type).toBe("text");
 	});
 
-	test("handles multiple user-assistant turn pairs", () => {
+	it("handles multiple user-assistant turn pairs", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -453,12 +450,12 @@ describe("buildOpenCodeTurns", () => {
 		expect(turns[3]?.kind).toBe("assistant");
 	});
 
-	test("returns empty turns for empty messages", () => {
+	it("returns empty turns for empty messages", () => {
 		const turns = buildOpenCodeTurns([]);
 		expect(turns).toEqual([]);
 	});
 
-	test("uses step-finish tokens as fallback for usage", () => {
+	it("uses step-finish tokens as fallback for usage", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -496,7 +493,7 @@ describe("buildOpenCodeTurns", () => {
 		});
 	});
 
-	test("captures finish reason from assistant data", () => {
+	it("captures finish reason from assistant data", () => {
 		const messages: OpenCodeMessage[] = [
 			{
 				id: "msg-1",
@@ -519,7 +516,7 @@ describe("buildOpenCodeTurns", () => {
 });
 
 describe("loadOpenCodeSession", () => {
-	test("loads and parses a full session from DB", async () => {
+	it("loads and parses a full session from DB", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project");
 		insertSession(db, "sess-1", "proj-1", "/Users/dev/project");
@@ -604,7 +601,7 @@ describe("loadOpenCodeSession", () => {
 		});
 	});
 
-	test("returns empty session when DB does not exist", async () => {
+	it("returns empty session when DB does not exist", async () => {
 		await rm(testDir, { recursive: true, force: true });
 		await mkdir(testDir, { recursive: true });
 
@@ -615,7 +612,7 @@ describe("loadOpenCodeSession", () => {
 		expect(session.turns).toEqual([]);
 	});
 
-	test("returns empty session when session has no messages", async () => {
+	it("returns empty session when session has no messages", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project");
 		insertSession(db, "sess-1", "proj-1", "/Users/dev/project");
@@ -626,7 +623,7 @@ describe("loadOpenCodeSession", () => {
 		expect(session.turns).toEqual([]);
 	});
 
-	test("handles tool error parts correctly", async () => {
+	it("handles tool error parts correctly", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project");
 		insertSession(db, "sess-1", "proj-1", "/Users/dev/project");
@@ -667,7 +664,7 @@ describe("loadOpenCodeSession", () => {
 		expect(toolBlock.call.result).toBe("Operation not permitted");
 	});
 
-	test("skips malformed message data gracefully", async () => {
+	it("skips malformed message data gracefully", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project");
 		insertSession(db, "sess-1", "proj-1", "/Users/dev/project");

@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 
 import { resolve } from "node:path";
-import { resolveLinuxNativeWrapperPaths } from "./linux-bundle.ts";
+import process from "node:process";
+import { resolveLinuxNativeWrapperPaths } from "./linux-bundle";
 
 const UPSTREAM_WM_CLASS = "ElectrobunKitchenSink-dev";
 const EXPECTED_WM_CLASS = "Klovi";
@@ -97,16 +98,13 @@ async function patchLinuxNativeWrapper(args: PatchArgs): Promise<PatchResult[]> 
 	if (patchedCount === 0 && alreadyPatchedCount === 0) {
 		throw new Error(`No Linux native wrapper libraries were patched under ${bundlePath}`);
 	}
-
-	console.log(`Patched Linux native wrapper WM_CLASS: ${patchedCount} updated, ${alreadyPatchedCount} already patched`);
 	return results;
 }
 
 if (import.meta.main) {
 	try {
 		await patchLinuxNativeWrapper(parseArgs(Bun.argv));
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+	} catch {
 		process.exit(1);
 	}
 }

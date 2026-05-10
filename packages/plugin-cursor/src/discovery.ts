@@ -3,20 +3,20 @@ import { fileURLToPath } from "node:url";
 import type { PluginProject, SessionSummary, SqliteDb } from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso, PluginConfig, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { encodeCursorProjectPath } from "./config.ts";
-import { getCursorWorkspaceStorageDirEffect, openCursorDbIfExists, openCursorGlobalDb } from "./db.ts";
-import { readPlanDisplayName } from "./plans.ts";
-import { fileExists, listFilesWithMtime, readDirEntriesSafe, readFileText } from "./shared/discovery-utils.ts";
-import { tryParseJson } from "./shared/json-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
-import { truncate } from "./shared/text-utils.ts";
+import { encodeCursorProjectPath } from "./config";
+import { getCursorWorkspaceStorageDirEffect, openCursorDbIfExists, openCursorGlobalDb } from "./db";
+import { readPlanDisplayName } from "./plans";
+import { fileExists, listFilesWithMtime, readDirEntriesSafe, readFileText } from "./shared/discovery-utils";
+import { tryParseJson } from "./shared/json-utils";
+import { iterateJsonl } from "./shared/jsonl-utils";
+import { truncate } from "./shared/text-utils";
 import type {
 	CursorAgentSummary,
 	CursorComposerSummary,
 	CursorIndex,
 	CursorPlanSummary,
 	CursorSessionRecord,
-} from "./types.ts";
+} from "./types";
 
 const SESSION_PREVIEW_MAX_LENGTH = 200;
 
@@ -251,7 +251,6 @@ function resolveComposerSessionType(unifiedMode: string): SessionSummary["sessio
 	if (unifiedMode === "agent") {
 		return "implementation";
 	}
-	// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
 	return undefined;
 }
 
@@ -429,7 +428,7 @@ function readFirstTranscriptUserMessage(text: string): string {
 			firstMessage = truncate(parts.join("\n\n"), SESSION_PREVIEW_MAX_LENGTH);
 			return false;
 		},
-		{ onMalformed: () => {} },
+		{ onMalformed: () => undefined },
 	);
 
 	return firstMessage;
@@ -585,7 +584,6 @@ function discoverMappedPlans(
 	agentsById: Map<string, CursorAgentSummary>,
 	options: PlanDiscoveryOptions = { loadDisplayName: true },
 ) {
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: sqlite registry mapping is linear but branchy
 	return Effect.gen(function* () {
 		const plansById = new Map<string, CursorPlanSummary>();
 		if (!globalDb) {

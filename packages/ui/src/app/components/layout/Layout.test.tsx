@@ -1,12 +1,11 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
-import { MockProviders } from "../../test-helpers/mock-rpc.ts";
-import { Layout } from "./Layout.tsx";
+import { MockProviders } from "../../test-helpers/mock-rpc";
+import { Layout } from "./Layout";
 
 afterEach(cleanup);
 
 describe("Layout", () => {
-	test("renders sidebar content", () => {
+	it("renders sidebar content", () => {
 		const { getByText } = render(
 			<Layout sidebar={<div>Sidebar Content</div>}>
 				<div>Main Content</div>
@@ -16,7 +15,7 @@ describe("Layout", () => {
 		expect(getByText("Sidebar Content")).toBeTruthy();
 	});
 
-	test("renders main content", () => {
+	it("renders main content", () => {
 		const { getByText } = render(
 			<Layout sidebar={<div>Sidebar</div>}>
 				<div>Main Content</div>
@@ -26,7 +25,7 @@ describe("Layout", () => {
 		expect(getByText("Main Content")).toBeTruthy();
 	});
 
-	test("applies sidebar-hidden class when hideSidebar is true", () => {
+	it("applies sidebar-hidden class when hideSidebar is true", () => {
 		const { container } = render(
 			<Layout sidebar={<div>Sidebar</div>} hideSidebar={true}>
 				<div>Content</div>
@@ -36,7 +35,7 @@ describe("Layout", () => {
 		expect(container.querySelector(".app-layout.sidebar-hidden")).not.toBeNull();
 	});
 
-	test("does not apply sidebar-hidden class by default", () => {
+	it("does not apply sidebar-hidden class by default", () => {
 		const { container } = render(
 			<Layout sidebar={<div>Sidebar</div>}>
 				<div>Content</div>
@@ -46,7 +45,7 @@ describe("Layout", () => {
 		expect(container.querySelector(".sidebar-hidden")).toBeNull();
 	});
 
-	test("has main-content wrapper", () => {
+	it("has main-content wrapper", () => {
 		const { container } = render(
 			<Layout sidebar={<div>Sidebar</div>}>
 				<div>Content</div>

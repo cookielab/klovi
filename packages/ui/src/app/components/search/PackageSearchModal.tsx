@@ -1,6 +1,6 @@
 import { SearchModal as UiSearchModal } from "@cookielab.io/klovi-ui-components/search";
 import { useCallback } from "react";
-import type { GlobalSessionResult } from "../../../shared/types.ts";
+import type { GlobalSessionResult } from "../../../shared/types";
 
 type PackageSearchModalProps = {
 	sessions: GlobalSessionResult[];

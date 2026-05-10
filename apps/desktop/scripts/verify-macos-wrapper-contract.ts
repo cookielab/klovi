@@ -3,6 +3,7 @@
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
+import process from "node:process";
 
 type VerifyArgs = {
 	appPath: string;
@@ -111,7 +112,6 @@ async function resolveZstdPath(appPath: string, explicitPath?: string): Promise<
 	}
 
 	for (const candidate of getDefaultZstdPaths(appPath)) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential processing required
 		if (await Bun.file(candidate).exists()) {
 			return candidate;
 		}
@@ -173,8 +173,7 @@ async function verifyMacOSWrapperContract(args: VerifyArgs): Promise<void> {
 if (import.meta.main) {
 	try {
 		await verifyMacOSWrapperContract(parseArgs(Bun.argv));
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+	} catch {
 		process.exit(1);
 	}
 }

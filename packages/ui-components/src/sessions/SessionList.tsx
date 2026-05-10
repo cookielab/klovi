@@ -1,9 +1,9 @@
 import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useRef } from "react";
-import type { SessionSummary } from "../types/index.ts";
-import { FetchError } from "../utilities/FetchError.tsx";
-import { formatFullDateTime, formatTime } from "../utilities/formatters.ts";
+import type { SessionSummary } from "../types/index";
+import { FetchError } from "../utilities/FetchError";
+import { formatFullDateTime, formatTime } from "../utilities/formatters";
 
 function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
@@ -130,27 +130,14 @@ function SessionList({
 			{sessions.length === 0 ? (
 				<div className={EMPTY_MESSAGE_CLASSES}>No sessions found</div>
 			) : (
-				// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
-				<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+				<div>
 					{virtualizer.getVirtualItems().map((item) => {
 						const session = sessions[item.index];
 						if (!session) {
 							return null;
 						}
 						return (
-							<div
-								key={session.sessionId}
-								data-session-id={session.sessionId}
-								data-index={item.index}
-								// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
-								style={{
-									position: "absolute",
-									top: 0,
-									left: 0,
-									right: 0,
-									transform: `translateY(${item.start}px)`,
-								}}
-							>
+							<div key={session.sessionId} data-session-id={session.sessionId} data-index={item.index}>
 								<SessionItem
 									session={session}
 									isActive={selectedId === session.sessionId}
@@ -166,6 +153,5 @@ function SessionList({
 	);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
 export type { SessionListProps };
 export { SessionList };

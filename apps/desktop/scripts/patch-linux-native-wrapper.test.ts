@@ -1,13 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	EXPECTED_WM_CLASS,
-	parseArgs,
-	patchLinuxNativeWrapper,
-	UPSTREAM_WM_CLASS,
-} from "./patch-linux-native-wrapper.ts";
+import { EXPECTED_WM_CLASS, parseArgs, patchLinuxNativeWrapper, UPSTREAM_WM_CLASS } from "./patch-linux-native-wrapper";
 
 const tempPaths: string[] = [];
 
@@ -15,7 +9,6 @@ afterEach(async () => {
 	while (tempPaths.length > 0) {
 		const path = tempPaths.pop();
 		if (path) {
-			// biome-ignore lint/performance/noAwaitInLoops: sequential cleanup of temp directories
 			await rm(path, { recursive: true, force: true });
 		}
 	}
@@ -34,7 +27,7 @@ async function writeWrapper(root: string, relativePath: string, contents: string
 }
 
 describe("parseArgs", () => {
-	test("accepts a single bundle path", () => {
+	it("accepts a single bundle path", () => {
 		expect(parseArgs(["bun", "patch-linux-native-wrapper.ts", "/tmp/Klovi"])).toEqual({
 			bundlePath: "/tmp/Klovi",
 		});
@@ -42,7 +35,7 @@ describe("parseArgs", () => {
 });
 
 describe("patchLinuxNativeWrapper", () => {
-	test("replaces the upstream WM_CLASS bytes in nested libraries", async () => {
+	it("replaces the upstream WM_CLASS bytes in nested libraries", async () => {
 		const root = await makeTempDir("klovi-linux-patch-");
 		const libraryPath = await writeWrapper(root, "bin/libNativeWrapper.so", `before-${UPSTREAM_WM_CLASS}-after`);
 
@@ -61,7 +54,7 @@ describe("patchLinuxNativeWrapper", () => {
 		expect(patched).toContain(EXPECTED_WM_CLASS);
 	});
 
-	test("is idempotent when the library is already patched", async () => {
+	it("is idempotent when the library is already patched", async () => {
 		const root = await makeTempDir("klovi-linux-patch-idempotent-");
 		const libraryPath = await writeWrapper(
 			root,
@@ -78,7 +71,7 @@ describe("patchLinuxNativeWrapper", () => {
 		]);
 	});
 
-	test("fails when the target library does not contain the expected bytes", async () => {
+	it("fails when the target library does not contain the expected bytes", async () => {
 		const root = await makeTempDir("klovi-linux-patch-missing-");
 		await writeWrapper(root, "bin/libNativeWrapper.so", "no wm class here");
 

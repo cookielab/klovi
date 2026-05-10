@@ -8,24 +8,24 @@ export {
 	ThinkingBlock as ThinkingBlockComponent,
 	UserBashContent,
 	UserMessage,
-} from "./messages/index.ts";
-export type { KeyboardHandlers, PresentationState } from "./presentation/index.ts";
-export { PresentationShell, useKeyboard, usePresentationMode } from "./presentation/index.ts";
-export type { SearchModalProps } from "./search/index.ts";
-export { SearchModal } from "./search/index.ts";
+} from "./messages/index";
+export type { KeyboardHandlers, PresentationState } from "./presentation/index";
+export { PresentationShell, useKeyboard, usePresentationMode } from "./presentation/index";
+export type { SearchModalProps } from "./search/index";
+export { SearchModal } from "./search/index";
 export type {
 	DashboardStatsProps,
 	HiddenProjectListProps,
 	ProjectListProps,
 	SessionListProps,
-} from "./sessions/index.ts";
+} from "./sessions/index";
 export {
 	DashboardStats as DashboardStatsPanel,
 	HiddenProjectList,
 	ProjectList,
 	projectDisplayName,
 	SessionList,
-} from "./sessions/index.ts";
+} from "./sessions/index";
 export {
 	BashToolContent,
 	DiffView,
@@ -38,7 +38,7 @@ export {
 	SmartToolOutput,
 	ToolCall,
 	truncateOutput,
-} from "./tools/index.ts";
+} from "./tools/index";
 export type {
 	AssistantTurn,
 	Attachment,
@@ -57,8 +57,8 @@ export type {
 	ToolResultImage,
 	Turn,
 	UserTurn,
-} from "./types/index.ts";
-export { groupContentBlocks } from "./types/index.ts";
+} from "./types/index";
+export { groupContentBlocks } from "./types/index";
 export {
 	detectOutputFormat,
 	ErrorBoundary,
@@ -70,4 +70,4 @@ export {
 	ImageLightbox,
 	isClaudeModel,
 	shortModel,
-} from "./utilities/index.ts";
+} from "./utilities/index";

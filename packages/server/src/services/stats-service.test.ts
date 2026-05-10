@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,9 +5,9 @@ import type { RegistryRequirements, Session, SessionSummary } from "@cookielab.i
 import { PluginError, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import type { ToolPlugin } from "./plugin-types.ts";
-import { PluginRegistry } from "./registry.ts";
-import { getStats, getStatsCachePath, invalidateStatsCache } from "./stats-service.ts";
+import type { ToolPlugin } from "./plugin-types";
+import { PluginRegistry } from "./registry";
+import { getStats, getStatsCachePath, invalidateStatsCache } from "./stats-service";
 
 const testLayer = Layer.merge(
 	NodeFileSystem.layer,
@@ -27,7 +26,6 @@ function isoDaysAgo(days: number): string {
 	return d.toISOString();
 }
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function makeSession(
 	id: string,
 	project: string,
@@ -128,7 +126,7 @@ afterEach(async () => {
 });
 
 describe("stats-service", () => {
-	test("writes a stats cache file next to settings.json on cold load", async () => {
+	it("writes a stats cache file next to settings.json on cold load", async () => {
 		const settingsPath = await makeSettingsPath();
 		const registry = new PluginRegistry();
 		const session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 10, 5);
@@ -161,7 +159,7 @@ describe("stats-service", () => {
 		expect(cached.stats.inputTokens).toBe(10);
 	});
 
-	test("returns the sidecar cache first and refreshes it in the background", async () => {
+	it("returns the sidecar cache first and refreshes it in the background", async () => {
 		const settingsPath = await makeSettingsPath();
 		const registry = new PluginRegistry();
 		const session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 99, 5);
@@ -218,7 +216,7 @@ describe("stats-service", () => {
 		expect(refreshed.refreshing).toBe(false);
 	});
 
-	test("invalidates the sidecar cache file", async () => {
+	it("invalidates the sidecar cache file", async () => {
 		const settingsPath = await makeSettingsPath();
 		await writeFile(
 			getStatsCachePath(settingsPath),

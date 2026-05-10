@@ -1,11 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { parseSubAgentSession } from "./parser.ts";
+import { parseSubAgentSession } from "./parser";
 
 const testDir = join(tmpdir(), `klovi-claude-subagent-test-${Date.now()}`);
 
@@ -25,7 +24,7 @@ describe("parseSubAgentSession", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("returns claude pluginId when sub-agent transcript is missing", async () => {
+	it("returns claude pluginId when sub-agent transcript is missing", async () => {
 		const session = await run(parseSubAgentSession("session-1", "-Users-dev-project", "42"));
 
 		expect(session).toEqual({
@@ -36,7 +35,7 @@ describe("parseSubAgentSession", () => {
 		});
 	});
 
-	test("returns claude pluginId when sub-agent transcript exists", async () => {
+	it("returns claude pluginId when sub-agent transcript exists", async () => {
 		const filePath = join(testDir, "projects", "-Users-dev-project", "session-1", "subagents", "agent-42.jsonl");
 		await mkdir(dirname(filePath), { recursive: true });
 		await Bun.write(

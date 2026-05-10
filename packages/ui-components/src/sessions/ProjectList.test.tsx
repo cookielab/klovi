@@ -1,7 +1,6 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import type { Project } from "../types/index.ts";
-import { ProjectList } from "./ProjectList.tsx";
+import type { Project } from "../types/index";
+import { ProjectList } from "./ProjectList";
 
 function makeProject(overrides: Partial<Project> = {}): Project {
 	return {
@@ -17,7 +16,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
 afterEach(cleanup);
 
 describe("ProjectList (package)", () => {
-	test("renders visible projects and supports selection", () => {
+	it("renders visible projects and supports selection", () => {
 		const onSelect = mock();
 		const projects = [makeProject({ encodedPath: "p1", name: "/Users/dev/alpha" })];
 
@@ -36,7 +35,7 @@ describe("ProjectList (package)", () => {
 		expect(onSelect).toHaveBeenCalledWith("p1");
 	});
 
-	test("hide button calls onHide without selecting", () => {
+	it("hide button calls onHide without selecting", () => {
 		const onSelect = mock();
 		const onHide = mock();
 		const project = makeProject({ encodedPath: "p2" });
@@ -57,7 +56,7 @@ describe("ProjectList (package)", () => {
 		expect(onSelect).not.toHaveBeenCalled();
 	});
 
-	test("shows hidden-projects link when hidden IDs exist", () => {
+	it("shows hidden-projects link when hidden IDs exist", () => {
 		const { getByText } = render(
 			<ProjectList
 				projects={[makeProject()]}
@@ -71,13 +70,12 @@ describe("ProjectList (package)", () => {
 		expect(getByText("2 hidden projects")).toBeTruthy();
 	});
 
-	test("renders only a windowed slice for large filtered project lists", () => {
+	it("renders only a windowed slice for large filtered project lists", () => {
 		const projects = Array.from({ length: 400 }, (_, i) =>
 			makeProject({ encodedPath: `p-${i}`, name: `/Users/dev/proj-${i}` }),
 		);
 		const { container } = render(
-			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
-			<div style={{ height: 600, width: 320 }}>
+			<div>
 				<ProjectList
 					projects={projects}
 					hiddenIds={new Set()}

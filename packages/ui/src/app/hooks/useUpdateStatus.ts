@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useKloviHostBridge } from "../../lib/context.ts";
-import type { UpdateStatus } from "../../shared/rpc-types.ts";
+import { useKloviHostBridge } from "../../lib/context";
+import type { UpdateStatus } from "../../shared/rpc-types";
 
 const DEFAULT_STATUS: UpdateStatus = {
 	status: "up-to-date",

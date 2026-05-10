@@ -1,7 +1,7 @@
 import type { FileSystem } from "@effect/platform";
 import { Layer } from "effect";
-import { PluginConfig, type PluginConfigShape } from "./plugin-config.ts";
-import type { SqliteClientTag } from "./sqlite-service.ts";
+import { PluginConfig, type PluginConfigShape } from "./plugin-config";
+import type { SqliteClientTag } from "./sqlite-service";
 
 export type PluginRequirements = PluginConfig | FileSystem.FileSystem | SqliteClientTag;
 

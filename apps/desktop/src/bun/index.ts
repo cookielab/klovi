@@ -1,15 +1,16 @@
 import { join } from "node:path";
+import process from "node:process";
 import { makeVersionState } from "@cookielab.io/klovi-server/services/version-service";
 import { Effect, Fiber, Schedule, SubscriptionRef } from "effect";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
-import type { KloviRPC, UpdateStatus } from "../shared/rpc-types.ts";
+import type { KloviRPC, UpdateStatus } from "../shared/rpc-types";
 import {
 	detectLinuxSystemTheme,
 	ensureDesktopRuntimeDirs,
 	resolveLinuxRenderer,
 	type SystemTheme,
-} from "./linux-runtime.ts";
+} from "./linux-runtime";
 import {
 	acceptRisksHandler,
 	applyUpdateHandler,
@@ -32,11 +33,11 @@ import {
 	updateGeneralSettingsHandler,
 	updatePluginSettingHandler,
 	updateUpdateSettingsHandler,
-} from "./rpc-handlers.ts";
-import { bridgeHandler, makeDesktopRuntime } from "./runtime.ts";
-import { UpdateStatusRef } from "./services.ts";
-import { makeThemePollingFiber } from "./theme-polling.ts";
-import { cleanupUpdates, startUpdateSchedule } from "./updater-service.ts";
+} from "./rpc-handlers";
+import { bridgeHandler, makeDesktopRuntime } from "./runtime";
+import { UpdateStatusRef } from "./services";
+import { makeThemePollingFiber } from "./theme-polling";
+import { cleanupUpdates, startUpdateSchedule } from "./updater-service";
 
 const versionState = makeVersionState(pkg.version ?? "0.0.0", pkg.commit ?? "");
 const STATS_REFRESH_INTERVAL = "5 minutes";
@@ -267,7 +268,7 @@ Electrobun.events.on("application-menu-clicked", (e) => {
 					.then((result) => {
 						win.webview.rpc?.send.checkForUpdatesResult(result);
 					})
-					.catch(() => {});
+					.catch(() => undefined);
 			}
 			break;
 		default:

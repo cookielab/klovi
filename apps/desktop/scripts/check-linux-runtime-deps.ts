@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 
 import { delimiter, resolve } from "node:path";
+import process from "node:process";
 import {
 	collectLinuxLibrarySearchPaths,
 	resolveLinuxLauncherPath,
 	resolveLinuxNativeWrapperPaths,
-} from "./linux-bundle.ts";
+} from "./linux-bundle";
 
 const MISSING_DEPENDENCY_REGEX = /^\s*(?<lib>\S+)\s*=>\s*not found\s*$/u;
 const NON_DYNAMIC_EXECUTABLE_REGEX = /\b(?:not a dynamic executable|statically linked)\b/iu;
@@ -89,7 +90,6 @@ async function checkLinuxRuntimeDeps(
 
 	const failures: string[] = [];
 	for (const targetPath of [launcherPath, ...nativeWrapperPaths]) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential ldd invocations per binary
 		const result = await commandRunner(["ldd", targetPath], env);
 		if (result.exitCode !== 0) {
 			const combinedOutput = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
@@ -114,15 +114,12 @@ async function checkLinuxRuntimeDeps(
 			].join("\n"),
 		);
 	}
-
-	console.log(`Verified Linux runtime dependencies: ${launcherPath}`);
 }
 
 if (import.meta.main) {
 	try {
 		await checkLinuxRuntimeDeps(parseArgs(Bun.argv));
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+	} catch {
 		process.exit(1);
 	}
 }

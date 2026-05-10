@@ -1,10 +1,10 @@
 import { SessionList as UiSessionList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useCallback } from "react";
-import { useKloviClient } from "../../../lib/context.ts";
-import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
-import type { Project, SessionSummary } from "../../../shared/types.ts";
-import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
-import { pluginDisplayName } from "../../utils/plugin.ts";
+import { useKloviClient } from "../../../lib/context";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect";
+import type { Project, SessionSummary } from "../../../shared/types";
+import { useEffectQuery } from "../../hooks/useEffectQuery";
+import { pluginDisplayName } from "../../utils/plugin";
 
 type PackageSessionListProps = {
 	project: Project;

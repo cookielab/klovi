@@ -1,6 +1,6 @@
 import { CodeBox } from "@cookielab.io/klovi-design-system";
-import type { ToolCallWithResult } from "../types/index.ts";
-import { SmartToolOutput } from "./SmartToolOutput.tsx";
+import type { ToolCallWithResult } from "../types/index";
+import { SmartToolOutput } from "./SmartToolOutput";
 
 const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
 

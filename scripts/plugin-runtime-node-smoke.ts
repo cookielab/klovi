@@ -12,61 +12,50 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { claudeCodePlugin } from "../packages/plugin-claude-code/src/index.ts";
-import { codexCliPlugin } from "../packages/plugin-codex/src/index.ts";
+import process from "node:process";
+import { Effect, ManagedRuntime } from "effect";
+import { claudeCodePlugin } from "../packages/plugin-claude-code/src/index";
+import { codexCliPlugin } from "../packages/plugin-codex/src/index";
 import {
+	makePluginConfigLayer,
 	type PluginConfigShape,
 	PluginRegistry,
-	makePluginConfigLayer,
 	type Session,
 	type SessionSummary,
-} from "../packages/plugin-core/src/index.ts";
-import { cursorPlugin } from "../packages/plugin-cursor/src/index.ts";
-import { openCodePlugin } from "../packages/plugin-opencode/src/index.ts";
-import { NodePluginLayer } from "../packages/server/src/effect/platform-node.ts";
-import { Effect, ManagedRuntime } from "effect";
+} from "../packages/plugin-core/src/index";
+import { cursorPlugin } from "../packages/plugin-cursor/src/index";
+import { openCodePlugin } from "../packages/plugin-opencode/src/index";
+import { NodePluginLayer } from "../packages/server/src/effect/platform-node";
 
 const runtime = ManagedRuntime.make(NodePluginLayer);
 
-function runPlugin<A, E>(
-	effect: Effect.Effect<A, E, any>,
-	config: PluginConfigShape,
-): Promise<A> {
+function runPlugin<A, E>(effect: Effect.Effect<A, E, never>, config: PluginConfigShape): Promise<A> {
 	return runtime.runPromise(effect.pipe(Effect.provide(makePluginConfigLayer(config))));
 }
 
-function runRegistry<A>(effect: Effect.Effect<A, never, any>): Promise<A> {
+function runRegistry<A>(effect: Effect.Effect<A, never, never>): Promise<A> {
 	return runtime.runPromise(effect);
 }
 
-let passed = 0;
+let _passed = 0;
 let failed = 0;
 
-function ok(label: string) {
-	passed++;
-	console.log(`  ✓ ${label}`);
+function ok(_label: string) {
+	_passed++;
 }
 
-function fail(label: string, err: unknown) {
+function fail(_label: string, _err: unknown) {
 	failed++;
-	console.error(`  ✗ ${label}:`, err);
 }
 
 // ── Helpers ────────────────────────────────────────────────
 
 const testDir = join(tmpdir(), `klovi-node-smoke-${Date.now()}`);
 
-async function writeJsonl(
-	filePath: string,
-	lines: Record<string, unknown>[],
-): Promise<void> {
+async function writeJsonl(filePath: string, lines: Record<string, unknown>[]): Promise<void> {
 	const dir = filePath.substring(0, filePath.lastIndexOf("/"));
 	await mkdir(dir, { recursive: true });
-	await writeFile(
-		filePath,
-		lines.map((l) => JSON.stringify(l)).join("\n"),
-		"utf-8",
-	);
+	await writeFile(filePath, lines.map((l) => JSON.stringify(l)).join("\n"), "utf-8");
 }
 
 function withCursorTestEnv(): () => void {
@@ -82,25 +71,25 @@ function withCursorTestEnv(): () => void {
 
 	return () => {
 		if (originalHome === undefined) {
-			delete process.env["HOME"];
+			process.env["HOME"] = undefined;
 		} else {
 			process.env["HOME"] = originalHome;
 		}
 
 		if (originalUserProfile === undefined) {
-			delete process.env["USERPROFILE"];
+			process.env["USERPROFILE"] = undefined;
 		} else {
 			process.env["USERPROFILE"] = originalUserProfile;
 		}
 
 		if (originalXdgConfigHome === undefined) {
-			delete process.env["XDG_CONFIG_HOME"];
+			process.env["XDG_CONFIG_HOME"] = undefined;
 		} else {
 			process.env["XDG_CONFIG_HOME"] = originalXdgConfigHome;
 		}
 
 		if (originalAppData === undefined) {
-			delete process.env["APPDATA"];
+			process.env["APPDATA"] = undefined;
 		} else {
 			process.env["APPDATA"] = originalAppData;
 		}
@@ -110,147 +99,147 @@ function withCursorTestEnv(): () => void {
 // ── Tests ──────────────────────────────────────────────────
 
 async function testPluginImports() {
-  console.log("\n1. Plugin imports under Node");
-  try {
-    if (claudeCodePlugin.id !== "claude-code") throw new Error("bad id");
-    ok("claude-code plugin imported");
-  } catch (e) {
-    fail("claude-code import", e);
-  }
-  try {
-    if (codexCliPlugin.id !== "codex-cli") throw new Error("bad id");
-    ok("codex-cli plugin imported");
-  } catch (e) {
-    fail("codex-cli import", e);
-  }
-  try {
-    if (openCodePlugin.id !== "opencode") throw new Error("bad id");
-    ok("opencode plugin imported");
-  } catch (e) {
-    fail("opencode import", e);
-  }
-  try {
-    if (cursorPlugin.id !== "cursor") throw new Error("bad id");
-    ok("cursor plugin imported");
-  } catch (e) {
-    fail("cursor import", e);
-  }
+	try {
+		if (claudeCodePlugin.id !== "claude-code") {
+			throw new Error("bad id");
+		}
+		ok("claude-code plugin imported");
+	} catch (e) {
+		fail("claude-code import", e);
+	}
+	try {
+		if (codexCliPlugin.id !== "codex-cli") {
+			throw new Error("bad id");
+		}
+		ok("codex-cli plugin imported");
+	} catch (e) {
+		fail("codex-cli import", e);
+	}
+	try {
+		if (openCodePlugin.id !== "opencode") {
+			throw new Error("bad id");
+		}
+		ok("opencode plugin imported");
+	} catch (e) {
+		fail("opencode import", e);
+	}
+	try {
+		if (cursorPlugin.id !== "cursor") {
+			throw new Error("bad id");
+		}
+		ok("cursor plugin imported");
+	} catch (e) {
+		fail("cursor import", e);
+	}
 }
 
 async function testRegistryBuild() {
-  console.log("\n2. Registry build with Node runtime");
-  const restoreEnv = withCursorTestEnv();
-  try {
-    const config = { dataDir: testDir };
-    const registry = new PluginRegistry<string, SessionSummary, Session>();
-    registry.register(claudeCodePlugin, config);
-    registry.register(codexCliPlugin, config);
-    registry.register(openCodePlugin, config);
-    registry.register(cursorPlugin, config);
-    ok("registry constructed with four plugins");
+	const restoreEnv = withCursorTestEnv();
+	try {
+		const config = { dataDir: testDir };
+		const registry = new PluginRegistry<string, SessionSummary, Session>();
+		registry.register(claudeCodePlugin, config);
+		registry.register(codexCliPlugin, config);
+		registry.register(openCodePlugin, config);
+		registry.register(cursorPlugin, config);
+		ok("registry constructed with four plugins");
 
-    const projects = await runRegistry(registry.discoverAllProjects());
-    if (!Array.isArray(projects)) throw new Error("expected array");
-    ok(`discoverAllProjects returned ${projects.length} projects`);
-  } catch (e) {
-    fail("registry build", e);
-  } finally {
-    restoreEnv();
-  }
+		const projects = await runRegistry(registry.discoverAllProjects());
+		if (!Array.isArray(projects)) {
+			throw new Error("expected array");
+		}
+		ok(`discoverAllProjects returned ${projects.length} projects`);
+	} catch (e) {
+		fail("registry build", e);
+	} finally {
+		restoreEnv();
+	}
 }
 
 async function testClaudeCodeRoundTrip() {
-  console.log("\n3. Claude Code plugin round-trip under Node");
-  const config = { dataDir: testDir };
-  const projectId = "-Users-dev-project";
+	const config = { dataDir: testDir };
+	const projectId = "-Users-dev-project";
 
-  try {
-    await writeJsonl(
-      join(testDir, "projects", projectId, "smoke-session.jsonl"),
-      [
-        {
-          type: "user",
-          uuid: "u1",
-          timestamp: "2025-01-14T10:00:00.000Z",
-          slug: "test-slug",
-          gitBranch: "main",
-          cwd: "/Users/dev/project",
-          message: {
-            role: "user",
-            model: "claude-sonnet",
-            content: "Hello from Node smoke test",
-          },
-        },
-        {
-          type: "assistant",
-          uuid: "a1",
-          timestamp: "2025-01-14T10:01:00.000Z",
-          message: {
-            role: "assistant",
-            model: "claude-sonnet",
-            content: [{ type: "text", text: "Response from smoke test" }],
-          },
-        },
-      ],
-    );
+	try {
+		await writeJsonl(join(testDir, "projects", projectId, "smoke-session.jsonl"), [
+			{
+				type: "user",
+				uuid: "u1",
+				timestamp: "2025-01-14T10:00:00.000Z",
+				slug: "test-slug",
+				gitBranch: "main",
+				cwd: "/Users/dev/project",
+				message: {
+					role: "user",
+					model: "claude-sonnet",
+					content: "Hello from Node smoke test",
+				},
+			},
+			{
+				type: "assistant",
+				uuid: "a1",
+				timestamp: "2025-01-14T10:01:00.000Z",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet",
+					content: [{ type: "text", text: "Response from smoke test" }],
+				},
+			},
+		]);
 
-    const projects = await runPlugin(claudeCodePlugin.discoverProjects, config);
-    if (projects.length === 0) throw new Error("no projects discovered");
-    ok(`discovered ${projects.length} project(s)`);
+		const projects = await runPlugin(claudeCodePlugin.discoverProjects, config);
+		if (projects.length === 0) {
+			throw new Error("no projects discovered");
+		}
+		ok(`discovered ${projects.length} project(s)`);
 
-    const sessions = await runPlugin(
-      claudeCodePlugin.listSessions(projectId),
-      config,
-    );
-    if (sessions.length === 0) throw new Error("no sessions found");
-    ok(`listed ${sessions.length} session(s)`);
+		const sessions = await runPlugin(claudeCodePlugin.listSessions(projectId), config);
+		if (sessions.length === 0) {
+			throw new Error("no sessions found");
+		}
+		ok(`listed ${sessions.length} session(s)`);
 
-    const session = await runPlugin(
-      claudeCodePlugin.loadSession(projectId, "smoke-session"),
-      config,
-    );
-    if (session.turns.length === 0) throw new Error("no turns loaded");
-    ok(`loaded session with ${session.turns.length} turn(s)`);
-  } catch (e) {
-    fail("claude-code round-trip", e);
-  }
+		const session = await runPlugin(claudeCodePlugin.loadSession(projectId, "smoke-session"), config);
+		if (session.turns.length === 0) {
+			throw new Error("no turns loaded");
+		}
+		ok(`loaded session with ${session.turns.length} turn(s)`);
+	} catch (e) {
+		fail("claude-code round-trip", e);
+	}
 }
 
 async function testOpenCodeImport() {
-  console.log("\n4. OpenCode plugin isDataAvailable under Node");
-  const config = { dataDir: join(testDir, "nonexistent-opencode") };
-  try {
-    const available = await runPlugin(openCodePlugin.isDataAvailable, config);
-    if (available !== false)
-      throw new Error(`expected false, got ${available}`);
-    ok("isDataAvailable returns false for missing dir");
-  } catch (e) {
-    fail("opencode isDataAvailable", e);
-  }
+	const config = { dataDir: join(testDir, "nonexistent-opencode") };
+	try {
+		const available = await runPlugin(openCodePlugin.isDataAvailable, config);
+		if (available !== false) {
+			throw new Error(`expected false, got ${available}`);
+		}
+		ok("isDataAvailable returns false for missing dir");
+	} catch (e) {
+		fail("opencode isDataAvailable", e);
+	}
 }
 
 // ── Main ───────────────────────────────────────────────────
 
 async function main() {
-  console.log("Node plugin runtime smoke tests");
-  console.log("================================");
+	await mkdir(testDir, { recursive: true });
 
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    await testPluginImports();
-    await testRegistryBuild();
-    await testClaudeCodeRoundTrip();
-    await testOpenCodeImport();
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-
-  console.log(`\nResults: ${passed} passed, ${failed} failed`);
-  if (failed > 0) process.exit(1);
+	try {
+		await testPluginImports();
+		await testRegistryBuild();
+		await testClaudeCodeRoundTrip();
+		await testOpenCodeImport();
+	} finally {
+		await rm(testDir, { recursive: true, force: true });
+	}
+	if (failed > 0) {
+		process.exit(1);
+	}
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
+main().catch((_err) => {
+	process.exit(1);
 });

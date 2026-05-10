@@ -1,2 +1,2 @@
-export type { SearchModalProps } from "./SearchModal.tsx";
-export { SearchModal } from "./SearchModal.tsx";
+export type { SearchModalProps } from "./SearchModal";
+export { SearchModal } from "./SearchModal";

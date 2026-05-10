@@ -1,10 +1,10 @@
 import type React from "react";
-import type { KloviHostConnectionState } from "../lib/host-bridge.ts";
-import type { Project, SessionSummary } from "../shared/types.ts";
-import { PackageProjectList } from "./components/project/PackageProjectList.tsx";
-import { PackageSessionList } from "./components/project/PackageSessionList.tsx";
-import { SettingsSidebar, type SettingsTab } from "./components/settings/SettingsSidebar.tsx";
-import type { ViewState } from "./view-state.ts";
+import type { KloviHostConnectionState } from "../lib/host-bridge";
+import type { Project, SessionSummary } from "../shared/types";
+import { PackageProjectList } from "./components/project/PackageProjectList";
+import { PackageSessionList } from "./components/project/PackageSessionList";
+import { SettingsSidebar, type SettingsTab } from "./components/settings/SettingsSidebar";
+import type { ViewState } from "./view-state";
 
 type SidebarActions = {
 	selectProject: (p: Project) => void;

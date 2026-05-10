@@ -1,11 +1,10 @@
-import { describe, expect, test } from "bun:test";
 import type { RegistryRequirements, Session, SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { PluginError, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import type { ToolPlugin } from "./plugin-types.ts";
-import { PluginRegistry } from "./registry.ts";
-import { scanStats } from "./stats.ts";
+import type { ToolPlugin } from "./plugin-types";
+import { PluginRegistry } from "./registry";
+import { scanStats } from "./stats";
 
 const testLayer = Layer.merge(
 	NodeFileSystem.layer,
@@ -23,7 +22,6 @@ function isoDaysAgo(days: number): string {
 	return d.toISOString();
 }
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function makeSession(
 	id: string,
 	project: string,
@@ -119,7 +117,7 @@ function createMockPlugin(
 }
 
 describe("scanStats", () => {
-	test("aggregates multi-tool style stats from registry sessions", async () => {
+	it("aggregates multi-tool style stats from registry sessions", async () => {
 		const registry = new PluginRegistry();
 
 		const s1 = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 100, 40);
@@ -161,7 +159,7 @@ describe("scanStats", () => {
 		expect(stats.models["gpt-5"]?.outputTokens).toBe(20);
 	});
 
-	test("keeps project/session counts when session loading fails", async () => {
+	it("keeps project/session counts when session loading fails", async () => {
 		const registry = new PluginRegistry();
 
 		const list: SessionSummary[] = [
@@ -184,7 +182,7 @@ describe("scanStats", () => {
 		expect(stats.inputTokens).toBe(0);
 	});
 
-	test("recomputes stats on each call", async () => {
+	it("recomputes stats on each call", async () => {
 		const registry = new PluginRegistry();
 		let session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 10, 5);
 
@@ -226,7 +224,7 @@ describe("scanStats", () => {
 		expect(second.inputTokens).toBe(999);
 	});
 
-	test("filters models with zero total tokens from stats", async () => {
+	it("filters models with zero total tokens from stats", async () => {
 		const registry = new PluginRegistry();
 		const zeroUsageSession = makeSession("s1", "project-1", isoDaysAgo(0), "gpt-5", 0, 0);
 		const [, assistantTurn] = zeroUsageSession.turns;

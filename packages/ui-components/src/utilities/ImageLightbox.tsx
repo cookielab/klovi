@@ -33,7 +33,6 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 	}, [handleClose]);
 
 	return (
-		// biome-ignore lint/a11y/noStaticElementInteractions: lightbox backdrop dismiss
 		<div
 			className={`${OVERLAY_BASE} ${visible ? "bg-black/85" : "bg-black/0"}`}
 			role="presentation"

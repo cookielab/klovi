@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context.ts";
-import { kloviHostBridge } from "../../lib/rpc-client.ts";
-import type { UpdateStatus } from "../../shared/rpc-types.ts";
+import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
+import { kloviHostBridge } from "../../lib/rpc-client";
+import type { UpdateStatus } from "../../shared/rpc-types";
 
 const NOTIFICATION_CLASSES =
 	"flex items-center gap-[12px] border-border-muted border-b bg-accent-subtle px-[12px] py-[6px] text-[0.85rem]";

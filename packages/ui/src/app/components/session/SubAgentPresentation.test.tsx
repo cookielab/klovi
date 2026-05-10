@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
-import type { Session } from "../../../shared/types.ts";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
-import { SubAgentPresentation } from "./SubAgentPresentation.tsx";
+import type { Session } from "../../../shared/types";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { SubAgentPresentation } from "./SubAgentPresentation";
 
 const STEP_REGEX = /Step/u;
 
@@ -32,43 +31,40 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 describe("SubAgentPresentation", () => {
 	afterEach(cleanup);
 
-	test("shows loading state initially", () => {
+	it("shows loading state initially", () => {
 		setupMockRPC({
-			getSubAgent: () => new Promise(() => {}),
+			getSubAgent: () => new Promise(() => undefined),
 		});
 		const { container } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		expect(container.querySelector(".loading")).not.toBeNull();
 		expect(container.textContent).toContain("Loading sub-agent conversation...");
 	});
 
-	test("renders presentation mode after fetch", async () => {
+	it("renders presentation mode after fetch", async () => {
 		const session = makeSession();
 		setupMockRPC({
 			getSubAgent: () => Promise.resolve({ session: session }),
 		});
 
 		const { container, findByText } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		await findByText(STEP_REGEX);
 		expect(container.textContent).toContain("← → step");
 	});
 
-	test("returns null when session has no turns", async () => {
+	it("returns null when session has no turns", async () => {
 		const session = makeSession({ turns: [] });
 		setupMockRPC({
 			getSubAgent: () => Promise.resolve({ session: session }),
 		});
 
 		const { container } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		await waitFor(() => {
@@ -77,14 +73,13 @@ describe("SubAgentPresentation", () => {
 		expect(container.textContent).not.toContain("← → step");
 	});
 
-	test("returns null when session is null", async () => {
+	it("returns null when session is null", async () => {
 		setupMockRPC({
 			getSubAgent: () => Promise.resolve({ session: null as unknown as Session }),
 		});
 
 		const { container } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => {}} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		await waitFor(() => {

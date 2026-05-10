@@ -1,5 +1,5 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
-import type { ToolCallWithResult } from "../types/index.ts";
+import type { ToolCallWithResult } from "../types/index";
 
 const MAX_OUTPUT_LENGTH = 5000;
 const MAX_CONTENT_LENGTH = 2000;

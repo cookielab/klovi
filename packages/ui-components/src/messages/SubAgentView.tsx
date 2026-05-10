@@ -1,7 +1,7 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
-import type { Turn } from "../types/index.ts";
-import { FetchError } from "../utilities/index.ts";
-import { MessageList } from "./MessageList.tsx";
+import type { Turn } from "../types/index";
+import { FetchError } from "../utilities/index";
+import { MessageList } from "./MessageList";
 
 type SubAgentViewProps = {
 	turns: Turn[];

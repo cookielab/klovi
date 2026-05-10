@@ -36,7 +36,6 @@ function parseAndVisit(
 	onMalformed: StreamJsonlHeadOptions["onMalformed"],
 ): unknown {
 	if (!line.trim()) {
-		// biome-ignore lint/complexity/noUselessUndefined: explicit return required for TS noImplicitReturns
 		return undefined;
 	}
 	const lineNumber = lineIndex + 1;
@@ -45,7 +44,6 @@ function parseAndVisit(
 		return visitor({ parsed: parsed, line: line, lineIndex: lineIndex, lineNumber: lineNumber });
 	} catch (error) {
 		onMalformed?.(line, lineNumber, error);
-		// biome-ignore lint/complexity/noUselessUndefined: explicit return required for TS noImplicitReturns
 		return undefined;
 	}
 }

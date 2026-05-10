@@ -1,13 +1,12 @@
-import { describe, expect, test } from "bun:test";
-import { tryParseJson } from "./json-utils.ts";
+import { tryParseJson } from "./json-utils";
 
 describe("tryParseJson", () => {
-	test("parses valid JSON values", () => {
+	it("parses valid JSON values", () => {
 		expect(tryParseJson<{ id: string }>('{"id":"abc"}')).toEqual({ id: "abc" });
 		expect(tryParseJson<string[]>('["a","b"]')).toEqual(["a", "b"]);
 	});
 
-	test("returns undefined for malformed payloads", () => {
+	it("returns undefined for malformed payloads", () => {
 		expect(tryParseJson("{")).toBeUndefined();
 		expect(tryParseJson("session-id: abc")).toBeUndefined();
 	});

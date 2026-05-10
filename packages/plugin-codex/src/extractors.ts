@@ -1,4 +1,4 @@
-import { truncate } from "./shared/text-utils.ts";
+import { truncate } from "./shared/text-utils";
 
 const COMMAND_SUMMARY_MAX = 80;
 

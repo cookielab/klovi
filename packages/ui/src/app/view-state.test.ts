@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { encodeSessionId } from "@cookielab.io/klovi-plugin-core";
-import type { KloviClient } from "../lib/client.ts";
-import { createRpcTimeoutError } from "../lib/rpc-errors.ts";
-import { getResumeCommand, restoreFromHash } from "./view-state.ts";
+import type { KloviClient } from "../lib/client";
+import { createRpcTimeoutError } from "../lib/rpc-errors";
+import { getResumeCommand, restoreFromHash } from "./view-state";
 
 const baseProject = {
 	encodedPath: "project-one",
@@ -48,27 +47,27 @@ afterEach(() => {
 });
 
 describe("getResumeCommand", () => {
-	test("returns plugin resume command for explicit plugin id", () => {
+	it("returns plugin resume command for explicit plugin id", () => {
 		expect(getResumeCommand("claude-code", encodeSessionId("claude-code", "abc123"))).toBe("claude --resume abc123");
 		expect(getResumeCommand("codex-cli", encodeSessionId("codex-cli", "def456"))).toBe("codex resume def456");
 	});
 
-	test("uses plugin id encoded in session id when plugin id is missing", () => {
+	it("uses plugin id encoded in session id when plugin id is missing", () => {
 		expect(getResumeCommand(undefined, encodeSessionId("codex-cli", "xyz789"))).toBe("codex resume xyz789");
 	});
 
-	test("returns undefined when plugin has no resume command", () => {
+	it("returns undefined when plugin has no resume command", () => {
 		expect(getResumeCommand("opencode", encodeSessionId("opencode", "xyz789"))).toBeUndefined();
 	});
 
-	test("returns undefined for unknown plugin or unencoded session id", () => {
+	it("returns undefined for unknown plugin or unencoded session id", () => {
 		expect(getResumeCommand("unknown-plugin", "raw-session-id")).toBeUndefined();
 		expect(getResumeCommand(undefined, "raw-session-id")).toBeUndefined();
 	});
 });
 
 describe("restoreFromHash", () => {
-	test("returns restoring when project loading hits a transport timeout", async () => {
+	it("returns restoring when project loading hits a transport timeout", async () => {
 		globalThis.location.hash = "#/project-one";
 		const view = await restoreFromHash(
 			createClient({
@@ -79,7 +78,7 @@ describe("restoreFromHash", () => {
 		expect(view).toEqual({ kind: "restoring", hash: "#/project-one" });
 	});
 
-	test("returns restoring when session loading hits a transport timeout", async () => {
+	it("returns restoring when session loading hits a transport timeout", async () => {
 		globalThis.location.hash = "#/project-one/session-1";
 		const view = await restoreFromHash(
 			createClient({
@@ -90,7 +89,7 @@ describe("restoreFromHash", () => {
 		expect(view).toEqual({ kind: "restoring", hash: "#/project-one/session-1" });
 	});
 
-	test("returns home when project is missing", async () => {
+	it("returns home when project is missing", async () => {
 		globalThis.location.hash = "#/missing-project";
 		const view = await restoreFromHash(
 			createClient({
@@ -101,7 +100,7 @@ describe("restoreFromHash", () => {
 		expect(view).toEqual({ kind: "home" });
 	});
 
-	test("returns project when session is missing", async () => {
+	it("returns project when session is missing", async () => {
 		globalThis.location.hash = "#/project-one/missing-session";
 		const view = await restoreFromHash(
 			createClient({

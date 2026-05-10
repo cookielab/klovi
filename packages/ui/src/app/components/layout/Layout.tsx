@@ -1,5 +1,5 @@
 import type React from "react";
-import { Sidebar } from "./Sidebar.tsx";
+import { Sidebar } from "./Sidebar";
 
 type LayoutProps = {
 	sidebar: React.ReactNode;

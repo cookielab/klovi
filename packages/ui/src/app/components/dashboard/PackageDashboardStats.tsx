@@ -1,9 +1,9 @@
 import { DashboardStats as UiDashboardStats } from "@cookielab.io/klovi-ui-components/sessions";
 import { useEffect, useState } from "react";
-import { useKloviClient, useKloviHostBridge } from "../../../lib/context.ts";
-import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
-import type { DashboardStats as Stats, StatsResponse } from "../../../shared/types.ts";
-import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
+import { useKloviClient, useKloviHostBridge } from "../../../lib/context";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect";
+import type { DashboardStats as Stats, StatsResponse } from "../../../shared/types";
+import { useEffectQuery } from "../../hooks/useEffectQuery";
 
 const STATS_REFRESH_POLL_MS = 1000;
 

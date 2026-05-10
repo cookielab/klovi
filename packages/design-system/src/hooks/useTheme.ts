@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { ResolvedTheme, ThemeSetting } from "../types.ts";
+import type { ResolvedTheme, ThemeSetting } from "../types";
 
 function getSystemTheme(): ResolvedTheme {
 	return globalThis.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";

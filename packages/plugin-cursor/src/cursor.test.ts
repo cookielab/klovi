@@ -1,5 +1,4 @@
 import { Database } from "bun:sqlite";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -8,10 +7,10 @@ import type { AssistantTurn, SqliteDb, UserTurn } from "@cookielab.io/klovi-plug
 import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { encodeCursorProjectPath, getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config.ts";
-import { buildCursorIndex, discoverCursorProjects, listCursorSessions } from "./discovery.ts";
-import { cursorPlugin } from "./index.ts";
-import { buildTurnsFromBubbles, loadCursorSession } from "./parser.ts";
+import { encodeCursorProjectPath, getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config";
+import { buildCursorIndex, discoverCursorProjects, listCursorSessions } from "./discovery";
+import { cursorPlugin } from "./index";
+import { buildTurnsFromBubbles, loadCursorSession } from "./parser";
 
 const TEST_SQLITE_LAYER = Layer.succeed(SqliteClientTag, {
 	open: (dbPath: string, options?: { readonly: boolean }) =>
@@ -27,20 +26,20 @@ const TEST_SQLITE_LAYER = Layer.succeed(SqliteClientTag, {
 const CREATED_AT_MS = 1_706_000_000_000;
 
 const ORIGINAL_ENV = {
-	HOME: process.env["HOME"],
-	USERPROFILE: process.env["USERPROFILE"],
-	XDG_CONFIG_HOME: process.env["XDG_CONFIG_HOME"],
-	APPDATA: process.env["APPDATA"],
+	HOME: Bun.env["HOME"],
+	USERPROFILE: Bun.env["USERPROFILE"],
+	XDG_CONFIG_HOME: Bun.env["XDG_CONFIG_HOME"],
+	APPDATA: Bun.env["APPDATA"],
 };
 
 let testDir = "";
 let userDataDir = "";
 
 function restoreEnv(): void {
-	process.env["HOME"] = ORIGINAL_ENV.HOME;
-	process.env["USERPROFILE"] = ORIGINAL_ENV.USERPROFILE;
-	process.env["XDG_CONFIG_HOME"] = ORIGINAL_ENV.XDG_CONFIG_HOME;
-	process.env["APPDATA"] = ORIGINAL_ENV.APPDATA;
+	Bun.env["HOME"] = ORIGINAL_ENV.HOME;
+	Bun.env["USERPROFILE"] = ORIGINAL_ENV.USERPROFILE;
+	Bun.env["XDG_CONFIG_HOME"] = ORIGINAL_ENV.XDG_CONFIG_HOME;
+	Bun.env["APPDATA"] = ORIGINAL_ENV.APPDATA;
 }
 
 function makeTestLayer() {
@@ -131,10 +130,10 @@ describe("cursor plugin", () => {
 	beforeEach(async () => {
 		testDir = join(tmpdir(), `klovi-cursor-test-${Date.now()}-${crypto.randomUUID()}`);
 		userDataDir = join(testDir, ".cursor");
-		process.env["HOME"] = testDir;
-		process.env["USERPROFILE"] = testDir;
-		process.env["XDG_CONFIG_HOME"] = join(testDir, ".config");
-		process.env["APPDATA"] = join(testDir, "AppData", "Roaming");
+		Bun.env["HOME"] = testDir;
+		Bun.env["USERPROFILE"] = testDir;
+		Bun.env["XDG_CONFIG_HOME"] = join(testDir, ".config");
+		Bun.env["APPDATA"] = join(testDir, "AppData", "Roaming");
 		await rm(testDir, { recursive: true, force: true });
 		await mkdir(userDataDir, { recursive: true });
 	});
@@ -144,7 +143,7 @@ describe("cursor plugin", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("buildTurnsFromBubbles maps text, thinking, and tool blocks in order", () => {
+	it("buildTurnsFromBubbles maps text, thinking, and tool blocks in order", () => {
 		const turns = buildTurnsFromBubbles(
 			[
 				{ bubbleId: "user-1", type: 1, text: "Inspect the auth flow" },
@@ -187,7 +186,7 @@ describe("cursor plugin", () => {
 		expect(toolBlock.call.isError).toBe(false);
 	});
 
-	test("discovers composer sessions from workspace Cursor state", async () => {
+	it("discovers composer sessions from workspace Cursor state", async () => {
 		const projectPath = join(testDir, "project-alpha");
 		await addWorkspace("workspace-alpha", projectPath, [
 			{
@@ -219,7 +218,7 @@ describe("cursor plugin", () => {
 		expect(sessions[0]?.sessionType).toBe("implementation");
 	});
 
-	test("discovers background agent transcripts for known workspace paths", async () => {
+	it("discovers background agent transcripts for known workspace paths", async () => {
 		const projectPath = join(testDir, "project-beta");
 		await addWorkspace("workspace-beta", projectPath);
 		await addAgentTranscript(projectPath, "agent-1", [
@@ -248,7 +247,7 @@ describe("cursor plugin", () => {
 		expect(sessions[0]?.sessionType).toBe("implementation");
 	});
 
-	test("lists and loads background agent sessions for an explicit project path without a workspace", async () => {
+	it("lists and loads background agent sessions for an explicit project path without a workspace", async () => {
 		const projectPath = join(testDir, "project-no-workspace");
 		await mkdir(projectPath, { recursive: true });
 		await addAgentTranscript(projectPath, "agent-standalone", [
@@ -277,7 +276,7 @@ describe("cursor plugin", () => {
 		expect((session.turns[0] as UserTurn).text).toBe("Investigate the release freeze");
 	});
 
-	test("maps plans to composer or agent sessions and excludes orphan plans", async () => {
+	it("maps plans to composer or agent sessions and excludes orphan plans", async () => {
 		const projectPath = join(testDir, "project-gamma");
 		const composerPlanPath = join(testDir, "plans", "composer.plan.md");
 		const agentPlanPath = join(testDir, "plans", "agent.plan.md");
@@ -335,7 +334,7 @@ describe("cursor plugin", () => {
 		expect(index.agentsById.get("agent-1")?.sessionType).toBe("plan");
 	});
 
-	test("reconstructs composer sessions from headers and bubble rows", async () => {
+	it("reconstructs composer sessions from headers and bubble rows", async () => {
 		const projectPath = join(testDir, "project-delta");
 		await addWorkspace("workspace-delta", projectPath, [
 			{
@@ -397,7 +396,7 @@ describe("cursor plugin", () => {
 		expect(assistantTurn.contentBlocks.map((block) => block.type)).toEqual(["text", "thinking", "tool_call"]);
 	});
 
-	test("falls back to inline composer conversation when headers are absent", async () => {
+	it("falls back to inline composer conversation when headers are absent", async () => {
 		const projectPath = join(testDir, "project-inline");
 		await addWorkspace("workspace-inline", projectPath, [
 			{
@@ -428,7 +427,7 @@ describe("cursor plugin", () => {
 		expect(assistantTurn.contentBlocks[0]?.type).toBe("text");
 	});
 
-	test("returns partial composer sessions when bubble rows are missing", async () => {
+	it("returns partial composer sessions when bubble rows are missing", async () => {
 		const projectPath = join(testDir, "project-partial");
 		await addWorkspace("workspace-partial", projectPath, [
 			{
@@ -464,7 +463,7 @@ describe("cursor plugin", () => {
 		expect((session.turns[1] as UserTurn).text).toBe("Recover what you can");
 	});
 
-	test("parses background agent transcripts into user and assistant turns", async () => {
+	it("parses background agent transcripts into user and assistant turns", async () => {
 		const projectPath = join(testDir, "project-agent");
 		await addWorkspace("workspace-agent", projectPath);
 		await addAgentTranscript(projectPath, "agent-2", [
@@ -490,7 +489,7 @@ describe("cursor plugin", () => {
 		expect(assistantTurn.contentBlocks[0]?.type).toBe("text");
 	});
 
-	test("exposes plugin identity and supports end-to-end discovery through plugin API", async () => {
+	it("exposes plugin identity and supports end-to-end discovery through plugin API", async () => {
 		const projectPath = join(testDir, "project-plugin");
 		await addWorkspace("workspace-plugin", projectPath, [
 			{

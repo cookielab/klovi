@@ -1,7 +1,9 @@
-import { semver } from "bun";
 import { readdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { UpdateChannel } from "../shared/rpc-types.ts";
+import process from "node:process";
+import type { UpdateChannel } from "../shared/rpc-types";
+
+const { semver } = Bun;
 
 type GitHubRelease = {
 	tag_name: string;
@@ -31,7 +33,6 @@ function filterReleasesByChannel(releases: GitHubRelease[], channel: UpdateChann
 			return false;
 		}
 		const tagChannel = getReleaseChannel(r.tag_name);
-		// biome-ignore lint/nursery/noUnnecessaryConditions: switch on exhaustive string union
 		switch (channel) {
 			case "stable":
 				return tagChannel === "stable";
@@ -118,7 +119,6 @@ async function pathExists(path: string): Promise<boolean> {
 }
 
 function getRequiredLauncherRelativePath(platform: Platform): string {
-	// biome-ignore lint/nursery/noUnnecessaryConditions: switch on exhaustive string union
 	switch (platform) {
 		case "macos":
 			return join("Contents", "MacOS", "launcher");
@@ -150,7 +150,6 @@ async function findExtractedAppBundlePath(platform: Platform, stagingDir: string
 	const entries = await readdir(stagingDir);
 	for (const entry of entries) {
 		const fullPath = join(stagingDir, entry);
-		// biome-ignore lint/performance/noAwaitInLoops: sequential directory scan for app bundle
 		if ((await stat(fullPath)).isDirectory()) {
 			return fullPath;
 		}

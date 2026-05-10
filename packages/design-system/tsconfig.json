@@ -1,7 +1,4 @@
 {
-	"extends": "../../tsconfig.fe.json",
-	"compilerOptions": {
-		"noEmit": true
-	},
-	"include": ["src/**/*.ts", "src/**/*.tsx"]
+	"extends": "../../tsconfig.json",
+	"include": ["src/**/*.ts", "src/**/*.tsx", "../../test-globals.d.ts"]
 }

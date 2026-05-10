@@ -1,8 +1,8 @@
 import { Effect } from "effect";
-import type { KloviClient } from "./client.ts";
-import type { KloviHostBridge } from "./host-bridge.ts";
-import { mapToRpcError, type RpcError } from "./rpc-errors-effect.ts";
-import { KloviClientService, KloviHostBridgeService } from "./runtime.ts";
+import type { KloviClient } from "./client";
+import type { KloviHostBridge } from "./host-bridge";
+import { mapToRpcError, type RpcError } from "./rpc-errors-effect";
+import { KloviClientService, KloviHostBridgeService } from "./runtime";
 
 type EffectfulKloviClient = {
 	[K in keyof KloviClient]: (

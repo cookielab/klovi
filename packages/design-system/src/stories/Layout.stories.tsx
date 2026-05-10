@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { AppLayout } from "../components/Layout/AppLayout.tsx";
-import { ContentHeader } from "../components/Layout/ContentHeader.tsx";
-import { Sidebar } from "../components/Layout/Sidebar.tsx";
+import { AppLayout } from "../components/Layout/AppLayout";
+import { ContentHeader } from "../components/Layout/ContentHeader";
+import { Sidebar } from "../components/Layout/Sidebar";
 
 const meta: Meta<typeof AppLayout> = {
 	title: "Components/Layout",
@@ -16,16 +16,13 @@ export const Default: Story = {
 	render: () => (
 		<AppLayout
 			sidebar={
-				<Sidebar
-					header={<h1 style={{ fontSize: "1.1rem", fontWeight: 700 }}>App Name</h1>}
-					footer={<span>Footer content</span>}
-				>
-					<div style={{ padding: 8 }}>Sidebar content goes here</div>
+				<Sidebar header={<h1>App Name</h1>} footer={<span>Footer content</span>}>
+					<div>Sidebar content goes here</div>
 				</Sidebar>
 			}
 		>
 			<ContentHeader left={<span>Page Title</span>} right={<button type="button">Action</button>} />
-			<div style={{ padding: 20 }}>Main content area</div>
+			<div>Main content area</div>
 		</AppLayout>
 	),
 };
@@ -41,7 +38,7 @@ export const HiddenSidebar: Story = {
 			}
 		>
 			<ContentHeader left={<span>Full Width</span>} />
-			<div style={{ padding: 20 }}>Content takes full width when sidebar is hidden</div>
+			<div>Content takes full width when sidebar is hidden</div>
 		</AppLayout>
 	),
 };

@@ -7,7 +7,6 @@ const bunSqliteClient: SqliteClient = {
 		Effect.try({
 			try: () => {
 				// Dynamic require to avoid hard dependency on bun:sqlite at module level
-				// biome-ignore lint/style/noCommonJs: bun:sqlite must be require'd dynamically
 				const sqlite = require("bun:sqlite");
 				return new sqlite.Database(dbPath, {
 					readonly: options?.readonly ?? true,

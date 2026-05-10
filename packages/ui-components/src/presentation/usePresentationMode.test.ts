@@ -1,7 +1,6 @@
-import { describe, expect, test } from "bun:test";
 import { act, renderHook } from "@testing-library/react";
-import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../types/index.ts";
-import { usePresentationMode } from "./usePresentationMode.ts";
+import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../types/index";
+import { usePresentationMode } from "./usePresentationMode";
 
 function userTurn(text = "hello"): UserTurn {
 	return {
@@ -43,7 +42,7 @@ function assistantTurn(options: { thinking?: number; text?: number; tools?: numb
 }
 
 describe("usePresentationMode", () => {
-	test("initial state is inactive and shows all turns", () => {
+	it("initial state is inactive and shows all turns", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn()];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
@@ -53,21 +52,21 @@ describe("usePresentationMode", () => {
 		expect(result.current.visibleTurns).toEqual(turns);
 	});
 
-	test("counts grouped sub-steps across turns", () => {
+	it("counts grouped sub-steps across turns", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn({ thinking: 1, text: 1, tools: 2 })];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
 		expect(result.current.totalSteps).toBe(4);
 	});
 
-	test("handles empty turns list", () => {
+	it("handles empty turns list", () => {
 		const { result } = renderHook(() => usePresentationMode([]));
 
 		expect(result.current.totalSteps).toBe(0);
 		expect(result.current.visibleTurns).toEqual([]);
 	});
 
-	test("enter and exit reset and clamp navigation state", () => {
+	it("enter and exit reset and clamp navigation state", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn()];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
@@ -90,7 +89,7 @@ describe("usePresentationMode", () => {
 		expect(result.current.fullscreen).toBe(false);
 	});
 
-	test("nextTurn jumps to next turn boundary", () => {
+	it("nextTurn jumps to next turn boundary", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn({ thinking: 1, text: 1 }), userTurn()];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
@@ -100,7 +99,7 @@ describe("usePresentationMode", () => {
 		expect(result.current.currentStep).toBe(2);
 	});
 
-	test("prevTurn jumps to previous turn boundary", () => {
+	it("prevTurn jumps to previous turn boundary", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn({ thinking: 1, text: 1 }), userTurn()];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
@@ -113,7 +112,7 @@ describe("usePresentationMode", () => {
 		expect(result.current.currentStep).toBe(2);
 	});
 
-	test("visible turns and substeps update with current step", () => {
+	it("visible turns and substeps update with current step", () => {
 		const turns: Turn[] = [userTurn(), assistantTurn({ thinking: 1, text: 1, tools: 1 })];
 		const { result } = renderHook(() => usePresentationMode(turns));
 
@@ -132,7 +131,7 @@ describe("usePresentationMode", () => {
 		expect(result.current.visibleSubSteps.get(1)).toBe(3);
 	});
 
-	test("toggleFullscreen switches mode", () => {
+	it("toggleFullscreen switches mode", () => {
 		const { result } = renderHook(() => usePresentationMode([]));
 
 		expect(result.current.fullscreen).toBe(false);

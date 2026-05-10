@@ -1,7 +1,7 @@
 import { Collapsible } from "@cookielab.io/klovi-design-system";
-import { MAX_THINKING_PREVIEW } from "../tools/index.ts";
-import type { ThinkingBlock as ThinkingBlockType } from "../types/index.ts";
-import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
+import { MAX_THINKING_PREVIEW } from "../tools/index";
+import type { ThinkingBlock as ThinkingBlockType } from "../types/index";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 type ThinkingBlockProps = {
 	block: ThinkingBlockType;

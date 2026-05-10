@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "../components/Button/Button.tsx";
+import { Button } from "../components/Button/Button";
 
 const meta: Meta<typeof Button> = {
 	title: "Components/Button",
@@ -47,7 +47,7 @@ export const Icon: Story = {
 
 export const AllVariants: Story = {
 	render: () => (
-		<div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: 20 }}>
+		<div>
 			<Button>Default</Button>
 			<Button variant="primary">Primary</Button>
 			<Button size="sm">Small</Button>

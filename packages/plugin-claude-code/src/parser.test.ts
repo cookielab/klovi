@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import type {
 	AssistantTurn,
 	ParseErrorTurn,
@@ -19,8 +19,8 @@ import {
 	findImplSessionId,
 	findPlanSessionId,
 	loadClaudeSession,
-} from "./parser.ts";
-import type { RawLine } from "./raw-types.ts";
+} from "./parser";
+import type { RawLine } from "./raw-types";
 
 function line(overrides: Partial<RawLine> & { type: string }): RawLine {
 	return {
@@ -31,7 +31,7 @@ function line(overrides: Partial<RawLine> & { type: string }): RawLine {
 }
 
 describe("buildTurns", () => {
-	test("basic user text → UserTurn", () => {
+	it("basic user text → UserTurn", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -44,7 +44,7 @@ describe("buildTurns", () => {
 		expect((turns[0] as UserTurn).text).toBe("Hello world");
 	});
 
-	test("basic assistant text → AssistantTurn with text contentBlock", () => {
+	it("basic assistant text → AssistantTurn with text contentBlock", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -64,7 +64,7 @@ describe("buildTurns", () => {
 		expect(turn.model).toBe("claude-sonnet-4-5-20250929");
 	});
 
-	test("thinking block extraction", () => {
+	it("thinking block extraction", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -88,7 +88,7 @@ describe("buildTurns", () => {
 		expect(turn.contentBlocks[1]).toEqual({ type: "text", text: "My answer." });
 	});
 
-	test("empty thinking blocks (redacted with signature) are skipped", () => {
+	it("empty thinking blocks (redacted with signature) are skipped", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -108,7 +108,7 @@ describe("buildTurns", () => {
 		expect(turn.contentBlocks[0]).toEqual({ type: "text", text: "My answer." });
 	});
 
-	test("tool use + tool result matching by id", () => {
+	it("tool use + tool result matching by id", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -151,7 +151,7 @@ describe("buildTurns", () => {
 		expect(toolCall.call.isError).toBe(false);
 	});
 
-	test("tool result is_error: true → isError: true", () => {
+	it("tool result is_error: true → isError: true", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -192,7 +192,7 @@ describe("buildTurns", () => {
 		expect(toolCall.call.result).toBe("command failed");
 	});
 
-	test("image attachment in user message → Attachment", () => {
+	it("image attachment in user message → Attachment", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -219,7 +219,7 @@ describe("buildTurns", () => {
 		expect(turn.attachments?.[0]?.mediaType).toBe("image/png");
 	});
 
-	test("command message parsing", () => {
+	it("command message parsing", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -237,7 +237,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("fix: resolve bug");
 	});
 
-	test("filtering: progress, file-history-snapshot, summary, isMeta lines skipped", () => {
+	it("filtering: progress, file-history-snapshot, summary, isMeta lines skipped", () => {
 		const lines: RawLine[] = [
 			line({ type: "progress", message: { role: "assistant", content: "" } }),
 			line({
@@ -260,7 +260,7 @@ describe("buildTurns", () => {
 		expect((turns[0] as UserTurn).text).toBe("Visible message");
 	});
 
-	test("bash-input user message → UserTurn with bashInput", () => {
+	it("bash-input user message → UserTurn with bashInput", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -278,7 +278,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("");
 	});
 
-	test("ide_opened_file user message → UserTurn with ideOpenedFile (path extracted)", () => {
+	it("ide_opened_file user message → UserTurn with ideOpenedFile (path extracted)", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -297,7 +297,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("");
 	});
 
-	test("ide_opened_file with unrecognized format renders as plain text", () => {
+	it("ide_opened_file with unrecognized format renders as plain text", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -315,7 +315,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("<ide_opened_file>Some unexpected format</ide_opened_file>");
 	});
 
-	test("bash-stdout only → UserTurn with bashStdout, bashStderr undefined", () => {
+	it("bash-stdout only → UserTurn with bashStdout, bashStderr undefined", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -334,7 +334,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("");
 	});
 
-	test("bash-stdout + bash-stderr → both fields set", () => {
+	it("bash-stdout + bash-stderr → both fields set", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -352,7 +352,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("");
 	});
 
-	test("empty bash-stdout + empty bash-stderr → both empty strings", () => {
+	it("empty bash-stdout + empty bash-stderr → both empty strings", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -370,7 +370,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("");
 	});
 
-	test("multi-line bash-stdout content", () => {
+	it("multi-line bash-stdout content", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -387,7 +387,7 @@ describe("buildTurns", () => {
 		expect(turn.text).toBe("");
 	});
 
-	test("bash-input followed by bash-stdout merges into one turn", () => {
+	it("bash-input followed by bash-stdout merges into one turn", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -406,7 +406,7 @@ describe("buildTurns", () => {
 		expect(turn.bashStderr).toBeUndefined();
 	});
 
-	test("bash-input followed by bash-stdout+stderr merges with all fields", () => {
+	it("bash-input followed by bash-stdout+stderr merges with all fields", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -428,7 +428,7 @@ describe("buildTurns", () => {
 		expect(turn.bashStderr).toBe("warn deprecated");
 	});
 
-	test("standalone bash-input followed by assistant turn stays separate", () => {
+	it("standalone bash-input followed by assistant turn stays separate", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -450,7 +450,7 @@ describe("buildTurns", () => {
 		expect(userTurn.bashStdout).toBeUndefined();
 	});
 
-	test("standalone bash-stdout stays separate", () => {
+	it("standalone bash-stdout stays separate", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -464,7 +464,7 @@ describe("buildTurns", () => {
 		expect(turn.bashInput).toBeUndefined();
 	});
 
-	test("bash-input followed by non-bash user turn doesn't merge", () => {
+	it("bash-input followed by non-bash user turn doesn't merge", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -484,7 +484,7 @@ describe("buildTurns", () => {
 		expect(textTurn.text).toBe("Hello world");
 	});
 
-	test("system-reminder user messages skipped", () => {
+	it("system-reminder user messages skipped", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -503,7 +503,7 @@ describe("buildTurns", () => {
 		expect((turns[0] as UserTurn).text).toBe("Real question");
 	});
 
-	test("tool-result-only user messages don't break assistant turn grouping", () => {
+	it("tool-result-only user messages don't break assistant turn grouping", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -544,7 +544,7 @@ describe("buildTurns", () => {
 		expect(turn.contentBlocks.map((b) => b.type)).toEqual(["text", "tool_call", "text"]);
 	});
 
-	test("contentBlocks preserve chronological order of thinking, text, and tool calls", () => {
+	it("contentBlocks preserve chronological order of thinking, text, and tool calls", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -589,7 +589,7 @@ describe("buildTurns", () => {
 		expect(turn.contentBlocks.map((b) => b.type)).toEqual(["thinking", "text", "tool_call", "thinking", "text"]);
 	});
 
-	test("system turn extraction", () => {
+	it("system turn extraction", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "system",
@@ -602,7 +602,7 @@ describe("buildTurns", () => {
 		expect((turns[0] as SystemTurn).text).toBe("System initialized");
 	});
 
-	test("token usage extraction from assistant message", () => {
+	it("token usage extraction from assistant message", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -628,7 +628,7 @@ describe("buildTurns", () => {
 		expect(turn.usage?.cacheCreationTokens).toBe(100);
 	});
 
-	test("stop reason extraction", () => {
+	it("stop reason extraction", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -645,7 +645,7 @@ describe("buildTurns", () => {
 		expect(turn.stopReason).toBe("end_turn");
 	});
 
-	test("image in tool result → resultImages", () => {
+	it("image in tool result → resultImages", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -697,7 +697,7 @@ describe("buildTurns", () => {
 		expect(toolCall.call.resultImages?.[0]?.data).toBe("AAAA");
 	});
 
-	test("multiple assistant lines merge into one turn", () => {
+	it("multiple assistant lines merge into one turn", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "assistant",
@@ -731,7 +731,7 @@ describe("buildTurns", () => {
 		expect(turn.contentBlocks.map((b) => b.type)).toEqual(["thinking", "text", "text"]);
 	});
 
-	test("empty/malformed lines handled gracefully", () => {
+	it("empty/malformed lines handled gracefully", () => {
 		const lines: RawLine[] = [
 			{ type: "user" } as RawLine, // no message
 			line({
@@ -756,7 +756,7 @@ describe("buildTurns", () => {
 		expect(parseError.rawLine).toContain("just a string");
 	});
 
-	test("parse errors from readJsonlLines are appended to turns", () => {
+	it("parse errors from readJsonlLines are appended to turns", () => {
 		const parseErrors: ParseErrorTurn[] = [
 			{
 				kind: "parse_error",
@@ -784,7 +784,7 @@ describe("buildTurns", () => {
 		expect(error.errorType).toBe("json_parse");
 	});
 
-	test("multiple parse errors are all preserved", () => {
+	it("multiple parse errors are all preserved", () => {
 		const parseErrors: ParseErrorTurn[] = [
 			{
 				kind: "parse_error",
@@ -811,7 +811,7 @@ describe("buildTurns", () => {
 });
 
 describe("extractSubAgentMap", () => {
-	test("extracts agentId from agent_progress events (foreground agents)", () => {
+	it("extracts agentId from agent_progress events (foreground agents)", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "progress",
@@ -823,7 +823,7 @@ describe("extractSubAgentMap", () => {
 		expect(map.get("toolu_abc123")).toBe("a1b2c3d");
 	});
 
-	test("extracts agentId from tool_result text (background agents)", () => {
+	it("extracts agentId from tool_result text (background agents)", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -848,7 +848,7 @@ describe("extractSubAgentMap", () => {
 		expect(map.get("toolu_xyz789")).toBe("a52c371");
 	});
 
-	test("extracts agentId from plain string tool_result content", () => {
+	it("extracts agentId from plain string tool_result content", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -868,7 +868,7 @@ describe("extractSubAgentMap", () => {
 		expect(map.get("toolu_str1")).toBe("abc1234");
 	});
 
-	test("ignores progress events that are not agent_progress", () => {
+	it("ignores progress events that are not agent_progress", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "progress",
@@ -880,7 +880,7 @@ describe("extractSubAgentMap", () => {
 		expect(map.size).toBe(0);
 	});
 
-	test("ignores tool_results without agentId in text", () => {
+	it("ignores tool_results without agentId in text", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -900,7 +900,7 @@ describe("extractSubAgentMap", () => {
 		expect(map.size).toBe(0);
 	});
 
-	test("handles both foreground and background agents in same session", () => {
+	it("handles both foreground and background agents in same session", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "progress",
@@ -927,7 +927,7 @@ describe("extractSubAgentMap", () => {
 		expect(map.get("toolu_bg1")).toBe("abg0002");
 	});
 
-	test("returns empty map when no sub-agents exist", () => {
+	it("returns empty map when no sub-agents exist", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "user",
@@ -948,7 +948,7 @@ describe("extractSubAgentMap", () => {
 });
 
 describe("extractSlug", () => {
-	test("returns slug from first line that has one", () => {
+	it("returns slug from first line that has one", () => {
 		const lines: RawLine[] = [
 			line({ type: "user", slug: "prancy-pondering-deer" }),
 			line({ type: "user", slug: "another-slug" }),
@@ -956,7 +956,7 @@ describe("extractSlug", () => {
 		expect(extractSlug(lines)).toBe("prancy-pondering-deer");
 	});
 
-	test("returns undefined when no lines have a slug", () => {
+	it("returns undefined when no lines have a slug", () => {
 		const lines: RawLine[] = [line({ type: "user", message: { role: "user", content: "Hello" } })];
 		expect(extractSlug(lines)).toBeUndefined();
 	});
@@ -982,7 +982,7 @@ describe("findPlanSessionId", () => {
 		},
 	];
 
-	test("returns planning session ID when first user turn starts with plan prefix", () => {
+	it("returns planning session ID when first user turn starts with plan prefix", () => {
 		const turns = buildTurns([
 			line({
 				type: "user",
@@ -993,7 +993,7 @@ describe("findPlanSessionId", () => {
 		expect(result).toBe("plan-session-1");
 	});
 
-	test("returns undefined when first user turn is a regular message", () => {
+	it("returns undefined when first user turn is a regular message", () => {
 		const turns = buildTurns([
 			line({
 				type: "user",
@@ -1004,7 +1004,7 @@ describe("findPlanSessionId", () => {
 		expect(result).toBeUndefined();
 	});
 
-	test("returns undefined when no session with matching slug is found", () => {
+	it("returns undefined when no session with matching slug is found", () => {
 		const turns = buildTurns([
 			line({
 				type: "user",
@@ -1015,7 +1015,7 @@ describe("findPlanSessionId", () => {
 		expect(result).toBeUndefined();
 	});
 
-	test("returns undefined when slug is undefined", () => {
+	it("returns undefined when slug is undefined", () => {
 		const turns = buildTurns([
 			line({
 				type: "user",
@@ -1026,7 +1026,7 @@ describe("findPlanSessionId", () => {
 		expect(result).toBeUndefined();
 	});
 
-	test("skips status-notice turns like [Request interrupted]", () => {
+	it("skips status-notice turns like [Request interrupted]", () => {
 		const turns = buildTurns([
 			line({
 				type: "user",
@@ -1062,22 +1062,22 @@ describe("findImplSessionId", () => {
 		},
 	];
 
-	test("returns impl session ID when slug-matched session with plan prefix exists", () => {
+	it("returns impl session ID when slug-matched session with plan prefix exists", () => {
 		const result = findImplSessionId("prancy-pondering-deer", sessions, "plan-session-1");
 		expect(result).toBe("impl-session-2");
 	});
 
-	test("returns undefined when no session with matching slug exists", () => {
+	it("returns undefined when no session with matching slug exists", () => {
 		const result = findImplSessionId("nonexistent-slug", sessions, "plan-session-1");
 		expect(result).toBeUndefined();
 	});
 
-	test("returns undefined when slug is undefined", () => {
+	it("returns undefined when slug is undefined", () => {
 		const result = findImplSessionId(undefined, sessions, "plan-session-1");
 		expect(result).toBeUndefined();
 	});
 
-	test("returns undefined when no slug-matched session starts with plan prefix", () => {
+	it("returns undefined when no slug-matched session starts with plan prefix", () => {
 		const noImplSessions: SessionSummary[] = [
 			{
 				sessionId: "session-a",
@@ -1116,7 +1116,7 @@ describe("loadClaudeSession streaming memory", () => {
 		await rm(memTestDir, { recursive: true, force: true });
 	});
 
-	test("does not allocate full file size as a single string", async () => {
+	it("does not allocate full file size as a single string", async () => {
 		const sessionId = "huge-session";
 		const filePath = join(memTestDir, "projects", "p", `${sessionId}.jsonl`);
 		const padLine = JSON.stringify({

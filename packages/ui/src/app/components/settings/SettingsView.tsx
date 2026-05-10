@@ -1,12 +1,12 @@
 import { Effect } from "effect";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context.ts";
-import { kloviHostBridge } from "../../../lib/rpc-client.ts";
-import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../../../shared/rpc-types.ts";
-import type { ThemeSetting } from "../../hooks/useTheme.ts";
-import { PluginRow } from "./PluginRow.tsx";
-import type { SettingsTab } from "./SettingsSidebar.tsx";
+import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context";
+import { kloviHostBridge } from "../../../lib/rpc-client";
+import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "../../../shared/rpc-types";
+import type { ThemeSetting } from "../../hooks/useTheme";
+import { PluginRow } from "./PluginRow";
+import type { SettingsTab } from "./SettingsSidebar";
 
 type ThemeProps = {
 	setting: ThemeSetting;
@@ -153,7 +153,6 @@ function FontSizeControl({
 			<button
 				type="button"
 				className={FONT_SIZE_BUTTON_CLASSES}
-				// biome-ignore lint/nursery/useNullishCoalescing: disabled is boolean|undefined, || intentionally treats false as falsy
 				disabled={disabled || size >= MAX_FONT_SIZE}
 				onClick={onIncrease}
 			>
@@ -216,11 +215,13 @@ function UpdatesTab({
 	const handleChannelChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const channel = e.target.value as UpdateChannel;
-			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
-			setUpdateSettings({ ...updateSettings!, channel: channel });
+			if (!updateSettings) {
+				return;
+			}
+			setUpdateSettings({ ...updateSettings, channel: channel });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ channel: channel }))
 				.then(() => setChanged(true))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[runKloviEffect, updateSettings, setUpdateSettings, setChanged],
 	);
@@ -228,11 +229,13 @@ function UpdatesTab({
 	const handleIntervalChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => {
 			const checkIntervalHours = Number(e.target.value);
-			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
-			setUpdateSettings({ ...updateSettings!, checkIntervalHours: checkIntervalHours });
+			if (!updateSettings) {
+				return;
+			}
+			setUpdateSettings({ ...updateSettings, checkIntervalHours: checkIntervalHours });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ checkIntervalHours: checkIntervalHours }))
 				.then(() => setChanged(true))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[runKloviEffect, updateSettings, setUpdateSettings, setChanged],
 	);
@@ -240,11 +243,13 @@ function UpdatesTab({
 	const handleAutoDownloadChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const autoDownload = e.target.checked;
-			// biome-ignore lint/style/noNonNullAssertion: updateSettings guaranteed non-null when handler is called
-			setUpdateSettings({ ...updateSettings!, autoDownload: autoDownload });
+			if (!updateSettings) {
+				return;
+			}
+			setUpdateSettings({ ...updateSettings, autoDownload: autoDownload });
 			runKloviEffect(kloviHostBridge.updateUpdateSettings({ autoDownload: autoDownload }))
 				.then(() => setChanged(true))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[runKloviEffect, updateSettings, setUpdateSettings, setChanged],
 	);
@@ -254,7 +259,7 @@ function UpdatesTab({
 		setApplyError(null);
 		runKloviEffect(kloviHostBridge.checkForUpdate())
 			.then((result) => setUpdateStatus(result))
-			.catch(() => {})
+			.catch(() => undefined)
 			.finally(() => setChecking(false));
 	}, [runKloviEffect]);
 
@@ -390,7 +395,7 @@ export function SettingsView({
 					setPlugins(data.plugins);
 					setChanged(true);
 				})
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);
@@ -405,7 +410,9 @@ export function SettingsView({
 				const updated = await runKloviEffect(client.updatePluginSetting({ pluginId: pluginId, dataDir: data.path }));
 				setPlugins(updated.plugins);
 				setChanged(true);
-			} catch {}
+			} catch {
+				// swallow browseDirectory errors (e.g. user cancelled)
+			}
 		},
 		[client, runKloviEffect],
 	);
@@ -417,7 +424,7 @@ export function SettingsView({
 					setPlugins(data.plugins);
 					setChanged(true);
 				})
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);
@@ -429,7 +436,7 @@ export function SettingsView({
 					setPlugins(data.plugins);
 					setChanged(true);
 				})
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);
@@ -440,7 +447,7 @@ export function SettingsView({
 			setShowSecurityWarning(value);
 			runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: value }))
 				.then(() => setChanged(true))
-				.catch(() => {});
+				.catch(() => undefined);
 		},
 		[client, runKloviEffect],
 	);

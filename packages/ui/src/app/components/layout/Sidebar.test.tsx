@@ -1,12 +1,11 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
-import { Sidebar } from "./Sidebar.tsx";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { Sidebar } from "./Sidebar";
 
 describe("Sidebar", () => {
 	afterEach(cleanup);
 
-	test("renders Klovi title", () => {
+	it("renders Klovi title", () => {
 		const { container } = render(
 			<Sidebar>
 				<div>Children</div>
@@ -16,7 +15,7 @@ describe("Sidebar", () => {
 		expect(container.querySelector("h1")?.textContent).toBe("Klovi");
 	});
 
-	test("renders children in sidebar-content", () => {
+	it("renders children in sidebar-content", () => {
 		const { getByText } = render(
 			<Sidebar>
 				<div>My Child Content</div>
@@ -26,8 +25,8 @@ describe("Sidebar", () => {
 		expect(getByText("My Child Content")).toBeTruthy();
 	});
 
-	test("renders search button when onSearchClick provided", () => {
-		const onSearchClick = mock(() => {});
+	it("renders search button when onSearchClick provided", () => {
+		const onSearchClick = mock(() => undefined);
 		const { getByTitle } = render(
 			<Sidebar onSearchClick={onSearchClick}>
 				<div>Content</div>
@@ -37,7 +36,7 @@ describe("Sidebar", () => {
 		expect(getByTitle("Search sessions (Ctrl+K)")).toBeTruthy();
 	});
 
-	test("does not render search button when onSearchClick not provided", () => {
+	it("does not render search button when onSearchClick not provided", () => {
 		const { container } = render(
 			<Sidebar>
 				<div>Content</div>
@@ -47,7 +46,7 @@ describe("Sidebar", () => {
 		expect(container.querySelector("[title='Search sessions (Ctrl+K)']")).toBeNull();
 	});
 
-	test("renders version info after fetch", async () => {
+	it("renders version info after fetch", async () => {
 		setupMockRPC({
 			getVersion: () => Promise.resolve({ version: "1.2.3", commit: "abc1234" }),
 		});
@@ -63,7 +62,7 @@ describe("Sidebar", () => {
 		expect(versionBadge.className).toContain("bg-surface-sunken");
 	});
 
-	test("renders version without commit hash when empty", async () => {
+	it("renders version without commit hash when empty", async () => {
 		setupMockRPC({
 			getVersion: () => Promise.resolve({ version: "1.2.3", commit: "" }),
 		});
@@ -77,8 +76,8 @@ describe("Sidebar", () => {
 		expect(await findByText("1.2.3")).toBeTruthy();
 	});
 
-	test("renders settings button when onSettingsClick provided", () => {
-		const onSettingsClick = mock(() => {});
+	it("renders settings button when onSettingsClick provided", () => {
+		const onSettingsClick = mock(() => undefined);
 		const { getByTitle } = render(
 			<Sidebar onSettingsClick={onSettingsClick}>
 				<div>Content</div>
@@ -88,7 +87,7 @@ describe("Sidebar", () => {
 		expect(getByTitle("Settings (Ctrl+,)")).toBeTruthy();
 	});
 
-	test("does not render settings button when onSettingsClick not provided", () => {
+	it("does not render settings button when onSettingsClick not provided", () => {
 		const { container } = render(
 			<Sidebar>
 				<div>Content</div>
@@ -98,7 +97,7 @@ describe("Sidebar", () => {
 		expect(container.querySelector("[title='Settings (Ctrl+,)']")).toBeNull();
 	});
 
-	test("renders footer with cookielab link", () => {
+	it("renders footer with cookielab link", () => {
 		const { container } = render(
 			<Sidebar>
 				<div>Content</div>

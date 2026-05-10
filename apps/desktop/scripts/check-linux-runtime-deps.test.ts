@@ -1,4 +1,3 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
@@ -9,7 +8,7 @@ import {
 	isSkippableLddFailure,
 	parseArgs,
 	parseMissingDependencies,
-} from "./check-linux-runtime-deps.ts";
+} from "./check-linux-runtime-deps";
 
 const tempPaths: string[] = [];
 
@@ -17,7 +16,6 @@ afterEach(async () => {
 	while (tempPaths.length > 0) {
 		const path = tempPaths.pop();
 		if (path) {
-			// biome-ignore lint/performance/noAwaitInLoops: sequential cleanup of temp directories
 			await rm(path, { recursive: true, force: true });
 		}
 	}
@@ -46,7 +44,7 @@ async function writeBundle(root: string): Promise<{
 }
 
 describe("parseArgs", () => {
-	test("accepts a single bundle path", () => {
+	it("accepts a single bundle path", () => {
 		expect(parseArgs(["bun", "check-linux-runtime-deps.ts", "/tmp/Klovi"])).toEqual({
 			bundlePath: "/tmp/Klovi",
 		});
@@ -54,7 +52,7 @@ describe("parseArgs", () => {
 });
 
 describe("parseMissingDependencies", () => {
-	test("returns only unresolved shared libraries", () => {
+	it("returns only unresolved shared libraries", () => {
 		const output = [
 			"\tlibwebkit2gtk-4.1.so.0 => not found",
 			"\tlibasar.so => /tmp/Klovi/lib/libasar.so (0x1234)",
@@ -67,7 +65,7 @@ describe("parseMissingDependencies", () => {
 });
 
 describe("buildLdLibraryPath", () => {
-	test("prepends unique bundle library paths", () => {
+	it("prepends unique bundle library paths", () => {
 		expect(buildLdLibraryPath(["/bundle/bin", "/bundle/lib"], `/usr/lib${delimiter}/bundle/bin`)).toBe(
 			["/bundle/bin", "/bundle/lib", "/usr/lib"].join(delimiter),
 		);
@@ -75,7 +73,7 @@ describe("buildLdLibraryPath", () => {
 });
 
 describe("isSkippableLddFailure", () => {
-	test("treats non-dynamic binaries as skippable", () => {
+	it("treats non-dynamic binaries as skippable", () => {
 		expect(isSkippableLddFailure("not a dynamic executable")).toBe(true);
 		expect(isSkippableLddFailure("statically linked")).toBe(true);
 		expect(isSkippableLddFailure("ldd: missing file")).toBe(false);
@@ -83,7 +81,7 @@ describe("isSkippableLddFailure", () => {
 });
 
 describe("checkLinuxRuntimeDeps", () => {
-	test("passes bundle-local library directories through LD_LIBRARY_PATH", async () => {
+	it("passes bundle-local library directories through LD_LIBRARY_PATH", async () => {
 		const root = await makeTempDir("klovi-linux-runtime-pass-");
 		const { launcherPath, localLibPath, wrapperPath } = await writeBundle(root);
 
@@ -112,7 +110,7 @@ describe("checkLinuxRuntimeDeps", () => {
 		);
 	});
 
-	test("skips launcher binaries that ldd reports as non-dynamic", async () => {
+	it("skips launcher binaries that ldd reports as non-dynamic", async () => {
 		const root = await makeTempDir("klovi-linux-runtime-static-launcher-");
 		const { launcherPath, localLibPath, wrapperPath } = await writeBundle(root);
 
@@ -140,7 +138,7 @@ describe("checkLinuxRuntimeDeps", () => {
 		expect(wrapperPath).toContain("libNativeWrapper.so");
 	});
 
-	test("reports only unresolved system dependencies", async () => {
+	it("reports only unresolved system dependencies", async () => {
 		const root = await makeTempDir("klovi-linux-runtime-fail-");
 		const { localLibPath } = await writeBundle(root);
 

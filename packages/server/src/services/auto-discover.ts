@@ -1,9 +1,9 @@
 import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
 import { makePluginConfigLayer } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
-import { PluginRegistry } from "./registry.ts";
-import type { PluginSettings } from "./settings.ts";
+import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog";
+import { PluginRegistry } from "./registry";
+import type { PluginSettings } from "./settings";
 
 export function createRegistry(settings?: PluginSettings): Effect.Effect<PluginRegistry, never, RegistryRequirements> {
 	return Effect.gen(function* () {

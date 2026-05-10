@@ -1,9 +1,9 @@
 import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig, PluginError } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { discoverCodexProjects, listCodexSessions } from "./discovery.ts";
-import { loadCodexSession } from "./parser.ts";
-import { fileExists } from "./shared/discovery-utils.ts";
+import { discoverCodexProjects, listCodexSessions } from "./discovery";
+import { loadCodexSession } from "./parser";
+import { fileExists } from "./shared/discovery-utils";
 
 export const codexCliPlugin: ToolPlugin<string, SessionSummary, Session> = {
 	id: "codex-cli",
@@ -31,16 +31,16 @@ export const codexCliPlugin: ToolPlugin<string, SessionSummary, Session> = {
 	getResumeCommand: (sessionId: string) => `codex resume ${sessionId}`,
 };
 
-export { DEFAULT_CODEX_CLI_DIR, getCodexCliDir, setCodexCliDir } from "./config.ts";
-export { discoverCodexProjects, listCodexSessions } from "./discovery.ts";
-export { codexInputFormatters, codexSummaryExtractors } from "./extractors.ts";
-export { codexFrontendPlugin } from "./frontend.ts";
-export type { CodexEvent } from "./parser.ts";
-export { buildCodexTurns, loadCodexSession } from "./parser.ts";
-export type { CodexSessionMeta, SessionFileInfo } from "./session-index.ts";
+export { DEFAULT_CODEX_CLI_DIR, getCodexCliDir, setCodexCliDir } from "./config";
+export { discoverCodexProjects, listCodexSessions } from "./discovery";
+export { codexInputFormatters, codexSummaryExtractors } from "./extractors";
+export { codexFrontendPlugin } from "./frontend";
+export type { CodexEvent } from "./parser";
+export { buildCodexTurns, loadCodexSession } from "./parser";
+export type { CodexSessionMeta, SessionFileInfo } from "./session-index";
 export {
 	findCodexSessionFileById,
 	isCodexSessionMeta,
 	normalizeSessionMeta,
 	scanCodexSessions,
-} from "./session-index.ts";
+} from "./session-index";

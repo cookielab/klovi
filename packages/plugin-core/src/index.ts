@@ -2,24 +2,24 @@ export type {
 	FrontendInputFormatter,
 	FrontendPlugin,
 	FrontendSummaryExtractor,
-} from "./frontend-plugin-types.ts";
-export type { BuiltinKloviPluginId, KloviPluginPackageName } from "./ids.ts";
+} from "./frontend-plugin-types";
+export type { BuiltinKloviPluginId, KloviPluginPackageName } from "./ids";
 export {
 	BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES,
 	BUILTIN_KLOVI_PLUGIN_IDS,
 	isBuiltinKloviPluginId,
 	KLOVI_PLUGIN_PACKAGE_NAMES,
-} from "./ids.ts";
-export { epochMsToIso, epochSecondsToIso, maxIso, sortByIsoDesc } from "./iso-time.ts";
-export type { JsonlLineContext, JsonlVisitor, StreamJsonlHeadOptions, StreamJsonlOptions } from "./jsonl-stream.ts";
-export { streamJsonl, streamJsonlHead } from "./jsonl-stream.ts";
-export type { PluginConfigShape } from "./plugin-config.ts";
-export { PluginConfig } from "./plugin-config.ts";
-export { PluginError } from "./plugin-errors.ts";
-export type { SessionIdEncoder } from "./plugin-registry.ts";
-export { encodeResolvedPath, PluginRegistry } from "./plugin-registry.ts";
-export type { PluginRequirements, RegistryRequirements } from "./plugin-runtime.ts";
-export { makePluginConfigLayer } from "./plugin-runtime.ts";
+} from "./ids";
+export { epochMsToIso, epochSecondsToIso, maxIso, sortByIsoDesc } from "./iso-time";
+export type { JsonlLineContext, JsonlVisitor, StreamJsonlHeadOptions, StreamJsonlOptions } from "./jsonl-stream";
+export { streamJsonl, streamJsonlHead } from "./jsonl-stream";
+export type { PluginConfigShape } from "./plugin-config";
+export { PluginConfig } from "./plugin-config";
+export { PluginError } from "./plugin-errors";
+export type { SessionIdEncoder } from "./plugin-registry";
+export { encodeResolvedPath, PluginRegistry } from "./plugin-registry";
+export type { PluginRequirements, RegistryRequirements } from "./plugin-runtime";
+export { makePluginConfigLayer } from "./plugin-runtime";
 export type {
 	Badge,
 	MergedProject,
@@ -31,10 +31,10 @@ export type {
 	ToolPlugin,
 	ToolPluginSessionDetail,
 	ToolPluginSubAgentParams,
-} from "./plugin-types.ts";
-export { stripT3CodeSuffix } from "./resolve-worktree.ts";
-export type { ParsedSessionId } from "./session-id.ts";
-export { encodeSessionId, parseSessionId } from "./session-id.ts";
+} from "./plugin-types";
+export { stripT3CodeSuffix } from "./resolve-worktree";
+export type { ParsedSessionId } from "./session-id";
+export { encodeSessionId, parseSessionId } from "./session-id";
 export type {
 	AssistantTurn,
 	Attachment,
@@ -53,6 +53,6 @@ export type {
 	ToolResultImage,
 	Turn,
 	UserTurn,
-} from "./session-types.ts";
-export type { SqliteClient, SqliteDb, SqliteQuery } from "./sqlite-service.ts";
-export { SqliteClientTag } from "./sqlite-service.ts";
+} from "./session-types";
+export type { SqliteClient, SqliteDb, SqliteQuery } from "./sqlite-service";
+export { SqliteClientTag } from "./sqlite-service";

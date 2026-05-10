@@ -10,8 +10,8 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { openOpenCodeDb } from "./db.ts";
-import { tryParseJson } from "./shared/json-utils.ts";
+import { openOpenCodeDb } from "./db";
+import { tryParseJson } from "./shared/json-utils";
 
 // --- DB row types ---
 
@@ -286,7 +286,6 @@ function extractStepFinishUsage(parts: PartData[]): TokenUsage | undefined {
 			};
 		}
 	}
-	// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
 	return undefined;
 }
 

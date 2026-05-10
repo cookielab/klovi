@@ -2,10 +2,10 @@ import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-pl
 import { PluginConfig, PluginError } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import { getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config.ts";
-import { buildCursorDiscoveryIndex, discoverCursorProjects, listCursorSessions } from "./discovery.ts";
-import { loadCursorSession } from "./parser.ts";
-import { fileExists } from "./shared/discovery-utils.ts";
+import { getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config";
+import { buildCursorDiscoveryIndex, discoverCursorProjects, listCursorSessions } from "./discovery";
+import { loadCursorSession } from "./parser";
+import { fileExists } from "./shared/discovery-utils";
 
 export const cursorPlugin: ToolPlugin<string, SessionSummary, Session> = {
 	id: "cursor",
@@ -88,15 +88,15 @@ export {
 	getCursorWorkspaceStorageDir,
 	getDefaultCursorDir,
 	setCursorDir,
-} from "./config.ts";
-export { openCursorDbIfExists, openCursorGlobalDb } from "./db.ts";
+} from "./config";
+export { openCursorDbIfExists, openCursorGlobalDb } from "./db";
 export {
 	buildCursorDiscoveryIndex,
 	buildCursorIndex,
 	discoverCursorProjects,
 	listCursorSessions,
-} from "./discovery.ts";
-export { cursorFrontendPlugin } from "./frontend.ts";
-export { buildTurnsFromBubbles, loadCursorSession } from "./parser.ts";
-export { loadCursorPlanSession, parsePlanFrontmatter } from "./plans.ts";
-export type { CursorAgentSummary, CursorComposerSummary, CursorIndex, CursorPlanSummary } from "./types.ts";
+} from "./discovery";
+export { cursorFrontendPlugin } from "./frontend";
+export { buildTurnsFromBubbles, loadCursorSession } from "./parser";
+export { loadCursorPlanSession, parsePlanFrontmatter } from "./plans";
+export type { CursorAgentSummary, CursorComposerSummary, CursorIndex, CursorPlanSummary } from "./types";

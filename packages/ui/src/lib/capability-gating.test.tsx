@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, screen } from "@testing-library/react";
 import { createElement } from "react";
-import { PluginRow, type PluginRowProps } from "../app/components/settings/PluginRow.tsx";
-import { UpdateNotification } from "../app/components/UpdateNotification.tsx";
-import type { KloviClient } from "./client.ts";
-import { KloviRuntimeProvider } from "./context.ts";
-import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "./host-bridge.ts";
+import { PluginRow, type PluginRowProps } from "../app/components/settings/PluginRow";
+import { UpdateNotification } from "../app/components/UpdateNotification";
+import type { KloviClient } from "./client";
+import { KloviRuntimeProvider } from "./context";
+import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "./host-bridge";
 
 function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviHostBridge {
 	const capabilities: KloviHostCapabilities = {
@@ -27,13 +26,13 @@ function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviH
 		checkForUpdate: () => Promise.resolve({ status: "up-to-date" as const, currentVersion: "0.0.0" }),
 		applyUpdate: () => Promise.resolve({ ok: false }),
 		openExternal: () => Promise.resolve({ ok: true }),
-		onMenuAction: () => () => {},
-		onUpdateStatus: () => () => {},
-		onManualUpdateResult: () => () => {},
-		onStatsUpdated: () => () => {},
-		onConnectionState: () => () => {},
+		onMenuAction: () => () => undefined,
+		onUpdateStatus: () => () => undefined,
+		onManualUpdateResult: () => () => undefined,
+		onStatsUpdated: () => () => undefined,
+		onConnectionState: () => () => undefined,
 		getSystemTheme: () => Promise.resolve({ theme: null }),
-		onSystemThemeChange: () => () => {},
+		onSystemThemeChange: () => () => undefined,
 	};
 }
 
@@ -65,28 +64,28 @@ function renderWithProviders(element: React.ReactElement, caps: Partial<KloviHos
 }
 
 describe("UpdateNotification capability gating", () => {
-	test("returns null when updater capability is false", () => {
+	it("returns null when updater capability is false", () => {
 		const { container } = renderWithProviders(
 			createElement(UpdateNotification, {
 				status: { status: "ready", latestVersion: "2.0.0", currentVersion: "1.0.0" },
 				dismissed: false,
-				onDismiss: () => {},
+				onDismiss: () => undefined,
 				manualCheckResult: null,
-				onDismissManualCheck: () => {},
+				onDismissManualCheck: () => undefined,
 			}),
 			{ updater: false },
 		);
 		expect(container.innerHTML).toBe("");
 	});
 
-	test("renders when updater capability is true and update ready", () => {
+	it("renders when updater capability is true and update ready", () => {
 		const { container } = renderWithProviders(
 			createElement(UpdateNotification, {
 				status: { status: "ready", latestVersion: "2.0.0", currentVersion: "1.0.0" },
 				dismissed: false,
-				onDismiss: () => {},
+				onDismiss: () => undefined,
 				manualCheckResult: null,
-				onDismissManualCheck: () => {},
+				onDismissManualCheck: () => undefined,
 			}),
 			{ updater: true },
 		);
@@ -107,42 +106,42 @@ describe("PluginRow browse button gating", () => {
 		isCustomDir: false,
 	};
 
-	test("shows Browse button when canBrowse is true", () => {
+	it("shows Browse button when canBrowse is true", () => {
 		render(
 			createElement(PluginRow, {
 				plugin: basePlugin,
-				onToggle: () => {},
-				onBrowse: () => {},
-				onPathChange: () => {},
-				onReset: () => {},
+				onToggle: () => undefined,
+				onBrowse: () => undefined,
+				onPathChange: () => undefined,
+				onReset: () => undefined,
 				canBrowse: true,
 			}),
 		);
 		expect(screen.getByText("Browse")).toBeTruthy();
 	});
 
-	test("hides Browse button when canBrowse is false", () => {
+	it("hides Browse button when canBrowse is false", () => {
 		render(
 			createElement(PluginRow, {
 				plugin: basePlugin,
-				onToggle: () => {},
-				onBrowse: () => {},
-				onPathChange: () => {},
-				onReset: () => {},
+				onToggle: () => undefined,
+				onBrowse: () => undefined,
+				onPathChange: () => undefined,
+				onReset: () => undefined,
 				canBrowse: false,
 			}),
 		);
 		expect(screen.queryByText("Browse")).toBeNull();
 	});
 
-	test("shows Browse button by default (canBrowse undefined)", () => {
+	it("shows Browse button by default (canBrowse undefined)", () => {
 		render(
 			createElement(PluginRow, {
 				plugin: basePlugin,
-				onToggle: () => {},
-				onBrowse: () => {},
-				onPathChange: () => {},
-				onReset: () => {},
+				onToggle: () => undefined,
+				onBrowse: () => undefined,
+				onPathChange: () => undefined,
+				onReset: () => undefined,
 			}),
 		);
 		expect(screen.getByText("Browse")).toBeTruthy();

@@ -1,5 +1,5 @@
 import { Data } from "effect";
-import { getRpcErrorCode } from "./rpc-errors.ts";
+import { getRpcErrorCode } from "./rpc-errors";
 
 const TIMEOUT_MS_REGEX = /exceeded (?<ms>\d+)ms/u;
 const TIMEOUT_METHOD_REGEX = /\((?<method>\w+) exceeded/u;

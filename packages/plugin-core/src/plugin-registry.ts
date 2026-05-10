@@ -1,16 +1,10 @@
 import { Effect, Layer } from "effect";
-import { maxIso, sortByIsoDesc } from "./iso-time.ts";
-import { PluginConfig, type PluginConfigShape } from "./plugin-config.ts";
-import type { RegistryRequirements } from "./plugin-runtime.ts";
-import type {
-	MergedProject,
-	PluginProject,
-	RegistrySession,
-	RegistrySessionSummary,
-	ToolPlugin,
-} from "./plugin-types.ts";
-import { resolveT3CodePaths } from "./resolve-worktree.ts";
-import { encodeSessionId } from "./session-id.ts";
+import { maxIso, sortByIsoDesc } from "./iso-time";
+import { PluginConfig, type PluginConfigShape } from "./plugin-config";
+import type { RegistryRequirements } from "./plugin-runtime";
+import type { MergedProject, PluginProject, RegistrySession, RegistrySessionSummary, ToolPlugin } from "./plugin-types";
+import { resolveT3CodePaths } from "./resolve-worktree";
+import { encodeSessionId } from "./session-id";
 
 type SessionIdEncoder<TPluginId extends string> = (pluginId: TPluginId, rawSessionId: string) => string;
 
@@ -61,12 +55,12 @@ class PluginRegistry<
 
 	private readonly sessionIdEncoder: SessionIdEncoder<TPluginId>;
 
-	constructor(options: RegistryOptions<TPluginId> = {}) {
+	public constructor(options: RegistryOptions<TPluginId> = {}) {
 		this.sessionIdEncoder =
 			options.encodeSessionId ?? ((pluginId, rawSessionId) => encodeSessionId(pluginId, rawSessionId));
 	}
 
-	register(plugin: ToolPlugin<TPluginId, TSessionSummary, TSession>, config: PluginConfigShape): void {
+	public register(plugin: ToolPlugin<TPluginId, TSessionSummary, TSession>, config: PluginConfigShape): void {
 		this.plugins.set(plugin.id, {
 			plugin: plugin,
 			config: config,
@@ -74,7 +68,7 @@ class PluginRegistry<
 		});
 	}
 
-	getPlugin(id: string): ToolPlugin<TPluginId, TSessionSummary, TSession> {
+	public getPlugin(id: string): ToolPlugin<TPluginId, TSessionSummary, TSession> {
 		const entry = this.plugins.get(id as TPluginId);
 		if (!entry) {
 			throw new Error(`Plugin not found: ${id}`);
@@ -82,7 +76,7 @@ class PluginRegistry<
 		return entry.plugin;
 	}
 
-	getPluginConfig(id: string): PluginConfigShape {
+	public getPluginConfig(id: string): PluginConfigShape {
 		const entry = this.plugins.get(id as TPluginId);
 		if (!entry) {
 			throw new Error(`Plugin not found: ${id}`);
@@ -90,7 +84,7 @@ class PluginRegistry<
 		return entry.config;
 	}
 
-	getAllPlugins(): ToolPlugin<TPluginId, TSessionSummary, TSession>[] {
+	public getAllPlugins(): ToolPlugin<TPluginId, TSessionSummary, TSession>[] {
 		return [...this.plugins.values()].map((entry) => entry.plugin);
 	}
 
@@ -193,14 +187,14 @@ class PluginRegistry<
 		);
 	}
 
-	discoverAllProjects(): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
+	public discoverAllProjects(): Effect.Effect<MergedProject<TPluginId>[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
 			const states = yield* this.discoverPluginStates(false);
 			return yield* this.mergeProjects(states.flatMap((state) => state.projects));
 		});
 	}
 
-	discoverAllProjectsWithSessions(): Effect.Effect<
+	public discoverAllProjectsWithSessions(): Effect.Effect<
 		DiscoveredProjectsWithSessions<TPluginId, TSessionSummary>,
 		never,
 		RegistryRequirements
@@ -234,7 +228,7 @@ class PluginRegistry<
 		});
 	}
 
-	listAllSessions(project: MergedProject<TPluginId>): Effect.Effect<TSessionSummary[], never, RegistryRequirements> {
+	public listAllSessions(project: MergedProject<TPluginId>): Effect.Effect<TSessionSummary[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
 			const allSessions: TSessionSummary[] = [];
 

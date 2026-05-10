@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import type { UpdateStatus } from "../../shared/rpc-types.ts";
-import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc.ts";
-import { UpdateNotification } from "./UpdateNotification.tsx";
+import type { UpdateStatus } from "../../shared/rpc-types";
+import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc";
+import { UpdateNotification } from "./UpdateNotification";
 
 const VERSION_READY_PATTERN = /v2\.0\.0 is ready/u;
 const EXTRACT_FAILED_PATTERN = /Extract failed/u;
@@ -22,14 +21,14 @@ function defaultProps() {
 describe("UpdateNotification", () => {
 	afterEach(cleanup);
 
-	test("renders nothing when status is up-to-date", () => {
+	it("renders nothing when status is up-to-date", () => {
 		const { container } = render(<UpdateNotification {...defaultProps()} />, {
 			wrapper: MockProviders,
 		});
 		expect(container.innerHTML).toBe("");
 	});
 
-	test("renders nothing when dismissed", () => {
+	it("renders nothing when dismissed", () => {
 		setupMockRPC();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
@@ -38,7 +37,7 @@ describe("UpdateNotification", () => {
 		expect(container.innerHTML).toBe("");
 	});
 
-	test("renders notification when status is ready", () => {
+	it("renders notification when status is ready", () => {
 		setupMockRPC();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
@@ -46,7 +45,7 @@ describe("UpdateNotification", () => {
 		expect(getByText(VERSION_READY_PATTERN)).toBeDefined();
 	});
 
-	test("renders Restart button when ready", () => {
+	it("renders Restart button when ready", () => {
 		setupMockRPC();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
@@ -54,7 +53,7 @@ describe("UpdateNotification", () => {
 		expect(getByRole("button", { name: "Restart to update" })).toBeDefined();
 	});
 
-	test("calls onDismiss when dismiss button clicked", () => {
+	it("calls onDismiss when dismiss button clicked", () => {
 		setupMockRPC();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
@@ -65,7 +64,7 @@ describe("UpdateNotification", () => {
 		expect(props.onDismiss).toHaveBeenCalled();
 	});
 
-	test("calls applyUpdate RPC when Restart clicked", () => {
+	it("calls applyUpdate RPC when Restart clicked", () => {
 		const applyUpdate = mock(() => Promise.resolve({ ok: true }));
 		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
@@ -77,8 +76,8 @@ describe("UpdateNotification", () => {
 		});
 	});
 
-	test("shows Restarting text and disables button while applying", () => {
-		const applyUpdate = mock(() => new Promise<{ ok: boolean }>(() => {})); // never resolves
+	it("shows Restarting text and disables button while applying", () => {
+		const applyUpdate = mock(() => new Promise<{ ok: boolean }>(() => undefined)); // never resolves
 		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
@@ -89,7 +88,7 @@ describe("UpdateNotification", () => {
 		expect(button.hasAttribute("disabled")).toBe(true);
 	});
 
-	test("shows error when applyUpdate returns ok: false", async () => {
+	it("shows error when applyUpdate returns ok: false", async () => {
 		const applyUpdate = mock(() => Promise.resolve({ ok: false, error: "Extract failed" }));
 		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
@@ -105,7 +104,7 @@ describe("UpdateNotification", () => {
 		expect(getByRole("button", { name: "Restart to update" }).hasAttribute("disabled")).toBe(false);
 	});
 
-	test("shows error when applyUpdate rejects", async () => {
+	it("shows error when applyUpdate rejects", async () => {
 		const applyUpdate = mock(() => Promise.reject(new Error("RPC error")));
 		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
@@ -119,14 +118,14 @@ describe("UpdateNotification", () => {
 		});
 	});
 
-	test("shows up-to-date message for manual check result", () => {
+	it("shows up-to-date message for manual check result", () => {
 		const props = defaultProps();
 		props.manualCheckResult = { status: "up-to-date", currentVersion: "1.0.0" };
 		const { getByText } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
 		expect(getByText("You're up to date")).toBeDefined();
 	});
 
-	test("shows error message for manual check result", () => {
+	it("shows error message for manual check result", () => {
 		const props = defaultProps();
 		props.manualCheckResult = {
 			status: "error",
@@ -137,7 +136,7 @@ describe("UpdateNotification", () => {
 		expect(getByText(NETWORK_TIMEOUT_PATTERN)).toBeDefined();
 	});
 
-	test("calls onDismissManualCheck when dismissing manual check result", () => {
+	it("calls onDismissManualCheck when dismissing manual check result", () => {
 		const props = defaultProps();
 		props.manualCheckResult = { status: "up-to-date", currentVersion: "1.0.0" };
 		const { getByLabelText } = render(<UpdateNotification {...props} />, {
@@ -147,7 +146,7 @@ describe("UpdateNotification", () => {
 		expect(props.onDismissManualCheck).toHaveBeenCalled();
 	});
 
-	test("manual check result with ready status falls through to normal notification", () => {
+	it("manual check result with ready status falls through to normal notification", () => {
 		setupMockRPC();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };

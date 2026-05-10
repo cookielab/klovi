@@ -1,8 +1,8 @@
 import type { PluginProject, SessionSummary, SqliteDb } from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { openOpenCodeDb } from "./db.ts";
-import { tryParseJson } from "./shared/json-utils.ts";
+import { openOpenCodeDb } from "./db";
+import { tryParseJson } from "./shared/json-utils";
 
 // --- Schema introspection ---
 

@@ -1,14 +1,13 @@
-import { describe, expect, test } from "bun:test";
 import {
 	encodeCursorProjectPath,
 	getCursorAppSupportRoot,
 	getCursorGlobalDbPath,
 	getCursorWorkspaceStorageDir,
 	getDefaultCursorDir,
-} from "./config.ts";
+} from "./config";
 
 describe("cursor config", () => {
-	test("derives default directories on macOS", () => {
+	it("derives default directories on macOS", () => {
 		const windowsHome = ["C:", "Users", "tester"].join("\\");
 		const windowsAppData = [windowsHome, "AppData", "Roaming"].join("\\");
 		const env = {
@@ -30,7 +29,7 @@ describe("cursor config", () => {
 		);
 	});
 
-	test("derives default directories on Linux", () => {
+	it("derives default directories on Linux", () => {
 		const env = {
 			HOME: "/home/tester",
 			XDG_CONFIG_HOME: "/home/tester/.config-custom",
@@ -46,7 +45,7 @@ describe("cursor config", () => {
 		);
 	});
 
-	test("derives default directories on Windows", () => {
+	it("derives default directories on Windows", () => {
 		const windowsHome = ["C:", "Users", "tester"].join("\\");
 		const windowsAppData = [windowsHome, "AppData", "Roaming"].join("\\");
 		const env = {
@@ -64,7 +63,7 @@ describe("cursor config", () => {
 		);
 	});
 
-	test("encodes project paths for Cursor transcript directories", () => {
+	it("encodes project paths for Cursor transcript directories", () => {
 		expect(encodeCursorProjectPath("/Users/tester/project")).toBe("Users-tester-project");
 		expect(encodeCursorProjectPath("C:\\Users\\tester\\project")).toBe("C--Users-tester-project");
 	});

@@ -1,4 +1,3 @@
-import { describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,43 +8,43 @@ import {
 	ensureDesktopRuntimeDirs,
 	getDesktopRuntimeDirs,
 	resolveLinuxRenderer,
-} from "./linux-runtime.ts";
+} from "./linux-runtime";
 
 const runDetect = (platform: NodeJS.Platform, env: Record<string, string | undefined>) =>
 	Effect.runPromise(detectLinuxSystemTheme(platform, env).pipe(Effect.provide(BunContext.layer)));
 
 describe("resolveLinuxRenderer", () => {
-	test("defaults to native on Linux", () => {
+	it("defaults to native on Linux", () => {
 		expect(resolveLinuxRenderer("linux", {})).toBe("native");
 	});
 
-	test("allows CEF override only on Linux", () => {
+	it("allows CEF override only on Linux", () => {
 		expect(resolveLinuxRenderer("linux", { KLOVI_LINUX_RENDERER: "cef" })).toBe("cef");
 		expect(resolveLinuxRenderer("darwin", { KLOVI_LINUX_RENDERER: "cef" })).toBeUndefined();
 	});
 });
 
 describe("detectLinuxSystemTheme", () => {
-	test("returns null on non-Linux platforms", async () => {
+	it("returns null on non-Linux platforms", async () => {
 		expect(await runDetect("darwin", {})).toBeNull();
 		expect(await runDetect("win32", {})).toBeNull();
 	});
 
-	test("detects dark from GTK_THEME with -dark suffix", async () => {
+	it("detects dark from GTK_THEME with -dark suffix", async () => {
 		expect(await runDetect("linux", { GTK_THEME: "Adwaita-dark" })).toBe("dark");
 	});
 
-	test("detects dark from GTK_THEME with :dark variant", async () => {
+	it("detects dark from GTK_THEME with :dark variant", async () => {
 		expect(await runDetect("linux", { GTK_THEME: "Adwaita:dark" })).toBe("dark");
 	});
 
-	test("detects light from GTK_THEME without dark", async () => {
+	it("detects light from GTK_THEME without dark", async () => {
 		expect(await runDetect("linux", { GTK_THEME: "Adwaita" })).toBe("light");
 	});
 });
 
 describe("desktop runtime directories", () => {
-	test("includes user and CEF runtime directories", () => {
+	it("includes user and CEF runtime directories", () => {
 		const dirs = getDesktopRuntimeDirs({
 			userData: "/tmp/klovi/data",
 			userCache: "/tmp/klovi/cache",
@@ -62,7 +61,7 @@ describe("desktop runtime directories", () => {
 		]);
 	});
 
-	test("creates all runtime directories", () => {
+	it("creates all runtime directories", () => {
 		const root = mkdtempSync(join(tmpdir(), "klovi-runtime-"));
 		const paths = {
 			userData: join(root, "data"),

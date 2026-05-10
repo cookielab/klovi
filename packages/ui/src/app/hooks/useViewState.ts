@@ -1,9 +1,9 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context.ts";
-import type { KloviHostConnectionState } from "../../lib/host-bridge.ts";
-import type { Project, SessionSummary } from "../../shared/types.ts";
-import { restoreFromHashEffect, type ViewState, viewToHash } from "../view-state.ts";
+import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
+import type { KloviHostConnectionState } from "../../lib/host-bridge";
+import type { Project, SessionSummary } from "../../shared/types";
+import { restoreFromHashEffect, type ViewState, viewToHash } from "../view-state";
 
 type UseViewStateResult = {
 	view: ViewState;

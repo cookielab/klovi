@@ -35,12 +35,15 @@ export function parsePort(argv: readonly string[], env: Record<string, string | 
 	return Number(env["KLOVI_PORT"] ?? String(DEFAULT_PORT));
 }
 
-export function resolveCliConfig(
-	baseDir: string,
-	argv: readonly string[] = process.argv,
-	env: Record<string, string | undefined> = process.env,
-	pathExists?: (path: string) => boolean,
-): KloviCliConfig {
+type ResolveCliConfigInput = {
+	baseDir: string;
+	argv: readonly string[];
+	env: Record<string, string | undefined>;
+	pathExists?: (path: string) => boolean;
+};
+
+export function resolveCliConfig(input: ResolveCliConfigInput): KloviCliConfig {
+	const { baseDir, argv, env, pathExists } = input;
 	return {
 		host: env["KLOVI_HOST"] ?? DEFAULT_HOST,
 		port: parsePort(argv, env),

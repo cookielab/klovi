@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import process from "node:process";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 

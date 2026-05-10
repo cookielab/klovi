@@ -1,7 +1,7 @@
 import { createElement } from "react";
-import type { KloviClient } from "../../lib/client.ts";
-import { KloviRuntimeProvider } from "../../lib/context.ts";
-import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "../../lib/host-bridge.ts";
+import type { KloviClient } from "../../lib/client";
+import { KloviRuntimeProvider } from "../../lib/context";
+import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "../../lib/host-bridge";
 
 type MockClientOverrides = {
 	[K in keyof KloviClient]?: KloviClient[K];
@@ -95,10 +95,10 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
 		checkForUpdate: () => Promise.resolve({ status: "up-to-date" as const, currentVersion: "test" }),
 		applyUpdate: () => Promise.resolve({ ok: true }),
 		openExternal: () => Promise.resolve({ ok: true }),
-		onMenuAction: () => () => {},
-		onUpdateStatus: () => () => {},
-		onManualUpdateResult: () => () => {},
-		onStatsUpdated: () => () => {},
+		onMenuAction: () => () => undefined,
+		onUpdateStatus: () => () => undefined,
+		onManualUpdateResult: () => () => undefined,
+		onStatsUpdated: () => () => undefined,
 		onConnectionState: (callback) => {
 			connectionStateListeners.add(callback);
 			return () => {
@@ -106,7 +106,7 @@ function createMockHostBridge(overrides: MockHostBridgeOverrides = {}): KloviHos
 			};
 		},
 		getSystemTheme: () => Promise.resolve({ theme: null }),
-		onSystemThemeChange: () => () => {},
+		onSystemThemeChange: () => () => undefined,
 		...overrides,
 	};
 }

@@ -2,8 +2,8 @@ import { Button } from "@cookielab.io/klovi-design-system";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type React from "react";
 import { useCallback, useRef } from "react";
-import type { Project } from "../types/index.ts";
-import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters.ts";
+import type { Project } from "../types/index";
+import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
 
 const PATH_SEPARATOR_REGEX = /[/\\]/u;
 
@@ -80,7 +80,6 @@ function ProjectItem({
 	);
 
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: contains nested button, cannot be a <button>
 		<div
 			className={`${LIST_ITEM_BASE_CLASSES} ${isActive ? LIST_ITEM_ACTIVE_CLASSES : ""}`}
 			role="button"
@@ -170,27 +169,14 @@ function ProjectList({
 			{filtered.length === 0 ? (
 				<div className={EMPTY_MESSAGE_CLASSES}>No projects found</div>
 			) : (
-				// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
-				<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+				<div>
 					{virtualizer.getVirtualItems().map((item) => {
 						const project = filtered[item.index];
 						if (!project) {
 							return null;
 						}
 						return (
-							<div
-								key={project.encodedPath}
-								data-project-encoded-path={project.encodedPath}
-								data-index={item.index}
-								// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
-								style={{
-									position: "absolute",
-									top: 0,
-									left: 0,
-									right: 0,
-									transform: `translateY(${item.start}px)`,
-								}}
-							>
+							<div key={project.encodedPath} data-project-encoded-path={project.encodedPath} data-index={item.index}>
 								<ProjectItem
 									project={project}
 									isActive={selectedId === project.encodedPath}
@@ -211,7 +197,5 @@ function ProjectList({
 	);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
 export type { ProjectListProps };
-// biome-ignore lint/style/useComponentExportOnlyModules: co-located utility used by consumers alongside the component
 export { ProjectList, projectDisplayName };

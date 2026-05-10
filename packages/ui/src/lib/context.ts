@@ -1,10 +1,10 @@
 import { Effect } from "effect";
 import type { ReactNode } from "react";
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo } from "react";
-import type { KloviClient } from "./client.ts";
-import type { KloviHostBridge } from "./host-bridge.ts";
-import { kloviClient } from "./rpc-client.ts";
-import { type KloviUiRuntime, type KloviUiServices, makeKloviUiRuntime } from "./runtime.ts";
+import type { KloviClient } from "./client";
+import type { KloviHostBridge } from "./host-bridge";
+import { kloviClient } from "./rpc-client";
+import { type KloviUiRuntime, type KloviUiServices, makeKloviUiRuntime } from "./runtime";
 
 type KloviRuntimeContextValue = {
 	runtime: KloviUiRuntime;

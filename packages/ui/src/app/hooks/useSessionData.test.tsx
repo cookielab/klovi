@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
-import type { Session, Turn } from "../../shared/types.ts";
-import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc.ts";
-import { useSessionData } from "./useSessionData.ts";
+import type { Session, Turn } from "../../shared/types";
+import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc";
+import { useSessionData } from "./useSessionData";
 
 afterEach(cleanup);
 
@@ -11,7 +10,7 @@ function makeTurn(i: number): Turn {
 }
 
 describe("useSessionData two-phase load", () => {
-	test("fires head and tail in parallel", async () => {
+	it("fires head and tail in parallel", async () => {
 		const headTurns = [makeTurn(0), makeTurn(1)];
 		const headFn = mock((_params: { sessionId: string; project: string; headSize?: number }) =>
 			Promise.resolve({
@@ -32,7 +31,7 @@ describe("useSessionData two-phase load", () => {
 		expect(tailFn.mock.calls[0]?.[0]).toEqual({ sessionId: "s1", project: "p1", fromTurn: 100 });
 	});
 
-	test("renders head turns first, then appends tail", async () => {
+	it("renders head turns first, then appends tail", async () => {
 		const headTurns = Array.from({ length: 100 }, (_, i) => makeTurn(i));
 		const tailTurns = Array.from({ length: 50 }, (_, i) => makeTurn(100 + i));
 		setupMockRPC({
@@ -52,7 +51,7 @@ describe("useSessionData two-phase load", () => {
 		expect(turnIds[149]).toBe("t-149");
 	});
 
-	test("renders head even if tail is still pending", async () => {
+	it("renders head even if tail is still pending", async () => {
 		const headTurns = [makeTurn(0), makeTurn(1)];
 		setupMockRPC({
 			getSessionHead: () =>
@@ -60,7 +59,7 @@ describe("useSessionData two-phase load", () => {
 					session: { sessionId: "s1", project: "p1", turns: headTurns } as Session,
 					totalTurns: 50,
 				}),
-			getSessionTail: () => new Promise(() => {}), // never resolves
+			getSessionTail: () => new Promise(() => undefined), // never resolves
 		});
 		const { result } = renderHook(() => useSessionData("s1", "p1"), { wrapper: MockProviders });
 		await waitFor(() => expect(result.current.data?.session.turns.length).toBe(2));

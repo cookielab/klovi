@@ -1,9 +1,9 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useEffect, useRef } from "react";
-import { MessageList } from "../messages/index.ts";
-import type { Turn } from "../types/index.ts";
-import { useKeyboard } from "./useKeyboard.ts";
-import { usePresentationMode } from "./usePresentationMode.ts";
+import { MessageList } from "../messages/index";
+import type { Turn } from "../types/index";
+import { useKeyboard } from "./useKeyboard";
+import { usePresentationMode } from "./usePresentationMode";
 
 type PresentationShellProps = {
 	turns: Turn[];

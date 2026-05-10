@@ -1,7 +1,7 @@
 import type { ThemeSetting } from "@cookielab.io/klovi-design-system";
 import { useCallback, useEffect, useState } from "react";
-import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context.ts";
-import { kloviHostBridge } from "../../lib/rpc-client.ts";
+import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
+import { kloviHostBridge } from "../../lib/rpc-client";
 
 const DEFAULT_PRESENTATION_FONT_SIZE = 15;
 const PRESENTATION_FONT_SIZE_STEP = 2;
@@ -20,7 +20,7 @@ export function useSystemThemeOverride(): "dark" | "light" | null {
 	useEffect(() => {
 		runKloviEffect(kloviHostBridge.getSystemTheme())
 			.then((result) => setTheme(result.theme))
-			.catch(() => {});
+			.catch(() => undefined);
 	}, [runKloviEffect]);
 
 	useEffect(

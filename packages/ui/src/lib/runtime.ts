@@ -1,6 +1,6 @@
 import { Context, Layer, ManagedRuntime } from "effect";
-import type { KloviClient } from "./client.ts";
-import type { KloviHostBridge } from "./host-bridge.ts";
+import type { KloviClient } from "./client";
+import type { KloviHostBridge } from "./host-bridge";
 
 export class KloviClientService extends Context.Tag("@klovi/ui/KloviClient")<KloviClientService, KloviClient>() {}
 

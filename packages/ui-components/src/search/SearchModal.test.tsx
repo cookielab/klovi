@@ -1,7 +1,6 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import type { GlobalSessionResult } from "../types/index.ts";
-import { SearchModal } from "./SearchModal.tsx";
+import type { GlobalSessionResult } from "../types/index";
+import { SearchModal } from "./SearchModal";
 
 function makeResult(overrides: Partial<GlobalSessionResult> = {}): GlobalSessionResult {
 	return {
@@ -20,7 +19,7 @@ function makeResult(overrides: Partial<GlobalSessionResult> = {}): GlobalSession
 afterEach(cleanup);
 
 describe("SearchModal (package)", () => {
-	test("returns null when closed", () => {
+	it("returns null when closed", () => {
 		const { container } = render(
 			<SearchModal open={false} sessions={[makeResult()]} onSelect={mock()} onClose={mock()} />,
 		);
@@ -28,7 +27,7 @@ describe("SearchModal (package)", () => {
 		expect(container.firstChild).toBeNull();
 	});
 
-	test("selects a result when clicked", () => {
+	it("selects a result when clicked", () => {
 		const onSelect = mock();
 		const result = makeResult();
 		const { getByText } = render(<SearchModal open={true} sessions={[result]} onSelect={onSelect} onClose={mock()} />);
@@ -38,7 +37,7 @@ describe("SearchModal (package)", () => {
 		expect(onSelect).toHaveBeenCalledWith(result);
 	});
 
-	test("closes on Escape from input", () => {
+	it("closes on Escape from input", () => {
 		const onClose = mock();
 		const { getByPlaceholderText } = render(
 			<SearchModal open={true} sessions={[makeResult()]} onSelect={mock()} onClose={onClose} />,

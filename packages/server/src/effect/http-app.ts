@@ -1,6 +1,6 @@
 import { HttpRouter, HttpServer, HttpServerRequest, HttpServerResponse } from "@effect/platform";
 import { Effect } from "effect";
-import { RPCError } from "../rpc-error.ts";
+import { RpcError } from "../rpc-error";
 import {
 	InvalidSessionIdError,
 	PluginSourceNotFoundError,
@@ -8,8 +8,8 @@ import {
 	SettingsWriteError,
 	SubAgentNotSupportedError,
 	UnknownPluginError,
-} from "../services/errors.ts";
-import { KloviServices, type KloviServicesShape } from "./server-services.ts";
+} from "../services/errors";
+import { KloviServices, type KloviServicesShape } from "./server-services";
 
 /** Methods on KloviServices that are callable via RPC (excludes internal fields). */
 type RpcMethodName = {
@@ -45,7 +45,7 @@ function mapDomainErrorToStatus(err: unknown): { status: number; message: string
 	if (err instanceof SettingsWriteError) {
 		return { status: 500, message: "Failed to write settings" };
 	}
-	if (err instanceof RPCError) {
+	if (err instanceof RpcError) {
 		return { status: err.status, message: err.message };
 	}
 	const message = err instanceof Error ? err.message : "Internal server error";
@@ -64,7 +64,7 @@ const rpcHandler = Effect.gen(function* () {
 
 	if (!isRpcMethod(method, services)) {
 		const httpNotFound = 404;
-		return yield* Effect.fail(new RPCError(httpNotFound, `Unknown method: ${method}`));
+		return yield* Effect.fail(new RpcError(httpNotFound, `Unknown method: ${method}`));
 	}
 
 	let params: Record<string, unknown> = {};

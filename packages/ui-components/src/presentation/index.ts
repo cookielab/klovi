@@ -1,5 +1,5 @@
-export { PresentationShell } from "./PresentationShell.tsx";
-export type { KeyboardHandlers } from "./useKeyboard.ts";
-export { useKeyboard } from "./useKeyboard.ts";
-export type { PresentationState } from "./usePresentationMode.ts";
-export { usePresentationMode } from "./usePresentationMode.ts";
+export { PresentationShell } from "./PresentationShell";
+export type { KeyboardHandlers } from "./useKeyboard";
+export { useKeyboard } from "./useKeyboard";
+export type { PresentationState } from "./usePresentationMode";
+export { usePresentationMode } from "./usePresentationMode";

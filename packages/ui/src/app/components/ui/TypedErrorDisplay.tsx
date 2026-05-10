@@ -1,5 +1,5 @@
 import { Button } from "@cookielab.io/klovi-design-system";
-import type { RpcError } from "../../../lib/rpc-errors-effect.ts";
+import type { RpcError } from "../../../lib/rpc-errors-effect";
 import "./TypedErrorDisplay.css";
 
 type TypedErrorDisplayProps = {

@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render, waitFor } from "@testing-library/react";
-import type { Session } from "../../../shared/types.ts";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
-import { SessionPresentation } from "./SessionPresentation.tsx";
+import type { Session } from "../../../shared/types";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { SessionPresentation } from "./SessionPresentation";
 
 const STEP_REGEX = /Step/u;
 
@@ -32,19 +31,18 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 describe("SessionPresentation", () => {
 	afterEach(cleanup);
 
-	test("shows loading state initially", () => {
+	it("shows loading state initially", () => {
 		setupMockRPC({
-			getSessionHead: () => new Promise(() => {}),
+			getSessionHead: () => new Promise(() => undefined),
 		});
 		const { container } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		expect(container.querySelector(".loading")).not.toBeNull();
 	});
 
-	test("renders presentation mode after fetch", async () => {
+	it("renders presentation mode after fetch", async () => {
 		const session = makeSession();
 		setupMockRPC({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
@@ -52,15 +50,14 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container, findByText } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		await findByText(STEP_REGEX);
 		expect(container.textContent).toContain("← → step");
 	});
 
-	test("renders progress bar", async () => {
+	it("renders progress bar", async () => {
 		const session = makeSession();
 		setupMockRPC({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
@@ -68,23 +65,21 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container, findByText } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		await findByText(STEP_REGEX);
 		expect(container.textContent).toContain("Esc exit");
 	});
 
-	test("returns null when no session data", async () => {
+	it("returns null when no session data", async () => {
 		setupMockRPC({
 			getSessionHead: () => Promise.resolve({ session: null as unknown as Session, totalTurns: 0 }),
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
 		const { container } = render(
-			// biome-ignore lint/nursery/noJsxPropsBind: test render prop
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => {}} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
 			{ wrapper: MockProviders },
 		);
 		await waitFor(() => {

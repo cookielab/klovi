@@ -1,7 +1,7 @@
-export { BashToolContent } from "./BashToolContent.tsx";
-export { DiffView, formatDiff } from "./DiffView.tsx";
-export { SmartToolOutput } from "./SmartToolOutput.tsx";
-export { ToolCall } from "./ToolCall.tsx";
+export { BashToolContent } from "./BashToolContent";
+export { DiffView, formatDiff } from "./DiffView";
+export { SmartToolOutput } from "./SmartToolOutput";
+export { ToolCall } from "./ToolCall";
 export {
 	formatToolInput,
 	getToolSummary,
@@ -9,4 +9,4 @@ export {
 	MAX_OUTPUT_LENGTH,
 	MAX_THINKING_PREVIEW,
 	truncateOutput,
-} from "./ToolCallDefaults.ts";
+} from "./ToolCallDefaults";

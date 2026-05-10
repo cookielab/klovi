@@ -3,7 +3,7 @@ import { createRegistry } from "@cookielab.io/klovi-server/services/auto-discove
 import { loadSettings } from "@cookielab.io/klovi-server/services/settings";
 import type { VersionInfo } from "@cookielab.io/klovi-server/services/version-service";
 import { Effect, Layer, ManagedRuntime, Ref, SubscriptionRef } from "effect";
-import type { UpdateStatus } from "../shared/rpc-types.ts";
+import type { UpdateStatus } from "../shared/rpc-types";
 import {
 	AppDataDirRef,
 	type DesktopServices,
@@ -13,7 +13,7 @@ import {
 	UpdaterConfig,
 	UpdateStatusRef,
 	VersionState,
-} from "./services.ts";
+} from "./services";
 
 type DesktopRuntimeConfig = {
 	versionInfo: VersionInfo;

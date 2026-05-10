@@ -1,8 +1,7 @@
-import { describe, expect, mock, test } from "bun:test";
-import { iterateJsonl } from "./jsonl-utils.ts";
+import { iterateJsonl } from "./jsonl-utils";
 
 describe("iterateJsonl", () => {
-	test("skips blank lines and yields parsed records", () => {
+	it("skips blank lines and yields parsed records", () => {
 		const seen: unknown[] = [];
 
 		iterateJsonl('\n{"name":"one"}\n  \n{"name":"two"}', (ctx) => {
@@ -15,7 +14,7 @@ describe("iterateJsonl", () => {
 		]);
 	});
 
-	test("limits processing with startAt and maxLines", () => {
+	it("limits processing with startAt and maxLines", () => {
 		const names: string[] = [];
 
 		iterateJsonl(
@@ -29,17 +28,17 @@ describe("iterateJsonl", () => {
 		expect(names).toEqual(["one"]);
 	});
 
-	test("invokes onMalformed with source line and number", () => {
-		const malformed = mock((_line: string, _lineNumber: number, _error: unknown) => {});
+	it("invokes onMalformed with source line and number", () => {
+		const malformed = mock((_line: string, _lineNumber: number, _error: unknown) => undefined);
 
-		iterateJsonl('{"ok":1}\n{broken}', () => {}, { onMalformed: malformed });
+		iterateJsonl('{"ok":1}\n{broken}', () => undefined, { onMalformed: malformed });
 
 		expect(malformed).toHaveBeenCalledTimes(1);
 		expect(malformed.mock.calls[0]?.[0]).toBe("{broken}");
 		expect(malformed.mock.calls[0]?.[1]).toBe(2);
 	});
 
-	test("allows visitor to break early", () => {
+	it("allows visitor to break early", () => {
 		const values: number[] = [];
 
 		iterateJsonl('{"n":1}\n{"n":2}\n{"n":3}', (ctx) => {

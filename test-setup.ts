@@ -1,5 +1,5 @@
 import { GlobalWindow } from "happy-dom";
-import { setupMockRPC } from "./packages/ui/src/app/test-helpers/mock-rpc.ts";
+import { setupMockRPC } from "./packages/ui/src/app/test-helpers/mock-rpc";
 
 const window = new GlobalWindow();
 
@@ -48,9 +48,15 @@ setupMockRPC();
 // Shim ResizeObserver for @tanstack/react-virtual measureElement under happy-dom
 if (!("ResizeObserver" in globalThis)) {
 	class ResizeObserverShim {
-		observe(): void {}
-		unobserve(): void {}
-		disconnect(): void {}
+		public observe(): void {
+			// noop shim for happy-dom
+		}
+		public unobserve(): void {
+			// noop shim for happy-dom
+		}
+		public disconnect(): void {
+			// noop shim for happy-dom
+		}
 	}
 	(globalThis as Record<string, unknown>)["ResizeObserver"] = ResizeObserverShim;
 }

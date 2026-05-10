@@ -3,8 +3,8 @@ import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-pl
 import { PluginConfig, PluginError } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery.ts";
-import { loadOpenCodeSession } from "./parser.ts";
+import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery";
+import { loadOpenCodeSession } from "./parser";
 
 export const openCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
 	id: "opencode",
@@ -56,12 +56,12 @@ export const openCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
 	// No resume command — OpenCode doesn't have one
 };
 
-export { DEFAULT_OPENCODE_DIR, getOpenCodeDir, setOpenCodeDir } from "./config.ts";
-export { getOpenCodeDbPath, openOpenCodeDb } from "./db.ts";
-export { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery.ts";
-export { openCodeInputFormatters, openCodeSummaryExtractors } from "./extractors.ts";
-export { openCodeFrontendPlugin } from "./frontend.ts";
-export type { OpenCodeMessage } from "./parser.ts";
-export { buildOpenCodeTurns, loadOpenCodeSession } from "./parser.ts";
-export { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
-export { NodeSqliteLayer } from "./runtime/node-sqlite.ts";
+export { DEFAULT_OPENCODE_DIR, getOpenCodeDir, setOpenCodeDir } from "./config";
+export { getOpenCodeDbPath, openOpenCodeDb } from "./db";
+export { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery";
+export { openCodeInputFormatters, openCodeSummaryExtractors } from "./extractors";
+export { openCodeFrontendPlugin } from "./frontend";
+export type { OpenCodeMessage } from "./parser";
+export { buildOpenCodeTurns, loadOpenCodeSession } from "./parser";
+export { BunSqliteLayer } from "./runtime/bun-sqlite";
+export { NodeSqliteLayer } from "./runtime/node-sqlite";

@@ -1,32 +1,32 @@
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
-import { AppGate } from "./app/App.tsx";
-import type { KloviClient } from "./lib/client.ts";
-import { KloviRuntimeProvider } from "./lib/context.ts";
-import type { KloviHostBridge } from "./lib/host-bridge.ts";
+import { AppGate } from "./app/App";
+import type { KloviClient } from "./lib/client";
+import { KloviRuntimeProvider } from "./lib/context";
+import type { KloviHostBridge } from "./lib/host-bridge";
 
-export { browserHostBridge } from "./lib/browser-host-bridge.ts";
-export type { KloviClient } from "./lib/client.ts";
+export { browserHostBridge } from "./lib/browser-host-bridge";
+export type { KloviClient } from "./lib/client";
 export type {
 	KloviHostBridge,
 	KloviHostCapabilities,
 	KloviHostConnectionState,
-} from "./lib/host-bridge.ts";
-export { createHttpClient } from "./lib/http-client.ts";
+} from "./lib/host-bridge";
+export { createHttpClient } from "./lib/http-client";
 export {
 	createRpcDisconnectedError,
 	createRpcTimeoutError,
 	getRpcErrorCode,
 	isRpcTimeoutError,
 	isRpcTransportError,
-} from "./lib/rpc-errors.ts";
+} from "./lib/rpc-errors";
 export type {
 	DashboardStats,
 	GlobalSessionResult,
 	Project,
 	Session,
 	SessionSummary,
-} from "./shared/types.ts";
+} from "./shared/types";
 
 export type MountKloviAppConfig = {
 	container: HTMLElement;

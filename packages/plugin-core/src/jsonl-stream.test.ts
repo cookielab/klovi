@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import type { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Ref } from "effect";
-import { streamJsonl, streamJsonlHead } from "./jsonl-stream.ts";
+import { streamJsonl, streamJsonlHead } from "./jsonl-stream";
 
 const testDir = join(tmpdir(), `klovi-jsonl-stream-test-${Date.now()}`);
 const fsLayer = NodeFileSystem.layer;
@@ -24,7 +24,7 @@ afterEach(async () => {
 });
 
 describe("streamJsonlHead", () => {
-	test("invokes visitor for each parsed line in order", async () => {
+	it("invokes visitor for each parsed line in order", async () => {
 		const filePath = join(testDir, "small.jsonl");
 		await Bun.write(
 			filePath,
@@ -41,7 +41,7 @@ describe("streamJsonlHead", () => {
 		expect(seen).toEqual([1, 2, 3]);
 	});
 
-	test("bails as soon as visitor returns false", async () => {
+	it("bails as soon as visitor returns false", async () => {
 		const filePath = join(testDir, "bail.jsonl");
 		await Bun.write(
 			filePath,
@@ -59,7 +59,7 @@ describe("streamJsonlHead", () => {
 		expect(seen).toEqual([1]);
 	});
 
-	test("respects maxLines cap", async () => {
+	it("respects maxLines cap", async () => {
 		const filePath = join(testDir, "cap.jsonl");
 		const lines = Array.from({ length: 50 }, (_, i) => JSON.stringify({ i: i }));
 		await Bun.write(filePath, lines.join("\n"));
@@ -81,7 +81,7 @@ describe("streamJsonlHead", () => {
 		expect(counter).toBe(5);
 	});
 
-	test("does not load full file when bailing on line 2 of a large file", async () => {
+	it("does not load full file when bailing on line 2 of a large file", async () => {
 		const filePath = join(testDir, "large.jsonl");
 		// 5 MB synthetic file; metadata in line 2
 		const meta = JSON.stringify({ kind: "meta", value: "found" });
@@ -99,7 +99,6 @@ describe("streamJsonlHead", () => {
 					found = obj.value;
 					return false;
 				}
-				// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
 				return undefined;
 			}),
 		);
@@ -110,7 +109,7 @@ describe("streamJsonlHead", () => {
 		expect(after - before).toBeLessThan(1024 * 1024);
 	});
 
-	test("skips blank lines", async () => {
+	it("skips blank lines", async () => {
 		const filePath = join(testDir, "blanks.jsonl");
 		await Bun.write(filePath, ["", JSON.stringify({ a: 1 }), "", JSON.stringify({ a: 2 }), ""].join("\n"));
 
@@ -124,7 +123,7 @@ describe("streamJsonlHead", () => {
 		expect(seen).toEqual([1, 2]);
 	});
 
-	test("calls onMalformed for bad JSON and continues", async () => {
+	it("calls onMalformed for bad JSON and continues", async () => {
 		const filePath = join(testDir, "bad.jsonl");
 		await Bun.write(filePath, [JSON.stringify({ a: 1 }), "{ not json", JSON.stringify({ a: 3 })].join("\n"));
 
@@ -146,7 +145,7 @@ describe("streamJsonlHead", () => {
 });
 
 describe("streamJsonl", () => {
-	test("invokes visitor for every line in a large file without bailing", async () => {
+	it("invokes visitor for every line in a large file without bailing", async () => {
 		const filePath = join(testDir, "big.jsonl");
 		const lineCount = 2000;
 		const lines = Array.from({ length: lineCount }, (_, i) => JSON.stringify({ i: i }));
@@ -164,7 +163,7 @@ describe("streamJsonl", () => {
 		expect(seen[lineCount - 1]).toBe(lineCount - 1);
 	});
 
-	test("preserves visit order across chunk boundaries", async () => {
+	it("preserves visit order across chunk boundaries", async () => {
 		const filePath = join(testDir, "ordered.jsonl");
 		const lines = Array.from({ length: 500 }, (_, i) => JSON.stringify({ i: i, pad: "x".repeat(50) }));
 		await Bun.write(filePath, lines.join("\n"));
@@ -179,7 +178,7 @@ describe("streamJsonl", () => {
 		expect(seen).toEqual(lines.map((_, i) => i));
 	});
 
-	test("calls onMalformed for bad lines and continues to the end", async () => {
+	it("calls onMalformed for bad lines and continues to the end", async () => {
 		const filePath = join(testDir, "messy.jsonl");
 		await Bun.write(
 			filePath,

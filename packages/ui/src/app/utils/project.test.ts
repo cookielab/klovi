@@ -1,6 +1,5 @@
-import { describe, expect, test } from "bun:test";
-import type { Project } from "../../shared/types.ts";
-import { projectDisplayName } from "./project.ts";
+import type { Project } from "../../shared/types";
+import { projectDisplayName } from "./project";
 
 function makeProject(name: string): Project {
 	return {
@@ -13,27 +12,27 @@ function makeProject(name: string): Project {
 }
 
 describe("projectDisplayName", () => {
-	test("returns last 2 segments of forward-slash path", () => {
+	it("returns last 2 segments of forward-slash path", () => {
 		expect(projectDisplayName(makeProject("Users/alice/my-project"))).toBe("alice/my-project");
 	});
 
-	test("returns last 2 segments of backslash path", () => {
+	it("returns last 2 segments of backslash path", () => {
 		expect(projectDisplayName(makeProject("Users\\alice\\my-project"))).toBe("alice/my-project");
 	});
 
-	test("handles mixed slashes", () => {
+	it("handles mixed slashes", () => {
 		expect(projectDisplayName(makeProject("Users/alice\\my-project"))).toBe("alice/my-project");
 	});
 
-	test("handles trailing slashes", () => {
+	it("handles trailing slashes", () => {
 		expect(projectDisplayName(makeProject("Users/alice/my-project/"))).toBe("alice/my-project");
 	});
 
-	test("returns full name for short paths", () => {
+	it("returns full name for short paths", () => {
 		expect(projectDisplayName(makeProject("my-project"))).toBe("my-project");
 	});
 
-	test("returns both segments for two-segment path", () => {
+	it("returns both segments for two-segment path", () => {
 		expect(projectDisplayName(makeProject("alice/my-project"))).toBe("alice/my-project");
 	});
 });

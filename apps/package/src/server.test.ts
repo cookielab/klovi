@@ -1,5 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { type KloviPackageServer, startKloviPackageServer } from "./server.ts";
+import { type KloviPackageServer, startKloviPackageServer } from "./server";
 
 const URL_PATTERN = /^http:\/\/127\.0\.0\.1:\d+$/u;
 
@@ -14,11 +13,11 @@ describe("startKloviPackageServer", () => {
 		server?.stop();
 	});
 
-	test("returns a URL", () => {
+	it("returns a URL", () => {
 		expect(server.url).toMatch(URL_PATTERN);
 	});
 
-	test("POST /api/rpc/getVersion returns version info", async () => {
+	it("POST /api/rpc/getVersion returns version info", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "POST",
 			body: "{}",
@@ -29,7 +28,7 @@ describe("startKloviPackageServer", () => {
 		expect(data).toHaveProperty("commit");
 	});
 
-	test("POST /api/rpc/unknown returns 404", async () => {
+	it("POST /api/rpc/unknown returns 404", async () => {
 		const res = await fetch(`${server.url}/api/rpc/unknownMethod`, {
 			method: "POST",
 			body: "{}",
@@ -37,7 +36,7 @@ describe("startKloviPackageServer", () => {
 		expect(res.status).toBe(404);
 	});
 
-	test("GET / returns 404 when no staticDir", async () => {
+	it("GET / returns 404 when no staticDir", async () => {
 		const res = await fetch(server.url);
 		expect(res.status).toBe(404);
 	});

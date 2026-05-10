@@ -1,10 +1,9 @@
-import { describe, expect, test } from "bun:test";
 import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
 import { PluginError, type SessionSummary, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import type { MergedProject, PluginProject, ToolPlugin } from "./plugin-types.ts";
-import { PluginRegistry } from "./registry.ts";
+import type { MergedProject, PluginProject, ToolPlugin } from "./plugin-types";
+import { PluginRegistry } from "./registry";
 
 const testConfig = { dataDir: "/test" };
 const testLayer = Layer.merge(
@@ -62,7 +61,7 @@ function createFailingPlugin(id: string): ToolPlugin {
 }
 
 describe("PluginRegistry", () => {
-	test("register and retrieve a plugin", () => {
+	it("register and retrieve a plugin", () => {
 		const registry = new PluginRegistry();
 		const plugin = createMockPlugin("test-plugin", []);
 
@@ -71,7 +70,7 @@ describe("PluginRegistry", () => {
 		expect(registry.getPlugin("test-plugin")).toBe(plugin);
 	});
 
-	test("getAllPlugins returns all registered", () => {
+	it("getAllPlugins returns all registered", () => {
 		const registry = new PluginRegistry();
 		const plugin1 = createMockPlugin("plugin-a", []);
 		const plugin2 = createMockPlugin("plugin-b", []);
@@ -85,13 +84,13 @@ describe("PluginRegistry", () => {
 		expect(all).toContain(plugin2);
 	});
 
-	test("getPlugin throws for unknown id", () => {
+	it("getPlugin throws for unknown id", () => {
 		const registry = new PluginRegistry();
 
 		expect(() => registry.getPlugin("nonexistent")).toThrow("Plugin not found: nonexistent");
 	});
 
-	test("discoverAllProjects merges by resolvedPath", async () => {
+	it("discoverAllProjects merges by resolvedPath", async () => {
 		const registry = new PluginRegistry();
 
 		const pluginA = createMockPlugin("plugin-a", [
@@ -131,7 +130,7 @@ describe("PluginRegistry", () => {
 		expect(merged?.sources).toContainEqual({ pluginId: "plugin-b", nativeId: "native-b" });
 	});
 
-	test("discoverAllProjects keeps separate paths separate", async () => {
+	it("discoverAllProjects keeps separate paths separate", async () => {
 		const registry = new PluginRegistry();
 
 		const plugin = createMockPlugin("plugin-a", [
@@ -161,7 +160,7 @@ describe("PluginRegistry", () => {
 		expect(projects.map((p) => p.resolvedPath)).toContain("/Users/foo/project-two");
 	});
 
-	test("discoverAllProjects sorts by lastActivity descending", async () => {
+	it("discoverAllProjects sorts by lastActivity descending", async () => {
 		const registry = new PluginRegistry();
 
 		const plugin = createMockPlugin("plugin-a", [
@@ -200,7 +199,7 @@ describe("PluginRegistry", () => {
 		expect(projects[2]?.resolvedPath).toBe("/Users/foo/old-project");
 	});
 
-	test("discoverAllProjects handles plugin discovery failure", async () => {
+	it("discoverAllProjects handles plugin discovery failure", async () => {
 		const registry = new PluginRegistry();
 
 		const failingPlugin = createFailingPlugin("failing-plugin");
@@ -223,7 +222,7 @@ describe("PluginRegistry", () => {
 		expect(projects[0]?.resolvedPath).toBe("/Users/foo/working");
 	});
 
-	test("listAllSessions aggregates from all sources with pluginId", async () => {
+	it("listAllSessions aggregates from all sources with pluginId", async () => {
 		const registry = new PluginRegistry();
 
 		const pluginA = createMockPlugin(
@@ -308,7 +307,7 @@ describe("PluginRegistry", () => {
 		expect(sessions[2]?.timestamp).toBe("2025-01-01T10:00:00Z");
 	});
 
-	test("listAllSessions handles plugin failure gracefully", async () => {
+	it("listAllSessions handles plugin failure gracefully", async () => {
 		const registry = new PluginRegistry();
 
 		const workingPlugin = createMockPlugin("working-plugin", [], {

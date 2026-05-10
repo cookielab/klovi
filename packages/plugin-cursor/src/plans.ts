@@ -1,8 +1,8 @@
 import { basename } from "node:path";
 import type { Session, SystemTurn } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { readFileText } from "./shared/discovery-utils.ts";
-import type { CursorPlanSummary } from "./types.ts";
+import { readFileText } from "./shared/discovery-utils";
+import type { CursorPlanSummary } from "./types";
 
 const LEADING_NEWLINES_REGEX = /^\n+/u;
 const PLAN_FILE_SUFFIX_REGEX = /\.plan\.md$/u;

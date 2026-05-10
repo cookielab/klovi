@@ -1,11 +1,11 @@
 import { parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import type { KloviClient } from "../lib/client.ts";
-import { kloviClient } from "../lib/rpc-client.ts";
-import { isRpcTransportError } from "../lib/rpc-errors.ts";
-import { isTransportRpcError } from "../lib/rpc-errors-effect.ts";
-import type { Project, SessionSummary } from "../shared/types.ts";
-import { getFrontendPlugin } from "./plugin-registry.ts";
+import type { KloviClient } from "../lib/client";
+import { kloviClient } from "../lib/rpc-client";
+import { isRpcTransportError } from "../lib/rpc-errors";
+import { isTransportRpcError } from "../lib/rpc-errors-effect";
+import type { Project, SessionSummary } from "../shared/types";
+import { getFrontendPlugin } from "./plugin-registry";
 
 const HASH_PREFIX_REGEX = /^#\/?/u;
 

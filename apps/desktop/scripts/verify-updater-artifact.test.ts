@@ -1,8 +1,7 @@
-import { describe, expect, test } from "bun:test";
-import { getDefaultZstdPaths, parseArgs } from "./verify-updater-artifact.ts";
+import { getDefaultZstdPaths, parseArgs } from "./verify-updater-artifact";
 
 describe("parseArgs", () => {
-	test("parses required updater artifact arguments", () => {
+	it("parses required updater artifact arguments", () => {
 		expect(
 			parseArgs([
 				"bun",
@@ -27,7 +26,7 @@ describe("parseArgs", () => {
 		});
 	});
 
-	test("parses optional zstd path", () => {
+	it("parses optional zstd path", () => {
 		expect(
 			parseArgs([
 				"bun",
@@ -57,14 +56,14 @@ describe("parseArgs", () => {
 });
 
 describe("getDefaultZstdPaths", () => {
-	test("checks desktop and workspace node_modules candidates", () => {
+	it("checks desktop and workspace node_modules candidates", () => {
 		expect(getDefaultZstdPaths("linux", "arm64")).toEqual([
 			expect.stringContaining("apps/desktop/node_modules/electrobun/dist-linux-arm64/zig-zstd"),
 			expect.stringContaining("node_modules/electrobun/dist-linux-arm64/zig-zstd"),
 		]);
 	});
 
-	test("uses .exe suffix for windows", () => {
+	it("uses .exe suffix for windows", () => {
 		expect(getDefaultZstdPaths("win", "x64")).toEqual([
 			expect.stringContaining("apps/desktop/node_modules/electrobun/dist-win-x64/zig-zstd.exe"),
 			expect.stringContaining("node_modules/electrobun/dist-win-x64/zig-zstd.exe"),

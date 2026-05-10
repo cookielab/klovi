@@ -1,5 +1,5 @@
 import type React from "react";
-import type { TurnRole } from "../../types.ts";
+import type { TurnRole } from "../../types";
 
 type TurnBoxProps = {
 	role: TurnRole;

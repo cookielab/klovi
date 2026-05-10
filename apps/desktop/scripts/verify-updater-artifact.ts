@@ -3,7 +3,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
-import { isValidUpdateInfo, validateExtractedBundle, validateUpdateInfo } from "../src/bun/updater.ts";
+import process from "node:process";
+import { isValidUpdateInfo, validateExtractedBundle, validateUpdateInfo } from "../src/bun/updater";
 
 type Platform = "macos" | "linux" | "win";
 type Arch = "arm64" | "x64";
@@ -101,7 +102,6 @@ async function resolveZstdPath(platform: Platform, arch: Arch, explicitPath?: st
 	}
 
 	for (const candidate of getDefaultZstdPaths(platform, arch)) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential file existence check per candidate path
 		if (await Bun.file(candidate).exists()) {
 			return candidate;
 		}
@@ -165,8 +165,7 @@ async function verifyUpdaterArtifact(args: VerifyUpdaterArtifactArgs): Promise<v
 		await validateUpdateJson(args);
 		const tarPath = await decompressTarball(args, tempDir);
 		await extractArchive(tarPath, stagingDir);
-		const bundlePath = await validateExtractedBundle(args.platform, stagingDir);
-		console.log(`Verified updater artifact: ${bundlePath}`);
+		const _bundlePath = await validateExtractedBundle(args.platform, stagingDir);
 	} finally {
 		await rm(tempDir, { recursive: true, force: true });
 	}
@@ -175,8 +174,7 @@ async function verifyUpdaterArtifact(args: VerifyUpdaterArtifactArgs): Promise<v
 if (import.meta.main) {
 	try {
 		await verifyUpdaterArtifact(parseArgs(Bun.argv));
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+	} catch {
 		process.exit(1);
 	}
 }

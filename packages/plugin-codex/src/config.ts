@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-const DEFAULT_CODEX_CLI_DIR = join(process.env["HOME"] ?? process.env["USERPROFILE"] ?? "", ".codex");
+const DEFAULT_CODEX_CLI_DIR = join(Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "", ".codex");
 
 // Legacy mutable state — kept for backwards compatibility
 let codexCliDir = DEFAULT_CODEX_CLI_DIR;

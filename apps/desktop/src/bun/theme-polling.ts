@@ -1,6 +1,6 @@
 import type { CommandExecutor } from "@effect/platform";
 import { Effect, Ref, Schedule } from "effect";
-import { detectLinuxSystemTheme, type SystemTheme } from "./linux-runtime.ts";
+import { detectLinuxSystemTheme, type SystemTheme } from "./linux-runtime";
 
 type ThemeChangeCallback = (theme: SystemTheme) => void;
 

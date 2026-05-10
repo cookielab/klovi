@@ -1,8 +1,8 @@
 import { HiddenProjectList as UiHiddenProjectList } from "@cookielab.io/klovi-ui-components/sessions";
-import { useKloviClient } from "../../../lib/context.ts";
-import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
-import type { Project } from "../../../shared/types.ts";
-import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
+import { useKloviClient } from "../../../lib/context";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect";
+import type { Project } from "../../../shared/types";
+import { useEffectQuery } from "../../hooks/useEffectQuery";
 
 type PackageHiddenProjectListProps = {
 	hiddenIds: Set<string>;

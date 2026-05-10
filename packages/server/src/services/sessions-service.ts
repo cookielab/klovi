@@ -13,9 +13,9 @@ import {
 	ProjectNotFoundError,
 	SubAgentNotSupportedError,
 	type UnknownPluginError,
-} from "./errors.ts";
-import type { MergedProject } from "./plugin-types.ts";
-import type { PluginRegistry } from "./registry.ts";
+} from "./errors";
+import type { MergedProject } from "./plugin-types";
+import type { PluginRegistry } from "./registry";
 
 const DEFAULT_HEAD_SIZE = 100;
 

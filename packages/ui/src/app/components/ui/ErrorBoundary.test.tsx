@@ -1,23 +1,19 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 
-// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function ThrowingComponent({ message }: { message: string }): never {
 	throw new Error(message);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function SafeComponent() {
 	return <div>Safe content</div>;
 }
 
 describe("ErrorBoundary", () => {
-	// biome-ignore lint/suspicious/noConsole: test-only console stubbing
 	const originalError = console.error;
 
 	function silenceExpectedBoundaryErrors(): void {
-		console.error = () => {};
+		console.error = () => undefined;
 	}
 
 	beforeEach(() => {
@@ -28,7 +24,7 @@ describe("ErrorBoundary", () => {
 		console.error = originalError;
 	});
 
-	test("renders children when no error", () => {
+	it("renders children when no error", () => {
 		const { getByText } = render(
 			<ErrorBoundary>
 				<SafeComponent />
@@ -37,7 +33,7 @@ describe("ErrorBoundary", () => {
 		expect(getByText("Safe content")).toBeTruthy();
 	});
 
-	test("renders view-level fallback on error", () => {
+	it("renders view-level fallback on error", () => {
 		silenceExpectedBoundaryErrors();
 		const { getByText } = render(
 			<ErrorBoundary>
@@ -49,7 +45,7 @@ describe("ErrorBoundary", () => {
 		expect(getByText("Try Again")).toBeTruthy();
 	});
 
-	test("renders inline fallback on error when inline=true", () => {
+	it("renders inline fallback on error when inline=true", () => {
 		silenceExpectedBoundaryErrors();
 		const { getByText } = render(
 			<ErrorBoundary inline={true}>
@@ -61,11 +57,10 @@ describe("ErrorBoundary", () => {
 		expect(getByText("Error details")).toBeTruthy();
 	});
 
-	test("retry resets error state on view-level boundary", () => {
+	it("retry resets error state on view-level boundary", () => {
 		silenceExpectedBoundaryErrors();
 		let shouldThrow = true;
 		function MaybeThrow(): React.JSX.Element {
-			// biome-ignore lint/nursery/noUnnecessaryConditions: value is mutated between renders in test
 			if (shouldThrow) {
 				throw new Error("boom");
 			}
@@ -84,11 +79,10 @@ describe("ErrorBoundary", () => {
 		expect(getByText("Recovered")).toBeTruthy();
 	});
 
-	test("retry resets error state on inline boundary", () => {
+	it("retry resets error state on inline boundary", () => {
 		silenceExpectedBoundaryErrors();
 		let shouldThrow = true;
 		function MaybeThrow(): React.JSX.Element {
-			// biome-ignore lint/nursery/noUnnecessaryConditions: value is mutated between renders in test
 			if (shouldThrow) {
 				throw new Error("boom");
 			}

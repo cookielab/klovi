@@ -1,7 +1,7 @@
 import { SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import { getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config.ts";
+import { getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config";
 
 export function openCursorDbIfExists(dbPath: string) {
 	return Effect.gen(function* () {

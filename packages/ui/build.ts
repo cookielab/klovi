@@ -1,8 +1,7 @@
-import process from "node:process";
 import tailwindPlugin from "bun-plugin-tailwind";
 
-const isWatch = process.argv.includes("--watch");
-const isMinify = process.argv.includes("--minify");
+const isWatch = Bun.argv.includes("--watch");
+const isMinify = Bun.argv.includes("--minify");
 
 await Bun.build({
 	entrypoints: ["src/index.html"],

@@ -1,9 +1,10 @@
 import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import process from "node:process";
 import { getUpdateSettings } from "@cookielab.io/klovi-server/services/settings-service";
 import { Duration, Effect, Schedule, SubscriptionRef } from "effect";
-import type { UpdateStatus } from "../shared/rpc-types.ts";
-import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "./services.ts";
+import type { UpdateStatus } from "../shared/rpc-types";
+import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "./services";
 import {
 	findLatestUsableRelease,
 	findReleaseAsset,
@@ -14,7 +15,7 @@ import {
 	isValidUpdateInfo,
 	validateExtractedBundle,
 	validateUpdateInfo,
-} from "./updater.ts";
+} from "./updater";
 
 type Platform = "macos" | "linux" | "win";
 
@@ -67,7 +68,6 @@ const streamChunksToFile = (state: StreamState) =>
 		let bytesDownloaded = 0;
 		const { reader, writer, totalBytes, version, currentVersion } = state;
 
-		// biome-ignore lint/nursery/noUnnecessaryConditions: intentional infinite loop - exits via break when stream completes
 		while (true) {
 			const { done, value } = yield* Effect.tryPromise({
 				try: () => reader.read(),
@@ -127,7 +127,7 @@ const fetchAndSave = (url: string, destPath: string, version: string) =>
 
 		if (totalBytes && bytesDownloaded !== totalBytes) {
 			yield* Effect.tryPromise({
-				try: () => rm(destPath).catch(() => {}),
+				try: () => rm(destPath).catch(() => undefined),
 				catch: () => new Error("Cleanup failed"),
 			});
 			return yield* Effect.fail(
@@ -141,7 +141,7 @@ const fetchWithRetry = (url: string, destPath: string, version: string) =>
 		Effect.retry(Schedule.exponential(Duration.seconds(1)).pipe(Schedule.compose(Schedule.recurs(2)))),
 		Effect.tapError(() =>
 			Effect.sync(() => {
-				rm(destPath).catch(() => {});
+				rm(destPath).catch(() => undefined);
 			}),
 		),
 	);
@@ -319,7 +319,7 @@ const decompressBundle = (platform: Platform, compressedPath: string, tarPath: s
 		}
 
 		yield* Effect.tryPromise({
-			try: () => rm(tarPath).catch(() => {}),
+			try: () => rm(tarPath).catch(() => undefined),
 			catch: () => new Error("Pre-decompress cleanup failed"),
 		});
 
@@ -339,6 +339,7 @@ const applyUpdate = Effect.gen(function* () {
 	if (!(downloadedAssetPath && latestRelease)) {
 		return yield* Effect.fail(new Error("No downloaded update to apply"));
 	}
+	const archivePath = downloadedAssetPath;
 
 	const config = yield* UpdaterConfig;
 	const { path: appDataDir } = yield* AppDataDirRef;
@@ -352,8 +353,7 @@ const applyUpdate = Effect.gen(function* () {
 
 	const applyPipeline = Effect.gen(function* () {
 		const archiveBytes = yield* Effect.tryPromise({
-			// biome-ignore lint/style/noNonNullAssertion: downloadedAssetPath guaranteed non-null by preceding guard
-			try: () => Bun.file(downloadedAssetPath!).arrayBuffer(),
+			try: () => Bun.file(archivePath).arrayBuffer(),
 			catch: () => new Error("Failed to read update archive"),
 		});
 		const archive = new Bun.Archive(archiveBytes);
@@ -429,11 +429,10 @@ const applyMacOs = (stagingDir: string, updatesDir: string) =>
 		}).pipe(Effect.ignore);
 
 		const { pid } = process;
-		Bun.spawn(
-			["sh", "-c", `while kill -0 ${pid} 2>/dev/null; do sleep 0.5; done; sleep 1; open "${runningAppPath}"`],
-			// biome-ignore lint/suspicious/noExplicitAny: Bun's types don't include the detached option
-			{ detached: true, stdio: ["ignore", "ignore", "ignore"] } as any,
-		);
+		Bun.spawn(["sh", "-c", `while kill -0 ${pid} 2>/dev/null; do sleep 0.5; done; sleep 1; open "${runningAppPath}"`], {
+			detached: true,
+			stdio: ["ignore", "ignore", "ignore"],
+		} as Parameters<typeof Bun.spawn>[1]);
 
 		yield* Effect.tryPromise({
 			try: () => rm(join(updatesDir, "staging"), { recursive: true }),
@@ -547,7 +546,7 @@ const cleanupUpdates = Effect.gen(function* () {
 	yield* Effect.tryPromise({
 		try: async () => {
 			const entries = await readdir(dir);
-			await Promise.all(entries.map((entry) => rm(join(dir, entry), { recursive: true }).catch(() => {})));
+			await Promise.all(entries.map((entry) => rm(join(dir, entry), { recursive: true }).catch(() => undefined)));
 		},
 		catch: () => new Error("Cleanup failed"),
 	}).pipe(Effect.ignore);

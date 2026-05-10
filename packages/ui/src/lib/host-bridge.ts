@@ -1,6 +1,6 @@
-import type { DesktopHostRequestMap, DesktopMenuAction, DesktopRequestArgs } from "../shared/desktop-contract.ts";
-import type { UpdateStatus } from "../shared/rpc-types.ts";
-import type { DashboardStats } from "../shared/types.ts";
+import type { DesktopHostRequestMap, DesktopMenuAction, DesktopRequestArgs } from "../shared/desktop-contract";
+import type { UpdateStatus } from "../shared/rpc-types";
+import type { DashboardStats } from "../shared/types";
 
 type KloviHostCapabilities = {
 	desktop: boolean;

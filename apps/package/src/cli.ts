@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { resolveCliConfig } from "./cli-config.ts";
-import { startKloviPackageServer } from "./server.ts";
+import process from "node:process";
+import { resolveCliConfig } from "./cli-config";
+import { startKloviPackageServer } from "./server";
 
 const __dir = import.meta.dirname;
 
@@ -10,7 +11,7 @@ const pkgPath = resolve(__dir, "../package.json");
 const pkg = JSON.parse(await readFile(pkgPath, "utf-8")) as Record<string, string>;
 const version = pkg["version"] ?? "0.0.0";
 const commit = pkg["commit"] ?? "";
-const config = resolveCliConfig(__dir);
+const config = resolveCliConfig({ baseDir: __dir, argv: process.argv, env: process.env });
 
 await startKloviPackageServer({
 	host: config.host,

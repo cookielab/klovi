@@ -1,5 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { createHttpClient } from "./http-client.ts";
+import { createHttpClient } from "./http-client";
 
 // Use a minimal mock server for testing
 let mockServer: ReturnType<typeof Bun.serve>;
@@ -28,14 +27,14 @@ afterAll(() => {
 });
 
 describe("createHttpClient", () => {
-	test("calls RPC endpoint and returns result", async () => {
+	it("calls RPC endpoint and returns result", async () => {
 		const client = createHttpClient(baseUrl);
 		const result = await client.getVersion();
 		expect(result.version).toBe("1.0.0");
 		expect(result.commit).toBe("abc123");
 	});
 
-	test("throws on error response", async () => {
+	it("throws on error response", async () => {
 		const client = createHttpClient(baseUrl);
 		await expect(
 			(client as unknown as { failMethod: () => Promise<unknown> }).failMethod?.() ??

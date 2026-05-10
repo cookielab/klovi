@@ -1,9 +1,9 @@
 import type { Session, SessionSummary, ToolPlugin } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig, PluginError } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { discoverClaudeProjects, listClaudeSessions } from "./discovery.ts";
-import { findImplSessionId, findPlanSessionId, loadClaudeSession, parseSubAgentSession } from "./parser.ts";
-import { fileExists } from "./shared/discovery-utils.ts";
+import { discoverClaudeProjects, listClaudeSessions } from "./discovery";
+import { findImplSessionId, findPlanSessionId, loadClaudeSession, parseSubAgentSession } from "./parser";
+import { fileExists } from "./shared/discovery-utils";
 
 export const claudeCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
 	id: "claude-code",
@@ -57,21 +57,21 @@ export const claudeCodePlugin: ToolPlugin<string, SessionSummary, Session> = {
 	getResumeCommand: (sessionId: string) => `claude --resume ${sessionId}`,
 };
 
-export { cleanCommandMessage, parseCommandMessage } from "./command-message.ts";
+export { cleanCommandMessage, parseCommandMessage } from "./command-message";
 export {
 	DEFAULT_CLAUDE_CODE_DIR,
 	getClaudeCodeDir,
 	getProjectsDir,
 	setClaudeCodeDir,
-} from "./config.ts";
+} from "./config";
 export {
 	classifySessionTypes,
 	discoverClaudeProjects,
 	extractCwd,
 	extractSessionMeta,
 	listClaudeSessions,
-} from "./discovery.ts";
-export { claudeCodeFrontendPlugin } from "./frontend.ts";
+} from "./discovery";
+export { claudeCodeFrontendPlugin } from "./frontend";
 export {
 	buildTurns,
 	extractSlug,
@@ -80,5 +80,5 @@ export {
 	findPlanSessionId,
 	loadClaudeSession,
 	parseSubAgentSession,
-} from "./parser.ts";
-export type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types.ts";
+} from "./parser";
+export type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types";

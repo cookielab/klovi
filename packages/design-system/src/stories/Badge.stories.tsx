@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Badge } from "../components/Badge/Badge.tsx";
-import type { BadgeVariant } from "../types.ts";
+import { Badge } from "../components/Badge/Badge";
+import type { BadgeVariant } from "../types";
 
 const meta: Meta<typeof Badge> = {
 	title: "Components/Badge",
@@ -26,7 +26,7 @@ const VARIANTS: BadgeVariant[] = [
 
 export const AllVariants: Story = {
 	render: () => (
-		<div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: 20 }}>
+		<div>
 			{VARIANTS.map((v) => (
 				<Badge key={v} variant={v}>
 					{v}
@@ -38,7 +38,7 @@ export const AllVariants: Story = {
 
 export const Mono: Story = {
 	render: () => (
-		<div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: 20 }}>
+		<div>
 			{VARIANTS.map((v) => (
 				<Badge key={v} variant={v} mono={true}>
 					{v}

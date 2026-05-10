@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-const DEFAULT_CLAUDE_CODE_DIR = join(process.env["HOME"] ?? process.env["USERPROFILE"] ?? "", ".claude");
+const DEFAULT_CLAUDE_CODE_DIR = join(Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "", ".claude");
 
 // Legacy mutable state — kept for backwards compatibility with tests/callers
 // that haven't migrated to PluginConfig yet. New code should use PluginConfig.

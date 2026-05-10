@@ -1,25 +1,24 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { Badge } from "./Badge/Badge.tsx";
-import { Button } from "./Button/Button.tsx";
-import { Collapsible } from "./Collapsible/Collapsible.tsx";
-import { Input } from "./FormControls/Input.tsx";
-import { SegmentedControl } from "./FormControls/SegmentedControl.tsx";
-import { Select } from "./FormControls/Select.tsx";
-import { Toggle } from "./FormControls/Toggle.tsx";
-import { AppLayout } from "./Layout/AppLayout.tsx";
-import { ContentHeader } from "./Layout/ContentHeader.tsx";
-import { Sidebar } from "./Layout/Sidebar.tsx";
-import { SidebarButton } from "./Layout/SidebarButton.tsx";
-import { Modal } from "./Modal/Modal.tsx";
+import { Badge } from "./Badge/Badge";
+import { Button } from "./Button/Button";
+import { Collapsible } from "./Collapsible/Collapsible";
+import { Input } from "./FormControls/Input";
+import { SegmentedControl } from "./FormControls/SegmentedControl";
+import { Select } from "./FormControls/Select";
+import { Toggle } from "./FormControls/Toggle";
+import { AppLayout } from "./Layout/AppLayout";
+import { ContentHeader } from "./Layout/ContentHeader";
+import { Sidebar } from "./Layout/Sidebar";
+import { SidebarButton } from "./Layout/SidebarButton";
+import { Modal } from "./Modal/Modal";
 
 const DETAILS_BUTTON_NAME = /details/iu;
 
 afterEach(cleanup);
 
 describe("design-system components", () => {
-	test("Button forwards props and handles clicks", () => {
-		const onClick = mock(() => {});
+	it("Button forwards props and handles clicks", () => {
+		const onClick = mock(() => undefined);
 
 		const { getByRole } = render(
 			<Button variant="primary" size="sm" icon={true} className="custom" onClick={onClick}>
@@ -35,7 +34,7 @@ describe("design-system components", () => {
 		expect(onClick).toHaveBeenCalledTimes(1);
 	});
 
-	test("Collapsible toggles content visibility", () => {
+	it("Collapsible toggles content visibility", () => {
 		const { queryByText, getByRole } = render(
 			<Collapsible title="Details">
 				<div>Hidden content</div>
@@ -51,8 +50,8 @@ describe("design-system components", () => {
 		expect(queryByText("Hidden content")).toBeNull();
 	});
 
-	test("Modal handles overlay clicks, escape, and inner click propagation", () => {
-		const onClose = mock(() => {});
+	it("Modal handles overlay clicks, escape, and inner click propagation", () => {
+		const onClose = mock(() => undefined);
 
 		const { getByRole, getByText, rerender } = render(
 			<Modal open={true} onClose={onClose} width={640}>
@@ -86,8 +85,8 @@ describe("design-system components", () => {
 		expect(onClose).toHaveBeenCalledTimes(2);
 	});
 
-	test("SegmentedControl respects value, onChange, and disabled state", () => {
-		const onChange = mock(() => {});
+	it("SegmentedControl respects value, onChange, and disabled state", () => {
+		const onChange = mock(() => undefined);
 
 		const { getByRole, rerender } = render(
 			<SegmentedControl
@@ -119,10 +118,10 @@ describe("design-system components", () => {
 		expect(onChange).toHaveBeenCalledTimes(1);
 	});
 
-	test("Input, Select, and Toggle render and wire through props", () => {
+	it("Input, Select, and Toggle render and wire through props", () => {
 		let inputChanges = 0;
 		let selectChanges = 0;
-		const onToggle = mock((_checked: boolean) => {});
+		const onToggle = mock((_checked: boolean) => undefined);
 
 		const { getByLabelText, getByRole } = render(
 			<div>
@@ -131,7 +130,6 @@ describe("design-system components", () => {
 				<Input
 					id="name"
 					value="Jane"
-					// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 					onChange={() => {
 						inputChanges += 1;
 					}}
@@ -142,7 +140,6 @@ describe("design-system components", () => {
 				<Select
 					id="theme"
 					value="light"
-					// biome-ignore lint/nursery/noJsxPropsBind: test render prop
 					onChange={() => {
 						selectChanges += 1;
 					}}
@@ -169,7 +166,7 @@ describe("design-system components", () => {
 		expect(onToggle).toHaveBeenCalledTimes(1);
 	});
 
-	test("layout primitives render expected sections", () => {
+	it("layout primitives render expected sections", () => {
 		const { getByText } = render(
 			<AppLayout
 				sidebar={
@@ -192,8 +189,8 @@ describe("design-system components", () => {
 		expect(getByText("Main content")).toBeTruthy();
 	});
 
-	test("SidebarButton renders as a button and forwards props", () => {
-		const onClick = mock(() => {});
+	it("SidebarButton renders as a button and forwards props", () => {
+		const onClick = mock(() => undefined);
 		const { getByRole } = render(
 			<SidebarButton onClick={onClick} title="Search">
 				Search
@@ -208,7 +205,7 @@ describe("design-system components", () => {
 		expect(onClick).toHaveBeenCalledTimes(1);
 	});
 
-	test("Badge renders content for multiple variants", () => {
+	it("Badge renders content for multiple variants", () => {
 		const { getByText, rerender } = render(<Badge>Default</Badge>);
 		expect(getByText("Default")).toBeTruthy();
 

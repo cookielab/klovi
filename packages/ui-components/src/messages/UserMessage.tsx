@@ -1,9 +1,9 @@
 import { TurnBox } from "@cookielab.io/klovi-design-system";
 import type React from "react";
-import type { UserTurn } from "../types/index.ts";
-import { formatFullDateTime, formatTimestamp } from "../utilities/index.ts";
-import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
-import { UserBashContent } from "./UserBashContent.tsx";
+import type { UserTurn } from "../types/index";
+import { formatFullDateTime, formatTimestamp } from "../utilities/index";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { UserBashContent } from "./UserBashContent";
 
 const IMAGE_MEDIA_TYPE_PREFIX_REGEX = /^image\//u;
 const STATUS_RE = /^\[.+\]$/u;
@@ -80,7 +80,6 @@ export function UserMessage({
 }: UserMessageProps) {
 	if (turn.bashInput !== undefined || turn.bashStdout !== undefined) {
 		return (
-			// biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role
 			<TurnBox role="user" timestamp={turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : null}>
 				<UserBashContent turn={turn} />
 			</TurnBox>
@@ -139,7 +138,6 @@ export function UserMessage({
 			{turn.attachments && turn.attachments.length > 0 ? (
 				<div className={ATTACHMENTS_CLASSES}>
 					{turn.attachments.map((a, i) => (
-						// biome-ignore lint/suspicious/noArrayIndexKey: attachments have no unique identifier
 						<span key={i} className={ATTACHMENT_BADGE_CLASSES}>
 							image/{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
 						</span>

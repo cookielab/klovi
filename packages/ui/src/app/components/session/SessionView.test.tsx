@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
-import type { Session } from "../../../shared/types.ts";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
-import { SessionView } from "./SessionView.tsx";
+import type { Session } from "../../../shared/types";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { SessionView } from "./SessionView";
 
 const ERROR_TITLE_TEXT = "Something went wrong";
 const HTTP_404_DETAIL_TEXT = "HTTP 404";
@@ -34,9 +33,9 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 describe("SessionView", () => {
 	afterEach(cleanup);
 
-	test("shows loading state initially", () => {
+	it("shows loading state initially", () => {
 		setupMockRPC({
-			getSessionHead: () => new Promise(() => {}),
+			getSessionHead: () => new Promise(() => undefined),
 		});
 		const { container } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,
@@ -45,7 +44,7 @@ describe("SessionView", () => {
 		expect(container.textContent).toContain("Loading session...");
 	});
 
-	test("renders messages after successful fetch", async () => {
+	it("renders messages after successful fetch", async () => {
 		const session = makeSession();
 		setupMockRPC({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
@@ -58,7 +57,7 @@ describe("SessionView", () => {
 		expect(await findByText("Hello world")).toBeTruthy();
 	});
 
-	test("shows error state on fetch failure", async () => {
+	it("shows error state on fetch failure", async () => {
 		setupMockRPC({
 			getSessionHead: () => Promise.reject(new Error("HTTP 404")),
 		});
@@ -70,7 +69,7 @@ describe("SessionView", () => {
 		expect(await findByText(HTTP_404_DETAIL_TEXT)).toBeTruthy();
 	});
 
-	test("shows error state on network error", async () => {
+	it("shows error state on network error", async () => {
 		setupMockRPC({
 			getSessionHead: () => Promise.reject(new Error("Network error")),
 		});
@@ -82,7 +81,7 @@ describe("SessionView", () => {
 		expect(await findByText(NETWORK_ERROR_DETAIL_TEXT)).toBeTruthy();
 	});
 
-	test("renders both user and assistant messages", async () => {
+	it("renders both user and assistant messages", async () => {
 		const session = makeSession();
 		setupMockRPC({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),

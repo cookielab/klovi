@@ -1,17 +1,16 @@
-import { describe, expect, test } from "bun:test";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { PluginError } from "./plugin-errors.ts";
-import { encodeResolvedPath, PluginRegistry } from "./plugin-registry.ts";
-import type { RegistryRequirements } from "./plugin-runtime.ts";
+import { PluginError } from "./plugin-errors";
+import { encodeResolvedPath, PluginRegistry } from "./plugin-registry";
+import type { RegistryRequirements } from "./plugin-runtime";
 import type {
 	PluginDiscoveryIndex,
 	PluginProject,
 	RegistrySession,
 	RegistrySessionSummary,
 	ToolPlugin,
-} from "./plugin-types.ts";
-import { SqliteClientTag } from "./sqlite-service.ts";
+} from "./plugin-types";
+import { SqliteClientTag } from "./sqlite-service";
 
 interface TestSessionSummary extends RegistrySessionSummary {
 	slug: string;
@@ -82,7 +81,7 @@ const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
 	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 describe("PluginRegistry", () => {
-	test("register and getPlugin", () => {
+	it("register and getPlugin", () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 		const plugin = createPlugin("claude-code", []);
 
@@ -91,7 +90,7 @@ describe("PluginRegistry", () => {
 		expect(registry.getPlugin("claude-code")).toBe(plugin);
 	});
 
-	test("registering the same plugin id replaces previous plugin", () => {
+	it("registering the same plugin id replaces previous plugin", () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 		const first = createPlugin("codex-cli", []);
 		const second = createPlugin("codex-cli", []);
@@ -103,13 +102,13 @@ describe("PluginRegistry", () => {
 		expect(registry.getPlugin("codex-cli")).toBe(second);
 	});
 
-	test("getPlugin throws when plugin id is missing", () => {
+	it("getPlugin throws when plugin id is missing", () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		expect(() => registry.getPlugin("missing")).toThrow("Plugin not found: missing");
 	});
 
-	test("discoverAllProjects merges projects sharing resolvedPath", async () => {
+	it("discoverAllProjects merges projects sharing resolvedPath", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -160,7 +159,7 @@ describe("PluginRegistry", () => {
 		]);
 	});
 
-	test("discoverAllProjects keeps projects with different paths separate and sorted", async () => {
+	it("discoverAllProjects keeps projects with different paths separate and sorted", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -192,7 +191,7 @@ describe("PluginRegistry", () => {
 		expect(merged[1]?.resolvedPath).toBe("/Users/dev/older");
 	});
 
-	test("discoverAllProjects tolerates per-plugin discovery failures", async () => {
+	it("discoverAllProjects tolerates per-plugin discovery failures", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(createFailingPlugin("broken"), testConfig);
@@ -216,7 +215,7 @@ describe("PluginRegistry", () => {
 		expect(merged[0]?.resolvedPath).toBe("/Users/dev/project");
 	});
 
-	test("discoverAllProjects with no plugins returns empty list", async () => {
+	it("discoverAllProjects with no plugins returns empty list", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		const merged = await runEffect(registry.discoverAllProjects());
@@ -224,7 +223,7 @@ describe("PluginRegistry", () => {
 		expect(merged).toEqual([]);
 	});
 
-	test("listAllSessions aggregates and sorts sessions from project sources", async () => {
+	it("listAllSessions aggregates and sorts sessions from project sources", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -278,7 +277,7 @@ describe("PluginRegistry", () => {
 		expect(sessions[1]?.pluginId).toBe("claude-code");
 	});
 
-	test("listAllSessions skips missing plugins and failing sources", async () => {
+	it("listAllSessions skips missing plugins and failing sources", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(createFailingPlugin("broken"), testConfig);
@@ -316,7 +315,7 @@ describe("PluginRegistry", () => {
 		expect(sessions[0]?.sessionId).toBe("opencode::session-1");
 	});
 
-	test("listAllSessions supports custom sessionId encoder", async () => {
+	it("listAllSessions supports custom sessionId encoder", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>({
 			encodeSessionId: (pluginId, rawSessionId) => `${pluginId}/${rawSessionId}`,
 		});
@@ -351,7 +350,7 @@ describe("PluginRegistry", () => {
 		expect(sessions[0]?.sessionId).toBe("claude-code/abc");
 	});
 
-	test("discoverAllProjectsWithSessions reuses plugin discovery indexes", async () => {
+	it("discoverAllProjectsWithSessions reuses plugin discovery indexes", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 		let listSessionsCalls = 0;
 
@@ -409,7 +408,7 @@ describe("PluginRegistry", () => {
 		expect(listSessionsCalls).toBe(0);
 	});
 
-	test("plugin can be instantiated with explicit config rather than module mutation", () => {
+	it("plugin can be instantiated with explicit config rather than module mutation", () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 		const plugin = createPlugin("test-plugin", []);
 
@@ -424,7 +423,7 @@ describe("PluginRegistry", () => {
 		expect(registry.getPluginConfig("test-plugin").dataDir).toBe("/custom/path/2");
 	});
 
-	test("registry methods can run multiple plugin effects and merge results", async () => {
+	it("registry methods can run multiple plugin effects and merge results", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -461,7 +460,7 @@ describe("PluginRegistry", () => {
 		expect(projects[1]?.resolvedPath).toBe("/path/a");
 	});
 
-	test("plugin failures remain isolated where current behavior expects partial success", async () => {
+	it("plugin failures remain isolated where current behavior expects partial success", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(createFailingPlugin("broken"), { dataDir: "/data/broken" });
@@ -487,7 +486,7 @@ describe("PluginRegistry", () => {
 });
 
 describe("t3code worktree merging", () => {
-	test("merges t3code worktree projects with matching main repo project", async () => {
+	it("merges t3code worktree projects with matching main repo project", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -533,7 +532,7 @@ describe("t3code worktree merging", () => {
 		expect(merged[0]?.sources).toHaveLength(3);
 	});
 
-	test("merges t3code worktrees together when no main repo project exists", async () => {
+	it("merges t3code worktrees together when no main repo project exists", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -566,7 +565,7 @@ describe("t3code worktree merging", () => {
 		expect(merged[0]?.sources).toHaveLength(2);
 	});
 
-	test("does not affect non-t3code projects", async () => {
+	it("does not affect non-t3code projects", async () => {
 		const registry = new PluginRegistry<string, TestSessionSummary, TestSession>();
 
 		registry.register(
@@ -600,15 +599,15 @@ describe("t3code worktree merging", () => {
 });
 
 describe("encodeResolvedPath", () => {
-	test("encodes unix paths with leading slash", () => {
+	it("encodes unix paths with leading slash", () => {
 		expect(encodeResolvedPath("/Users/dev/project")).toBe("-Users-dev-project");
 	});
 
-	test("encodes windows paths with separators and colon", () => {
+	it("encodes windows paths with separators and colon", () => {
 		expect(encodeResolvedPath("C:\\Users\\dev\\project")).toBe("C--Users-dev-project");
 	});
 
-	test("preserves plain names except separator replacement", () => {
+	it("preserves plain names except separator replacement", () => {
 		expect(encodeResolvedPath("workspace/project:name")).toBe("workspace-project-name");
 	});
 });

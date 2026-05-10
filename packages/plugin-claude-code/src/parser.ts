@@ -12,8 +12,8 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig, streamJsonl } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { parseCommandMessage } from "./command-message.ts";
-import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types.ts";
+import { parseCommandMessage } from "./command-message";
+import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types";
 
 const MAX_RAW_LINE_LENGTH = 500;
 
@@ -23,7 +23,6 @@ type ParsedSession = {
 };
 
 function loadClaudeSession(nativeId: string, sessionId: string) {
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const filePath = join(config.dataDir, "projects", nativeId, `${sessionId}.jsonl`);
@@ -61,7 +60,6 @@ function loadClaudeSession(nativeId: string, sessionId: string) {
 }
 
 function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: string) {
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const filePath = join(config.dataDir, "projects", encodedPath, sessionId, "subagents", `agent-${agentId}.jsonl`);
@@ -143,7 +141,6 @@ function extractSlug(lines: RawLine[]): string | undefined {
 			return line.slug;
 		}
 	}
-	// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
 	return undefined;
 }
 

@@ -1,11 +1,11 @@
 import { CodeBox, Collapsible } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import type React from "react";
-import type { ToolCallWithResult } from "../types/index.ts";
-import { BashToolContent } from "./BashToolContent.tsx";
-import { DiffView } from "./DiffView.tsx";
-import { SmartToolOutput } from "./SmartToolOutput.tsx";
-import { formatToolInput, getToolSummary, hasInputFormatter } from "./ToolCallDefaults.ts";
+import type { ToolCallWithResult } from "../types/index";
+import { BashToolContent } from "./BashToolContent";
+import { DiffView } from "./DiffView";
+import { SmartToolOutput } from "./SmartToolOutput";
+import { formatToolInput, getToolSummary, hasInputFormatter } from "./ToolCallDefaults";
 
 const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
 const INPUT_CLASSES = "font-mono text-[0.78rem] leading-[1.5] whitespace-pre-wrap break-words text-foreground-muted";

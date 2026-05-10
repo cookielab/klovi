@@ -1,5 +1,5 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
-import { codexInputFormatters, codexSummaryExtractors } from "./extractors.ts";
+import { codexInputFormatters, codexSummaryExtractors } from "../extractors";
 
 export const codexFrontendPlugin: FrontendPlugin = {
 	id: "codex-cli",

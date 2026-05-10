@@ -8,8 +8,8 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { makePluginConfigLayer, parseSessionId } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import type { MergedProject } from "./plugin-types.ts";
-import type { PluginRegistry } from "./registry.ts";
+import type { MergedProject } from "./plugin-types";
+import type { PluginRegistry } from "./registry";
 
 type SessionWithProject = {
 	project: MergedProject;

@@ -2,6 +2,7 @@
 
 import { readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import process from "node:process";
 
 const EXPECTED_LINUX_APP_NAME = "Klovi";
 const EXPECTED_LINUX_APP_IDENTIFIER = "io.cookielab.klovi";
@@ -38,7 +39,6 @@ function parseArgs(argv: string[]): VerifyArgs {
 
 async function hasMetadataFile(dir: string): Promise<boolean> {
 	for (const filename of METADATA_FILENAMES) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential metadata file existence check
 		if (await Bun.file(join(dir, "Resources", filename)).exists()) {
 			return true;
 		}
@@ -107,7 +107,6 @@ function parseDesktopEntry(raw: string): Map<string, string> {
 async function readWrapperMetadata(bundleRoot: string): Promise<WrapperMetadata> {
 	for (const filename of METADATA_FILENAMES) {
 		const filePath = join(bundleRoot, "Resources", filename);
-		// biome-ignore lint/performance/noAwaitInLoops: sequential metadata file read
 		if (await Bun.file(filePath).exists()) {
 			const parsed: unknown = await Bun.file(filePath).json();
 			assertMetadata(parsed);
@@ -134,7 +133,6 @@ async function assertBundleIcons(bundleRoot: string): Promise<void> {
 	const iconPaths = [join(bundleRoot, "Resources", "appIcon.png"), join(bundleRoot, "Resources", "app", "icon.png")];
 
 	for (const iconPath of iconPaths) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential icon existence check
 		if (!(await Bun.file(iconPath).exists())) {
 			throw new Error(`Missing required icon asset: ${iconPath}`);
 		}
@@ -145,7 +143,6 @@ async function assertAppDirIcons(inputRoot: string): Promise<void> {
 	const iconPaths = [join(inputRoot, `${EXPECTED_LINUX_ICON_BASENAME}.png`), join(inputRoot, ".DirIcon")];
 
 	for (const iconPath of iconPaths) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential icon existence check
 		if (!(await Bun.file(iconPath).exists())) {
 			throw new Error(`Missing required AppDir icon asset: ${iconPath}`);
 		}
@@ -180,15 +177,12 @@ async function verifyLinuxWrapperContract(args: VerifyArgs): Promise<void> {
 	if (layout.isAppDir) {
 		await assertAppDirIcons(layout.inputRoot);
 	}
-
-	console.log(`Verified Linux wrapper contract: ${layout.inputRoot}`);
 }
 
 if (import.meta.main) {
 	try {
 		await verifyLinuxWrapperContract(parseArgs(Bun.argv));
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+	} catch {
 		process.exit(1);
 	}
 }

@@ -16,6 +16,7 @@
 
 import { readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import process from "node:process";
 
 // ---------------------------------------------------------------------------
 // CLI argument parsing (exported for testing)
@@ -76,8 +77,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 	return { tarball: tarball, arch: arch, version: version, output: output };
 }
 
-function fail(message: string): never {
-	console.error(`ERROR: ${message}`);
+function fail(_message: string): never {
 	process.exit(1);
 }
 
@@ -86,7 +86,7 @@ function fail(message: string): never {
 // ---------------------------------------------------------------------------
 
 const BYTES_PER_KB = 1024;
-const BYTES_PER_MB = BYTES_PER_KB * BYTES_PER_KB;
+const _BYTES_PER_MB = BYTES_PER_KB * BYTES_PER_KB;
 
 const APPIMAGE_ARCH_MAP: Record<string, string> = {
 	x64: "x86_64",
@@ -100,7 +100,6 @@ const APPIMAGE_DESKTOP_ENTRY_FILENAME = "io.cookielab.klovi.desktop";
 // ---------------------------------------------------------------------------
 
 async function run(cmd: string[], opts?: { cwd?: string }): Promise<void> {
-	console.log(`$ ${cmd.join(" ")}`);
 	const proc = Bun.spawn(cmd, {
 		...(opts?.cwd ? { cwd: opts.cwd } : {}),
 		stdout: "inherit",
@@ -140,7 +139,7 @@ Terminal=false
 `;
 
 async function main(): Promise<void> {
-	const { tarball, arch, version, output } = parseArgs(Bun.argv);
+	const { tarball, arch, output } = parseArgs(Bun.argv);
 
 	const tarballPath = resolve(tarball);
 	const outputPath = resolve(output);
@@ -150,18 +149,10 @@ async function main(): Promise<void> {
 	const appBinDir = join(appDir, "usr", "bin");
 	const extractDir = join(workDir, "extracted");
 
-	console.log(`Packaging AppImage for ${arch} v${version}`);
-	console.log(`  tarball : ${tarballPath}`);
-	console.log(`  output  : ${outputPath}`);
-	console.log(`  workDir : ${workDir}`);
-
 	// 1. Create working directories
 	await ensureDir(extractDir);
 	await ensureDir(appLibDir);
 	await ensureDir(appBinDir);
-
-	// 2. Decompress .tar.zst using system tar (Ubuntu 24.04 CI has zstd support)
-	console.log("\nStep 1: Extract .tar.zst...");
 	await run(["tar", "--zstd", "-xf", tarballPath, "-C", extractDir]);
 
 	// 3. Find the top-level bundle directory from extracted output
@@ -171,10 +162,6 @@ async function main(): Promise<void> {
 		fail("Tarball extracted to empty directory");
 	}
 	const bundlePath = join(extractDir, bundleDir);
-	console.log(`  Found bundle: ${bundleDir}`);
-
-	// 4. Build AppDir layout
-	console.log("\nStep 2: Build AppDir layout...");
 
 	// Place extracted bundle under usr/lib/klovi/
 	await run(["sh", "-c", `cp -a "${bundlePath}"/. "${appLibDir}/"`]);
@@ -203,14 +190,9 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 	}
 	await Bun.write(join(appDir, "klovi.png"), iconFile);
 	await Bun.write(join(appDir, ".DirIcon"), iconFile);
-
-	// 8. Download appimagetool (architecture derived from --arch)
-	console.log("\nStep 3: Download appimagetool...");
 	const appImageArch = APPIMAGE_ARCH_MAP[arch] ?? fail(`Unsupported arch: ${arch}`);
 	const toolUrl = `${APPIMAGE_TOOL_BASE_URL}/appimagetool-${appImageArch}.AppImage`;
 	const toolPath = join(workDir, "appimagetool");
-
-	console.log(`  Downloading ${toolUrl}`);
 	const response = await fetch(toolUrl);
 	if (!response.ok) {
 		fail(`Failed to download appimagetool: ${response.status} ${response.statusText}`);
@@ -218,15 +200,11 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 	// Use arrayBuffer() to fully download before writing — streaming a Response
 	// directly via Bun.write() can silently fail on some CI environments.
 	const toolBytes = await response.arrayBuffer();
-	console.log(`  Downloaded ${toolBytes.byteLength} bytes`);
 	await Bun.write(toolPath, toolBytes);
 	await run(["chmod", "+x", toolPath]);
-
-	// 9. Build the AppImage
-	console.log("\nStep 4: Build AppImage...");
 	await ensureDir(dirname(outputPath));
 
-	const appImageToolEnv = { ...process.env, ARCH: appImageArch };
+	const appImageToolEnv = { ...Bun.env, ARCH: appImageArch };
 	const buildProc = Bun.spawn([toolPath, appDir, outputPath], {
 		cwd: workDir,
 		stdout: "inherit",
@@ -237,9 +215,6 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 	if (buildExitCode !== 0) {
 		fail(`appimagetool failed with exit code ${buildExitCode}`);
 	}
-
-	// 10. Cleanup
-	console.log("\nStep 5: Cleanup...");
 	await run(["rm", "-rf", workDir]);
 
 	// 11. Done
@@ -247,11 +222,6 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 	if (!(await outputFile.exists())) {
 		fail(`AppImage was not created at: ${outputPath}`);
 	}
-
-	const { size } = outputFile;
-	console.log("\nAppImage created successfully!");
-	console.log(`  Path: ${outputPath}`);
-	console.log(`  Size: ${(size / BYTES_PER_MB).toFixed(1)} MB`);
 }
 
 // Only run main when executed directly, not when imported for testing.
@@ -261,8 +231,7 @@ exec "\${HERE}/../lib/klovi/bin/launcher" "$@"
 if (import.meta.main) {
 	try {
 		await main();
-	} catch (err) {
-		console.error(err);
+	} catch {
 		process.exit(1);
 	}
 }

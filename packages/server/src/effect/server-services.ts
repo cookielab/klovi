@@ -7,7 +7,7 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import type { FileSystem } from "@effect/platform";
 import { Context, Effect, Layer } from "effect";
-import { createRegistry } from "../services/auto-discover.ts";
+import { createRegistry } from "../services/auto-discover";
 import type {
 	InvalidSessionIdError,
 	PluginSourceNotFoundError,
@@ -15,10 +15,10 @@ import type {
 	SettingsWriteError,
 	SubAgentNotSupportedError,
 	UnknownPluginError,
-} from "../services/errors.ts";
-import { completeOnboarding, isFirstLaunch, resetSettings } from "../services/onboarding-service.ts";
-import type { MergedProject } from "../services/plugin-types.ts";
-import type { PluginRegistry } from "../services/registry.ts";
+} from "../services/errors";
+import { completeOnboarding, isFirstLaunch, resetSettings } from "../services/onboarding-service";
+import type { MergedProject } from "../services/plugin-types";
+import type { PluginRegistry } from "../services/registry";
 import {
 	getProjects,
 	getSession,
@@ -27,9 +27,9 @@ import {
 	getSessionTail,
 	getSubAgent,
 	searchSessions,
-} from "../services/sessions-service.ts";
-import type { UpdateChannel } from "../services/settings.ts";
-import { loadSettings } from "../services/settings.ts";
+} from "../services/sessions-service";
+import type { UpdateChannel } from "../services/settings";
+import { loadSettings } from "../services/settings";
 import {
 	getGeneralSettings,
 	getPluginSettings,
@@ -39,10 +39,10 @@ import {
 	updateGeneralSettings,
 	updatePluginSetting,
 	updateUpdateSettings,
-} from "../services/settings-service.ts";
-import { getStats, invalidateStatsCache, type StatsResponse } from "../services/stats-service.ts";
-import { getVersion, makeVersionState, type VersionInfo } from "../services/version-service.ts";
-import { ServerConfig } from "./server-config.ts";
+} from "../services/settings-service";
+import { getStats, invalidateStatsCache, type StatsResponse } from "../services/stats-service";
+import { getVersion, makeVersionState, type VersionInfo } from "../services/version-service";
+import { ServerConfig } from "./server-config";
 
 export type KloviServicesShape = {
 	readonly acceptRisks: () => Effect.Effect<{ ok: boolean }, SettingsWriteError, FileSystem.FileSystem>;

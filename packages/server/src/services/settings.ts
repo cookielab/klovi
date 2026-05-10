@@ -1,8 +1,8 @@
 import { dirname, join } from "node:path";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog.ts";
-import { SettingsWriteError } from "./errors.ts";
+import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog";
+import { SettingsWriteError } from "./errors";
 
 type UpdateChannel = "stable" | "candidate" | "beta";
 

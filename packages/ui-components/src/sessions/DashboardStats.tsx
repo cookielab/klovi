@@ -1,5 +1,5 @@
-import type { ModelTokenUsage, DashboardStats as Stats } from "../types/index.ts";
-import { FetchError } from "../utilities/FetchError.tsx";
+import type { ModelTokenUsage, DashboardStats as Stats } from "../types/index";
+import { FetchError } from "../utilities/FetchError";
 
 const fmt = new Intl.NumberFormat();
 const CLAUDE_MODEL_NAME_REGEX = /claude-(?<modelId>\w+-[\d-]+?)(?:-\d{8})?$/u;

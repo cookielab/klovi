@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,7 +5,7 @@ import type { AssistantTurn } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { buildCodexTurns, type CodexEvent, loadCodexSession } from "./parser.ts";
+import { buildCodexTurns, type CodexEvent, loadCodexSession } from "./parser";
 
 const testDir = join(tmpdir(), `klovi-codex-parser-test-${Date.now()}`);
 
@@ -69,7 +68,7 @@ afterEach(async () => {
 });
 
 describe("buildCodexTurns", () => {
-	test("builds assistant turn with text from agent_message", () => {
+	it("builds assistant turn with text from agent_message", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Hello, I can help!" } },
@@ -96,7 +95,7 @@ describe("buildCodexTurns", () => {
 		});
 	});
 
-	test("builds thinking content from reasoning items", () => {
+	it("builds thinking content from reasoning items", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "reasoning", text: "Let me think about this..." } },
@@ -118,7 +117,7 @@ describe("buildCodexTurns", () => {
 		expect(assistant.contentBlocks[1]?.type).toBe("text");
 	});
 
-	test("builds tool call from command_execution", () => {
+	it("builds tool call from command_execution", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{
@@ -147,7 +146,7 @@ describe("buildCodexTurns", () => {
 		expect(toolBlock.call.isError).toBe(false);
 	});
 
-	test("marks failed command_execution as error", () => {
+	it("marks failed command_execution as error", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{
@@ -171,7 +170,7 @@ describe("buildCodexTurns", () => {
 		expect(toolBlock.call.isError).toBe(true);
 	});
 
-	test("builds tool call from file_change", () => {
+	it("builds tool call from file_change", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{
@@ -203,7 +202,7 @@ describe("buildCodexTurns", () => {
 		expect(toolBlock.call.isError).toBe(false);
 	});
 
-	test("builds tool call from mcp_tool_call", () => {
+	it("builds tool call from mcp_tool_call", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{
@@ -230,7 +229,7 @@ describe("buildCodexTurns", () => {
 		expect(toolBlock.call.result).toBe("Found 3 results");
 	});
 
-	test("builds tool call from web_search", () => {
+	it("builds tool call from web_search", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{
@@ -250,7 +249,7 @@ describe("buildCodexTurns", () => {
 		expect(toolBlock.call.input).toEqual({ query: "how to use bun test" });
 	});
 
-	test("uses deterministic generated UUIDs per parsed session", () => {
+	it("uses deterministic generated UUIDs per parsed session", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "First response" } },
@@ -268,7 +267,7 @@ describe("buildCodexTurns", () => {
 		expect(turns[2]).toMatchObject({ kind: "assistant", uuid: "codex-assistant-2" });
 	});
 
-	test("handles multiple turns", () => {
+	it("handles multiple turns", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "First response" } },
@@ -292,7 +291,7 @@ describe("buildCodexTurns", () => {
 		expect(textBlock.text).toBe("First response");
 	});
 
-	test("captures usage from turn.completed with cached tokens", () => {
+	it("captures usage from turn.completed with cached tokens", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Response" } },
@@ -312,7 +311,7 @@ describe("buildCodexTurns", () => {
 		});
 	});
 
-	test("handles mixed content blocks in a single turn", () => {
+	it("handles mixed content blocks in a single turn", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "reasoning", text: "Thinking..." } },
@@ -341,14 +340,14 @@ describe("buildCodexTurns", () => {
 		expect(assistant.contentBlocks[3]?.type).toBe("text");
 	});
 
-	test("returns empty turns for empty events", () => {
+	it("returns empty turns for empty events", () => {
 		const turns = buildCodexTurns([], "o4-mini", "2025-01-15T00:00:00Z");
 		expect(turns).toEqual([]);
 	});
 });
 
 describe("loadCodexSession", () => {
-	test("loads and parses a full session file", async () => {
+	it("loads and parses a full session file", async () => {
 		await writeSession("test-uuid", baseMeta, [
 			{ type: "thread.started" },
 			{ type: "turn.started" },
@@ -383,7 +382,7 @@ describe("loadCodexSession", () => {
 		expect(assistant.contentBlocks[2]?.type).toBe("tool_call");
 	});
 
-	test("returns empty session when file not found", async () => {
+	it("returns empty session when file not found", async () => {
 		const session = await Effect.runPromise(
 			loadCodexSession("/Users/dev/project", "nonexistent-uuid").pipe(Effect.provide(testLayer)),
 		);
@@ -393,7 +392,7 @@ describe("loadCodexSession", () => {
 		expect(session.turns).toEqual([]);
 	});
 
-	test("loads session with file_change events", async () => {
+	it("loads session with file_change events", async () => {
 		await writeSession("fc-uuid", { ...baseMeta, uuid: "fc-uuid" }, [
 			{ type: "turn.started" },
 			{
@@ -418,7 +417,7 @@ describe("loadCodexSession", () => {
 		expect(toolBlock.call.name).toBe("file_change");
 	});
 
-	test("loads session with mcp_tool_call events", async () => {
+	it("loads session with mcp_tool_call events", async () => {
 		await writeSession("mcp-uuid", { ...baseMeta, uuid: "mcp-uuid" }, [
 			{ type: "turn.started" },
 			{
@@ -447,7 +446,7 @@ describe("loadCodexSession", () => {
 		expect(toolBlock.call.result).toBe("Found results");
 	});
 
-	test("handles usage tracking across turns", async () => {
+	it("handles usage tracking across turns", async () => {
 		await writeSession("usage-uuid", { ...baseMeta, uuid: "usage-uuid" }, [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Response 1" } },
@@ -472,7 +471,7 @@ describe("loadCodexSession", () => {
 
 describe("new envelope format", () => {
 	describe("loadCodexSession", () => {
-		test("loads session with new-format metadata and events", async () => {
+		it("loads session with new-format metadata and events", async () => {
 			await writeNewFormatSession("new-test-uuid", newBaseMeta, [
 				{
 					type: "event_msg",
@@ -541,7 +540,7 @@ describe("new envelope format", () => {
 			});
 		});
 
-		test("loads new-format session with command execution", async () => {
+		it("loads new-format session with command execution", async () => {
 			await writeNewFormatSession("cmd-uuid", { ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "cmd-uuid" } }, [
 				{
 					type: "event_msg",
@@ -595,7 +594,7 @@ describe("new envelope format", () => {
 			expect(toolBlock.call.isError).toBe(false);
 		});
 
-		test("finds new-format file by session ID with rollout prefix", async () => {
+		it("finds new-format file by session ID with rollout prefix", async () => {
 			await writeNewFormatSession(
 				"rollout-uuid",
 				{ ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "rollout-uuid" } },
@@ -622,7 +621,7 @@ describe("new envelope format", () => {
 			expect(assistant.contentBlocks[0]?.type).toBe("text");
 		});
 
-		test("returns empty session when new-format file not found", async () => {
+		it("returns empty session when new-format file not found", async () => {
 			const session = await Effect.runPromise(
 				loadCodexSession("/Users/dev/project", "nonexistent-new-uuid").pipe(Effect.provide(testLayer)),
 			);
@@ -631,7 +630,7 @@ describe("new envelope format", () => {
 			expect(session.turns).toEqual([]);
 		});
 
-		test("extracts tokens from nested info.last_token_usage in new format", async () => {
+		it("extracts tokens from nested info.last_token_usage in new format", async () => {
 			await writeNewFormatSession(
 				"nested-tokens-uuid",
 				{ ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "nested-tokens-uuid" } },
@@ -680,7 +679,7 @@ describe("new envelope format", () => {
 			});
 		});
 
-		test("token_count does not prematurely flush assistant turn", async () => {
+		it("token_count does not prematurely flush assistant turn", async () => {
 			await writeNewFormatSession(
 				"no-flush-uuid",
 				{ ...newBaseMeta, payload: { ...newBaseMeta.payload, id: "no-flush-uuid" } },
@@ -726,7 +725,7 @@ describe("new envelope format", () => {
 			expect(assistant.contentBlocks[1]?.type).toBe("text");
 		});
 
-		test("uses turn_context model when model field absent in new format", async () => {
+		it("uses turn_context model when model field absent in new format", async () => {
 			const metaNoModel = {
 				type: "session_meta",
 				timestamp: "2026-02-18T10:00:00.000Z",
@@ -766,7 +765,7 @@ describe("new envelope format", () => {
 			expect(assistant.model).toBe("gpt-5.3-codex");
 		});
 
-		test("falls back to provider as model when no explicit model is present", async () => {
+		it("falls back to provider as model when no explicit model is present", async () => {
 			const metaNoModel = {
 				type: "session_meta",
 				timestamp: "2026-02-18T10:00:00.000Z",

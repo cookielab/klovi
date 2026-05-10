@@ -1,12 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { getOpenCodeDbPath, openOpenCodeDb } from "./db.ts";
-import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
+import { getOpenCodeDbPath, openOpenCodeDb } from "./db";
+import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
 const testDir = join(tmpdir(), `klovi-opencode-db-test-${Date.now()}`);
 
@@ -30,17 +29,17 @@ describe("opencode db helpers", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("returns db path in configured data directory", async () => {
+	it("returns db path in configured data directory", async () => {
 		const dbPath = await runEffect(getOpenCodeDbPath());
 		expect(dbPath).toBe(join(testDir, "opencode.db"));
 	});
 
-	test("openOpenCodeDb returns null when db file is missing", async () => {
+	it("openOpenCodeDb returns null when db file is missing", async () => {
 		const db = await runEffect(openOpenCodeDb());
 		expect(db).toBeNull();
 	});
 
-	test("openOpenCodeDb returns null when sqlite open throws", async () => {
+	it("openOpenCodeDb returns null when sqlite open throws", async () => {
 		await mkdir(join(testDir, "opencode.db"), { recursive: true });
 		const db = await runEffect(openOpenCodeDb());
 		expect(db).toBeNull();

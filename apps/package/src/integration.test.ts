@@ -1,7 +1,6 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { type KloviPackageServer, startKloviPackageServer } from "./server.ts";
+import { type KloviPackageServer, startKloviPackageServer } from "./server";
 
 const tmpStaticDir = resolve(import.meta.dir, "../.test-integration-static");
 
@@ -10,7 +9,6 @@ describe("apps/package integration", () => {
 
 	beforeAll(async () => {
 		mkdirSync(tmpStaticDir, { recursive: true });
-		// biome-ignore lint/security/noSecrets: HTML test fixture, not a secret
 		writeFileSync(join(tmpStaticDir, "index.html"), "<html><body>Klovi</body></html>");
 		writeFileSync(join(tmpStaticDir, "app.js"), "console.log('app')");
 
@@ -28,7 +26,7 @@ describe("apps/package integration", () => {
 		rmSync(tmpStaticDir, { recursive: true, force: true });
 	});
 
-	test("RPC: getVersion returns configured version", async () => {
+	it("RPC: getVersion returns configured version", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "POST",
 			body: "{}",
@@ -39,7 +37,7 @@ describe("apps/package integration", () => {
 		expect(data.commit).toBe("test123");
 	});
 
-	test("RPC: unknown method returns 404", async () => {
+	it("RPC: unknown method returns 404", async () => {
 		const res = await fetch(`${server.url}/api/rpc/unknownMethod`, {
 			method: "POST",
 			body: "{}",
@@ -47,21 +45,21 @@ describe("apps/package integration", () => {
 		expect(res.status).toBe(404);
 	});
 
-	test("static: GET / serves index.html", async () => {
+	it("static: GET / serves index.html", async () => {
 		const res = await fetch(server.url);
 		expect(res.status).toBe(200);
 		const text = await res.text();
 		expect(text).toContain("Klovi");
 	});
 
-	test("static: GET /app.js serves JS file", async () => {
+	it("static: GET /app.js serves JS file", async () => {
 		const res = await fetch(`${server.url}/app.js`);
 		expect(res.status).toBe(200);
 		const text = await res.text();
 		expect(text).toContain("console.log");
 	});
 
-	test("static: SPA fallback for unknown route serves index.html", async () => {
+	it("static: SPA fallback for unknown route serves index.html", async () => {
 		const res = await fetch(`${server.url}/some/deep/route`);
 		expect(res.status).toBe(200);
 		const text = await res.text();
@@ -73,13 +71,13 @@ describe("apps/package integration", () => {
 	// 404, not an HTML fallback. An HTML response for a <link rel="stylesheet">
 	// or <script type="module"> is silently rejected by browsers and produces
 	// the "broken CSS" symptom that prompted this fix.
-	test("static: missing .css asset returns 404 (no index.html fallback)", async () => {
+	it("static: missing .css asset returns 404 (no index.html fallback)", async () => {
 		const res = await fetch(`${server.url}/chunk-missing.css`);
 		expect(res.status).toBe(404);
 		expect(res.headers.get("content-type")).not.toContain("text/html");
 	});
 
-	test("static: missing .js asset returns 404 (no index.html fallback)", async () => {
+	it("static: missing .js asset returns 404 (no index.html fallback)", async () => {
 		const res = await fetch(`${server.url}/chunk-missing.js`);
 		expect(res.status).toBe(404);
 		expect(res.headers.get("content-type")).not.toContain("text/html");

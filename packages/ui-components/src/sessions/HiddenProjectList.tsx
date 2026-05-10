@@ -1,8 +1,8 @@
 import { Button } from "@cookielab.io/klovi-design-system";
 import { useCallback } from "react";
-import type { Project } from "../types/index.ts";
-import { FetchError } from "../utilities/FetchError.tsx";
-import { projectDisplayName } from "./ProjectList.tsx";
+import type { Project } from "../types/index";
+import { FetchError } from "../utilities/FetchError";
+import { projectDisplayName } from "./ProjectList";
 
 const HIDDEN_PROJECTS_PAGE_CLASSES = "mx-auto w-full max-w-[600px] p-[20px]";
 const BACK_BTN_CLASSES =

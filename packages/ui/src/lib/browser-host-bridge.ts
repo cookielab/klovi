@@ -1,5 +1,5 @@
-import type { UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types.ts";
-import type { KloviHostBridge, KloviHostCapabilities } from "./host-bridge.ts";
+import type { UpdateSettingsInfo, UpdateStatus } from "../shared/rpc-types";
+import type { KloviHostBridge, KloviHostCapabilities } from "./host-bridge";
 
 const browserCapabilities: KloviHostCapabilities = {
 	desktop: false,
@@ -30,11 +30,11 @@ export const browserHostBridge: KloviHostBridge = {
 		window.open(params.url, "_blank", "noopener,noreferrer");
 		return Promise.resolve({ ok: true });
 	},
-	onMenuAction: () => () => {},
-	onUpdateStatus: () => () => {},
-	onManualUpdateResult: () => () => {},
-	onStatsUpdated: () => () => {},
-	onConnectionState: () => () => {},
+	onMenuAction: () => () => undefined,
+	onUpdateStatus: () => () => undefined,
+	onManualUpdateResult: () => () => undefined,
+	onStatsUpdated: () => () => undefined,
+	onConnectionState: () => () => undefined,
 	getSystemTheme: () => Promise.resolve({ theme: null }),
-	onSystemThemeChange: () => () => {},
+	onSystemThemeChange: () => () => undefined,
 };

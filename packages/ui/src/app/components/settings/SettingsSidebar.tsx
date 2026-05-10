@@ -44,6 +44,5 @@ function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProp
 	);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for tab discriminant
 export type { SettingsTab };
 export { SettingsSidebar };

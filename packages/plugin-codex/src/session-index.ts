@@ -105,7 +105,6 @@ function streamInferredModel(filePath: string) {
 			filePath,
 			({ parsed, lineIndex }) => {
 				if (lineIndex === 0) {
-					// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
 					return undefined;
 				}
 				const extracted = extractTurnContextModel(parsed);
@@ -113,7 +112,6 @@ function streamInferredModel(filePath: string) {
 					model = extracted;
 					return false;
 				}
-				// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
 				return undefined;
 			},
 			{ maxLines: 256 },
@@ -217,7 +215,6 @@ function walkForFile(
 	dir: string,
 	match: (fileName: string) => boolean,
 ): Effect.Effect<string | null, never, FileSystem.FileSystem> {
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Effect.gen wrapper adds nesting
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));

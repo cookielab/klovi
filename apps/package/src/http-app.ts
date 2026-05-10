@@ -1,7 +1,7 @@
 import { makeHttpApp, makeRpcRouter } from "@cookielab.io/klovi-server/effect/http-app";
 import { HttpServer } from "@effect/platform";
 import { Effect } from "effect";
-import { makeStaticHandler } from "./static-handler.ts";
+import { makeStaticHandler } from "./static-handler";
 
 export const makePackageHttpApp = (staticDir: string) => {
 	const router = makeRpcRouter();

@@ -1,8 +1,7 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
-import type { DashboardStats } from "../../../shared/types.ts";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc.ts";
-import { PackageDashboardStats } from "./PackageDashboardStats.tsx";
+import type { DashboardStats } from "../../../shared/types";
+import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { PackageDashboardStats } from "./PackageDashboardStats";
 
 function makeStats(projects: number): DashboardStats {
 	return {
@@ -25,9 +24,9 @@ describe("PackageDashboardStats", () => {
 		cleanup();
 	});
 
-	test("shows a scaffold on a cold load", () => {
+	it("shows a scaffold on a cold load", () => {
 		setupMockRPC({
-			getStats: () => new Promise(() => {}),
+			getStats: () => new Promise(() => undefined),
 		});
 
 		render(<PackageDashboardStats />, { wrapper: MockProviders });
@@ -36,7 +35,7 @@ describe("PackageDashboardStats", () => {
 		expect(screen.getByText("Loading stats...")).toBeDefined();
 	});
 
-	test("uses server-cached stats before polling to a fresh result", async () => {
+	it("uses server-cached stats before polling to a fresh result", async () => {
 		let getStatsCalls = 0;
 
 		setupMockRPC({
@@ -68,7 +67,7 @@ describe("PackageDashboardStats", () => {
 		);
 	});
 
-	test("updates when the desktop host pushes refreshed stats", async () => {
+	it("updates when the desktop host pushes refreshed stats", async () => {
 		let listener: ((stats: DashboardStats) => void) | null = null;
 
 		setupMockRPC({

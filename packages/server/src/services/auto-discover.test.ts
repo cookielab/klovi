@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,9 +8,9 @@ import { SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { getOpenCodeDir, setOpenCodeDir } from "@cookielab.io/klovi-plugin-opencode";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { createRegistry } from "./auto-discover.ts";
-import type { PluginSettings } from "./settings.ts";
-import { getDefaultSettings } from "./settings.ts";
+import { createRegistry } from "./auto-discover";
+import type { PluginSettings } from "./settings";
+import { getDefaultSettings } from "./settings";
 
 const testLayer = Layer.merge(
 	NodeFileSystem.layer,
@@ -41,7 +40,7 @@ describe("createRegistry with settings", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("disabled plugin is not registered even if dir exists", async () => {
+	it("disabled plugin is not registered even if dir exists", async () => {
 		const claudeDir = join(testDir, ".claude");
 		await mkdir(join(claudeDir, "projects"), { recursive: true });
 		setClaudeCodeDir(claudeDir);
@@ -58,7 +57,7 @@ describe("createRegistry with settings", () => {
 		expect(registry.getAllPlugins().find((p) => p.id === "claude-code")).toBeUndefined();
 	});
 
-	test("custom dataDir is used for discovery", async () => {
+	it("custom dataDir is used for discovery", async () => {
 		const customDir = join(testDir, "custom-claude");
 		await mkdir(join(customDir, "projects"), { recursive: true });
 
@@ -75,7 +74,7 @@ describe("createRegistry with settings", () => {
 		expect(plugin).toBeDefined();
 	});
 
-	test("without settings argument, uses the built-in default enablement", async () => {
+	it("without settings argument, uses the built-in default enablement", async () => {
 		const registry = await runEffect(createRegistry());
 		expect(registry).toBeDefined();
 	});

@@ -1,7 +1,6 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { cleanup, render } from "@testing-library/react";
-import type { Turn } from "../types/index.ts";
-import { MessageList } from "./MessageList.tsx";
+import type { Turn } from "../types/index";
+import { MessageList } from "./MessageList";
 
 afterEach(cleanup);
 
@@ -15,11 +14,10 @@ function makeTurn(i: number): Turn {
 }
 
 describe("MessageList virtualization", () => {
-	test("renders only a windowed slice when many turns are passed", () => {
+	it("renders only a windowed slice when many turns are passed", () => {
 		const turns = Array.from({ length: 500 }, (_, i) => makeTurn(i));
 		const { container } = render(
-			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
-			<div style={{ height: 600, width: 800 }}>
+			<div>
 				<MessageList turns={turns} />
 			</div>,
 		);
@@ -29,11 +27,10 @@ describe("MessageList virtualization", () => {
 		expect(items.length).toBeGreaterThan(0);
 	});
 
-	test("uses turn.uuid as a stable key when present", () => {
+	it("uses turn.uuid as a stable key when present", () => {
 		const turns: Turn[] = [makeTurn(0), makeTurn(1), makeTurn(2)];
 		const { container } = render(
-			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
-			<div style={{ height: 600, width: 800 }}>
+			<div>
 				<MessageList turns={turns} />
 			</div>,
 		);
@@ -41,11 +38,10 @@ describe("MessageList virtualization", () => {
 		expect(indexes.includes("0")).toBe(true);
 	});
 
-	test("appending turns does not reset scrollTop", async () => {
+	it("appending turns does not reset scrollTop", async () => {
 		const initial = Array.from({ length: 100 }, (_, i) => makeTurn(i));
 		const { container, rerender } = render(
-			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
-			<div style={{ height: 600, width: 800 }}>
+			<div>
 				<MessageList turns={initial} />
 			</div>,
 		);
@@ -57,8 +53,7 @@ describe("MessageList virtualization", () => {
 
 		const appended = [...initial, ...Array.from({ length: 50 }, (_, i) => makeTurn(100 + i))];
 		rerender(
-			// biome-ignore lint/nursery/noInlineStyles: test fixture needs explicit dimensions for virtualizer
-			<div style={{ height: 600, width: 800 }}>
+			<div>
 				<MessageList turns={appended} />
 			</div>,
 		);

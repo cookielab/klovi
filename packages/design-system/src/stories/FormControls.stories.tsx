@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { Input } from "../components/FormControls/Input.tsx";
-import { SegmentedControl } from "../components/FormControls/SegmentedControl.tsx";
-import { Select } from "../components/FormControls/Select.tsx";
-import { Toggle } from "../components/FormControls/Toggle.tsx";
+import { Input } from "../components/FormControls/Input";
+import { SegmentedControl } from "../components/FormControls/SegmentedControl";
+import { Select } from "../components/FormControls/Select";
+import { Toggle } from "../components/FormControls/Toggle";
 
 const meta: Meta = {
 	title: "Components/FormControls",
@@ -16,7 +16,7 @@ type Story = StoryObj;
 export const InputStory: Story = {
 	name: "Input",
 	render: () => (
-		<div style={{ padding: 20, maxWidth: 400 }}>
+		<div>
 			<Input placeholder="Type here..." />
 		</div>
 	),
@@ -25,7 +25,7 @@ export const InputStory: Story = {
 export const SelectStory: Story = {
 	name: "Select",
 	render: () => (
-		<div style={{ padding: 20, maxWidth: 400 }}>
+		<div>
 			<Select
 				options={[
 					{ value: "opt1", label: "Option 1" },
@@ -37,11 +37,10 @@ export const SelectStory: Story = {
 	),
 };
 
-// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function ToggleDemo() {
 	const [checked, setChecked] = useState(false);
 	return (
-		<div style={{ padding: 20 }}>
+		<div>
 			<Toggle checked={checked} onChange={setChecked} label="Enable feature" />
 		</div>
 	);
@@ -52,11 +51,10 @@ export const ToggleStory: Story = {
 	render: () => <ToggleDemo />,
 };
 
-// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function SegmentedDemo() {
 	const [value, setValue] = useState<"system" | "light" | "dark">("system");
 	return (
-		<div style={{ padding: 20 }}>
+		<div>
 			<SegmentedControl
 				value={value}
 				onChange={setValue}

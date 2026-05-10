@@ -11,6 +11,7 @@
 
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import process from "node:process";
 
 const packageDir = resolve(import.meta.dirname, "..");
 const repoRoot = resolve(packageDir, "../..");
@@ -41,22 +42,18 @@ const cliArgs = parseArgs();
 
 // Validate that dist/ exists (build must run first)
 if (!existsSync(distDir)) {
-	console.error("Error: dist/ does not exist. Run the build first.");
 	process.exit(1);
 }
 
 if (!existsSync(resolve(distDir, "cli.js"))) {
-	console.error("Error: dist/cli.js does not exist. Run the build first.");
 	process.exit(1);
 }
 
 if (!existsSync(resolve(distDir, "server.js"))) {
-	console.error("Error: dist/server.js does not exist. Run the build first.");
 	process.exit(1);
 }
 
 if (!existsSync(resolve(distDir, "web"))) {
-	console.error("Error: dist/web/ does not exist. Run the build first.");
 	process.exit(1);
 }
 
@@ -147,16 +144,5 @@ const workspaceImportPattern = /@cookielab\.io\/klovi-/u;
 const hasWorkspaceImports = workspaceImportPattern.test(cliContent) || workspaceImportPattern.test(serverContent);
 
 if (hasWorkspaceImports) {
-	console.error("Error: Built files still contain references to internal workspace packages (@cookielab.io/klovi-*).");
-	console.error("The bundle must be self-contained. Check build externals configuration.");
 	process.exit(1);
 }
-
-console.log("Staged npm artifact at:", stageDir);
-console.log("  package.json version:", version);
-console.log("  package.json commit:", commit || "(none)");
-console.log("  dist/cli.js:", existsSync(resolve(stageDir, "dist/cli.js")) ? "OK" : "MISSING");
-console.log("  dist/server.js:", existsSync(resolve(stageDir, "dist/server.js")) ? "OK" : "MISSING");
-console.log("  dist/web/:", existsSync(resolve(stageDir, "dist/web")) ? "OK" : "MISSING");
-console.log("  README.md:", existsSync(resolve(stageDir, "README.md")) ? "OK" : "MISSING");
-console.log("  LICENSE.md:", existsSync(resolve(stageDir, "LICENSE.md")) ? "OK" : "MISSING");

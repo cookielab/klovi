@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
-import type { PluginSettingInfo } from "../../../shared/rpc-types.ts";
+import type { PluginSettingInfo } from "../../../shared/rpc-types";
 
 type PluginRowProps = {
 	plugin: PluginSettingInfo;
@@ -100,6 +100,5 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrows
 	);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
 export type { PluginRowProps };
 export { PluginRow };

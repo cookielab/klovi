@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Collapsible } from "../components/Collapsible/Collapsible.tsx";
+import { Collapsible } from "../components/Collapsible/Collapsible";
 
 const meta: Meta<typeof Collapsible> = {
 	title: "Components/Collapsible",
@@ -27,7 +27,7 @@ export const Open: Story = {
 
 export const Multiple: Story = {
 	render: () => (
-		<div style={{ padding: 20, maxWidth: 600 }}>
+		<div>
 			<Collapsible title="Section 1">Content for section 1</Collapsible>
 			<Collapsible title="Section 2" defaultOpen={true}>
 				Content for section 2 (starts open)

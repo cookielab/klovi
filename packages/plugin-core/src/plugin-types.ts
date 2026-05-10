@@ -1,6 +1,6 @@
 import type { Effect } from "effect";
-import type { PluginError } from "./plugin-errors.ts";
-import type { PluginRequirements } from "./plugin-runtime.ts";
+import type { PluginError } from "./plugin-errors";
+import type { PluginRequirements } from "./plugin-runtime";
 
 export type PluginProject<TPluginId extends string = string> = {
 	pluginId: TPluginId;

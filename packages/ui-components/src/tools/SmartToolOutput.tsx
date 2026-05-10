@@ -1,9 +1,9 @@
 import { CodeBox } from "@cookielab.io/klovi-design-system";
 import { useCallback, useState } from "react";
-import type { ToolResultImage } from "../types/index.ts";
-import { detectOutputFormat } from "../utilities/format-detector.ts";
-import { ImageLightbox } from "../utilities/ImageLightbox.tsx";
-import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults.ts";
+import type { ToolResultImage } from "../types/index";
+import { detectOutputFormat } from "../utilities/format-detector";
+import { ImageLightbox } from "../utilities/ImageLightbox";
+import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults";
 
 const SECTION_LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold text-foreground-subtle uppercase";
 const OUTPUT_BASE_CLASSES =
@@ -59,13 +59,7 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 			{resultImages && resultImages.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{resultImages.map((img, i) => (
-						<ToolResultImageButton
-							// biome-ignore lint/suspicious/noArrayIndexKey: images have no stable unique identifier
-							key={i}
-							img={img}
-							index={i}
-							onSelect={setLightboxSrc}
-						/>
+						<ToolResultImageButton key={i} img={img} index={i} onSelect={setLightboxSrc} />
 					))}
 				</div>
 			)}

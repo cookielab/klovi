@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
+import process from "node:process";
 import { bootstrapServer } from "@cookielab.io/klovi-server/effect/bootstrap";
-import { makePackageServeLayer } from "./http-app.ts";
+import { makePackageServeLayer } from "./http-app";
 
 type StartKloviPackageServerOptions = {
 	host?: string;
@@ -22,7 +23,7 @@ function openInBrowser(url: string): void {
 	const commands = { darwin: "open", win32: "cmd" } as const;
 	const cmd = commands[process.platform as keyof typeof commands] ?? "xdg-open";
 	const args = process.platform === "win32" ? ["/c", "start", url] : [url];
-	execFile(cmd, args, () => {});
+	execFile(cmd, args, () => undefined);
 }
 
 /**

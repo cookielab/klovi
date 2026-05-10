@@ -1,9 +1,9 @@
 import { ProjectList as UiProjectList } from "@cookielab.io/klovi-ui-components/sessions";
 import { useCallback, useState } from "react";
-import { useKloviClient } from "../../../lib/context.ts";
-import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect.ts";
-import type { Project } from "../../../shared/types.ts";
-import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
+import { useKloviClient } from "../../../lib/context";
+import { getRpcErrorMessage } from "../../../lib/rpc-errors-effect";
+import type { Project } from "../../../shared/types";
+import { useEffectQuery } from "../../hooks/useEffectQuery";
 
 type PackageProjectListProps = {
 	onSelect: (project: Project) => void;

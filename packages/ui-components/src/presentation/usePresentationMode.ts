@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import type { AssistantTurn, Turn } from "../types/index.ts";
-import { groupContentBlocks } from "../types/index.ts";
+import type { AssistantTurn, Turn } from "../types/index";
+import { groupContentBlocks } from "../types/index";
 
 type PresentationState = {
 	active: boolean;

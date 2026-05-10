@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import process from "node:process";
 import { Command, type CommandExecutor } from "@effect/platform";
 import { Effect } from "effect";
 

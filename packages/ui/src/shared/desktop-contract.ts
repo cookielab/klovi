@@ -1,4 +1,4 @@
-import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "./rpc-types.ts";
+import type { PluginSettingInfo, UpdateChannel, UpdateSettingsInfo, UpdateStatus } from "./rpc-types";
 import type {
 	DashboardStats,
 	GlobalSessionResult,
@@ -7,7 +7,7 @@ import type {
 	SessionSummary,
 	StatsResponse,
 	Turn,
-} from "./types.ts";
+} from "./types";
 
 type EmptyPayload = Record<string, never>;
 

@@ -32,7 +32,6 @@ const BTN_SM_CLASSES = "h-7 px-2 py-1 text-[0.8rem]";
 const BTN_PRIMARY_CLASSES =
 	"border-accent! bg-accent! text-foreground-inverse! hover:border-accent-hover! hover:bg-accent-hover!";
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: header renders multiple conditional UI sections
 export function Header({
 	title,
 	breadcrumb,

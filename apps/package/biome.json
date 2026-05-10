@@ -1,24 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
 	"root": false,
-	"extends": ["@cookielab.io/biome-config/node", "../../biome.shared.json"],
-	"linter": {
-		"rules": {
-			"correctness": {
-				"noProcessGlobal": "off"
-			}
-		}
-	},
-	"overrides": [
-		{
-			"includes": ["scripts/**"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noConsole": "off"
-					}
-				}
-			}
-		}
-	]
+	"extends": ["../../biome.json", "@cookielab.io/biome-config/node"]
 }

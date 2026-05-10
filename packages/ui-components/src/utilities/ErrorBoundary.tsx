@@ -12,19 +12,18 @@ type ErrorBoundaryState = {
 	error: Error | null;
 };
 
-// biome-ignore lint/style/useReactFunctionComponents: Error boundaries require class components
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-	override state: ErrorBoundaryState = { error: null };
+	public override state: ErrorBoundaryState = { error: null };
 
-	static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+	public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
 		return { error: error };
 	}
 
-	retry = () => {
+	public retry = (): void => {
 		this.setState({ error: null });
 	};
 
-	override render() {
+	public override render(): React.ReactNode {
 		const { error } = this.state;
 		if (!error) {
 			return this.props.children;

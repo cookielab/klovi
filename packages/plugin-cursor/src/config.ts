@@ -1,4 +1,5 @@
 import { posix, win32 } from "node:path";
+import process from "node:process";
 
 const LEADING_SLASHES_REGEX = /^\/+/u;
 const PATH_SEPARATOR_REGEX = /[:/\\]/gu;
@@ -13,7 +14,7 @@ function getPlatform(options?: CursorPathOptions): NodeJS.Platform {
 }
 
 function getEnv(options?: CursorPathOptions): NodeJS.ProcessEnv {
-	return options?.env ?? process.env;
+	return options?.env ?? Bun.env;
 }
 
 function getPathApi(platform: NodeJS.Platform) {

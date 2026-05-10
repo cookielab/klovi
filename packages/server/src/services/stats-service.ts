@@ -2,8 +2,8 @@ import { dirname, join } from "node:path";
 import type { DashboardStats, RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import type { PluginRegistry } from "./registry.ts";
-import { scanStats } from "./stats.ts";
+import type { PluginRegistry } from "./registry";
+import { scanStats } from "./stats";
 
 type StatsResponse = {
 	stats: DashboardStats;

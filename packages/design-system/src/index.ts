@@ -1,23 +1,23 @@
 // Types
 
-export { Badge } from "./components/Badge/Badge.tsx";
-export { Button } from "./components/Button/Button.tsx";
-export { CodeBox } from "./components/CodeBox/CodeBox.tsx";
-export { Collapsible } from "./components/Collapsible/Collapsible.tsx";
-export { Input } from "./components/FormControls/Input.tsx";
-export { SegmentedControl } from "./components/FormControls/SegmentedControl.tsx";
-export { Select } from "./components/FormControls/Select.tsx";
-export { Toggle } from "./components/FormControls/Toggle.tsx";
-export { AppLayout } from "./components/Layout/AppLayout.tsx";
-export { ContentHeader } from "./components/Layout/ContentHeader.tsx";
-export { Sidebar } from "./components/Layout/Sidebar.tsx";
-export { SidebarButton } from "./components/Layout/SidebarButton.tsx";
-export { Modal } from "./components/Modal/Modal.tsx";
+export { Badge } from "./components/Badge/Badge";
+export { Button } from "./components/Button/Button";
+export { CodeBox } from "./components/CodeBox/CodeBox";
+export { Collapsible } from "./components/Collapsible/Collapsible";
+export { Input } from "./components/FormControls/Input";
+export { SegmentedControl } from "./components/FormControls/SegmentedControl";
+export { Select } from "./components/FormControls/Select";
+export { Toggle } from "./components/FormControls/Toggle";
+export { AppLayout } from "./components/Layout/AppLayout";
+export { ContentHeader } from "./components/Layout/ContentHeader";
+export { Sidebar } from "./components/Layout/Sidebar";
+export { SidebarButton } from "./components/Layout/SidebarButton";
+export { Modal } from "./components/Modal/Modal";
 // Components
-export { ThemeProvider } from "./components/ThemeProvider/ThemeProvider.tsx";
-export { TurnBox } from "./components/TurnBox/TurnBox.tsx";
-export { useFontSize } from "./hooks/useFontSize.ts";
-export type { UseThemeOptions } from "./hooks/useTheme.ts";
+export { ThemeProvider } from "./components/ThemeProvider/ThemeProvider";
+export { TurnBox } from "./components/TurnBox/TurnBox";
+export { useFontSize } from "./hooks/useFontSize";
+export type { UseThemeOptions } from "./hooks/useTheme";
 // Hooks
-export { resolveTheme, useTheme } from "./hooks/useTheme.ts";
-export type { BadgeVariant, ResolvedTheme, ThemeSetting, TurnRole } from "./types.ts";
+export { resolveTheme, useTheme } from "./hooks/useTheme";
+export type { BadgeVariant, ResolvedTheme, ThemeSetting, TurnRole } from "./types";

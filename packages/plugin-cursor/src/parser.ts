@@ -8,13 +8,13 @@ import type {
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { openCursorGlobalDb } from "./db.ts";
-import { buildCursorProjectIndex } from "./discovery.ts";
-import { loadCursorPlanSession } from "./plans.ts";
-import { readFileText } from "./shared/discovery-utils.ts";
-import { tryParseJson } from "./shared/json-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
-import type { CursorAgentSummary, CursorComposerSummary } from "./types.ts";
+import { openCursorGlobalDb } from "./db";
+import { buildCursorProjectIndex } from "./discovery";
+import { loadCursorPlanSession } from "./plans";
+import { readFileText } from "./shared/discovery-utils";
+import { tryParseJson } from "./shared/json-utils";
+import { iterateJsonl } from "./shared/jsonl-utils";
+import type { CursorAgentSummary, CursorComposerSummary } from "./types";
 
 const COMPOSER_PREFIX_REGEX = /^composer:/u;
 const AGENT_PREFIX_REGEX = /^agent:/u;
@@ -334,7 +334,7 @@ function loadCursorAgentSession(summary: CursorAgentSummary) {
 					turnIndex += 1;
 				}
 			},
-			{ onMalformed: () => {} },
+			{ onMalformed: () => undefined },
 		);
 
 		return {

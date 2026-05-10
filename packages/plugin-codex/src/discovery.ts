@@ -1,9 +1,9 @@
 import type { PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso, sortByIsoDesc, streamJsonlHead } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { type SessionFileInfo, scanCodexSessions } from "./session-index.ts";
-import { readFileText } from "./shared/discovery-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
+import { type SessionFileInfo, scanCodexSessions } from "./session-index";
+import { readFileText } from "./shared/discovery-utils";
+import { iterateJsonl } from "./shared/jsonl-utils";
 
 type CodexEvent = {
 	type: string;
@@ -85,13 +85,11 @@ function streamFirstUserMessage(filePath: string) {
 			filePath,
 			({ parsed, lineIndex }) => {
 				if (lineIndex === 0) {
-					// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
 					return undefined;
 				}
 				if (visitForFirstUserMessage(parsed, captured)) {
 					return false;
 				}
-				// biome-ignore lint/complexity/noUselessUndefined: explicit return for TS narrowing
 				return undefined;
 			},
 			{ maxLines: 200 },
@@ -124,7 +122,6 @@ function extractFirstUserMessageFromText(text: string): string | null {
 					return false;
 				}
 			}
-			// biome-ignore lint/complexity/noUselessUndefined: explicit return needed for TypeScript
 			return undefined;
 		},
 		{ startAt: 1 },

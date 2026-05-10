@@ -1,13 +1,12 @@
 import { Database } from "bun:sqlite";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery.ts";
-import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
+import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery";
+import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
 const testDir = join(tmpdir(), `klovi-opencode-discovery-test-${Date.now()}`);
 
@@ -105,7 +104,6 @@ function insertSession(
 	);
 }
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertMessage(
 	db: Database,
 	id: string,
@@ -123,7 +121,6 @@ function insertMessage(
 	]);
 }
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 function insertPart(
 	db: Database,
 	id: string,
@@ -151,7 +148,7 @@ afterEach(async () => {
 });
 
 describe("discoverOpenCodeProjects", () => {
-	test("discovers projects from project table", async () => {
+	it("discovers projects from project table", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a", "Project A");
 		insertSession(db, "sess-1", "proj-1", { directory: "/Users/dev/project-a" });
@@ -168,7 +165,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(projects[0]?.sessionCount).toBe(2);
 	});
 
-	test("discovers multiple projects", async () => {
+	it("discovers multiple projects", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a", "Project A");
 		insertProject(db, "proj-2", "/Users/dev/project-b", "Project B");
@@ -183,7 +180,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(paths).toEqual(["/Users/dev/project-a", "/Users/dev/project-b"]);
 	});
 
-	test("returns empty array when DB does not exist", async () => {
+	it("returns empty array when DB does not exist", async () => {
 		// Don't create the DB file
 		await rm(testDir, { recursive: true, force: true });
 		await mkdir(testDir, { recursive: true });
@@ -192,7 +189,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(projects).toEqual([]);
 	});
 
-	test("returns empty array when DB has unexpected schema", async () => {
+	it("returns empty array when DB has unexpected schema", async () => {
 		const dbPath = join(testDir, "opencode.db");
 		const db = new Database(dbPath, { create: true });
 		db.run("CREATE TABLE some_random_table (id TEXT PRIMARY KEY)");
@@ -202,7 +199,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(projects).toEqual([]);
 	});
 
-	test("skips projects with no sessions", async () => {
+	it("skips projects with no sessions", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a", "Project A");
 		insertProject(db, "proj-2", "/Users/dev/project-b", "Project B");
@@ -216,7 +213,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(projects[0]?.nativeId).toBe("proj-1");
 	});
 
-	test("uses worktree as display name when name is null", async () => {
+	it("uses worktree as display name when name is null", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a", null);
 		insertSession(db, "sess-1", "proj-1", { directory: "/Users/dev/project-a" });
@@ -228,7 +225,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(projects[0]?.displayName).toBe("/Users/dev/project-a");
 	});
 
-	test("falls back to discovery from session directories when project table is absent", async () => {
+	it("falls back to discovery from session directories when project table is absent", async () => {
 		const dbPath = join(testDir, "opencode.db");
 		const db = new Database(dbPath, { create: true });
 		db.run(`
@@ -290,7 +287,7 @@ describe("discoverOpenCodeProjects", () => {
 		expect(projects[1]?.sessionCount).toBe(2);
 	});
 
-	test("falls back to session discovery when project table lacks worktree column", async () => {
+	it("falls back to session discovery when project table lacks worktree column", async () => {
 		const dbPath = join(testDir, "opencode.db");
 		const db = new Database(dbPath, { create: true });
 		db.run(`
@@ -352,7 +349,7 @@ describe("discoverOpenCodeProjects", () => {
 });
 
 describe("listOpenCodeSessions", () => {
-	test("lists sessions for a project", async () => {
+	it("lists sessions for a project", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a");
 		insertSession(db, "sess-1", "proj-1", {
@@ -395,7 +392,7 @@ describe("listOpenCodeSessions", () => {
 		expect(sessions[1]?.model).toBe("claude-sonnet-4-20250514");
 	});
 
-	test("falls back to first user text part when title is empty", async () => {
+	it("falls back to first user text part when title is empty", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a");
 		insertSession(db, "sess-1", "proj-1", {
@@ -427,7 +424,7 @@ describe("listOpenCodeSessions", () => {
 		expect(sessions[0]?.firstMessage).toBe("Help me fix the authentication flow");
 	});
 
-	test("falls back to default message when no title or user text", async () => {
+	it("falls back to default message when no title or user text", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a");
 		insertSession(db, "sess-1", "proj-1", {
@@ -442,7 +439,7 @@ describe("listOpenCodeSessions", () => {
 		expect(sessions[0]?.firstMessage).toBe("OpenCode session");
 	});
 
-	test("returns empty when DB does not exist", async () => {
+	it("returns empty when DB does not exist", async () => {
 		await rm(testDir, { recursive: true, force: true });
 		await mkdir(testDir, { recursive: true });
 
@@ -450,7 +447,7 @@ describe("listOpenCodeSessions", () => {
 		expect(sessions).toEqual([]);
 	});
 
-	test("returns empty for non-matching project", async () => {
+	it("returns empty for non-matching project", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a");
 		insertSession(db, "sess-1", "proj-1", { directory: "/Users/dev/project-a" });
@@ -460,7 +457,7 @@ describe("listOpenCodeSessions", () => {
 		expect(sessions).toEqual([]);
 	});
 
-	test("sessions sorted by time_created descending", async () => {
+	it("sessions sorted by time_created descending", async () => {
 		const db = createTestDb();
 		insertProject(db, "proj-1", "/Users/dev/project-a");
 		insertSession(db, "sess-old", "proj-1", {
@@ -481,7 +478,7 @@ describe("listOpenCodeSessions", () => {
 		expect(sessions[1]?.sessionId).toBe("sess-old");
 	});
 
-	test("lists sessions by directory when project table is absent", async () => {
+	it("lists sessions by directory when project table is absent", async () => {
 		const dbPath = join(testDir, "opencode.db");
 		const db = new Database(dbPath, { create: true });
 		db.run(`

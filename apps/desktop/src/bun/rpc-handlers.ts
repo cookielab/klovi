@@ -27,10 +27,10 @@ import {
 } from "@cookielab.io/klovi-server/services/stats-service";
 import { getVersion } from "@cookielab.io/klovi-server/services/version-service";
 import { Effect, Ref } from "effect";
-import type { UpdateChannel } from "../shared/rpc-types.ts";
-import { refreshRegistry } from "./runtime.ts";
-import { RegistryRef, SettingsPathRef, VersionState } from "./services.ts";
-import { applyUpdate as applyUpdateEffect, checkForUpdate } from "./updater-service.ts";
+import type { UpdateChannel } from "../shared/rpc-types";
+import { refreshRegistry } from "./runtime";
+import { RegistryRef, SettingsPathRef, VersionState } from "./services";
+import { applyUpdate as applyUpdateEffect, checkForUpdate } from "./updater-service";
 
 // ---------- Onboarding / misc ----------
 

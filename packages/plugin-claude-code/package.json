@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"exports": {
 		".": "./src/index.ts",
-		"./frontend": "./src/frontend.ts"
+		"./frontend": "./src/frontend/index.ts"
 	},
 	"sideEffects": false,
 	"files": ["src"],

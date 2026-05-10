@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { BunContext } from "@effect/platform-bun";
 import { Effect } from "effect";
-import type { PluginSettings } from "./settings.ts";
-import { getDefaultSettings, loadSettings, saveSettings } from "./settings.ts";
+import type { PluginSettings } from "./settings";
+import { getDefaultSettings, loadSettings, saveSettings } from "./settings";
 
 const testDir = join(tmpdir(), `klovi-settings-test-${Date.now()}`);
 
@@ -24,7 +23,7 @@ describe("settings", () => {
 		}
 	});
 
-	test("getDefaultSettings returns the built-in plugin defaults with null dataDirs", () => {
+	it("getDefaultSettings returns the built-in plugin defaults with null dataDirs", () => {
 		const settings = getDefaultSettings();
 		expect(settings.version).toBe(1);
 		expect(settings.plugins["claude-code"]).toEqual({ enabled: true, dataDir: null });
@@ -33,12 +32,12 @@ describe("settings", () => {
 		expect(settings.plugins["cursor"]).toEqual({ enabled: false, dataDir: null });
 	});
 
-	test("loadSettings returns defaults when file does not exist", async () => {
+	it("loadSettings returns defaults when file does not exist", async () => {
 		const settings = await run(loadSettings(join(testDir, "nonexistent", "settings.json")));
 		expect(settings).toEqual(getDefaultSettings());
 	});
 
-	test("saveSettings writes and loadSettings reads back", async () => {
+	it("saveSettings writes and loadSettings reads back", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = settingsPath();
 		const settings: PluginSettings = {
@@ -55,13 +54,13 @@ describe("settings", () => {
 		expect(loaded).toEqual(settings);
 	});
 
-	test("saveSettings creates parent directories", async () => {
+	it("saveSettings creates parent directories", async () => {
 		const deep = join(testDir, "a", "b", "settings.json");
 		await run(saveSettings(deep, getDefaultSettings()));
 		expect(await Bun.file(deep).exists()).toBe(true);
 	});
 
-	test("loadSettings returns defaults for corrupted JSON", async () => {
+	it("loadSettings returns defaults for corrupted JSON", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = settingsPath();
 		await Bun.write(path, "not valid json{{{");
@@ -69,7 +68,7 @@ describe("settings", () => {
 		expect(settings).toEqual(getDefaultSettings());
 	});
 
-	test("getDefaultSettings includes updates with stable channel", () => {
+	it("getDefaultSettings includes updates with stable channel", () => {
 		const settings = getDefaultSettings();
 		expect(settings.updates).toEqual({
 			channel: "stable",
@@ -78,7 +77,7 @@ describe("settings", () => {
 		});
 	});
 
-	test("loadSettings preserves updates field", async () => {
+	it("loadSettings preserves updates field", async () => {
 		await mkdir(testDir, { recursive: true });
 		const path = settingsPath();
 		const settings: PluginSettings = {

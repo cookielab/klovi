@@ -1,7 +1,7 @@
 import type { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import type { SettingsWriteError } from "./errors.ts";
-import { deleteSettingsFile, getDefaultSettings, saveSettings, settingsFileExists } from "./settings.ts";
+import type { SettingsWriteError } from "./errors";
+import { deleteSettingsFile, getDefaultSettings, saveSettings, settingsFileExists } from "./settings";
 
 function isFirstLaunch(settingsPath: string): Effect.Effect<{ firstLaunch: boolean }, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {

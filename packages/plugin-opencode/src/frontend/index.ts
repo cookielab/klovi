@@ -1,5 +1,5 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
-import { openCodeInputFormatters, openCodeSummaryExtractors } from "./extractors.ts";
+import { openCodeInputFormatters, openCodeSummaryExtractors } from "../extractors";
 
 export const openCodeFrontendPlugin: FrontendPlugin = {
 	id: "opencode",

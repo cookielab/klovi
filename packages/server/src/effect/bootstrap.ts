@@ -1,9 +1,9 @@
 import { join } from "node:path";
 import { HttpServer } from "@effect/platform";
 import { Cause, Effect, Fiber, Layer } from "effect";
-import { makeBunServerLayer } from "./platform-bun.ts";
-import { ServerConfig } from "./server-config.ts";
-import { KloviServicesLive } from "./server-services.ts";
+import { makeBunServerLayer } from "./platform-bun";
+import { ServerConfig } from "./server-config";
+import { KloviServicesLive } from "./server-services";
 
 type BootstrapOptions = {
 	host?: string;
@@ -20,7 +20,7 @@ type BootstrapResult = {
 };
 
 function getDefaultSettingsPath(): string {
-	const home = process.env["HOME"] ?? process.env["USERPROFILE"] ?? "";
+	const home = Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "";
 	return join(home, ".klovi", "settings.json");
 }
 
@@ -38,14 +38,11 @@ function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "no
  * `packages/server` to pass the RPC-only serve layer while `apps/package`
  * can compose RPC + static file serving.
  */
+type AnyLayer = Layer.Layer<never, unknown, unknown>;
+
 async function bootstrapServer(
 	options: BootstrapOptions,
-	makeServe: () => Layer.Layer<
-		never,
-		never,
-		// biome-ignore lint/suspicious/noExplicitAny: Layer output varies by caller
-		any
-	>,
+	makeServe: () => AnyLayer,
 ): Promise<BootstrapResult> {
 	const host = options.host ?? "127.0.0.1";
 	const port = options.port ?? 0;
@@ -55,10 +52,9 @@ async function bootstrapServer(
 	const rt = detectRuntime(options.runtime);
 
 	// Configure plugin layer and platform layer for the selected runtime
-	// biome-ignore lint/suspicious/noExplicitAny: platform layers have different type signatures
-	let platformLayer: Layer.Layer<any, any, any>;
+	let platformLayer: AnyLayer;
 	if (rt === "node") {
-		const { makeNodeServerLayer } = await import("./platform-node.ts");
+		const { makeNodeServerLayer } = await import("./platform-node");
 		platformLayer = makeNodeServerLayer({ host: host, port: port });
 	} else {
 		platformLayer = makeBunServerLayer({ hostname: host, port: port });

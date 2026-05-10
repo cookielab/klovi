@@ -1,34 +1,33 @@
-import { describe, expect, test } from "bun:test";
-import { detectOutputFormat } from "./format-detector.ts";
+import { detectOutputFormat } from "./format-detector";
 
 describe("detectOutputFormat", () => {
-	test("returns null for empty string", () => {
+	it("returns null for empty string", () => {
 		expect(detectOutputFormat("")).toBeNull();
 	});
 
-	test("returns null for whitespace only", () => {
+	it("returns null for whitespace only", () => {
 		expect(detectOutputFormat("   \n  ")).toBeNull();
 	});
 
-	test("returns null for plain text", () => {
+	it("returns null for plain text", () => {
 		expect(detectOutputFormat("hello world")).toBeNull();
 	});
 
-	test("returns null for file listing", () => {
+	it("returns null for file listing", () => {
 		expect(detectOutputFormat("file1.txt\nfile2.txt\nfile3.txt")).toBeNull();
 	});
 
 	// JSON
 	describe("JSON", () => {
-		test("detects JSON object", () => {
+		it("detects JSON object", () => {
 			expect(detectOutputFormat('{"name": "test", "version": "1.0.0"}')).toBe("json");
 		});
 
-		test("detects JSON array", () => {
+		it("detects JSON array", () => {
 			expect(detectOutputFormat("[1, 2, 3]")).toBe("json");
 		});
 
-		test("detects multiline JSON", () => {
+		it("detects multiline JSON", () => {
 			const json = `{
   "name": "test",
   "dependencies": {
@@ -38,22 +37,22 @@ describe("detectOutputFormat", () => {
 			expect(detectOutputFormat(json)).toBe("json");
 		});
 
-		test("rejects invalid JSON with braces", () => {
+		it("rejects invalid JSON with braces", () => {
 			expect(detectOutputFormat("{not valid json}")).toBeNull();
 		});
 
-		test("detects empty JSON object", () => {
+		it("detects empty JSON object", () => {
 			expect(detectOutputFormat("{}")).toBe("json");
 		});
 
-		test("detects empty JSON array", () => {
+		it("detects empty JSON array", () => {
 			expect(detectOutputFormat("[]")).toBe("json");
 		});
 	});
 
 	// Diff
 	describe("Diff", () => {
-		test("detects unified diff starting with 'diff '", () => {
+		it("detects unified diff starting with 'diff '", () => {
 			const diff = `diff --git a/file.ts b/file.ts
 index abc123..def456 100644
 --- a/file.ts
@@ -65,7 +64,7 @@ index abc123..def456 100644
 			expect(detectOutputFormat(diff)).toBe("diff");
 		});
 
-		test("detects diff starting with '--- '", () => {
+		it("detects diff starting with '--- '", () => {
 			const diff = `--- a/file.ts
 +++ b/file.ts
 @@ -1 +1 @@
@@ -74,7 +73,7 @@ index abc123..def456 100644
 			expect(detectOutputFormat(diff)).toBe("diff");
 		});
 
-		test("detects diff with multiple +/- lines", () => {
+		it("detects diff with multiple +/- lines", () => {
 			const diff = `@@ -1,4 +1,4 @@
 -line1
 -line2
@@ -87,19 +86,19 @@ index abc123..def456 100644
 
 	// XML/HTML
 	describe("XML/HTML", () => {
-		test("detects XML declaration", () => {
+		it("detects XML declaration", () => {
 			expect(detectOutputFormat('<?xml version="1.0"?>\n<root></root>')).toBe("markup");
 		});
 
-		test("detects HTML DOCTYPE", () => {
+		it("detects HTML DOCTYPE", () => {
 			expect(detectOutputFormat("<!DOCTYPE html>\n<html><body></body></html>")).toBe("markup");
 		});
 
-		test("detects HTML tag structure", () => {
+		it("detects HTML tag structure", () => {
 			expect(detectOutputFormat("<div><p>Hello</p></div>")).toBe("markup");
 		});
 
-		test("rejects plain text starting with <", () => {
+		it("rejects plain text starting with <", () => {
 			// No closing tag at end
 			expect(detectOutputFormat("<not actually html")).toBeNull();
 		});
@@ -107,80 +106,79 @@ index abc123..def456 100644
 
 	// TypeScript
 	describe("TypeScript", () => {
-		test("detects interface declaration", () => {
+		it("detects interface declaration", () => {
 			expect(detectOutputFormat("interface User {\n  name: string;\n}")).toBe("typescript");
 		});
 
-		test("detects exported interface", () => {
+		it("detects exported interface", () => {
 			expect(detectOutputFormat("export interface Config {\n  port: number;\n}")).toBe("typescript");
 		});
 
-		test("detects type alias", () => {
+		it("detects type alias", () => {
 			expect(detectOutputFormat("type Status = 'active' | 'inactive';")).toBe("typescript");
 		});
 
-		test("detects exported type", () => {
+		it("detects exported type", () => {
 			expect(detectOutputFormat("export type Result<T> = Success<T> | Error;")).toBe("typescript");
 		});
 	});
 
 	// Python
 	describe("Python", () => {
-		test("detects function definition", () => {
-			// biome-ignore lint/security/noSecrets: test data, not a real secret
+		it("detects function definition", () => {
 			expect(detectOutputFormat("def hello():\n    print('world')")).toBe("python");
 		});
 
-		test("detects class definition", () => {
+		it("detects class definition", () => {
 			expect(detectOutputFormat("class MyClass:\n    def __init__(self):\n        pass")).toBe("python");
 		});
 
-		test("detects import statement", () => {
+		it("detects import statement", () => {
 			expect(detectOutputFormat("import os\nimport sys")).toBe("python");
 		});
 
-		test("detects if __name__ pattern", () => {
+		it("detects if __name__ pattern", () => {
 			expect(detectOutputFormat('if __name__ == "__main__":\n    main()')).toBe("python");
 		});
 	});
 
 	// CSS
 	describe("CSS", () => {
-		test("detects class selector with declarations", () => {
+		it("detects class selector with declarations", () => {
 			expect(detectOutputFormat(".container {\n  color: red;\n}")).toBe("css");
 		});
 
-		test("detects @media rule", () => {
+		it("detects @media rule", () => {
 			expect(detectOutputFormat("@media (max-width: 768px) {\n  body { padding: 0; }\n}")).toBe("css");
 		});
 
-		test("detects element selector with declarations", () => {
+		it("detects element selector with declarations", () => {
 			expect(detectOutputFormat("body {\n  margin: 0;\n  padding: 0;\n}")).toBe("css");
 		});
 
-		test("detects @import rule", () => {
+		it("detects @import rule", () => {
 			expect(detectOutputFormat('@import url("styles.css");\n\nbody { margin: 0; }')).toBe("css");
 		});
 	});
 
 	// YAML
 	describe("YAML", () => {
-		test("detects YAML starting with ---", () => {
+		it("detects YAML starting with ---", () => {
 			expect(detectOutputFormat("---\nname: test\nversion: 1.0")).toBe("yaml");
 		});
 
-		test("detects key-value YAML", () => {
+		it("detects key-value YAML", () => {
 			expect(detectOutputFormat("name: my-app\nversion: 1.0.0\ndescription: A test app")).toBe("yaml");
 		});
 
-		test("rejects YAML-like text with braces (could be JSON)", () => {
+		it("rejects YAML-like text with braces (could be JSON)", () => {
 			expect(detectOutputFormat("name: test\ndata: { nested: true }")).toBeNull();
 		});
 	});
 
 	// Priority / ambiguity
 	describe("detection priority", () => {
-		test("JSON takes priority over other formats", () => {
+		it("JSON takes priority over other formats", () => {
 			// Valid JSON that could look like other formats
 			expect(detectOutputFormat('{"import": "value"}')).toBe("json");
 		});

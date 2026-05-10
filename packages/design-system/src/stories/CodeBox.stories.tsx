@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { CodeBox } from "../components/CodeBox/CodeBox.tsx";
+import { CodeBox } from "../components/CodeBox/CodeBox";
 
 const meta: Meta<typeof CodeBox> = {
 	title: "Components/CodeBox",

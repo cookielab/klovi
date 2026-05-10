@@ -1,8 +1,6 @@
-import { describe, expect, mock, test } from "bun:test";
 import { fireEvent, render } from "@testing-library/react";
-import { useKeyboard } from "./useKeyboard.ts";
+import { useKeyboard } from "./useKeyboard";
 
-// biome-ignore lint/style/useComponentExportOnlyModules: test helper component
 function KeyboardTestHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }) {
 	useKeyboard(props.handlers, props.active);
 	return <div>Keyboard test</div>;
@@ -14,72 +12,72 @@ function fireKey(key: string, opts: KeyboardEventInit = {}) {
 }
 
 describe("useKeyboard", () => {
-	test("calls onNext for ArrowRight", () => {
-		const onNext = mock(() => {});
+	it("calls onNext for ArrowRight", () => {
+		const onNext = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext }} active={true} />);
 		fireKey("ArrowRight");
 		expect(onNext).toHaveBeenCalledTimes(1);
 	});
 
-	test("calls onNext for Space", () => {
-		const onNext = mock(() => {});
+	it("calls onNext for Space", () => {
+		const onNext = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext }} active={true} />);
 		fireKey(" ");
 		expect(onNext).toHaveBeenCalledTimes(1);
 	});
 
-	test("calls onPrev for ArrowLeft", () => {
-		const onPrev = mock(() => {});
+	it("calls onPrev for ArrowLeft", () => {
+		const onPrev = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onPrev: onPrev }} active={true} />);
 		fireKey("ArrowLeft");
 		expect(onPrev).toHaveBeenCalledTimes(1);
 	});
 
-	test("calls onNextTurn for ArrowDown", () => {
-		const onNextTurn = mock(() => {});
+	it("calls onNextTurn for ArrowDown", () => {
+		const onNextTurn = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onNextTurn: onNextTurn }} active={true} />);
 		fireKey("ArrowDown");
 		expect(onNextTurn).toHaveBeenCalledTimes(1);
 	});
 
-	test("calls onPrevTurn for ArrowUp", () => {
-		const onPrevTurn = mock(() => {});
+	it("calls onPrevTurn for ArrowUp", () => {
+		const onPrevTurn = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onPrevTurn: onPrevTurn }} active={true} />);
 		fireKey("ArrowUp");
 		expect(onPrevTurn).toHaveBeenCalledTimes(1);
 	});
 
-	test("calls onEscape for Escape", () => {
-		const onEscape = mock(() => {});
+	it("calls onEscape for Escape", () => {
+		const onEscape = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onEscape: onEscape }} active={true} />);
 		fireKey("Escape");
 		expect(onEscape).toHaveBeenCalledTimes(1);
 	});
 
-	test("calls onFullscreen for 'f' key (no modifier)", () => {
-		const onFullscreen = mock(() => {});
+	it("calls onFullscreen for 'f' key (no modifier)", () => {
+		const onFullscreen = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onFullscreen: onFullscreen }} active={true} />);
 		fireKey("f");
 		expect(onFullscreen).toHaveBeenCalledTimes(1);
 	});
 
-	test("does NOT call onFullscreen for Ctrl+f", () => {
-		const onFullscreen = mock(() => {});
+	it("does NOT call onFullscreen for Ctrl+f", () => {
+		const onFullscreen = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onFullscreen: onFullscreen }} active={true} />);
 		fireKey("f", { ctrlKey: true });
 		expect(onFullscreen).toHaveBeenCalledTimes(0);
 	});
 
-	test("does NOT call onFullscreen for Cmd+f", () => {
-		const onFullscreen = mock(() => {});
+	it("does NOT call onFullscreen for Cmd+f", () => {
+		const onFullscreen = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onFullscreen: onFullscreen }} active={true} />);
 		fireKey("f", { metaKey: true });
 		expect(onFullscreen).toHaveBeenCalledTimes(0);
 	});
 
-	test("does nothing when active is false", () => {
-		const onNext = mock(() => {});
-		const onPrev = mock(() => {});
+	it("does nothing when active is false", () => {
+		const onNext = mock(() => undefined);
+		const onPrev = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext, onPrev: onPrev }} active={false} />);
 		fireKey("ArrowRight");
 		fireKey("ArrowLeft");
@@ -87,10 +85,10 @@ describe("useKeyboard", () => {
 		expect(onPrev).toHaveBeenCalledTimes(0);
 	});
 
-	test("does not fire for unrelated keys", () => {
-		const onNext = mock(() => {});
-		const onPrev = mock(() => {});
-		const onEscape = mock(() => {});
+	it("does not fire for unrelated keys", () => {
+		const onNext = mock(() => undefined);
+		const onPrev = mock(() => undefined);
+		const onEscape = mock(() => undefined);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext, onPrev: onPrev, onEscape: onEscape }} active={true} />);
 		fireKey("a");
 		fireKey("Enter");
@@ -100,7 +98,7 @@ describe("useKeyboard", () => {
 		expect(onEscape).toHaveBeenCalledTimes(0);
 	});
 
-	test("missing handlers are safely skipped", () => {
+	it("missing handlers are safely skipped", () => {
 		const { container } = render(<KeyboardTestHarness handlers={{}} active={true} />);
 		// Should not throw when a handler is undefined
 		fireKey("ArrowRight");
@@ -110,16 +108,16 @@ describe("useKeyboard", () => {
 		expect(container).toBeTruthy();
 	});
 
-	test("cleans up listener on unmount", () => {
-		const onNext = mock(() => {});
+	it("cleans up listener on unmount", () => {
+		const onNext = mock(() => undefined);
 		const { unmount } = render(<KeyboardTestHarness handlers={{ onNext: onNext }} active={true} />);
 		unmount();
 		fireKey("ArrowRight");
 		expect(onNext).toHaveBeenCalledTimes(0);
 	});
 
-	test("ignores keydown when target is an input element", () => {
-		const onNext = mock(() => {});
+	it("ignores keydown when target is an input element", () => {
+		const onNext = mock(() => undefined);
 		const { container } = render(
 			<div>
 				<input type="text" data-testid="input" />
@@ -132,8 +130,8 @@ describe("useKeyboard", () => {
 		expect(onNext).toHaveBeenCalledTimes(0);
 	});
 
-	test("ignores keydown when target is a textarea element", () => {
-		const onNext = mock(() => {});
+	it("ignores keydown when target is a textarea element", () => {
+		const onNext = mock(() => undefined);
 		const { container } = render(
 			<div>
 				<textarea data-testid="textarea" />

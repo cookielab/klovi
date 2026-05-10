@@ -1,5 +1,4 @@
-import { describe, expect, test } from "bun:test";
-import { type ContentBlock, groupContentBlocks } from "./index.ts";
+import { type ContentBlock, groupContentBlocks } from "./index";
 
 function text(value: string): ContentBlock {
 	return { type: "text", text: value };
@@ -23,11 +22,11 @@ function tool(id: string): ContentBlock {
 }
 
 describe("groupContentBlocks", () => {
-	test("returns empty array for no blocks", () => {
+	it("returns empty array for no blocks", () => {
 		expect(groupContentBlocks([])).toEqual([]);
 	});
 
-	test("places each text block in its own group", () => {
+	it("places each text block in its own group", () => {
 		const first = text("a");
 		const second = text("b");
 		const blocks = [first, second];
@@ -35,7 +34,7 @@ describe("groupContentBlocks", () => {
 		expect(groupContentBlocks(blocks)).toEqual([[first], [second]]);
 	});
 
-	test("groups consecutive non-text blocks together", () => {
+	it("groups consecutive non-text blocks together", () => {
 		const first = thinking("t1");
 		const second = tool("1");
 		const third = tool("2");
@@ -44,7 +43,7 @@ describe("groupContentBlocks", () => {
 		expect(groupContentBlocks(blocks)).toEqual([[first, second, third]]);
 	});
 
-	test("splits non-text groups around text blocks", () => {
+	it("splits non-text groups around text blocks", () => {
 		const first = thinking("t1");
 		const second = tool("1");
 		const third = text("answer");
@@ -55,7 +54,7 @@ describe("groupContentBlocks", () => {
 		expect(groupContentBlocks(blocks)).toEqual([[first, second], [third], [fourth, fifth]]);
 	});
 
-	test("flushes trailing non-text group", () => {
+	it("flushes trailing non-text group", () => {
 		const first = text("intro");
 		const second = tool("1");
 		const third = thinking("later");

@@ -1,5 +1,4 @@
-import { describe, expect, test } from "bun:test";
-import { codexInputFormatters, codexSummaryExtractors } from "./extractors.ts";
+import { codexInputFormatters, codexSummaryExtractors } from "./extractors";
 
 function requireHandler(
 	handlers: Record<string, (input: Record<string, unknown>) => string>,
@@ -13,7 +12,7 @@ function requireHandler(
 }
 
 describe("codexSummaryExtractors", () => {
-	test("command_execution summary truncates long command", () => {
+	it("command_execution summary truncates long command", () => {
 		const longCommand = "x".repeat(100);
 		const summary = requireHandler(
 			codexSummaryExtractors,
@@ -26,7 +25,7 @@ describe("codexSummaryExtractors", () => {
 		expect(summary.endsWith("...")).toBe(true);
 	});
 
-	test("file_change summary returns first changed path", () => {
+	it("file_change summary returns first changed path", () => {
 		const summary = requireHandler(
 			codexSummaryExtractors,
 			"file_change",
@@ -40,11 +39,11 @@ describe("codexSummaryExtractors", () => {
 		expect(summary).toBe("src/main.ts");
 	});
 
-	test("file_change summary returns empty string when changes are invalid", () => {
+	it("file_change summary returns empty string when changes are invalid", () => {
 		expect(requireHandler(codexSummaryExtractors, "file_change")({ changes: "invalid" })).toBe("");
 	});
 
-	test("web_search summary truncates long query", () => {
+	it("web_search summary truncates long query", () => {
 		const query = "search ".repeat(20);
 		const summary = requireHandler(codexSummaryExtractors, "web_search")({ query: query });
 
@@ -54,11 +53,11 @@ describe("codexSummaryExtractors", () => {
 });
 
 describe("codexInputFormatters", () => {
-	test("command_execution formatter returns command", () => {
+	it("command_execution formatter returns command", () => {
 		expect(requireHandler(codexInputFormatters, "command_execution")({ command: "bun test" })).toBe("bun test");
 	});
 
-	test("file_change formatter formats each change line", () => {
+	it("file_change formatter formats each change line", () => {
 		const formatted = requireHandler(
 			codexInputFormatters,
 			"file_change",
@@ -72,7 +71,7 @@ describe("codexInputFormatters", () => {
 		expect(formatted).toBe("edit: src/main.ts\ncreate: src/new.ts");
 	});
 
-	test("file_change formatter falls back to JSON when changes are not array", () => {
+	it("file_change formatter falls back to JSON when changes are not array", () => {
 		const formatted = requireHandler(
 			codexInputFormatters,
 			"file_change",
@@ -84,7 +83,7 @@ describe("codexInputFormatters", () => {
 		expect(formatted).toContain('"id": 123');
 	});
 
-	test("web_search formatter prefixes query label", () => {
+	it("web_search formatter prefixes query label", () => {
 		expect(requireHandler(codexInputFormatters, "web_search")({ query: "bun test coverage" })).toBe(
 			"Query: bun test coverage",
 		);

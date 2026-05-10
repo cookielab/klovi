@@ -1,7 +1,7 @@
 import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GlobalSessionResult } from "../types/index.ts";
-import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters.ts";
+import type { GlobalSessionResult } from "../types/index";
+import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
 
 function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
@@ -68,7 +68,6 @@ function SearchResultItem({
 	const isHighlighted = index === highlightedIndex;
 
 	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: keyboard nav handled by input onKeyDown
 		<div
 			key={`${result.encodedPath}-${result.sessionId}`}
 			className={`${RESULT_ITEM_BASE_CLASSES} ${isHighlighted ? RESULT_ITEM_HIGHLIGHTED_CLASSES : ""}`}
@@ -201,7 +200,6 @@ function SearchModal({
 	}
 
 	return (
-		// biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop dismiss
 		<div className={OVERLAY_CLASSES} role="presentation" onMouseDown={onClose}>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation on modal body */}
 			<div className={MODAL_CLASSES} role="presentation" onMouseDown={handleModalMouseDown}>
@@ -249,6 +247,5 @@ function SearchModal({
 	);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: type-only export for component props
 export type { SearchModalProps };
 export { SearchModal };

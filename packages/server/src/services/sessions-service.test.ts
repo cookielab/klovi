@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,8 +6,8 @@ import type { RegistryRequirements } from "@cookielab.io/klovi-plugin-core";
 import { SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { PluginRegistry } from "./registry.ts";
-import { getSessionHead, getSessionTail } from "./sessions-service.ts";
+import { PluginRegistry } from "./registry";
+import { getSessionHead, getSessionTail } from "./sessions-service";
 
 const testDir = join(tmpdir(), `klovi-sessions-service-test-${Date.now()}`);
 
@@ -47,7 +46,7 @@ afterEach(async () => {
 });
 
 describe("getSessionHead / getSessionTail", () => {
-	test("head returns first headSize turns and totalTurns", async () => {
+	it("head returns first headSize turns and totalTurns", async () => {
 		await writeSession("-Users-x", "s1", 30);
 		const registry = new PluginRegistry();
 		registry.register(claudeCodePlugin, { dataDir: testDir });
@@ -63,7 +62,7 @@ describe("getSessionHead / getSessionTail", () => {
 		expect(result.session.turns.length).toBe(10);
 	});
 
-	test("tail returns turns after fromTurn", async () => {
+	it("tail returns turns after fromTurn", async () => {
 		await writeSession("-Users-x", "s1", 30);
 		const registry = new PluginRegistry();
 		registry.register(claudeCodePlugin, { dataDir: testDir });
@@ -78,7 +77,7 @@ describe("getSessionHead / getSessionTail", () => {
 		expect(result.turns.length).toBe(20);
 	});
 
-	test("tail returns empty array when fromTurn >= totalTurns", async () => {
+	it("tail returns empty array when fromTurn >= totalTurns", async () => {
 		await writeSession("-Users-x", "s1", 5);
 		const registry = new PluginRegistry();
 		registry.register(claudeCodePlugin, { dataDir: testDir });

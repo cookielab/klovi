@@ -1,5 +1,5 @@
-import { bootstrapServer } from "./effect/bootstrap.ts";
-import { makeServeLayer } from "./effect/http-app.ts";
+import { bootstrapServer } from "./effect/bootstrap";
+import { makeServeLayer } from "./effect/http-app";
 
 export type StartKloviServerOptions = {
 	host?: string;

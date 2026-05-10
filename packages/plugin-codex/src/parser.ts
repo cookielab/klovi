@@ -9,9 +9,9 @@ import type {
 } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso } from "@cookielab.io/klovi-plugin-core";
 import { Effect } from "effect";
-import { type CodexSessionMeta, findCodexSessionFileById, normalizeSessionMeta } from "./session-index.ts";
-import { readFileText } from "./shared/discovery-utils.ts";
-import { iterateJsonl } from "./shared/jsonl-utils.ts";
+import { type CodexSessionMeta, findCodexSessionFileById, normalizeSessionMeta } from "./session-index";
+import { readFileText } from "./shared/discovery-utils";
+import { iterateJsonl } from "./shared/jsonl-utils";
 
 type CodexItemCommand = {
 	type: "command_execution";
@@ -512,7 +512,6 @@ function loadCodexSession(_nativeId: string, sessionId: string) {
 		const events: CodexEvent[] = [];
 		let turnContextModel: string | null = null;
 
-		// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: callback parses heterogeneous JSONL events
 		iterateJsonl(text, ({ parsed, lineIndex }) => {
 			if (lineIndex === 0) {
 				const normalized = normalizeSessionMeta(parsed);

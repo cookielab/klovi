@@ -1,6 +1,5 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { RPCError } from "./rpc-error.ts";
-import { type KloviServer, startKloviServer } from "./server.ts";
+import { RpcError } from "./rpc-error";
+import { type KloviServer, startKloviServer } from "./server";
 
 describe("RPC dispatch", () => {
 	let server: KloviServer;
@@ -18,7 +17,7 @@ describe("RPC dispatch", () => {
 		server?.stop();
 	});
 
-	test("returns result for known method", async () => {
+	it("returns result for known method", async () => {
 		const res = await fetch(`${server.url}/api/rpc/getVersion`, {
 			method: "POST",
 			body: "{}",
@@ -29,7 +28,7 @@ describe("RPC dispatch", () => {
 		expect(data).toHaveProperty("commit");
 	});
 
-	test("returns 404 for unknown method", async () => {
+	it("returns 404 for unknown method", async () => {
 		const res = await fetch(`${server.url}/api/rpc/nonexistent`, {
 			method: "POST",
 			body: "{}",
@@ -39,7 +38,7 @@ describe("RPC dispatch", () => {
 		expect(data.error).toContain("Unknown method");
 	});
 
-	test("acceptRisks returns ok", async () => {
+	it("acceptRisks returns ok", async () => {
 		const res = await fetch(`${server.url}/api/rpc/acceptRisks`, {
 			method: "POST",
 			body: "{}",
@@ -50,9 +49,9 @@ describe("RPC dispatch", () => {
 	});
 });
 
-describe("RPCError", () => {
-	test("has status and message", () => {
-		const err = new RPCError(404, "Not found");
+describe("RpcError", () => {
+	it("has status and message", () => {
+		const err = new RpcError(404, "Not found");
 		expect(err.status).toBe(404);
 		expect(err.message).toBe("Not found");
 		expect(err).toBeInstanceOf(Error);

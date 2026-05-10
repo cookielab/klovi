@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import type { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
@@ -11,7 +11,7 @@ import {
 	listFilesBySuffix,
 	listFilesWithMtime,
 	readDirEntriesSafe,
-} from "./discovery-utils.ts";
+} from "./discovery-utils";
 
 const testDir = join(tmpdir(), `klovi-claude-discovery-utils-test-${Date.now()}`);
 const originalPlatform = process.platform;
@@ -33,12 +33,12 @@ afterEach(async () => {
 });
 
 describe("claude discovery utils", () => {
-	test("readDirEntriesSafe returns [] for missing directory", async () => {
+	it("readDirEntriesSafe returns [] for missing directory", async () => {
 		const entries = await runFs(readDirEntriesSafe(join(testDir, "missing")));
 		expect(entries).toEqual([]);
 	});
 
-	test("listFilesBySuffix filters matching files", async () => {
+	it("listFilesBySuffix filters matching files", async () => {
 		await Bun.write(join(testDir, "a.jsonl"), "{}");
 		await Bun.write(join(testDir, "b.txt"), "x");
 		await Bun.write(join(testDir, "c.jsonl"), "{}");
@@ -47,7 +47,7 @@ describe("claude discovery utils", () => {
 		expect(files.sort()).toEqual(["a.jsonl", "c.jsonl"]);
 	});
 
-	test("getLatestMtime returns newest mtime and tolerates missing file", async () => {
+	it("getLatestMtime returns newest mtime and tolerates missing file", async () => {
 		const first = join(testDir, "a.jsonl");
 		const second = join(testDir, "b.jsonl");
 
@@ -60,7 +60,7 @@ describe("claude discovery utils", () => {
 		expect(latest).toBe("2025-01-15T00:00:00.000Z");
 	});
 
-	test("listFilesWithMtime returns descending mtime order", async () => {
+	it("listFilesWithMtime returns descending mtime order", async () => {
 		const first = join(testDir, "a.jsonl");
 		const second = join(testDir, "b.jsonl");
 
@@ -73,12 +73,12 @@ describe("claude discovery utils", () => {
 		expect(files.map((f) => f.fileName)).toEqual(["b.jsonl", "a.jsonl"]);
 	});
 
-	test("decodeEncodedPath decodes unix-style encoded paths", () => {
+	it("decodeEncodedPath decodes unix-style encoded paths", () => {
 		expect(decodeEncodedPath("-Users-dev-project")).toBe("/Users/dev/project");
 		expect(decodeEncodedPath("Users-dev-project")).toBe("Users/dev/project");
 	});
 
-	test("decodeEncodedPath decodes windows drive format when running on win32", () => {
+	it("decodeEncodedPath decodes windows drive format when running on win32", () => {
 		Object.defineProperty(process, "platform", { value: "win32" });
 		expect(decodeEncodedPath("-C-Users-dev-project")).toBe("C:/Users/dev/project");
 	});

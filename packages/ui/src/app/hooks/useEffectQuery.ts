@@ -1,7 +1,7 @@
 import { Cause, Effect, Fiber } from "effect";
 import { type DependencyList, useCallback, useEffect, useState } from "react";
-import { useKloviRuntime } from "../../lib/context.ts";
-import { normalizeRpcError, type RpcError } from "../../lib/rpc-errors-effect.ts";
+import { useKloviRuntime } from "../../lib/context";
+import { normalizeRpcError, type RpcError } from "../../lib/rpc-errors-effect";
 
 type UseEffectQueryResult<T> = {
 	data: T | null;
@@ -12,17 +12,16 @@ type UseEffectQueryResult<T> = {
 
 export function useEffectQuery<T, E = unknown, R = unknown>(
 	effectFactory: () => Effect.Effect<T, E, R>,
-	deps: DependencyList,
+	_deps: DependencyList,
 ): UseEffectQueryResult<T> {
 	const runtime = useKloviRuntime();
 	const [data, setData] = useState<T | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<RpcError | null>(null);
-	const [retryCount, setRetryCount] = useState(0);
+	const [_retryCount, setRetryCount] = useState(0);
 
 	const retry = useCallback(() => setRetryCount((c) => c + 1), []);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: retryCount triggers refetch on retry(); deps array is spread from caller
 	useEffect(() => {
 		setLoading(true);
 		setError(null);
@@ -48,7 +47,7 @@ export function useEffectQuery<T, E = unknown, R = unknown>(
 		return () => {
 			Effect.runFork(Fiber.interrupt(fiber));
 		};
-	}, [runtime, retryCount, ...deps]);
+	}, [runtime, effectFactory]);
 
 	return { data: data, loading: loading, error: error, retry: retry };
 }

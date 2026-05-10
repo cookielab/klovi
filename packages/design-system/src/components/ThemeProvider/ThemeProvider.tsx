@@ -1,6 +1,6 @@
 import type React from "react";
-import { useFontSize } from "../../hooks/useFontSize.ts";
-import { useTheme } from "../../hooks/useTheme.ts";
+import { useFontSize } from "../../hooks/useFontSize";
+import { useTheme } from "../../hooks/useTheme";
 
 type ThemeProviderProps = {
 	children: React.ReactNode;

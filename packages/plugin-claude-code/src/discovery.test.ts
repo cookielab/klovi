@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,7 +5,7 @@ import type { SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { classifySessionTypes, discoverClaudeProjects, listClaudeSessions } from "./discovery.ts";
+import { classifySessionTypes, discoverClaudeProjects, listClaudeSessions } from "./discovery";
 
 const testDir = join(tmpdir(), `klovi-claude-discovery-test-${Date.now()}`);
 
@@ -38,17 +37,17 @@ afterEach(async () => {
 });
 
 describe("claude-code discovery", () => {
-	test("discoverClaudeProjects returns empty when projects dir is missing", async () => {
+	it("discoverClaudeProjects returns empty when projects dir is missing", async () => {
 		const projects = await run(discoverClaudeProjects());
 		expect(projects).toEqual([]);
 	});
 
-	test("listClaudeSessions returns empty when project dir is missing", async () => {
+	it("listClaudeSessions returns empty when project dir is missing", async () => {
 		const sessions = await run(listClaudeSessions("missing-project"));
 		expect(sessions).toEqual([]);
 	});
 
-	test("discovers projects and lists sessions from valid jsonl files", async () => {
+	it("discovers projects and lists sessions from valid jsonl files", async () => {
 		await writeSession("-Users-dev-project-a", "session-1", [
 			JSON.stringify({
 				type: "user",
@@ -76,7 +75,7 @@ describe("claude-code discovery", () => {
 		expect(sessions[0]?.firstMessage).toBe("Fix login flow");
 	});
 
-	test("prefers cwd from newest session file", async () => {
+	it("prefers cwd from newest session file", async () => {
 		const oldPath = await writeSession("-Users-dev-project-a", "session-1", [
 			JSON.stringify({
 				type: "user",
@@ -110,7 +109,7 @@ describe("claude-code discovery", () => {
 		expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");
 	});
 
-	test("falls back to older cwd when newest session has no cwd", async () => {
+	it("falls back to older cwd when newest session has no cwd", async () => {
 		const oldPath = await writeSession("-Users-dev-project-a", "session-1", [
 			JSON.stringify({
 				type: "user",
@@ -143,7 +142,7 @@ describe("claude-code discovery", () => {
 		expect(projects[0]?.lastActivity).toBe("2025-01-15T00:00:00.000Z");
 	});
 
-	test("listClaudeSessions returns sessions in newest-first order regardless of FS order", async () => {
+	it("listClaudeSessions returns sessions in newest-first order regardless of FS order", async () => {
 		const projectId = "-Users-dev-many";
 		// Create 30 sessions with interleaved (non-monotonic) timestamps in line 1.
 		// Writes run in parallel — listClaudeSessions sorts by line-1 `timestamp`, not mtime.
@@ -182,13 +181,13 @@ function session(overrides: Partial<SessionSummary> & { sessionId: string }): Se
 }
 
 describe("classifySessionTypes", () => {
-	test("marks implementation sessions by prefix", () => {
+	it("marks implementation sessions by prefix", () => {
 		const sessions = [session({ sessionId: "s1", firstMessage: "Implement the following plan:\n\n# My plan" })];
 		classifySessionTypes(sessions);
 		expect(sessions[0]?.sessionType).toBe("implementation");
 	});
 
-	test("marks plan sessions by slug match with implementation session", () => {
+	it("marks plan sessions by slug match with implementation session", () => {
 		const sessions = [
 			session({ sessionId: "s1", slug: "my-feature", firstMessage: "Add a logout button" }),
 			session({
@@ -202,7 +201,7 @@ describe("classifySessionTypes", () => {
 		expect(sessions[1]?.sessionType).toBe("implementation");
 	});
 
-	test("normal sessions have no sessionType", () => {
+	it("normal sessions have no sessionType", () => {
 		const sessions = [
 			session({ sessionId: "s1", slug: "feature-a", firstMessage: "Fix the login bug" }),
 			session({ sessionId: "s2", slug: "feature-b", firstMessage: "Add dark mode" }),
@@ -212,7 +211,7 @@ describe("classifySessionTypes", () => {
 		expect(sessions[1]?.sessionType).toBeUndefined();
 	});
 
-	test("does not mark plan for different slugs", () => {
+	it("does not mark plan for different slugs", () => {
 		const sessions = [
 			session({ sessionId: "s1", slug: "feature-a", firstMessage: "Add a button" }),
 			session({
@@ -226,7 +225,7 @@ describe("classifySessionTypes", () => {
 		expect(sessions[1]?.sessionType).toBe("implementation");
 	});
 
-	test("handles multiple plan+impl pairs", () => {
+	it("handles multiple plan+impl pairs", () => {
 		const sessions = [
 			session({ sessionId: "s1", slug: "feat-1", firstMessage: "Plan feat 1" }),
 			session({

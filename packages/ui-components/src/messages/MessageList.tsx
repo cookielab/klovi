@@ -2,11 +2,11 @@ import { TurnBox } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef } from "react";
-import type { Turn } from "../types/index.ts";
-import { ErrorBoundary, formatFullDateTime, formatTimestamp } from "../utilities/index.ts";
-import { AssistantMessage } from "./AssistantMessage.tsx";
-import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
-import { UserMessage } from "./UserMessage.tsx";
+import type { Turn } from "../types/index";
+import { ErrorBoundary, formatFullDateTime, formatTimestamp } from "../utilities/index";
+import { AssistantMessage } from "./AssistantMessage";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { UserMessage } from "./UserMessage";
 
 const STEP_FADE_IN_KEYFRAMES =
 	"@keyframes stepFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }";
@@ -212,19 +212,7 @@ export function MessageList({
 					}
 					const isActive = visibleSubSteps ? item.index === turns.length - 1 : false;
 					return (
-						<div
-							key={turn.uuid || item.index}
-							ref={virtualizer.measureElement}
-							data-index={item.index}
-							// biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning
-							style={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								width: "100%",
-								transform: `translateY(${item.start}px)`,
-							}}
-						>
+						<div key={turn.uuid || item.index} ref={virtualizer.measureElement} data-index={item.index}>
 							<ErrorBoundary inline={true}>
 								{renderTurn({
 									turn: turn,

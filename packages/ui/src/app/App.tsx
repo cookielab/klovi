@@ -1,25 +1,25 @@
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { useCallback, useEffect, useState } from "react";
 import faviconUrl from "../../favicon.svg";
-import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../lib/context.ts";
-import { isTransportRpcError } from "../lib/rpc-errors-effect.ts";
-import type { GlobalSessionResult } from "../shared/types.ts";
-import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats.tsx";
-import { Header } from "./components/layout/Header.tsx";
-import { Layout } from "./components/layout/Layout.tsx";
-import { PackageSubAgentView } from "./components/message/PackageSubAgentView.tsx";
-import { PackageHiddenProjectList } from "./components/project/PackageHiddenProjectList.tsx";
-import { PackageSearchModal } from "./components/search/PackageSearchModal.tsx";
-import { SessionPresentation } from "./components/session/SessionPresentation.tsx";
-import { SessionView } from "./components/session/SessionView.tsx";
-import { SubAgentPresentation } from "./components/session/SubAgentPresentation.tsx";
-import type { SettingsTab } from "./components/settings/SettingsSidebar.tsx";
-import { SettingsView } from "./components/settings/SettingsView.tsx";
-import { UpdateNotification } from "./components/UpdateNotification.tsx";
-import { Onboarding } from "./components/ui/Onboarding.tsx";
-import { SecurityWarning } from "./components/ui/SecurityWarning.tsx";
-import { useGlobalShortcuts, useSearchShortcut, useSettingsShortcut } from "./hooks/useGlobalShortcuts.ts";
-import { useHiddenProjects } from "./hooks/useHiddenProjects.ts";
+import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../lib/context";
+import { isTransportRpcError } from "../lib/rpc-errors-effect";
+import type { GlobalSessionResult } from "../shared/types";
+import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats";
+import { Header } from "./components/layout/Header";
+import { Layout } from "./components/layout/Layout";
+import { PackageSubAgentView } from "./components/message/PackageSubAgentView";
+import { PackageHiddenProjectList } from "./components/project/PackageHiddenProjectList";
+import { PackageSearchModal } from "./components/search/PackageSearchModal";
+import { SessionPresentation } from "./components/session/SessionPresentation";
+import { SessionView } from "./components/session/SessionView";
+import { SubAgentPresentation } from "./components/session/SubAgentPresentation";
+import type { SettingsTab } from "./components/settings/SettingsSidebar";
+import { SettingsView } from "./components/settings/SettingsView";
+import { UpdateNotification } from "./components/UpdateNotification";
+import { Onboarding } from "./components/ui/Onboarding";
+import { SecurityWarning } from "./components/ui/SecurityWarning";
+import { useGlobalShortcuts, useSearchShortcut, useSettingsShortcut } from "./hooks/useGlobalShortcuts";
+import { useHiddenProjects } from "./hooks/useHiddenProjects";
 import {
 	resolveTheme,
 	useFontSize,
@@ -27,11 +27,11 @@ import {
 	usePresentationTheme,
 	useSystemThemeOverride,
 	useTheme,
-} from "./hooks/useTheme.ts";
-import { useUpdateStatus } from "./hooks/useUpdateStatus.ts";
-import { useViewState } from "./hooks/useViewState.ts";
-import { getSidebarContent } from "./sidebar-content.tsx";
-import { getHeaderInfo, getResumeCommand, resolveProjectAndSessionEffect } from "./view-state.ts";
+} from "./hooks/useTheme";
+import { useUpdateStatus } from "./hooks/useUpdateStatus";
+import { useViewState } from "./hooks/useViewState";
+import { getSidebarContent } from "./sidebar-content";
+import { getHeaderInfo, getResumeCommand, resolveProjectAndSessionEffect } from "./view-state";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
 const EMPTY_STATE_CLASSES =
@@ -77,7 +77,7 @@ function App() {
 	const fetchSearchSessions = useCallback(() => {
 		runKloviEffect(client.searchSessions())
 			.then((data) => setSearchSessions(data.sessions))
-			.catch(() => {});
+			.catch(() => undefined);
 	}, [client, runKloviEffect]);
 
 	const openSearch = useCallback(() => {
@@ -360,7 +360,6 @@ function AppGate() {
 	const [screen, setScreen] = useState<"connecting" | "onboarding" | "security-warning" | "none">("onboarding");
 	const isDesktopHost = hostBridge.getCapabilities().desktop;
 
-	// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: initialization state machine with necessary branching
 	const initialize = useCallback(async () => {
 		setAccepted(false);
 		setLoading(true);
@@ -436,7 +435,7 @@ function AppGate() {
 	}, [client, isDesktopHost, runKloviEffect]);
 
 	const handleDontShowAgain = useCallback(() => {
-		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => {});
+		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => undefined);
 	}, [client, runKloviEffect]);
 
 	if (loading) {

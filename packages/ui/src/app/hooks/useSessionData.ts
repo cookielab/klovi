@@ -1,9 +1,9 @@
 import { Cause, Effect, Fiber } from "effect";
 import { useEffect, useState } from "react";
-import { useKloviClient, useKloviRuntime } from "../../lib/context.ts";
-import { normalizeRpcError, type RpcError } from "../../lib/rpc-errors-effect.ts";
-import type { Session } from "../../shared/types.ts";
-import { useEffectQuery } from "./useEffectQuery.ts";
+import { useKloviClient, useKloviRuntime } from "../../lib/context";
+import { normalizeRpcError, type RpcError } from "../../lib/rpc-errors-effect";
+import type { Session } from "../../shared/types";
+import { useEffectQuery } from "./useEffectQuery";
 
 const HEAD_SIZE = 100;
 

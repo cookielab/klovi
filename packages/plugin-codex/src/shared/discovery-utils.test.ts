@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
-import { decodeEncodedPath, readDirEntriesSafe } from "./discovery-utils.ts";
+import { decodeEncodedPath, readDirEntriesSafe } from "./discovery-utils";
 
 const testDir = join(tmpdir(), `klovi-codex-discovery-utils-test-${Date.now()}`);
 const originalPlatform = process.platform;
@@ -22,19 +22,19 @@ afterEach(async () => {
 });
 
 describe("codex discovery utils", () => {
-	test("readDirEntriesSafe returns [] for missing directory", async () => {
+	it("readDirEntriesSafe returns [] for missing directory", async () => {
 		const entries = await Effect.runPromise(
 			readDirEntriesSafe(join(testDir, "missing")).pipe(Effect.provide(testLayer)),
 		);
 		expect(entries).toEqual([]);
 	});
 
-	test("decodeEncodedPath supports unix-style paths", () => {
+	it("decodeEncodedPath supports unix-style paths", () => {
 		expect(decodeEncodedPath("-Users-dev-project")).toBe("/Users/dev/project");
 		expect(decodeEncodedPath("Users-dev-project")).toBe("Users/dev/project");
 	});
 
-	test("decodeEncodedPath supports windows-style drive paths", () => {
+	it("decodeEncodedPath supports windows-style drive paths", () => {
 		Object.defineProperty(process, "platform", { value: "win32" });
 		expect(decodeEncodedPath("-D-Workspace-klovi")).toBe("D:/Workspace/klovi");
 	});

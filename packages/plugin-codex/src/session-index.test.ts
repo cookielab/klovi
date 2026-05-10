@@ -1,16 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import {
-	findCodexSessionFileById,
-	isCodexSessionMeta,
-	normalizeSessionMeta,
-	scanCodexSessions,
-} from "./session-index.ts";
+import { findCodexSessionFileById, isCodexSessionMeta, normalizeSessionMeta, scanCodexSessions } from "./session-index";
 
 const testDir = join(tmpdir(), `klovi-codex-session-index-test-${Date.now()}`);
 
@@ -25,7 +19,7 @@ afterEach(async () => {
 });
 
 describe("isCodexSessionMeta", () => {
-	test("returns true for valid old-format meta", () => {
+	it("returns true for valid old-format meta", () => {
 		expect(
 			isCodexSessionMeta({
 				uuid: "test",
@@ -37,7 +31,7 @@ describe("isCodexSessionMeta", () => {
 		).toBe(true);
 	});
 
-	test("returns false for new-format envelope", () => {
+	it("returns false for new-format envelope", () => {
 		expect(
 			isCodexSessionMeta({
 				type: "session_meta",
@@ -46,14 +40,14 @@ describe("isCodexSessionMeta", () => {
 		).toBe(false);
 	});
 
-	test("returns false for non-object", () => {
+	it("returns false for non-object", () => {
 		expect(isCodexSessionMeta("string")).toBe(false);
 		expect(isCodexSessionMeta(null)).toBe(false);
 	});
 });
 
 describe("normalizeSessionMeta", () => {
-	test("passes through old-format meta unchanged", () => {
+	it("passes through old-format meta unchanged", () => {
 		const meta = {
 			uuid: "old-uuid",
 			cwd: "/tmp/project",
@@ -65,7 +59,7 @@ describe("normalizeSessionMeta", () => {
 		expect(result).toEqual(meta);
 	});
 
-	test("normalizes new-format envelope to CodexSessionMeta", () => {
+	it("normalizes new-format envelope to CodexSessionMeta", () => {
 		const newFormat = {
 			type: "session_meta",
 			timestamp: "2026-02-18T10:00:00.000Z",
@@ -88,7 +82,7 @@ describe("normalizeSessionMeta", () => {
 		expect(result?.timestamps.created).toBeCloseTo(new Date("2026-02-18T10:00:00.000Z").getTime() / 1000, 0);
 	});
 
-	test("uses unknown as model when model absent", () => {
+	it("uses unknown as model when model absent", () => {
 		const newFormat = {
 			type: "session_meta",
 			payload: {
@@ -104,7 +98,7 @@ describe("normalizeSessionMeta", () => {
 		expect(result?.provider_id).toBe("anthropic");
 	});
 
-	test("uses file mtime as updated timestamp", () => {
+	it("uses file mtime as updated timestamp", () => {
 		const newFormat = {
 			type: "session_meta",
 			payload: {
@@ -120,16 +114,15 @@ describe("normalizeSessionMeta", () => {
 		expect(result?.timestamps.updated).toBe(fileMtime);
 	});
 
-	test("returns null for unrecognized format", () => {
+	it("returns null for unrecognized format", () => {
 		expect(normalizeSessionMeta({ random: "object" })).toBeNull();
 		expect(normalizeSessionMeta("string")).toBeNull();
 		expect(normalizeSessionMeta(null)).toBeNull();
 	});
 });
 
-// biome-ignore lint/security/noSecrets: test data, not a real secret
 describe("findCodexSessionFileById", () => {
-	test("finds old-format file by exact uuid match", async () => {
+	it("finds old-format file by exact uuid match", async () => {
 		const dir = join(testDir, "sessions", "openai", "2025-01-15");
 		await mkdir(dir, { recursive: true });
 		await Bun.write(join(dir, "my-uuid.jsonl"), "{}");
@@ -138,7 +131,7 @@ describe("findCodexSessionFileById", () => {
 		expect(result).toBe(join(dir, "my-uuid.jsonl"));
 	});
 
-	test("finds new-format file by suffix match", async () => {
+	it("finds new-format file by suffix match", async () => {
 		const dir = join(testDir, "sessions", "2026", "02", "18");
 		await mkdir(dir, { recursive: true });
 		await Bun.write(join(dir, "rollout-2026-02-18-my-uuid.jsonl"), "{}");
@@ -147,14 +140,14 @@ describe("findCodexSessionFileById", () => {
 		expect(result).toBe(join(dir, "rollout-2026-02-18-my-uuid.jsonl"));
 	});
 
-	test("returns null when no file matches", async () => {
+	it("returns null when no file matches", async () => {
 		const result = await Effect.runPromise(findCodexSessionFileById("nonexistent").pipe(Effect.provide(testLayer)));
 		expect(result).toBeNull();
 	});
 });
 
 describe("scanCodexSessions", () => {
-	test("scans new-format session files", async () => {
+	it("scans new-format session files", async () => {
 		const dir = join(testDir, "sessions", "2026", "02", "18");
 		await mkdir(dir, { recursive: true });
 		await Bun.write(
@@ -180,7 +173,7 @@ describe("scanCodexSessions", () => {
 		expect(sessions[0]?.meta.model).toBe("o4-mini");
 	});
 
-	test("uses turn_context model when new-format meta has no model", async () => {
+	it("uses turn_context model when new-format meta has no model", async () => {
 		const dir = join(testDir, "sessions", "2026", "02", "18");
 		await mkdir(dir, { recursive: true });
 		await Bun.write(
@@ -212,7 +205,7 @@ describe("scanCodexSessions", () => {
 		expect(sessions[0]?.meta.model).toBe("gpt-5.3-codex");
 	});
 
-	test("falls back to provider when new-format meta has no model", async () => {
+	it("falls back to provider when new-format meta has no model", async () => {
 		const dir = join(testDir, "sessions", "2026", "02", "18");
 		await mkdir(dir, { recursive: true });
 		await Bun.write(

@@ -1,4 +1,4 @@
-import type { KloviClient } from "./client.ts";
+import type { KloviClient } from "./client";
 
 async function rpcCall<T>(baseUrl: string, method: string, params?: unknown): Promise<T> {
 	const response = await fetch(`${baseUrl}/api/rpc/${method}`, {

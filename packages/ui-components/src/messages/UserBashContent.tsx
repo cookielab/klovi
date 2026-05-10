@@ -1,6 +1,6 @@
 import { CodeBox } from "@cookielab.io/klovi-design-system";
-import { SmartToolOutput } from "../tools/index.ts";
-import type { UserTurn } from "../types/index.ts";
+import { SmartToolOutput } from "../tools/index";
+import type { UserTurn } from "../types/index";
 
 type UserBashContentProps = {
 	turn: UserTurn;

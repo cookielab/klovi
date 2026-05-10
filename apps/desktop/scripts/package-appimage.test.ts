@@ -1,11 +1,10 @@
-import { describe, expect, test } from "bun:test";
-import { APPIMAGE_ARCH_MAP, APPIMAGE_DESKTOP_ENTRY_FILENAME, DESKTOP_ENTRY, parseArgs } from "./package-appimage.ts";
+import { APPIMAGE_ARCH_MAP, APPIMAGE_DESKTOP_ENTRY_FILENAME, DESKTOP_ENTRY, parseArgs } from "./package-appimage";
 
 const STARTUP_WM_CLASS_LINE = ["StartupWMClass", "Klovi"].join("=");
 const GNOME_WM_CLASS_LINE = ["X-GNOME-WMClass", "Klovi"].join("=");
 
 describe("parseArgs", () => {
-	test("parses all required arguments", () => {
+	it("parses all required arguments", () => {
 		const argv = [
 			"bun",
 			"package-appimage.ts",
@@ -27,7 +26,7 @@ describe("parseArgs", () => {
 		});
 	});
 
-	test("accepts arm64 architecture", () => {
+	it("accepts arm64 architecture", () => {
 		const argv = [
 			"bun",
 			"package-appimage.ts",
@@ -44,7 +43,7 @@ describe("parseArgs", () => {
 		expect(result.arch).toBe("arm64");
 	});
 
-	test("matches workflow invocation args (no --appimagetool-arch)", () => {
+	it("matches workflow invocation args (no --appimagetool-arch)", () => {
 		// The workflow calls: bun package-appimage.ts --tarball X --arch Y --version Z --output W
 		const argv = [
 			"bun",
@@ -63,21 +62,21 @@ describe("parseArgs", () => {
 });
 
 describe("APPIMAGE_ARCH_MAP", () => {
-	test("maps x64 to x86_64", () => {
+	it("maps x64 to x86_64", () => {
 		expect(APPIMAGE_ARCH_MAP["x64"]).toBe("x86_64");
 	});
 
-	test("maps arm64 to aarch64", () => {
+	it("maps arm64 to aarch64", () => {
 		expect(APPIMAGE_ARCH_MAP["arm64"]).toBe("aarch64");
 	});
 });
 
 describe("linux desktop metadata", () => {
-	test("uses the canonical desktop file identifier", () => {
+	it("uses the canonical desktop file identifier", () => {
 		expect(APPIMAGE_DESKTOP_ENTRY_FILENAME).toBe("io.cookielab.klovi.desktop");
 	});
 
-	test("matches Klovi's Linux dock identity", () => {
+	it("matches Klovi's Linux dock identity", () => {
 		expect(DESKTOP_ENTRY).toContain("Name=Klovi");
 		expect(DESKTOP_ENTRY).toContain("Icon=klovi");
 		expect(DESKTOP_ENTRY).toContain(STARTUP_WM_CLASS_LINE);

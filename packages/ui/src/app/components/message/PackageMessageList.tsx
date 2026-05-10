@@ -1,10 +1,10 @@
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
 import { MessageList as UiMessageList } from "@cookielab.io/klovi-ui-components/messages";
 import { useCallback } from "react";
-import { useRunKloviEffect } from "../../../lib/context.ts";
-import { kloviHostBridge } from "../../../lib/rpc-client.ts";
-import type { Turn } from "../../../shared/types.ts";
-import { getFrontendPlugin } from "../../plugin-registry.ts";
+import { useRunKloviEffect } from "../../../lib/context";
+import { kloviHostBridge } from "../../../lib/rpc-client";
+import type { Turn } from "../../../shared/types";
+import { getFrontendPlugin } from "../../plugin-registry";
 
 type PackageMessageListProps = {
 	turns: Turn[];
@@ -34,7 +34,7 @@ export function PackageMessageList({
 	const runKloviEffect = useRunKloviEffect();
 	const handleLinkClick = useCallback(
 		(url: string) => {
-			runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => {});
+			runKloviEffect(kloviHostBridge.openExternal({ url: url })).catch(() => undefined);
 		},
 		[runKloviEffect],
 	);

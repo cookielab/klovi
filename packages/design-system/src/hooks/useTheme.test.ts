@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { act, cleanup, renderHook } from "@testing-library/react";
-import { useFontSize } from "./useFontSize.ts";
-import { resolveTheme, useTheme } from "./useTheme.ts";
+import { useFontSize } from "./useFontSize";
+import { resolveTheme, useTheme } from "./useTheme";
 
 const THEME_KEY = "klovi-theme";
 const FONT_SIZE_KEY = "klovi-font-size";
@@ -80,24 +79,24 @@ afterEach(() => {
 });
 
 describe("resolveTheme", () => {
-	test("returns explicit non-system values", () => {
+	it("returns explicit non-system values", () => {
 		expect(resolveTheme("light")).toBe("light");
 		expect(resolveTheme("dark")).toBe("dark");
 	});
 
-	test("uses override when setting is system", () => {
+	it("uses override when setting is system", () => {
 		expect(resolveTheme("system", "dark")).toBe("dark");
 		expect(resolveTheme("system", "light")).toBe("light");
 	});
 
-	test("ignores override for explicit settings", () => {
+	it("ignores override for explicit settings", () => {
 		expect(resolveTheme("light", "dark")).toBe("light");
 		expect(resolveTheme("dark", "light")).toBe("dark");
 	});
 });
 
 describe("useTheme", () => {
-	test("defaults to system and resolves from matchMedia", () => {
+	it("defaults to system and resolves from matchMedia", () => {
 		installMatchMedia(true);
 
 		const { result } = renderHook(() => useTheme());
@@ -108,7 +107,7 @@ describe("useTheme", () => {
 		expect(localStorage.getItem(THEME_KEY)).toBe("system");
 	});
 
-	test("restores stored theme and cycles settings", () => {
+	it("restores stored theme and cycles settings", () => {
 		installMatchMedia(false);
 		localStorage.setItem(THEME_KEY, "light");
 
@@ -128,7 +127,7 @@ describe("useTheme", () => {
 		expect(result.current.setting).toBe("light");
 	});
 
-	test("reacts to system theme changes in system mode", () => {
+	it("reacts to system theme changes in system mode", () => {
 		const media = installMatchMedia(false);
 
 		const { result, unmount } = renderHook(() => useTheme());
@@ -143,7 +142,7 @@ describe("useTheme", () => {
 		expect(media.removeEventListener).toHaveBeenCalledTimes(1);
 	});
 
-	test("does not subscribe to system changes when theme is explicit", () => {
+	it("does not subscribe to system changes when theme is explicit", () => {
 		const media = installMatchMedia(false);
 		localStorage.setItem(THEME_KEY, "dark");
 
@@ -152,7 +151,7 @@ describe("useTheme", () => {
 		expect(media.addEventListener).toHaveBeenCalledTimes(0);
 	});
 
-	test("set() updates explicit setting", () => {
+	it("set() updates explicit setting", () => {
 		installMatchMedia(false);
 
 		const { result } = renderHook(() => useTheme());
@@ -164,7 +163,7 @@ describe("useTheme", () => {
 		expect(localStorage.getItem(THEME_KEY)).toBe("dark");
 	});
 
-	test("uses systemThemeOverride when set and setting is system", () => {
+	it("uses systemThemeOverride when set and setting is system", () => {
 		installMatchMedia(false);
 
 		const { result } = renderHook(() => useTheme({ systemThemeOverride: "dark" }));
@@ -173,7 +172,7 @@ describe("useTheme", () => {
 		expect(result.current.resolved).toBe("dark");
 	});
 
-	test("ignores systemThemeOverride when setting is explicit", () => {
+	it("ignores systemThemeOverride when setting is explicit", () => {
 		installMatchMedia(false);
 		localStorage.setItem(THEME_KEY, "light");
 
@@ -183,7 +182,7 @@ describe("useTheme", () => {
 		expect(result.current.resolved).toBe("light");
 	});
 
-	test("does not subscribe to matchMedia when systemThemeOverride is active", () => {
+	it("does not subscribe to matchMedia when systemThemeOverride is active", () => {
 		const media = installMatchMedia(false);
 
 		renderHook(() => useTheme({ systemThemeOverride: "dark" }));
@@ -191,7 +190,7 @@ describe("useTheme", () => {
 		expect(media.addEventListener).toHaveBeenCalledTimes(0);
 	});
 
-	test("reacts to systemThemeOverride changes", () => {
+	it("reacts to systemThemeOverride changes", () => {
 		installMatchMedia(false);
 
 		const { result, rerender } = renderHook(
@@ -207,7 +206,7 @@ describe("useTheme", () => {
 });
 
 describe("useFontSize", () => {
-	test("defaults to 15 and writes css var + storage", () => {
+	it("defaults to 15 and writes css var + storage", () => {
 		const { result } = renderHook(() => useFontSize());
 
 		expect(result.current.size).toBe(15);
@@ -215,7 +214,7 @@ describe("useFontSize", () => {
 		expect(localStorage.getItem(FONT_SIZE_KEY)).toBe("15");
 	});
 
-	test("restores from localStorage and clamps bounds", () => {
+	it("restores from localStorage and clamps bounds", () => {
 		localStorage.setItem(FONT_SIZE_KEY, "28");
 		const { result } = renderHook(() => useFontSize());
 

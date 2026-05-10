@@ -1,8 +1,7 @@
-import { describe, expect, test } from "bun:test";
-import { getFrontendPlugin } from "./plugin-registry.ts";
+import { getFrontendPlugin } from "./plugin-registry";
 
 describe("frontend plugin registry", () => {
-	test("registers built-in frontend plugins from packages", () => {
+	it("registers built-in frontend plugins from packages", () => {
 		const claude = getFrontendPlugin("claude-code");
 		const codex = getFrontendPlugin("codex-cli");
 		const opencode = getFrontendPlugin("opencode");
@@ -14,14 +13,14 @@ describe("frontend plugin registry", () => {
 		expect(cursor?.displayName).toBe("Cursor");
 	});
 
-	test("uses plugin-provided resume commands", () => {
+	it("uses plugin-provided resume commands", () => {
 		expect(getFrontendPlugin("claude-code")?.getResumeCommand?.("abc123")).toBe("claude --resume abc123");
 		expect(getFrontendPlugin("codex-cli")?.getResumeCommand?.("abc123")).toBe("codex resume abc123");
 		expect(getFrontendPlugin("opencode")?.getResumeCommand).toBeUndefined();
 		expect(getFrontendPlugin("cursor")?.getResumeCommand).toBeUndefined();
 	});
 
-	test("returns undefined for unknown plugin", () => {
+	it("returns undefined for unknown plugin", () => {
 		expect(getFrontendPlugin("unknown-plugin")).toBeUndefined();
 	});
 });

@@ -1,13 +1,12 @@
 import { Database } from "bun:sqlite";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { openCodePlugin } from "./index.ts";
-import { BunSqliteLayer } from "./runtime/bun-sqlite.ts";
+import { openCodePlugin } from "./index";
+import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
 const testDir = join(tmpdir(), `klovi-opencode-index-test-${Date.now()}`);
 
@@ -127,14 +126,14 @@ describe("openCodePlugin", () => {
 		await rm(testDir, { recursive: true, force: true });
 	});
 
-	test("exposes plugin identity and no resume command", () => {
+	it("exposes plugin identity and no resume command", () => {
 		expect(openCodePlugin.id).toBe("opencode");
 		expect(openCodePlugin.displayName).toBe("OpenCode");
 		expect(openCodePlugin.getDefaultDataDir()).toBeNull();
 		expect("getResumeCommand" in openCodePlugin).toBe(false);
 	});
 
-	test("discovers, lists, and loads sessions through plugin interface", async () => {
+	it("discovers, lists, and loads sessions through plugin interface", async () => {
 		createDbWithSingleSession();
 
 		const projects = await runEffect(openCodePlugin.discoverProjects);
@@ -153,7 +152,7 @@ describe("openCodePlugin", () => {
 		expect(session.turns).toHaveLength(2);
 	});
 
-	test("returns empty discovery/list results when db is missing", async () => {
+	it("returns empty discovery/list results when db is missing", async () => {
 		const projects = await runEffect(openCodePlugin.discoverProjects);
 		const sessions = await runEffect(openCodePlugin.listSessions("project-1"));
 

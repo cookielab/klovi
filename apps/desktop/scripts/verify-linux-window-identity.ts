@@ -3,7 +3,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { resolveLinuxLauncherPath } from "./linux-bundle.ts";
+import process from "node:process";
+import { resolveLinuxLauncherPath } from "./linux-bundle";
 
 const EXPECTED_WM_CLASS = "Klovi";
 const FORBIDDEN_WM_CLASS = "ElectrobunKitchenSink";
@@ -186,10 +187,10 @@ function formatLaunchFailure(details: LaunchFailureDetails): string {
 }
 
 class WindowSearchTimeoutError extends Error {
-	readonly lastObservedWindows: WindowIdentity[];
-	readonly rootPid: number;
+	public readonly lastObservedWindows: WindowIdentity[];
+	public readonly rootPid: number;
 
-	constructor(rootPid: number, lastObservedWindows: WindowIdentity[]) {
+	public constructor(rootPid: number, lastObservedWindows: WindowIdentity[]) {
 		super(
 			formatLaunchFailure({
 				lastObservedWindows: lastObservedWindows,
@@ -210,7 +211,6 @@ async function findWindowForLaunch(rootPid: number, timeoutMs = 30_000): Promise
 	const deadline = Date.now() + timeoutMs;
 
 	while (Date.now() < deadline) {
-		// biome-ignore lint/performance/noAwaitInLoops: sequential polling required - each iteration checks new window state
 		const windowIds = await listWindowIds();
 		const identities = await Promise.all(windowIds.map((windowId) => readWindowIdentity(windowId)));
 		const ownerPids = await listProcessFamily(rootPid);
@@ -256,7 +256,6 @@ async function killProcessTree(rootPid: number): Promise<void> {
 			return;
 		}
 		const killPollIntervalMs = 100;
-		// biome-ignore lint/performance/noAwaitInLoops: sequential polling required - deliberate sleep between polls
 		await Bun.sleep(killPollIntervalMs);
 	}
 
@@ -331,8 +330,6 @@ async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
 		if (name !== "" && !name.includes(EXPECTED_WM_CLASS)) {
 			throw new Error(`Window title does not contain ${EXPECTED_WM_CLASS}: ${name}`);
 		}
-
-		console.log(`Verified Linux window identity: ${wmClass}${name ? ` (${name})` : ""}`);
 	} finally {
 		if (proc.pid != null) {
 			await killProcessTree(proc.pid);
@@ -345,8 +342,7 @@ async function verifyLinuxWindowIdentity(args: VerifyArgs): Promise<void> {
 if (import.meta.main) {
 	try {
 		await verifyLinuxWindowIdentity(parseArgs(Bun.argv));
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+	} catch {
 		process.exit(1);
 	}
 }

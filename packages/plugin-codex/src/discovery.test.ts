@@ -1,17 +1,15 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginConfig } from "@cookielab.io/klovi-plugin-core";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
-import { discoverCodexProjects, listCodexSessions } from "./discovery.ts";
+import { discoverCodexProjects, listCodexSessions } from "./discovery";
 
 const testDir = join(tmpdir(), `klovi-codex-discovery-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
 
-// biome-ignore lint/complexity/useMaxParams: test helper with positional args for readability
 async function writeSession(
 	provider: string,
 	date: string,
@@ -50,7 +48,7 @@ afterEach(async () => {
 });
 
 describe("discoverCodexProjects", () => {
-	test("discovers projects from session files", async () => {
+	it("discovers projects from session files", async () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			name: "Fix bug",
@@ -78,7 +76,7 @@ describe("discoverCodexProjects", () => {
 		expect(projects[0]?.sessionCount).toBe(2);
 	});
 
-	test("groups sessions by cwd into separate projects", async () => {
+	it("groups sessions by cwd into separate projects", async () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			cwd: "/Users/dev/project-a",
@@ -102,12 +100,12 @@ describe("discoverCodexProjects", () => {
 		expect(paths).toEqual(["/Users/dev/project-a", "/Users/dev/project-b"]);
 	});
 
-	test("returns empty array when no sessions exist", async () => {
+	it("returns empty array when no sessions exist", async () => {
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
 		expect(projects).toEqual([]);
 	});
 
-	test("skips files with malformed first line", async () => {
+	it("skips files with malformed first line", async () => {
 		const dir = join(testDir, "sessions", "openai", "2025-01-15");
 		await mkdir(dir, { recursive: true });
 		await Bun.write(join(dir, "bad-uuid.jsonl"), "not valid json\n");
@@ -116,7 +114,7 @@ describe("discoverCodexProjects", () => {
 		expect(projects).toEqual([]);
 	});
 
-	test("handles multiple providers", async () => {
+	it("handles multiple providers", async () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			cwd: "/Users/dev/project",
@@ -142,7 +140,7 @@ describe("discoverCodexProjects", () => {
 });
 
 describe("listCodexSessions", () => {
-	test("lists sessions matching a project cwd", async () => {
+	it("lists sessions matching a project cwd", async () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			name: "Fix the login bug",
@@ -181,7 +179,7 @@ describe("listCodexSessions", () => {
 		expect(sessions[0]?.model).toBe("o4-mini");
 	});
 
-	test("uses first agent_message when name is empty", async () => {
+	it("uses first agent_message when name is empty", async () => {
 		await writeSession(
 			"openai",
 			"2025-01-15",
@@ -208,7 +206,7 @@ describe("listCodexSessions", () => {
 		expect(sessions[0]?.firstMessage).toBe("I'll help you fix the bug");
 	});
 
-	test("falls back to default message when no name or agent_message", async () => {
+	it("falls back to default message when no name or agent_message", async () => {
 		await writeSession(
 			"openai",
 			"2025-01-15",
@@ -229,7 +227,7 @@ describe("listCodexSessions", () => {
 		expect(sessions[0]?.firstMessage).toBe("Codex session");
 	});
 
-	test("returns empty for non-matching cwd", async () => {
+	it("returns empty for non-matching cwd", async () => {
 		await writeSession("openai", "2025-01-15", "uuid-1", {
 			uuid: "uuid-1",
 			cwd: "/Users/dev/project-a",
@@ -244,7 +242,7 @@ describe("listCodexSessions", () => {
 		expect(sessions).toEqual([]);
 	});
 
-	test("sessions sorted by timestamp descending", async () => {
+	it("sessions sorted by timestamp descending", async () => {
 		await writeSession("openai", "2025-01-15", "uuid-old", {
 			uuid: "uuid-old",
 			name: "Old session",
@@ -272,7 +270,7 @@ describe("listCodexSessions", () => {
 
 describe("new envelope format", () => {
 	describe("discoverCodexProjects", () => {
-		test("discovers projects from new-format session files", async () => {
+		it("discovers projects from new-format session files", async () => {
 			await writeNewFormatSession("2026/02/18", "new-uuid-1", {
 				type: "session_meta",
 				timestamp: "2026-02-18T10:00:00.000Z",
@@ -293,7 +291,7 @@ describe("new envelope format", () => {
 			expect(projects[0]?.sessionCount).toBe(1);
 		});
 
-		test("mixes old and new format sessions into same project", async () => {
+		it("mixes old and new format sessions into same project", async () => {
 			await writeSession("openai", "2025-01-15", "old-uuid", {
 				uuid: "old-uuid",
 				cwd: "/Users/dev/project",
@@ -321,7 +319,7 @@ describe("new envelope format", () => {
 	});
 
 	describe("listCodexSessions", () => {
-		test("lists new-format sessions", async () => {
+		it("lists new-format sessions", async () => {
 			await writeNewFormatSession("2026/02/18", "new-uuid-1", {
 				type: "session_meta",
 				timestamp: "2026-02-18T10:00:00.000Z",
@@ -342,7 +340,7 @@ describe("new envelope format", () => {
 			expect(sessions[0]?.model).toBe("o4-mini");
 		});
 
-		test("extracts first user message from new-format event_msg", async () => {
+		it("extracts first user message from new-format event_msg", async () => {
 			await writeNewFormatSession(
 				"2026/02/18",
 				"msg-uuid",
@@ -376,7 +374,7 @@ describe("new envelope format", () => {
 			expect(sessions[0]?.firstMessage).toBe("Fix the login bug");
 		});
 
-		test("falls back to Codex session when no messages in new format", async () => {
+		it("falls back to Codex session when no messages in new format", async () => {
 			await writeNewFormatSession("2026/02/18", "empty-uuid", {
 				type: "session_meta",
 				timestamp: "2026-02-18T10:00:00.000Z",

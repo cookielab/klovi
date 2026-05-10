@@ -16,30 +16,21 @@ const TOKEN_GROUPS = {
 	Status: ["color-error", "color-success"],
 };
 
-// biome-ignore lint/style/useComponentExportOnlyModules: story-local helper component
 function Swatch({ name }: { name: string }) {
 	return (
-		<div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-			<div
-				style={{
-					width: 48,
-					height: 32,
-					background: `var(--${name})`,
-					border: "1px solid var(--color-border)",
-				}}
-			/>
-			<code style={{ fontSize: "0.85rem" }}>--{name}</code>
+		<div>
+			<div />
+			<code>--{name}</code>
 		</div>
 	);
 }
 
-// biome-ignore lint/style/useComponentExportOnlyModules: story-local demo component
 function TokenPalette() {
 	return (
-		<div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 32 }}>
+		<div>
 			{Object.entries(TOKEN_GROUPS).map(([group, tokens]) => (
 				<div key={group}>
-					<h3 style={{ marginBottom: 12, fontSize: "1rem", fontWeight: 600 }}>{group}</h3>
+					<h3>{group}</h3>
 					{tokens.map((t) => (
 						<Swatch key={t} name={t} />
 					))}

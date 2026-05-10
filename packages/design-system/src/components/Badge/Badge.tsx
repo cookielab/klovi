@@ -1,5 +1,5 @@
 import type React from "react";
-import type { BadgeVariant } from "../../types.ts";
+import type { BadgeVariant } from "../../types";
 
 type BadgeProps = {
 	variant?: BadgeVariant;

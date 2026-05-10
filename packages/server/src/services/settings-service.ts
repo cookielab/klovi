@@ -1,9 +1,9 @@
 import type { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
-import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog.ts";
-import { type SettingsWriteError, UnknownPluginError } from "./errors.ts";
-import type { PluginSettings, UpdateChannel } from "./settings.ts";
-import { loadSettings, saveSettings } from "./settings.ts";
+import { BUILTIN_PLUGIN_DESCRIPTORS, BUILTIN_PLUGIN_ID_SET } from "./catalog";
+import { type SettingsWriteError, UnknownPluginError } from "./errors";
+import type { PluginSettings, UpdateChannel } from "./settings";
+import { loadSettings, saveSettings } from "./settings";
 
 type PluginSettingInfo = {
 	id: string;

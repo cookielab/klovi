@@ -3,9 +3,9 @@ import { formatShortcut } from "@cookielab.io/klovi-ui-components/utilities";
 import type React from "react";
 import { useCallback } from "react";
 import faviconUrl from "../../../../favicon.svg";
-import { useKloviClient, useRunKloviEffect } from "../../../lib/context.ts";
-import { kloviHostBridge } from "../../../lib/rpc-client.ts";
-import { useEffectQuery } from "../../hooks/useEffectQuery.ts";
+import { useKloviClient, useRunKloviEffect } from "../../../lib/context";
+import { kloviHostBridge } from "../../../lib/rpc-client";
+import { useEffectQuery } from "../../hooks/useEffectQuery";
 
 type VersionInfo = {
 	version: string;
@@ -42,7 +42,7 @@ export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: Si
 				kloviHostBridge.openExternal({
 					url: "https://cookielab.io?utm_source=opensource&utm_medium=klovi",
 				}),
-			).catch(() => {});
+			).catch(() => undefined);
 		},
 		[runKloviEffect],
 	);

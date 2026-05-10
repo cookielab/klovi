@@ -1,11 +1,11 @@
 import { TurnBox } from "@cookielab.io/klovi-design-system";
 import type { FrontendPlugin } from "@cookielab.io/klovi-plugin-core";
-import { ToolCall } from "../tools/index.ts";
-import type { AssistantTurn, ContentBlock, TokenUsage } from "../types/index.ts";
-import { groupContentBlocks } from "../types/index.ts";
-import { formatFullDateTime, formatTimestamp, shortModel } from "../utilities/index.ts";
-import { MarkdownRenderer } from "./MarkdownRenderer.tsx";
-import { ThinkingBlock } from "./ThinkingBlock.tsx";
+import { ToolCall } from "../tools/index";
+import type { AssistantTurn, ContentBlock, TokenUsage } from "../types/index";
+import { groupContentBlocks } from "../types/index";
+import { formatFullDateTime, formatTimestamp, shortModel } from "../utilities/index";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { ThinkingBlock } from "./ThinkingBlock";
 
 const EXEC_TREE_CLASSES =
 	"relative mt-3 pl-5 before:content-[''] before:absolute before:left-[7px] before:top-0 before:bottom-0 before:w-px before:bg-tree-line";
@@ -113,7 +113,6 @@ export function AssistantMessage({
 	const flatGroups = hasNonText ? [] : visibleGroups;
 
 	return (
-		// biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role
 		<TurnBox
 			role="assistant"
 			{...(turn.model ? { model: shortModel(turn.model) } : {})}
@@ -143,7 +142,6 @@ export function AssistantMessage({
 				<div className={EXEC_TREE_CLASSES}>
 					{treeGroups.map((group, i) => (
 						<div
-							// biome-ignore lint/suspicious/noArrayIndexKey: positional groups are never reordered
 							key={`tree-${i}`}
 							className={`${TREE_NODE_CLASSES}${isPresentation && i === treeGroups.length - 1 ? ` ${STEP_ENTER_CLASSES}` : ""}`}
 						>
@@ -160,11 +158,7 @@ export function AssistantMessage({
 				</div>
 			)}
 			{flatGroups.map((group, i) => (
-				<div
-					// biome-ignore lint/suspicious/noArrayIndexKey: positional groups are never reordered
-					key={`flat-${i}`}
-					className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}
-				>
+				<div key={`flat-${i}`} className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}>
 					{renderGroup({
 						group: group,
 						sessionId: sessionId,
