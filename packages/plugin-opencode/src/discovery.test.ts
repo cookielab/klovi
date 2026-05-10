@@ -382,14 +382,14 @@ describe("listOpenCodeSessions", () => {
 		// Add an assistant message to get model info
 		insertMessage(db, "msg-1", "sess-1", {
 			role: "assistant",
-			modelID: "claude-sonnet-4-20250514",
-			providerID: "anthropic",
+			["modelID"]: "claude-sonnet-4-20250514",
+			["providerID"]: "anthropic",
 			tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 		});
 		insertMessage(db, "msg-2", "sess-2", {
 			role: "assistant",
-			modelID: "gpt-4o",
-			providerID: "openai",
+			["modelID"]: "gpt-4o",
+			["providerID"]: "openai",
 			tokens: { input: N_200, output: N_100, cache: { read: 0, write: 0 } },
 		});
 		db.close();

@@ -6,20 +6,20 @@ const N_60 = 60;
 const COMMAND_SUMMARY_MAX = 80;
 
 export const codexSummaryExtractors: Record<string, (input: Record<string, unknown>) => string> = {
-	command_execution: (i) => truncate(String(i["command"] || ""), COMMAND_SUMMARY_MAX),
-	file_change: (i) => {
+	["command_execution"]: (i) => truncate(String(i["command"] || ""), COMMAND_SUMMARY_MAX),
+	["file_change"]: (i) => {
 		const changes = i["changes"];
 		if (Array.isArray(changes) && changes.length > 0) {
 			return String((changes[0] as Record<string, unknown>)["path"] || "");
 		}
 		return "";
 	},
-	web_search: (i) => truncate(String(i["query"] || ""), N_60),
+	["web_search"]: (i) => truncate(String(i["query"] || ""), N_60),
 };
 
 export const codexInputFormatters: Record<string, (input: Record<string, unknown>) => string> = {
-	command_execution: (i) => String(i["command"] || ""),
-	file_change: (i) => {
+	["command_execution"]: (i) => String(i["command"] || ""),
+	["file_change"]: (i) => {
 		const changes = i["changes"];
 		if (Array.isArray(changes)) {
 			return (changes as Record<string, unknown>[])
@@ -28,5 +28,5 @@ export const codexInputFormatters: Record<string, (input: Record<string, unknown
 		}
 		return JSON.stringify(i, null, 2);
 	},
-	web_search: (i) => `Query: ${String(i["query"] || "")}`,
+	["web_search"]: (i) => `Query: ${String(i["query"] || "")}`,
 };

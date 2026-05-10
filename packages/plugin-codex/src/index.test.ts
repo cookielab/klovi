@@ -67,7 +67,7 @@ describe("codexCliPlugin", () => {
 				cwd: "/Users/dev/project-a",
 				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
-				provider_id: "openai",
+				["provider_id"]: "openai",
 			},
 			[
 				{ type: "turn.started" },
@@ -75,7 +75,7 @@ describe("codexCliPlugin", () => {
 					type: "item.completed",
 					item: { type: "agent_message", text: "I will refactor this safely." },
 				},
-				{ type: "turn.completed", usage: { input_tokens: N_100, output_tokens: N_40 } },
+				{ type: "turn.completed", usage: { ["input_tokens"]: N_100, ["output_tokens"]: N_40 } },
 			],
 		);
 

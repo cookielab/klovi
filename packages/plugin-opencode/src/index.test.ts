@@ -108,7 +108,7 @@ function createDbWithSingleSession(): void {
 		"session-1",
 		N_1706000001000,
 		N_1706000001000,
-		JSON.stringify({ role: "assistant", modelID: "gpt-5", finish: "stop" }),
+		JSON.stringify({ role: "assistant", ["modelID"]: "gpt-5", finish: "stop" }),
 	]);
 
 	db.run("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)", [

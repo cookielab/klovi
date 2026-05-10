@@ -86,7 +86,7 @@ if (typeof HTMLElement !== "undefined") {
 			bottom: N_600,
 			width: N_800,
 			height: N_600,
-			toJSON: () => ({}),
+			["toJSON"]: () => ({}),
 		} as DOMRect;
 	};
 }

@@ -63,7 +63,7 @@ describe("discoverCodexProjects", () => {
 			cwd: "/Users/dev/project-a",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		await writeSession("openai", "2025-01-16", "uuid-2", {
@@ -72,7 +72,7 @@ describe("discoverCodexProjects", () => {
 			cwd: "/Users/dev/project-a",
 			timestamps: { created: N_1706100000, updated: N_1706101000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
@@ -90,7 +90,7 @@ describe("discoverCodexProjects", () => {
 			cwd: "/Users/dev/project-a",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		await writeSession("openai", "2025-01-15", "uuid-2", {
@@ -98,7 +98,7 @@ describe("discoverCodexProjects", () => {
 			cwd: "/Users/dev/project-b",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
@@ -128,7 +128,7 @@ describe("discoverCodexProjects", () => {
 			cwd: "/Users/dev/project",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		await writeSession("anthropic", "2025-01-15", "uuid-2", {
@@ -136,7 +136,7 @@ describe("discoverCodexProjects", () => {
 			cwd: "/Users/dev/project",
 			timestamps: { created: N_1706100000, updated: N_1706101000 },
 			model: "claude-4",
-			provider_id: "anthropic",
+			["provider_id"]: "anthropic",
 		});
 
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
@@ -155,7 +155,7 @@ describe("listCodexSessions", () => {
 			cwd: "/Users/dev/project-a",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		await writeSession("openai", "2025-01-16", "uuid-2", {
@@ -164,7 +164,7 @@ describe("listCodexSessions", () => {
 			cwd: "/Users/dev/project-a",
 			timestamps: { created: N_1706100000, updated: N_1706101000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		// Different project, should not be included
@@ -174,7 +174,7 @@ describe("listCodexSessions", () => {
 			cwd: "/Users/dev/project-b",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		const sessions = await Effect.runPromise(listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)));
@@ -197,7 +197,7 @@ describe("listCodexSessions", () => {
 				cwd: "/Users/dev/project-a",
 				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
-				provider_id: "openai",
+				["provider_id"]: "openai",
 			},
 			[
 				{ type: "turn.started" },
@@ -224,7 +224,7 @@ describe("listCodexSessions", () => {
 				cwd: "/Users/dev/project-a",
 				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
-				provider_id: "openai",
+				["provider_id"]: "openai",
 			},
 			[{ type: "turn.started" }, { type: "turn.completed" }],
 		);
@@ -241,7 +241,7 @@ describe("listCodexSessions", () => {
 			cwd: "/Users/dev/project-a",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		const sessions = await Effect.runPromise(
@@ -257,7 +257,7 @@ describe("listCodexSessions", () => {
 			cwd: "/Users/dev/project",
 			timestamps: { created: N_1700000000, updated: N_1700001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		await writeSession("openai", "2025-01-16", "uuid-new", {
@@ -266,7 +266,7 @@ describe("listCodexSessions", () => {
 			cwd: "/Users/dev/project",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		});
 
 		const sessions = await Effect.runPromise(listCodexSessions("/Users/dev/project").pipe(Effect.provide(testLayer)));
@@ -286,7 +286,7 @@ describe("new envelope format", () => {
 					id: "new-uuid-1",
 					cwd: "/Users/dev/new-project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 					originator: "Codex Desktop",
 				},
 			});
@@ -305,7 +305,7 @@ describe("new envelope format", () => {
 				cwd: "/Users/dev/project",
 				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
-				provider_id: "openai",
+				["provider_id"]: "openai",
 			});
 
 			await writeNewFormatSession("2026/02/18", "new-uuid", {
@@ -315,7 +315,7 @@ describe("new envelope format", () => {
 					id: "new-uuid",
 					cwd: "/Users/dev/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 				},
 			});
 
@@ -335,7 +335,7 @@ describe("new envelope format", () => {
 					id: "new-uuid-1",
 					cwd: "/Users/dev/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 					model: "o4-mini",
 				},
 			});
@@ -359,7 +359,7 @@ describe("new envelope format", () => {
 						id: "msg-uuid",
 						cwd: "/Users/dev/project",
 						timestamp: "2026-02-18T10:00:00.000Z",
-						model_provider: "openai",
+						["model_provider"]: "openai",
 					},
 				},
 				[
@@ -390,7 +390,7 @@ describe("new envelope format", () => {
 					id: "empty-uuid",
 					cwd: "/Users/dev/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 				},
 			});
 

@@ -60,7 +60,7 @@ const baseMeta = {
 	cwd: "/Users/dev/project",
 	timestamps: { created: N_1706000000, updated: N_1706001000 },
 	model: "o4-mini",
-	provider_id: "openai",
+	["provider_id"]: "openai",
 };
 
 const newBaseMeta = {
@@ -70,7 +70,7 @@ const newBaseMeta = {
 		id: "new-test-uuid",
 		cwd: "/Users/dev/project",
 		timestamp: "2026-02-18T10:00:00.000Z",
-		model_provider: "openai",
+		["model_provider"]: "openai",
 		model: "o4-mini",
 		originator: "Codex Desktop",
 	},
@@ -89,7 +89,7 @@ describe("buildCodexTurns", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Hello, I can help!" } },
-			{ type: "turn.completed", usage: { input_tokens: N_100, output_tokens: N_50 } },
+			{ type: "turn.completed", usage: { ["input_tokens"]: N_100, ["output_tokens"]: N_50 } },
 		];
 
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
@@ -142,8 +142,8 @@ describe("buildCodexTurns", () => {
 				item: {
 					type: "command_execution",
 					command: "ls -la",
-					aggregated_output: "total 42\ndrwxr-xr-x 5 user user 160 Jan 15 00:00 .",
-					exit_code: 0,
+					["aggregated_output"]: "total 42\ndrwxr-xr-x 5 user user 160 Jan 15 00:00 .",
+					["exit_code"]: 0,
 				},
 			},
 			{ type: "turn.completed" },
@@ -171,8 +171,8 @@ describe("buildCodexTurns", () => {
 				item: {
 					type: "command_execution",
 					command: "false",
-					aggregated_output: "",
-					exit_code: 1,
+					["aggregated_output"]: "",
+					["exit_code"]: 1,
 				},
 			},
 			{ type: "turn.completed" },
@@ -288,10 +288,10 @@ describe("buildCodexTurns", () => {
 		const events: CodexEvent[] = [
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "First response" } },
-			{ type: "turn.completed", usage: { input_tokens: N_50, output_tokens: N_20 } },
+			{ type: "turn.completed", usage: { ["input_tokens"]: N_50, ["output_tokens"]: N_20 } },
 			{ type: "turn.started" },
 			{ type: "item.completed", item: { type: "agent_message", text: "Second response" } },
-			{ type: "turn.completed", usage: { input_tokens: N_80, output_tokens: N_30 } },
+			{ type: "turn.completed", usage: { ["input_tokens"]: N_80, ["output_tokens"]: N_30 } },
 		];
 
 		const turns = buildCodexTurns(events, "o4-mini", "2025-01-15T00:00:00Z");
@@ -314,7 +314,7 @@ describe("buildCodexTurns", () => {
 			{ type: "item.completed", item: { type: "agent_message", text: "Response" } },
 			{
 				type: "turn.completed",
-				usage: { input_tokens: N_200, output_tokens: N_100, cached_input_tokens: N_50 },
+				usage: { ["input_tokens"]: N_200, ["output_tokens"]: N_100, ["cached_input_tokens"]: N_50 },
 			},
 		];
 
@@ -338,8 +338,8 @@ describe("buildCodexTurns", () => {
 				item: {
 					type: "command_execution",
 					command: "cat file.ts",
-					aggregated_output: "content",
-					exit_code: 0,
+					["aggregated_output"]: "content",
+					["exit_code"]: 0,
 				},
 			},
 			{ type: "item.completed", item: { type: "agent_message", text: "Here are the results." } },
@@ -375,11 +375,11 @@ describe("loadCodexSession", () => {
 				item: {
 					type: "command_execution",
 					command: "git diff",
-					aggregated_output: "+new line",
-					exit_code: 0,
+					["aggregated_output"]: "+new line",
+					["exit_code"]: 0,
 				},
 			},
-			{ type: "turn.completed", usage: { input_tokens: N_300, output_tokens: N_150 } },
+			{ type: "turn.completed", usage: { ["input_tokens"]: N_300, ["output_tokens"]: N_150 } },
 		]);
 
 		const session = await Effect.runPromise(
@@ -469,7 +469,7 @@ describe("loadCodexSession", () => {
 			{ type: "item.completed", item: { type: "agent_message", text: "Response 1" } },
 			{
 				type: "turn.completed",
-				usage: { input_tokens: N_100, output_tokens: N_50, cached_input_tokens: N_25 },
+				usage: { ["input_tokens"]: N_100, ["output_tokens"]: N_50, ["cached_input_tokens"]: N_25 },
 			},
 		]);
 
@@ -513,7 +513,7 @@ describe("new envelope format", () => {
 				{
 					type: "event_msg",
 					timestamp: "2026-02-18T10:00:04.000Z",
-					payload: { type: "token_count", input_tokens: N_200, output_tokens: N_80 },
+					payload: { type: "token_count", ["input_tokens"]: N_200, ["output_tokens"]: N_80 },
 				},
 				{
 					type: "event_msg",
@@ -570,7 +570,7 @@ describe("new envelope format", () => {
 					payload: {
 						type: "function_call",
 						name: "exec_command",
-						call_id: "call_abc",
+						["call_id"]: "call_abc",
 						arguments: '{"cmd":"ls -la","workdir":"/tmp"}',
 					},
 				},
@@ -579,14 +579,14 @@ describe("new envelope format", () => {
 					timestamp: "2026-02-18T10:00:02.500Z",
 					payload: {
 						type: "function_call_output",
-						call_id: "call_abc",
+						["call_id"]: "call_abc",
 						output: "file1.ts\nfile2.ts",
 					},
 				},
 				{
 					type: "event_msg",
 					timestamp: "2026-02-18T10:00:03.000Z",
-					payload: { type: "token_count", input_tokens: N_100, output_tokens: N_50 },
+					payload: { type: "token_count", ["input_tokens"]: N_100, ["output_tokens"]: N_50 },
 				},
 				{
 					type: "event_msg",
@@ -668,10 +668,10 @@ describe("new envelope format", () => {
 						payload: {
 							type: "token_count",
 							info: {
-								last_token_usage: {
-									input_tokens: N_500,
-									cached_input_tokens: N_100,
-									output_tokens: N_250,
+								["last_token_usage"]: {
+									["input_tokens"]: N_500,
+									["cached_input_tokens"]: N_100,
+									["output_tokens"]: N_250,
 								},
 							},
 						},
@@ -714,7 +714,7 @@ describe("new envelope format", () => {
 					{
 						type: "event_msg",
 						timestamp: "2026-02-18T10:00:03.000Z",
-						payload: { type: "token_count", input_tokens: N_50, output_tokens: N_20 },
+						payload: { type: "token_count", ["input_tokens"]: N_50, ["output_tokens"]: N_20 },
 					},
 					{
 						type: "event_msg",
@@ -750,7 +750,7 @@ describe("new envelope format", () => {
 					id: "provider-uuid",
 					cwd: "/Users/dev/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 				},
 			};
 
@@ -790,7 +790,7 @@ describe("new envelope format", () => {
 					id: "provider-only-uuid",
 					cwd: "/Users/dev/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 				},
 			};
 

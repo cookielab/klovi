@@ -151,9 +151,9 @@ function normalizeEventMsg(payload: EnvelopePayload): CodexEvent | null {
 			return {
 				type: "usage_update",
 				usage: {
-					input_tokens: src.input_tokens,
-					cached_input_tokens: src.cached_input_tokens,
-					output_tokens: src.output_tokens,
+					["input_tokens"]: src.input_tokens,
+					["cached_input_tokens"]: src.cached_input_tokens,
+					["output_tokens"]: src.output_tokens,
 				},
 			};
 		}
@@ -187,8 +187,8 @@ function normalizeResponseItem(payload: EnvelopePayload): CodexEvent | null {
 			item: {
 				type: "command_execution",
 				command: name,
-				aggregated_output: "",
-				exit_code: 0,
+				["aggregated_output"]: "",
+				["exit_code"]: 0,
 			},
 			// Store call_id and parsed args for the generic tool call path
 			callId: payload.call_id,

@@ -69,7 +69,7 @@ function makeSession(
 						call: {
 							toolUseId: `${id}-tool-1`,
 							name: "Read",
-							input: { file_path: "README.md" },
+							input: { ["file_path"]: "README.md" },
 							result: "ok",
 							isError: false,
 						},

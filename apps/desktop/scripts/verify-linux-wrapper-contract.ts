@@ -164,7 +164,7 @@ async function verifyLinuxWrapperContract(args: VerifyArgs): Promise<void> {
 	const desktopEntry = parseDesktopEntry(await Bun.file(desktopEntryPath).text());
 	const expectedEntries: Record<string, string> = {
 		Name: EXPECTED_LINUX_APP_NAME,
-		StartupWMClass: EXPECTED_LINUX_WM_CLASS,
+		["StartupWMClass"]: EXPECTED_LINUX_WM_CLASS,
 	};
 
 	for (const [key, value] of Object.entries(expectedEntries)) {

@@ -69,7 +69,7 @@ describe("semver.order", () => {
 
 function makeRelease(tag: string, prerelease: boolean): GithubRelease {
 	return {
-		tag_name: tag,
+		["tag_name"]: tag,
 		prerelease: prerelease,
 		draft: false,
 		assets: [],
@@ -87,18 +87,18 @@ function makeReleaseWithAssets(
 	const updateJsonName = getUpdateJsonAssetName(platform, arch);
 	const assets: GithubRelease["assets"] = [];
 	if (!opts?.missingTarball) {
-		assets.push({ name: tarballName, browser_download_url: `https://example.com/${tarballName}` });
+		assets.push({ name: tarballName, ["browser_download_url"]: `https://example.com/${tarballName}` });
 	}
 	if (!opts?.missingUpdateJson) {
 		assets.push({
 			name: updateJsonName,
-			browser_download_url: `https://example.com/${updateJsonName}`,
+			["browser_download_url"]: `https://example.com/${updateJsonName}`,
 		});
 	}
 	// Add a user-facing installer asset (should be ignored by updater)
 	assets.push({
 		name: `Klovi-${tag}-macos-arm64.dmg`,
-		browser_download_url: `https://example.com/Klovi-${tag}.dmg`,
+		["browser_download_url"]: `https://example.com/Klovi-${tag}.dmg`,
 	});
 	return { ...makeRelease(tag, prerelease), assets: assets };
 }
@@ -376,11 +376,11 @@ describe("findReleaseAsset", () => {
 			assets: [
 				{
 					name: "Klovi-2.1.0-windows-amd64.exe",
-					browser_download_url: "https://example.com/setup.exe",
+					["browser_download_url"]: "https://example.com/setup.exe",
 				},
 				{
 					name: "stable-win-x64-Klovi.tar.zst",
-					browser_download_url: "https://example.com/bundle.tar.zst",
+					["browser_download_url"]: "https://example.com/bundle.tar.zst",
 				},
 			],
 		};
@@ -396,7 +396,7 @@ describe("findReleaseAsset", () => {
 			assets: [
 				{
 					name: "Klovi-2.0.0-macos-arm64.dmg",
-					browser_download_url: "https://example.com/Klovi.dmg",
+					["browser_download_url"]: "https://example.com/Klovi.dmg",
 				},
 			],
 		};
@@ -412,7 +412,7 @@ describe("findLatestRelease", () => {
 			assets: [
 				{
 					name: "stable-macos-arm64-Klovi.app.tar.zst",
-					browser_download_url: "https://example.com/beta",
+					["browser_download_url"]: "https://example.com/beta",
 				},
 			],
 		},
@@ -421,7 +421,7 @@ describe("findLatestRelease", () => {
 			assets: [
 				{
 					name: "stable-macos-arm64-Klovi.app.tar.zst",
-					browser_download_url: "https://example.com/rc",
+					["browser_download_url"]: "https://example.com/rc",
 				},
 			],
 		},
@@ -430,7 +430,7 @@ describe("findLatestRelease", () => {
 			assets: [
 				{
 					name: "stable-macos-arm64-Klovi.app.tar.zst",
-					browser_download_url: "https://example.com/stable",
+					["browser_download_url"]: "https://example.com/stable",
 				},
 			],
 		},
@@ -533,7 +533,7 @@ describe("findLatestUsableRelease", () => {
 			assets: [
 				{
 					name: "Klovi-2.1.0-macos-arm64.dmg",
-					browser_download_url: "https://example.com/Klovi.dmg",
+					["browser_download_url"]: "https://example.com/Klovi.dmg",
 				},
 			],
 		};
@@ -579,11 +579,11 @@ describe("findLatestUsableRelease", () => {
 			assets: [
 				{
 					name: "beta-macos-arm64-Klovi.app.tar.zst",
-					browser_download_url: "https://example.com/beta.tar.zst",
+					["browser_download_url"]: "https://example.com/beta.tar.zst",
 				},
 				{
 					name: "beta-macos-arm64-update.json",
-					browser_download_url: "https://example.com/beta-update.json",
+					["browser_download_url"]: "https://example.com/beta-update.json",
 				},
 			],
 		};

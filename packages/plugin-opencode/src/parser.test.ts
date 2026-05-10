@@ -180,8 +180,8 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
-					providerID: "anthropic",
+					["modelID"]: "claude-sonnet-4-20250514",
+					["providerID"]: "anthropic",
 					tokens: { input: N_100, output: N_50, cache: { read: N_10, write: N_5 } },
 				},
 				timeCreated: N_1706000000,
@@ -213,7 +213,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000000,
@@ -244,14 +244,14 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000000,
 				parts: [
 					{
 						type: "tool",
-						callID: "call-123",
+						["callID"]: "call-123",
 						tool: "read_file",
 						state: {
 							status: "completed",
@@ -287,14 +287,14 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "gpt-4o",
+					["modelID"]: "gpt-4o",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000000,
 				parts: [
 					{
 						type: "tool",
-						callID: "call-456",
+						["callID"]: "call-456",
 						tool: "write_file",
 						state: {
 							status: "error",
@@ -323,14 +323,14 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "gpt-4o",
+					["modelID"]: "gpt-4o",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000000,
 				parts: [
 					{
 						type: "tool",
-						callID: "call-789",
+						["callID"]: "call-789",
 						tool: "bash",
 						state: {
 							status: "pending",
@@ -357,7 +357,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000000,
@@ -386,7 +386,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_300, output: N_150, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000000,
@@ -395,7 +395,7 @@ describe("buildOpenCodeTurns", () => {
 					{ type: "text", text: "Let me check the file." },
 					{
 						type: "tool",
-						callID: "call-1",
+						["callID"]: "call-1",
 						tool: "read_file",
 						state: {
 							status: "completed",
@@ -434,7 +434,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-2",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000001,
@@ -450,7 +450,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-4",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_200, output: N_100, cache: { read: 0, write: 0 } },
 				},
 				timeCreated: N_1706000003,
@@ -478,7 +478,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					// No tokens field at message level
 				},
 				timeCreated: N_1706000000,
@@ -516,7 +516,7 @@ describe("buildOpenCodeTurns", () => {
 				id: "msg-1",
 				data: {
 					role: "assistant",
-					modelID: "claude-sonnet-4-20250514",
+					["modelID"]: "claude-sonnet-4-20250514",
 					tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 					finish: "end_turn",
 				},
@@ -561,8 +561,8 @@ describe("loadOpenCodeSession", () => {
 			"sess-1",
 			{
 				role: "assistant",
-				modelID: "claude-sonnet-4-20250514",
-				providerID: "anthropic",
+				["modelID"]: "claude-sonnet-4-20250514",
+				["providerID"]: "anthropic",
 				tokens: { input: N_300, output: N_150, cache: { read: N_50, write: N_10 } },
 				finish: "end_turn",
 			},
@@ -578,7 +578,7 @@ describe("loadOpenCodeSession", () => {
 		});
 		insertPart(db, "part-4", "msg-2", "sess-1", {
 			type: "tool",
-			callID: "call-1",
+			["callID"]: "call-1",
 			tool: "edit_file",
 			state: {
 				status: "completed",
@@ -651,14 +651,14 @@ describe("loadOpenCodeSession", () => {
 			"sess-1",
 			{
 				role: "assistant",
-				modelID: "gpt-4o",
+				["modelID"]: "gpt-4o",
 				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 			},
 			N_1706000000,
 		);
 		insertPart(db, "part-1", "msg-1", "sess-1", {
 			type: "tool",
-			callID: "call-err",
+			["callID"]: "call-err",
 			tool: "bash",
 			state: {
 				status: "error",
@@ -703,7 +703,7 @@ describe("loadOpenCodeSession", () => {
 			"sess-1",
 			{
 				role: "assistant",
-				modelID: "gpt-4o",
+				["modelID"]: "gpt-4o",
 				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 			},
 			now + 1,

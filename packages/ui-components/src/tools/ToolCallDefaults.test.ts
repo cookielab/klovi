@@ -59,7 +59,7 @@ describe("getToolSummary", () => {
 	});
 
 	it("falls back to built-in extractors", () => {
-		expect(getToolSummary(call("Read", { file_path: "/tmp/file.ts" }))).toBe("/tmp/file.ts");
+		expect(getToolSummary(call("Read", { ["file_path"]: "/tmp/file.ts" }))).toBe("/tmp/file.ts");
 		expect(getToolSummary(call("TaskUpdate", { taskId: N_7, status: "done" }))).toBe("#7 → done");
 		expect(getToolSummary(call("AskUserQuestion", { questions: [{ question: "What now?" }] }))).toBe("What now?");
 	});
@@ -104,9 +104,9 @@ describe("formatToolInput", () => {
 	it("formats edit and write inputs with labeled sections", () => {
 		const editText = formatToolInput(
 			call("Edit", {
-				file_path: "/tmp/a.ts",
-				old_string: "before",
-				new_string: "after",
+				["file_path"]: "/tmp/a.ts",
+				["old_string"]: "before",
+				["new_string"]: "after",
 			}),
 		);
 
@@ -116,7 +116,7 @@ describe("formatToolInput", () => {
 
 		const writeText = formatToolInput(
 			call("Write", {
-				file_path: "/tmp/b.ts",
+				["file_path"]: "/tmp/b.ts",
 				content: "x".repeat(N_2050),
 			}),
 		);
@@ -170,10 +170,10 @@ describe("formatToolInput", () => {
 	it("NotebookEdit includes notebook metadata and source", () => {
 		const text = formatToolInput(
 			call("NotebookEdit", {
-				notebook_path: "/tmp/demo.ipynb",
-				cell_number: 2,
-				edit_mode: "replace",
-				new_source: "print('hello')",
+				["notebook_path"]: "/tmp/demo.ipynb",
+				["cell_number"]: 2,
+				["edit_mode"]: "replace",
+				["new_source"]: "print('hello')",
 			}),
 		);
 

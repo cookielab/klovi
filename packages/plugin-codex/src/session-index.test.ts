@@ -33,7 +33,7 @@ describe("isCodexSessionMeta", () => {
 				cwd: "/tmp",
 				timestamps: { created: N_1000, updated: N_2000 },
 				model: "o4-mini",
-				provider_id: "openai",
+				["provider_id"]: "openai",
 			}),
 		).toBe(true);
 	});
@@ -60,7 +60,7 @@ describe("normalizeSessionMeta", () => {
 			cwd: "/tmp/project",
 			timestamps: { created: N_1706000000, updated: N_1706001000 },
 			model: "o4-mini",
-			provider_id: "openai",
+			["provider_id"]: "openai",
 		};
 		const result = normalizeSessionMeta(meta);
 		expect(result).toEqual(meta);
@@ -74,7 +74,7 @@ describe("normalizeSessionMeta", () => {
 				id: "new-uuid",
 				cwd: "/tmp/project",
 				timestamp: "2026-02-18T10:00:00.000Z",
-				model_provider: "openai",
+				["model_provider"]: "openai",
 				model: "o4-mini",
 			},
 		};
@@ -96,7 +96,7 @@ describe("normalizeSessionMeta", () => {
 				id: "uuid",
 				cwd: "/tmp",
 				timestamp: "2026-02-18T10:00:00.000Z",
-				model_provider: "anthropic",
+				["model_provider"]: "anthropic",
 			},
 		};
 
@@ -112,7 +112,7 @@ describe("normalizeSessionMeta", () => {
 				id: "uuid",
 				cwd: "/tmp",
 				timestamp: "2026-02-18T10:00:00.000Z",
-				model_provider: "openai",
+				["model_provider"]: "openai",
 			},
 		};
 
@@ -166,7 +166,7 @@ describe("scanCodexSessions", () => {
 					id: "scan-uuid",
 					cwd: "/tmp/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 					model: "o4-mini",
 				},
 			}),
@@ -193,7 +193,7 @@ describe("scanCodexSessions", () => {
 						id: "turn-context-model-uuid",
 						cwd: "/tmp/project",
 						timestamp: "2026-02-18T10:00:00.000Z",
-						model_provider: "openai",
+						["model_provider"]: "openai",
 					},
 				}),
 				JSON.stringify({
@@ -224,7 +224,7 @@ describe("scanCodexSessions", () => {
 					id: "provider-model-uuid",
 					cwd: "/tmp/project",
 					timestamp: "2026-02-18T10:00:00.000Z",
-					model_provider: "openai",
+					["model_provider"]: "openai",
 				},
 			}),
 		);

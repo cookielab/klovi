@@ -31,7 +31,7 @@ export default {
 			"src/views/main/index.html": "views/main/index.html",
 		},
 		mac: {
-			bundleCEF: isDev,
+			["bundleCEF"]: isDev,
 			defaultRenderer: isDev ? "cef" : "native",
 			...(isDev && {
 				chromiumFlags: {
@@ -41,7 +41,7 @@ export default {
 			icons: "icon.iconset",
 		},
 		linux: {
-			bundleCEF: false,
+			["bundleCEF"]: false,
 			defaultRenderer: "native",
 			icon: "icon.iconset/icon_256x256.png",
 		},

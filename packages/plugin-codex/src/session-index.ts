@@ -79,7 +79,7 @@ function normalizeSessionMeta(parsed: unknown, fileMtimeEpoch?: number): CodexSe
 			cwd: payload.cwd,
 			timestamps: { created: createdEpoch, updated: updatedEpoch },
 			model: payload.model || "unknown",
-			provider_id: payload.model_provider || "unknown",
+			["provider_id"]: payload.model_provider || "unknown",
 		};
 	}
 

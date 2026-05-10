@@ -133,7 +133,7 @@ describe("buildTurns", () => {
 							type: "tool_use",
 							id: "tool_1",
 							name: "Read",
-							input: { file_path: "/tmp/test.ts" },
+							input: { ["file_path"]: "/tmp/test.ts" },
 						},
 					],
 				},
@@ -145,7 +145,7 @@ describe("buildTurns", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "tool_1",
+							["tool_use_id"]: "tool_1",
 							content: "file contents here",
 						},
 					],
@@ -188,9 +188,9 @@ describe("buildTurns", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "tool_err",
+							["tool_use_id"]: "tool_err",
 							content: "command failed",
-							is_error: true,
+							["is_error"]: true,
 						},
 					],
 				},
@@ -217,7 +217,7 @@ describe("buildTurns", () => {
 							type: "image",
 							source: {
 								type: "base64",
-								media_type: "image/png",
+								["media_type"]: "image/png",
 								data: "iVBOR...",
 							},
 						},
@@ -529,7 +529,7 @@ describe("buildTurns", () => {
 							type: "tool_use",
 							id: "t1",
 							name: "Read",
-							input: { file_path: "/a.ts" },
+							input: { ["file_path"]: "/a.ts" },
 						},
 					],
 				},
@@ -538,7 +538,7 @@ describe("buildTurns", () => {
 				type: "user",
 				message: {
 					role: "user",
-					content: [{ type: "tool_result", tool_use_id: "t1", content: "contents" }],
+					content: [{ type: "tool_result", ["tool_use_id"]: "t1", content: "contents" }],
 				},
 			}),
 			line({
@@ -571,7 +571,7 @@ describe("buildTurns", () => {
 							type: "tool_use",
 							id: "t1",
 							name: "Read",
-							input: { file_path: "/a.ts" },
+							input: { ["file_path"]: "/a.ts" },
 						},
 					],
 				},
@@ -580,7 +580,7 @@ describe("buildTurns", () => {
 				type: "user",
 				message: {
 					role: "user",
-					content: [{ type: "tool_result", tool_use_id: "t1", content: "contents" }],
+					content: [{ type: "tool_result", ["tool_use_id"]: "t1", content: "contents" }],
 				},
 			}),
 			line({
@@ -624,10 +624,10 @@ describe("buildTurns", () => {
 					model: "claude-sonnet-4-5-20250929",
 					content: [{ type: "text", text: "Done." }],
 					usage: {
-						input_tokens: N_1500,
-						output_tokens: N_300,
-						cache_read_input_tokens: N_1200,
-						cache_creation_input_tokens: N_100,
+						["input_tokens"]: N_1500,
+						["output_tokens"]: N_300,
+						["cache_read_input_tokens"]: N_1200,
+						["cache_creation_input_tokens"]: N_100,
 					},
 				},
 			}),
@@ -649,7 +649,7 @@ describe("buildTurns", () => {
 					role: "assistant",
 					model: "claude-sonnet-4-5-20250929",
 					content: [{ type: "text", text: "All done." }],
-					stop_reason: "end_turn",
+					["stop_reason"]: "end_turn",
 				},
 			}),
 		];
@@ -670,7 +670,7 @@ describe("buildTurns", () => {
 							type: "tool_use",
 							id: "t_img",
 							name: "Read",
-							input: { file_path: "/screenshot.png" },
+							input: { ["file_path"]: "/screenshot.png" },
 						},
 					],
 				},
@@ -682,14 +682,14 @@ describe("buildTurns", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "t_img",
+							["tool_use_id"]: "t_img",
 							content: [
 								{ type: "text", text: "Image read successfully" },
 								{
 									type: "image",
 									source: {
 										type: "base64",
-										media_type: "image/png",
+										["media_type"]: "image/png",
 										data: "AAAA",
 									},
 								},
@@ -828,7 +828,7 @@ describe("extractSubAgentMap", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "progress",
-				parentToolUseID: "toolu_abc123",
+				["parentToolUseID"]: "toolu_abc123",
 				data: { type: "agent_progress", agentId: "a1b2c3d" },
 			}),
 		];
@@ -845,7 +845,7 @@ describe("extractSubAgentMap", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "toolu_xyz789",
+							["tool_use_id"]: "toolu_xyz789",
 							content: [
 								{
 									type: "text",
@@ -870,7 +870,7 @@ describe("extractSubAgentMap", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "toolu_str1",
+							["tool_use_id"]: "toolu_str1",
 							content: "agentId: abc1234 (internal ID)",
 						},
 					],
@@ -885,7 +885,7 @@ describe("extractSubAgentMap", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "progress",
-				parentToolUseID: "some-uuid",
+				["parentToolUseID"]: "some-uuid",
 				data: { type: "hook_progress" },
 			}),
 		];
@@ -902,7 +902,7 @@ describe("extractSubAgentMap", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "toolu_nope",
+							["tool_use_id"]: "toolu_nope",
 							content: "file contents here, no agent id",
 						},
 					],
@@ -917,7 +917,7 @@ describe("extractSubAgentMap", () => {
 		const lines: RawLine[] = [
 			line({
 				type: "progress",
-				parentToolUseID: "toolu_fg1",
+				["parentToolUseID"]: "toolu_fg1",
 				data: { type: "agent_progress", agentId: "afg0001" },
 			}),
 			line({
@@ -927,7 +927,7 @@ describe("extractSubAgentMap", () => {
 					content: [
 						{
 							type: "tool_result",
-							tool_use_id: "toolu_bg1",
+							["tool_use_id"]: "toolu_bg1",
 							content: "Async agent launched successfully.\nagentId: abg0002",
 						},
 					],
