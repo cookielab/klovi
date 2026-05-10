@@ -59,39 +59,40 @@ async function writeJsonl(filePath: string, lines: Record<string, unknown>[]): P
 }
 
 function withCursorTestEnv(): () => void {
-	const originalHome = process.env["HOME"];
-	const originalUserProfile = process.env["USERPROFILE"];
-	const originalXdgConfigHome = process.env["XDG_CONFIG_HOME"];
-	const originalAppData = process.env["APPDATA"];
+	const env = (process as { env: Record<string, string | undefined> }).env;
+	const originalHome = env["HOME"];
+	const originalUserProfile = env["USERPROFILE"];
+	const originalXdgConfigHome = env["XDG_CONFIG_HOME"];
+	const originalAppData = env["APPDATA"];
 
-	process.env["HOME"] = testDir;
-	process.env["USERPROFILE"] = testDir;
-	process.env["XDG_CONFIG_HOME"] = join(testDir, ".config");
-	process.env["APPDATA"] = join(testDir, "AppData", "Roaming");
+	env["HOME"] = testDir;
+	env["USERPROFILE"] = testDir;
+	env["XDG_CONFIG_HOME"] = join(testDir, ".config");
+	env["APPDATA"] = join(testDir, "AppData", "Roaming");
 
 	return () => {
 		if (originalHome === undefined) {
-			process.env["HOME"] = undefined;
+			env["HOME"] = undefined;
 		} else {
-			process.env["HOME"] = originalHome;
+			env["HOME"] = originalHome;
 		}
 
 		if (originalUserProfile === undefined) {
-			process.env["USERPROFILE"] = undefined;
+			env["USERPROFILE"] = undefined;
 		} else {
-			process.env["USERPROFILE"] = originalUserProfile;
+			env["USERPROFILE"] = originalUserProfile;
 		}
 
 		if (originalXdgConfigHome === undefined) {
-			process.env["XDG_CONFIG_HOME"] = undefined;
+			env["XDG_CONFIG_HOME"] = undefined;
 		} else {
-			process.env["XDG_CONFIG_HOME"] = originalXdgConfigHome;
+			env["XDG_CONFIG_HOME"] = originalXdgConfigHome;
 		}
 
 		if (originalAppData === undefined) {
-			process.env["APPDATA"] = undefined;
+			env["APPDATA"] = undefined;
 		} else {
-			process.env["APPDATA"] = originalAppData;
+			env["APPDATA"] = originalAppData;
 		}
 	};
 }

@@ -11,7 +11,8 @@ const pkgPath = resolve(__dir, "../package.json");
 const pkg = JSON.parse(await readFile(pkgPath, "utf-8")) as Record<string, string>;
 const version = pkg["version"] ?? "0.0.0";
 const commit = pkg["commit"] ?? "";
-const config = resolveCliConfig({ baseDir: __dir, argv: process.argv, env: process.env });
+const env = (process as { env: Record<string, string | undefined> }).env;
+const config = resolveCliConfig({ baseDir: __dir, argv: process.argv, env: env });
 
 await startKloviPackageServer({
 	host: config.host,
