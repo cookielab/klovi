@@ -1,4 +1,4 @@
-import { Text } from "@cookielab.io/klovi-design-system";
+import { Text } from "../index";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "../components/Button/Button";
 

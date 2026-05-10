@@ -1,4 +1,4 @@
-import { Text } from "@cookielab.io/klovi-design-system";
+import { Text } from "../index";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { Badge } from "./Badge/Badge";
 import { Button } from "./Button/Button";
