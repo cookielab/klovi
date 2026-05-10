@@ -16,6 +16,8 @@ const N_2050 = 2050;
 function call(name: string, input: Record<string, unknown> = {}): ToolCallWithResult {
 	return {
 		toolUseId: "tool-1",
+		kind: "generic",
+		title: name,
 		name: name,
 		input: input,
 		result: "",

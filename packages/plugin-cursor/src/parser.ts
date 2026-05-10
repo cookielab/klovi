@@ -3,6 +3,7 @@ import type {
 	ContentBlock,
 	Session,
 	SystemTurn,
+	ToolCallKind,
 	ToolCallWithResult,
 	Turn,
 	UserTurn,
@@ -90,6 +91,30 @@ function synthesizedTimestamp(baseTimestampMs: number, index: number): string {
 	return new Date(baseTimestampMs + index).toISOString();
 }
 
+/**
+ * Parse an MCP raw name like `mcp__<server>__<tool>` into a human-readable label.
+ */
+function parseMcpDisplayName(rawName: string): string {
+	const parts = rawName.split("__");
+	if (parts.length >= 3) {
+		return parts.slice(2).join("_");
+	}
+	if (parts.length === 2 && parts[1]) {
+		return parts[1];
+	}
+	return rawName;
+}
+
+function normalizeToolCall(rawName: string): {
+	kind: ToolCallKind;
+	title: string;
+} {
+	if (rawName.startsWith("mcp__")) {
+		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+	}
+	return { kind: "generic", title: rawName };
+}
+
 function normalizeToolInput(params: unknown): Record<string, unknown> {
 	if (typeof params === "string") {
 		const parsed = tryParseJson<unknown>(params);
@@ -133,9 +158,14 @@ function normalizeToolResult(result: unknown): string {
 function bubbleToContentBlock(bubble: CursorBubblePayload): ContentBlock | null {
 	const tool = bubble.toolFormerData;
 	if (tool?.name) {
+		const rawName = tool.name;
+		const normalized = normalizeToolCall(rawName);
 		const call: ToolCallWithResult = {
 			toolUseId: tool.toolCallId ?? bubble.bubbleId ?? tool.name,
-			name: tool.name,
+			kind: normalized.kind,
+			title: normalized.title,
+			name: rawName,
+			rawName: rawName,
 			input: normalizeToolInput(tool.params),
 			result: normalizeToolResult(tool.result),
 			isError: tool.status !== "completed" && tool.status !== "success",

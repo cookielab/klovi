@@ -5,6 +5,7 @@ import type {
 	ParseErrorTurn,
 	Session,
 	SessionSummary,
+	ToolCallKind,
 	ToolCallWithResult,
 	ToolResultImage,
 	Turn,
@@ -32,7 +33,7 @@ function loadClaudeSession(nativeId: string, sessionId: string) {
 		const slug = extractSlug(rawLines);
 		const turns = buildTurns(rawLines, parseErrors);
 
-		// Attach subAgentId to Task tool calls
+		// Attach subAgentId to Task tool calls and upgrade kind/title
 		for (const turn of turns) {
 			if (turn.kind !== "assistant") {
 				continue;
@@ -42,6 +43,8 @@ function loadClaudeSession(nativeId: string, sessionId: string) {
 					const agentId = subAgentMap.get(block.call.toolUseId);
 					if (agentId) {
 						block.call.subAgentId = agentId;
+						block.call.kind = "subagent";
+						block.call.title = "Sub-Agent";
 					}
 				}
 			}
@@ -80,6 +83,8 @@ function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: s
 					const nestedAgentId = subAgentMap.get(block.call.toolUseId);
 					if (nestedAgentId) {
 						block.call.subAgentId = nestedAgentId;
+						block.call.kind = "subagent";
+						block.call.title = "Sub-Agent";
 					}
 				}
 			}
@@ -366,15 +371,95 @@ function createAssistantTurn(line: RawLine): AssistantTurn {
 
 type ToolResultMap = Map<string, { content: string; isError: boolean; images: ToolResultImage[] }>;
 
-function buildToolCall(block: RawContentBlock, toolResults: ToolResultMap): ToolCallWithResult {
+/**
+ * Parse a Cursor-style `mcp__<server>__<tool>` raw name into a human-readable
+ * label. Returns the tool segment, falling back to the server segment, and
+ * ultimately the full raw name if the segments cannot be parsed.
+ */
+function parseMcpDisplayName(rawName: string): string {
+	const parts = rawName.split("__");
+	// parts[0] = "mcp", parts[1] = server, parts[2..] = tool segments
+	if (parts.length >= 3) {
+		return parts.slice(2).join("_");
+	}
+	if (parts.length === 2 && parts[1]) {
+		return parts[1];
+	}
+	return rawName;
+}
+
+function normalizeToolCall(
+	rawName: string,
+	input: Record<string, unknown>,
+	subAgentId?: string | undefined,
+): {
+	kind: ToolCallKind;
+	title: string;
+	summary?: string | undefined;
+	formattedInput?: string | undefined;
+} {
+	if (rawName === "Bash") {
+		return { kind: "shell", title: "Bash" };
+	}
+	if (rawName === "Read") {
+		return { kind: "file_read", title: "Read" };
+	}
+	if (rawName === "Write") {
+		return { kind: "file_write", title: "Write" };
+	}
+	if (rawName === "Edit") {
+		return { kind: "file_edit", title: "Edit" };
+	}
+	if (rawName === "NotebookRead") {
+		return { kind: "file_read", title: "Notebook Read" };
+	}
+	if (rawName === "NotebookEdit") {
+		return { kind: "file_edit", title: "Notebook Edit" };
+	}
+	if (rawName === "Glob" || rawName === "Grep") {
+		return { kind: "search", title: rawName };
+	}
+	if (rawName === "WebFetch" || rawName === "WebSearch") {
+		return { kind: "web", title: rawName };
+	}
+	if (rawName === "Skill") {
+		const skillName = typeof input["skill_name"] === "string" ? input["skill_name"] : undefined;
+		return { kind: "skill", title: skillName ?? "Skill" };
+	}
+	if (rawName === "Task" && subAgentId !== undefined) {
+		return { kind: "subagent", title: "Sub-Agent" };
+	}
+	if (rawName.startsWith("mcp__")) {
+		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+	}
+	return { kind: "generic", title: rawName };
+}
+
+function buildToolCall(
+	block: RawContentBlock,
+	toolResults: ToolResultMap,
+	subAgentId?: string | undefined,
+): ToolCallWithResult {
 	const result = toolResults.get((block as { id: string }).id);
+	const rawName = (block as { name: string }).name;
+	const input = (block as { input: Record<string, unknown> }).input;
+	const normalized = normalizeToolCall(rawName, input, subAgentId);
 	const toolCall: ToolCallWithResult = {
 		toolUseId: (block as { id: string }).id,
-		name: (block as { name: string }).name,
-		input: (block as { input: Record<string, unknown> }).input,
+		kind: normalized.kind,
+		title: normalized.title,
+		name: rawName,
+		rawName: rawName,
+		input: input,
 		result: result?.content ?? "",
 		isError: result?.isError ?? false,
 	};
+	if (normalized.summary !== undefined) {
+		toolCall.summary = normalized.summary;
+	}
+	if (normalized.formattedInput !== undefined) {
+		toolCall.formattedInput = normalized.formattedInput;
+	}
 	if (result?.images && result.images.length > 0) {
 		toolCall.resultImages = result.images;
 	}

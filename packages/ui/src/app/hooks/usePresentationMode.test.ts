@@ -32,7 +32,7 @@ function assistantTurn(opts: { thinking?: number; text?: number; tools?: number 
 			})),
 			...Array.from({ length: tools }, (_, i) => ({
 				type: "tool_call" as const,
-				call: { toolUseId: `tool-${i}`, name: "Read", input: {}, result: "ok", isError: false },
+				call: { toolUseId: `tool-${i}`, kind: "generic" as const, title: "Read", name: "Read", input: {}, result: "ok", isError: false },
 			})),
 		] satisfies ContentBlock[],
 	};

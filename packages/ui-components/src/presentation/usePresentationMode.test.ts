@@ -35,6 +35,8 @@ function assistantTurn(options: { thinking?: number; text?: number; tools?: numb
 				type: "tool_call" as const,
 				call: {
 					toolUseId: `tool-${i}`,
+					kind: "generic" as const,
+					title: "Read",
 					name: "Read",
 					input: {},
 					result: "ok",

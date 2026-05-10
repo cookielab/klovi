@@ -13,6 +13,8 @@ function tool(id: string): ContentBlock {
 		type: "tool_call",
 		call: {
 			toolUseId: id,
+			kind: "generic",
+			title: "Read",
 			name: "Read",
 			input: {},
 			result: "ok",

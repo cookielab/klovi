@@ -160,8 +160,240 @@ describe("buildTurns", () => {
 		expect(call?.type).toBe("tool_call");
 		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
 		expect(toolCall.call.name).toBe("Read");
+		expect(toolCall.call.rawName).toBe("Read");
+		expect(toolCall.call.kind).toBe("file_read");
+		expect(toolCall.call.title).toBe("Read");
 		expect(toolCall.call.result).toBe("file contents here");
 		expect(toolCall.call.isError).toBe(false);
+	});
+
+	it("tool call normalization: Bash → shell kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_bash",
+							name: "Bash",
+							input: { command: "ls -la" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("shell");
+		expect(toolCall.title).toBe("Bash");
+		expect(toolCall.name).toBe("Bash");
+		expect(toolCall.rawName).toBe("Bash");
+	});
+
+	it("tool call normalization: Write → file_write kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_write",
+							name: "Write",
+							input: { ["file_path"]: "/tmp/out.ts", content: "hello" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("file_write");
+		expect(toolCall.title).toBe("Write");
+	});
+
+	it("tool call normalization: Edit → file_edit kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_edit",
+							name: "Edit",
+							input: { ["file_path"]: "/tmp/a.ts", ["old_string"]: "x", ["new_string"]: "y" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("file_edit");
+		expect(toolCall.title).toBe("Edit");
+	});
+
+	it("tool call normalization: Glob → search kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_glob",
+							name: "Glob",
+							input: { pattern: "**/*.ts" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("search");
+		expect(toolCall.title).toBe("Glob");
+	});
+
+	it("tool call normalization: WebFetch → web kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_web",
+							name: "WebFetch",
+							input: { url: "https://example.com" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("web");
+		expect(toolCall.title).toBe("WebFetch");
+	});
+
+	it("tool call normalization: Skill with skill_name → skill kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_skill",
+							name: "Skill",
+							input: { ["skill_name"]: "verify" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("skill");
+		expect(toolCall.title).toBe("verify");
+	});
+
+	it("tool call normalization: Skill without skill_name → 'Skill' title", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_skill2",
+							name: "Skill",
+							input: {},
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("skill");
+		expect(toolCall.title).toBe("Skill");
+	});
+
+	it("tool call normalization: mcp__server__tool → mcp kind with display name", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_mcp",
+							name: "mcp__filesystem__read_file",
+							input: { path: "/tmp/f" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("mcp");
+		expect(toolCall.title).toBe("read_file");
+		expect(toolCall.name).toBe("mcp__filesystem__read_file");
+		expect(toolCall.rawName).toBe("mcp__filesystem__read_file");
+	});
+
+	it("tool call normalization: unknown tool → generic kind", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_unknown",
+							name: "SomeFutureToolName",
+							input: {},
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.kind).toBe("generic");
+		expect(toolCall.title).toBe("SomeFutureToolName");
 	});
 
 	it("tool result is_error: true → isError: true", () => {

@@ -276,6 +276,9 @@ describe("buildOpenCodeTurns", () => {
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
 		expect(toolBlock.call.toolUseId).toBe("call-123");
 		expect(toolBlock.call.name).toBe("read_file");
+		expect(toolBlock.call.rawName).toBe("read_file");
+		expect(toolBlock.call.kind).toBe("generic");
+		expect(toolBlock.call.title).toBe("read_file");
 		expect(toolBlock.call.input).toEqual({ path: "/src/main.ts" });
 		expect(toolBlock.call.result).toBe("file contents here");
 		expect(toolBlock.call.isError).toBe(false);

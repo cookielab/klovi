@@ -184,6 +184,9 @@ describe("cursor plugin", () => {
 			{ type: "tool_call" }
 		>;
 		expect(toolBlock.call.name).toBe("read_file");
+		expect(toolBlock.call.rawName).toBe("read_file");
+		expect(toolBlock.call.kind).toBe("generic");
+		expect(toolBlock.call.title).toBe("read_file");
 		expect(toolBlock.call.toolUseId).toBe("tool-1");
 		expect(toolBlock.call.input).toEqual({ path: "/tmp/auth.ts" });
 		expect(toolBlock.call.result).toContain('"ok": true');

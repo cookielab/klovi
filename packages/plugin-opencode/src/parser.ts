@@ -4,6 +4,7 @@ import type {
 	Session,
 	SqliteDb,
 	TokenUsage,
+	ToolCallKind,
 	ToolCallWithResult,
 	Turn,
 	UserTurn,
@@ -143,6 +144,32 @@ type PartData =
 	| PartDataStepFinish
 	| PartDataOther;
 
+// --- Normalization ---
+
+/**
+ * Parse an MCP raw name like `mcp__<server>__<tool>` into a human-readable label.
+ */
+function parseMcpDisplayName(rawName: string): string {
+	const parts = rawName.split("__");
+	if (parts.length >= 3) {
+		return parts.slice(2).join("_");
+	}
+	if (parts.length === 2 && parts[1]) {
+		return parts[1];
+	}
+	return rawName;
+}
+
+function normalizeToolCall(rawName: string): {
+	kind: ToolCallKind;
+	title: string;
+} {
+	if (rawName.startsWith("mcp__")) {
+		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+	}
+	return { kind: "generic", title: rawName };
+}
+
 // --- Turn building ---
 
 function partToContentBlock(partData: PartData, nextToolUseId: () => string): ContentBlock | null {
@@ -170,12 +197,17 @@ function partToContentBlock(partData: PartData, nextToolUseId: () => string): Co
 function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): ToolCallWithResult {
 	const { state } = toolPart;
 	const toolId = toolPart.callID || nextToolUseId();
+	const rawName = toolPart.tool;
+	const normalized = normalizeToolCall(rawName);
 
 	switch (state.status) {
 		case "completed":
 			return {
 				toolUseId: toolId,
-				name: toolPart.tool,
+				kind: normalized.kind,
+				title: normalized.title,
+				name: rawName,
+				rawName: rawName,
 				input: state.input,
 				result: state.output,
 				isError: false,
@@ -183,7 +215,10 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 		case "error":
 			return {
 				toolUseId: toolId,
-				name: toolPart.tool,
+				kind: normalized.kind,
+				title: normalized.title,
+				name: rawName,
+				rawName: rawName,
 				input: state.input,
 				result: state.error,
 				isError: true,
@@ -192,7 +227,10 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 		case "running":
 			return {
 				toolUseId: toolId,
-				name: toolPart.tool,
+				kind: normalized.kind,
+				title: normalized.title,
+				name: rawName,
+				rawName: rawName,
 				input: state.input,
 				result: "[Tool execution was interrupted]",
 				isError: true,

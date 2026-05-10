@@ -3,6 +3,7 @@ import type {
 	ContentBlock,
 	Session,
 	TokenUsage,
+	ToolCallKind,
 	ToolCallWithResult,
 	Turn,
 	UserTurn,
@@ -232,40 +233,132 @@ function normalizeEvent(raw: unknown): CodexEvent | null {
 	return null;
 }
 
+const COMMAND_SUMMARY_MAX = 80;
+const WEB_SEARCH_SUMMARY_MAX = 60;
+
+/**
+ * Parse an MCP raw name like `mcp__<server>__<tool>` into a human-readable label.
+ */
+function parseMcpDisplayName(rawName: string): string {
+	const parts = rawName.split("__");
+	if (parts.length >= 3) {
+		return parts.slice(2).join("_");
+	}
+	if (parts.length === 2 && parts[1]) {
+		return parts[1];
+	}
+	return rawName;
+}
+
+function truncate(s: string, max: number): string {
+	return s.length <= max ? s : `${s.slice(0, max)}...`;
+}
+
+function normalizeToolCall(
+	rawName: string,
+	input: Record<string, unknown>,
+): {
+	kind: ToolCallKind;
+	title: string;
+	summary?: string | undefined;
+	formattedInput?: string | undefined;
+} {
+	if (rawName === "command_execution") {
+		const cmd = String(input["command"] ?? "");
+		const formattedInput = cmd;
+		const summary = truncate(cmd, COMMAND_SUMMARY_MAX);
+		return { kind: "shell", title: "Command", summary: summary, formattedInput: formattedInput };
+	}
+	if (rawName === "file_change") {
+		const changes = input["changes"];
+		const summary =
+			Array.isArray(changes) && changes.length > 0 ? String((changes[0] as Record<string, unknown>)["path"] ?? "") : "";
+		let formattedInput: string;
+		if (Array.isArray(changes)) {
+			formattedInput = (changes as Record<string, unknown>[])
+				.map((c) => `${c["kind"] ?? "change"}: ${c["path"] ?? ""}`)
+				.join("\n");
+		} else {
+			formattedInput = JSON.stringify(input, null, 2);
+		}
+		return { kind: "file_edit", title: "File Change", summary: summary, formattedInput: formattedInput };
+	}
+	if (rawName === "web_search") {
+		const query = String(input["query"] ?? "");
+		const summary = truncate(query, WEB_SEARCH_SUMMARY_MAX);
+		const formattedInput = `Query: ${query}`;
+		return { kind: "web", title: "Web Search", summary: summary, formattedInput: formattedInput };
+	}
+	if (rawName.startsWith("mcp__")) {
+		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+	}
+	return { kind: "generic", title: rawName };
+}
+
 function buildToolCallFromItem(item: CodexItem, nextToolUseId: () => string): ToolCallWithResult | null {
 	switch (item.type) {
-		case "command_execution":
+		case "command_execution": {
+			const input = { command: item.command };
+			const normalized = normalizeToolCall("command_execution", input);
 			return {
 				toolUseId: nextToolUseId(),
+				kind: normalized.kind,
+				title: normalized.title,
+				summary: normalized.summary,
+				formattedInput: normalized.formattedInput,
 				name: "command_execution",
-				input: { command: item.command },
+				rawName: "command_execution",
+				input: input,
 				result: item.aggregated_output ?? "",
 				isError: item.exit_code !== undefined && item.exit_code !== 0,
 			};
-		case "file_change":
+		}
+		case "file_change": {
+			const input = { changes: item.changes };
+			const normalized = normalizeToolCall("file_change", input);
 			return {
 				toolUseId: nextToolUseId(),
+				kind: normalized.kind,
+				title: normalized.title,
+				summary: normalized.summary,
+				formattedInput: normalized.formattedInput,
 				name: "file_change",
-				input: { changes: item.changes },
+				rawName: "file_change",
+				input: input,
 				result: "",
 				isError: false,
 			};
-		case "mcp_tool_call":
+		}
+		case "mcp_tool_call": {
+			// For Codex MCP tool calls, `item.tool` is just the tool name (not mcp__-prefixed).
+			// We treat these as mcp kind since they come from a named MCP server.
 			return {
 				toolUseId: nextToolUseId(),
+				kind: "mcp",
+				title: item.tool,
 				name: item.tool,
+				rawName: item.tool,
 				input: item.arguments,
 				result: item.result ?? "",
 				isError: false,
 			};
-		case "web_search":
+		}
+		case "web_search": {
+			const input = { query: item.query };
+			const normalized = normalizeToolCall("web_search", input);
 			return {
 				toolUseId: nextToolUseId(),
+				kind: normalized.kind,
+				title: normalized.title,
+				summary: normalized.summary,
+				formattedInput: normalized.formattedInput,
 				name: "web_search",
-				input: { query: item.query },
+				rawName: "web_search",
+				input: input,
 				result: "",
 				isError: false,
 			};
+		}
 		default:
 			return null;
 	}
@@ -411,13 +504,25 @@ function handleGenericToolCall(state: TurnBuilderState, event: CodexEvent, ctx: 
 	if (!state.currentAssistant) {
 		state.currentAssistant = createAssistantTurn(ctx.model, ctx.timestamp, ctx.nextAssistantTurnId());
 	}
+	const rawName = event.toolName ?? "unknown";
+	const input = event.toolInput ?? {};
+	const normalized = normalizeToolCall(rawName, input);
 	const toolCall: ToolCallWithResult = {
 		toolUseId: event.callId ?? ctx.nextToolUseId(),
-		name: event.toolName ?? "unknown",
-		input: event.toolInput ?? {},
+		kind: normalized.kind,
+		title: normalized.title,
+		name: rawName,
+		rawName: rawName,
+		input: input,
 		result: "",
 		isError: false,
 	};
+	if (normalized.summary !== undefined) {
+		toolCall.summary = normalized.summary;
+	}
+	if (normalized.formattedInput !== undefined) {
+		toolCall.formattedInput = normalized.formattedInput;
+	}
 	if (event.callId) {
 		state.pendingToolCalls.set(event.callId, toolCall);
 	}
