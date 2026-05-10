@@ -145,7 +145,7 @@ function loadClaudeSession(nativeId: string, sessionId: string) {
 				continue;
 			}
 			for (const block of turn.contentBlocks) {
-				if (block.type === "tool_call" && block.call.name === "Task") {
+				if (block.type === "tool_call" && block.call.rawName === "Task") {
 					const agentId = subAgentMap.get(block.call.toolUseId);
 					if (agentId) {
 						block.call.subAgentId = agentId;
@@ -185,7 +185,7 @@ function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: s
 				continue;
 			}
 			for (const block of turn.contentBlocks) {
-				if (block.type === "tool_call" && block.call.name === "Task") {
+				if (block.type === "tool_call" && block.call.rawName === "Task") {
 					const nestedAgentId = subAgentMap.get(block.call.toolUseId);
 					if (nestedAgentId) {
 						block.call.subAgentId = nestedAgentId;
@@ -587,7 +587,6 @@ function buildToolCall(
 		toolUseId: (block as { id: string }).id,
 		kind: normalized.kind,
 		title: normalized.title,
-		name: rawName,
 		rawName: rawName,
 		input: input,
 		result: result?.content ?? "",

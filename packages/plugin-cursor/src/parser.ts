@@ -229,7 +229,6 @@ function bubbleToContentBlock(bubble: CursorBubblePayload): ContentBlock | null 
 			toolUseId: tool.toolCallId ?? bubble.bubbleId ?? tool.name,
 			kind: normalized.kind,
 			title: normalized.title,
-			name: rawName,
 			rawName: rawName,
 			input: input,
 			result: normalizeToolResult(tool.result),

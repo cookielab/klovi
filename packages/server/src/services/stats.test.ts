@@ -70,7 +70,6 @@ function makeSession(
 							toolUseId: `${id}-tool-1`,
 							kind: "generic" as const,
 							title: "Read",
-							name: "Read",
 							input: { ["file_path"]: "README.md" },
 							result: "ok",
 							isError: false,

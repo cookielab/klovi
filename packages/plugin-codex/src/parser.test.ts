@@ -157,7 +157,7 @@ describe("buildCodexTurns", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.name).toBe("command_execution");
+		expect(toolBlock.call.rawName).toBe("command_execution");
 		expect(toolBlock.call.rawName).toBe("command_execution");
 		expect(toolBlock.call.kind).toBe("shell");
 		expect(toolBlock.call.title).toBe("Command");
@@ -214,7 +214,7 @@ describe("buildCodexTurns", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.name).toBe("file_change");
+		expect(toolBlock.call.rawName).toBe("file_change");
 		expect(toolBlock.call.rawName).toBe("file_change");
 		expect(toolBlock.call.kind).toBe("file_edit");
 		expect(toolBlock.call.title).toBe("File Change");
@@ -251,7 +251,7 @@ describe("buildCodexTurns", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.name).toBe("search_docs");
+		expect(toolBlock.call.rawName).toBe("search_docs");
 		expect(toolBlock.call.rawName).toBe("search_docs");
 		expect(toolBlock.call.kind).toBe("mcp");
 		expect(toolBlock.call.title).toBe("search_docs");
@@ -275,7 +275,7 @@ describe("buildCodexTurns", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.name).toBe("web_search");
+		expect(toolBlock.call.rawName).toBe("web_search");
 		expect(toolBlock.call.rawName).toBe("web_search");
 		expect(toolBlock.call.kind).toBe("web");
 		expect(toolBlock.call.title).toBe("Web Search");
@@ -449,7 +449,7 @@ describe("loadCodexSession", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.name).toBe("file_change");
+		expect(toolBlock.call.rawName).toBe("file_change");
 	});
 
 	it("loads session with mcp_tool_call events", async () => {
@@ -476,7 +476,7 @@ describe("loadCodexSession", () => {
 		const [block] = assistant.contentBlocks;
 		expect(block?.type).toBe("tool_call");
 		const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-		expect(toolBlock.call.name).toBe("search");
+		expect(toolBlock.call.rawName).toBe("search");
 		expect(toolBlock.call.input).toEqual({ q: "test" });
 		expect(toolBlock.call.result).toBe("Found results");
 	});
@@ -623,7 +623,7 @@ describe("new envelope format", () => {
 			const [block] = assistant.contentBlocks;
 			expect(block?.type).toBe("tool_call");
 			const toolBlock = block as Extract<typeof block, { type: "tool_call" }>;
-			expect(toolBlock.call.name).toBe("exec_command");
+			expect(toolBlock.call.rawName).toBe("exec_command");
 			expect(toolBlock.call.input).toEqual({ cmd: "ls -la", workdir: "/tmp" });
 			expect(toolBlock.call.result).toBe("file1.ts\nfile2.ts");
 			expect(toolBlock.call.isError).toBe(false);

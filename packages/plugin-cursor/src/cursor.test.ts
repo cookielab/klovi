@@ -183,7 +183,7 @@ describe("cursor plugin", () => {
 			(typeof assistantTurn.contentBlocks)[number],
 			{ type: "tool_call" }
 		>;
-		expect(toolBlock.call.name).toBe("read_file");
+		expect(toolBlock.call.rawName).toBe("read_file");
 		expect(toolBlock.call.rawName).toBe("read_file");
 		expect(toolBlock.call.kind).toBe("file_read");
 		expect(toolBlock.call.title).toBe("read_file");

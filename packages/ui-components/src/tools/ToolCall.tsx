@@ -49,7 +49,7 @@ function getMcpServer(call: ToolCallWithResult): string | null {
 		return null;
 	}
 	// Derive from rawName if it has the mcp__ prefix convention
-	const rawName = call.rawName ?? call.name;
+	const rawName = call.rawName ?? "";
 	if (rawName.startsWith("mcp__")) {
 		const parts = rawName.split("__");
 		return parts[1] || null;
@@ -99,7 +99,7 @@ export function ToolCall({ call, defaultOpen, sessionId, project }: ToolCallProp
 		}
 		if (mcpServer) {
 			// Show the parts after the server prefix
-			const rawName = call.rawName ?? call.name;
+			const rawName = call.rawName ?? "";
 			if (rawName.startsWith("mcp__")) {
 				return rawName.split("__").slice(1).join("__").replace(/__/gu, " > ");
 			}

@@ -15,7 +15,6 @@ function tool(id: string): ContentBlock {
 			toolUseId: id,
 			kind: "generic",
 			title: "Read",
-			name: "Read",
 			input: {},
 			result: "ok",
 			isError: false,

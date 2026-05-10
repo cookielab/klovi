@@ -159,7 +159,7 @@ describe("buildTurns", () => {
 		const [call] = turn.contentBlocks;
 		expect(call?.type).toBe("tool_call");
 		const toolCall = call as Extract<typeof call, { type: "tool_call" }>;
-		expect(toolCall.call.name).toBe("Read");
+		expect(toolCall.call.rawName).toBe("Read");
 		expect(toolCall.call.rawName).toBe("Read");
 		expect(toolCall.call.kind).toBe("file_read");
 		expect(toolCall.call.title).toBe("Read");
@@ -190,7 +190,6 @@ describe("buildTurns", () => {
 		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
 		expect(toolCall.kind).toBe("shell");
 		expect(toolCall.title).toBe("Bash");
-		expect(toolCall.name).toBe("Bash");
 		expect(toolCall.rawName).toBe("Bash");
 	});
 
@@ -371,7 +370,6 @@ describe("buildTurns", () => {
 		expect(toolCall.kind).toBe("mcp");
 		expect(toolCall.title).toBe("read_file");
 		expect(toolCall.summary).toBe("read_file");
-		expect(toolCall.name).toBe("mcp__filesystem__read_file");
 		expect(toolCall.rawName).toBe("mcp__filesystem__read_file");
 	});
 

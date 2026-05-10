@@ -18,7 +18,6 @@ function call(
 		toolUseId: "tool-1",
 		kind: "generic",
 		title: name,
-		name: name,
 		input: input,
 		result: "",
 		isError: false,
