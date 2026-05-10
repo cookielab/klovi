@@ -5,13 +5,13 @@ import { type SettingsWriteError, UnknownPluginError } from "./errors";
 import type { PluginSettings, UpdateChannel } from "./settings";
 import { loadSettings, saveSettings } from "./settings";
 
-
 const N_6 = 6;
 const N_24 = 24;
 
 type PluginSettingInfo = {
 	id: string;
 	displayName: string;
+	status?: "beta" | undefined;
 	enabled: boolean;
 	dataDir: string;
 	defaultDataDir: string;
@@ -31,21 +31,24 @@ function buildPluginSettingsResponse(
 ): Effect.Effect<{ plugins: PluginSettingInfo[] }, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const settings = yield* loadSettings(settingsPath);
-		const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(({ plugin, defaultDir, defaultEnabled }) => {
-			const { id } = plugin;
-			const { displayName } = plugin;
-			const pluginConf = settings.plugins[id] ?? { enabled: defaultEnabled, dataDir: null };
-			const defaultDataDir = defaultDir;
-			const isCustomDir = pluginConf.dataDir !== null;
-			return {
-				id: id,
-				displayName: displayName,
-				enabled: pluginConf.enabled,
-				dataDir: pluginConf.dataDir ?? defaultDataDir,
-				defaultDataDir: defaultDataDir,
-				isCustomDir: isCustomDir,
-			};
-		});
+		const plugins: PluginSettingInfo[] = BUILTIN_PLUGIN_DESCRIPTORS.map(
+			({ plugin, defaultDir, defaultEnabled, status }) => {
+				const { id } = plugin;
+				const { displayName } = plugin;
+				const pluginConf = settings.plugins[id] ?? { enabled: defaultEnabled, dataDir: null };
+				const defaultDataDir = defaultDir;
+				const isCustomDir = pluginConf.dataDir !== null;
+				return {
+					id: id,
+					displayName: displayName,
+					status: status,
+					enabled: pluginConf.enabled,
+					dataDir: pluginConf.dataDir ?? defaultDataDir,
+					defaultDataDir: defaultDataDir,
+					isCustomDir: isCustomDir,
+				};
+			},
+		);
 		return { plugins: plugins };
 	});
 }

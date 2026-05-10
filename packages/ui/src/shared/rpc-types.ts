@@ -6,6 +6,7 @@ export type VersionInfo = {
 export type PluginSettingInfo = {
 	id: string;
 	displayName: string;
+	status?: "beta" | undefined;
 	enabled: boolean;
 	dataDir: string;
 	defaultDataDir: string;

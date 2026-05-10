@@ -32,7 +32,7 @@ const BROWSE_BTN_CLASSES =
 function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps): React.ReactNode {
 	const customPath = plugin.isCustomDir ? plugin.dataDir : "";
 	const [editingPath, setEditingPath] = useState(customPath);
-	const displayName = plugin.id === "cursor" ? "Cursor (beta)" : plugin.displayName;
+	const displayName = plugin.status === "beta" ? `${plugin.displayName} (beta)` : plugin.displayName;
 
 	useEffect(() => {
 		setEditingPath(plugin.isCustomDir ? plugin.dataDir : "");

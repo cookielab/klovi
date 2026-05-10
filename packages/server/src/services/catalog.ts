@@ -8,6 +8,7 @@ export type BuiltinPluginDescriptor = {
 	plugin: ToolPlugin;
 	defaultDir: string;
 	defaultEnabled: boolean;
+	status?: "beta" | undefined;
 };
 
 export const BUILTIN_PLUGIN_DESCRIPTORS: BuiltinPluginDescriptor[] = [
@@ -30,6 +31,7 @@ export const BUILTIN_PLUGIN_DESCRIPTORS: BuiltinPluginDescriptor[] = [
 		plugin: cursorPlugin,
 		defaultDir: DEFAULT_CURSOR_DIR,
 		defaultEnabled: false,
+		status: "beta",
 	},
 ];
 

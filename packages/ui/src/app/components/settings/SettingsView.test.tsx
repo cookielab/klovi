@@ -4,8 +4,6 @@ import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SettingsSidebar, type SettingsTab } from "./SettingsSidebar";
 import { SettingsView } from "./SettingsView";
 
-
-
 const noop = (): undefined => undefined;
 const N_15 = 15;
 const N_20 = 20;
@@ -78,7 +76,9 @@ describe("SettingsView", () => {
 		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
-					plugins: [makePlugin({ id: "cursor", displayName: "Cursor", defaultDataDir: "/Users/test/.cursor" })],
+					plugins: [
+						makePlugin({ id: "cursor", displayName: "Cursor", status: "beta", defaultDataDir: "/Users/test/.cursor" }),
+					],
 				}),
 		});
 		const props = defaultProps();

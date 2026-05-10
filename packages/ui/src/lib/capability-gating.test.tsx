@@ -6,7 +6,6 @@ import type { KloviClient } from "./client";
 import { KloviRuntimeProvider } from "./context";
 import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "./host-bridge";
 
-
 const noop = (): undefined => undefined;
 function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviHostBridge {
 	const capabilities: KloviHostCapabilities = {
@@ -97,6 +96,52 @@ describe("UpdateNotification capability gating", () => {
 });
 
 afterEach(cleanup);
+
+describe("PluginRow status badge", () => {
+	it("renders '(beta)' suffix when plugin.status is 'beta'", () => {
+		const betaPlugin: PluginRowProps["plugin"] = {
+			id: "any-plugin",
+			displayName: "Any Plugin",
+			status: "beta",
+			enabled: true,
+			dataDir: "/data",
+			defaultDataDir: "/default",
+			isCustomDir: false,
+		};
+		render(
+			createElement(PluginRow, {
+				plugin: betaPlugin,
+				onToggle: noop,
+				onBrowse: noop,
+				onPathChange: noop,
+				onReset: noop,
+			}),
+		);
+		expect(screen.getByText("Any Plugin (beta)")).toBeTruthy();
+	});
+
+	it("does not render '(beta)' suffix when plugin.status is undefined", () => {
+		const stablePlugin: PluginRowProps["plugin"] = {
+			id: "any-plugin",
+			displayName: "Any Plugin",
+			enabled: true,
+			dataDir: "/data",
+			defaultDataDir: "/default",
+			isCustomDir: false,
+		};
+		render(
+			createElement(PluginRow, {
+				plugin: stablePlugin,
+				onToggle: noop,
+				onBrowse: noop,
+				onPathChange: noop,
+				onReset: noop,
+			}),
+		);
+		expect(screen.getByText("Any Plugin")).toBeTruthy();
+		expect(screen.queryByText("Any Plugin (beta)")).toBeNull();
+	});
+});
 
 describe("PluginRow browse button gating", () => {
 	const basePlugin: PluginRowProps["plugin"] = {
