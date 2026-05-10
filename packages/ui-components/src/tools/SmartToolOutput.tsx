@@ -7,6 +7,9 @@ import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults";
 
 
 
+
+const N_32 = 32;
+
 const N_200 = 200;
 
 const T_OUTPUT = "Output";
@@ -66,7 +69,7 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 			{resultImages && resultImages.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{resultImages.map((img, i) => (
-						<ToolResultImageButton key={`${img.mediaType}-${img.data.slice(0, 32)}`} img={img} index={i} onSelect={setLightboxSrc} />
+						<ToolResultImageButton key={`${img.mediaType}-${img.data.slice(0, N_32)}`} img={img} index={i} onSelect={setLightboxSrc} />
 					))}
 				</div>
 			)}

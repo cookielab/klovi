@@ -154,7 +154,7 @@ describe("PluginRegistry", () => {
 
 		expect(merged).toHaveLength(1);
 		expect(merged[0]?.resolvedPath).toBe("/Users/dev/project");
-		expect(merged[0]?.sessionCount).toBe(6);
+		expect(merged[0]?.sessionCount).toBe(N_6);
 		expect(merged[0]?.lastActivity).toBe("2026-02-22T10:00:00Z");
 		expect(merged[0]?.sources).toEqual([
 			{ pluginId: "claude-code", nativeId: "a" },
@@ -565,7 +565,7 @@ describe("t3code worktree merging", () => {
 
 		expect(merged).toHaveLength(1);
 		expect(merged[0]?.resolvedPath).toBe("/home/.t3/worktrees/Deltro");
-		expect(merged[0]?.sessionCount).toBe(3);
+		expect(merged[0]?.sessionCount).toBe(N_3);
 		expect(merged[0]?.sources).toHaveLength(2);
 	});
 
