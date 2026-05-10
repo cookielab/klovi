@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { useKeyboard } from "./useKeyboard";
 
 
+
+const noop = (): undefined => undefined;
 const T_KEYBOARD_HARNESS = "keyboard harness";
 
 function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }): React.ReactNode {
@@ -18,10 +20,10 @@ afterEach(cleanup);
 
 describe("useKeyboard", () => {
 	it("maps arrow and space keys to step handlers", () => {
-		const onNext = mock(() => undefined);
-		const onPrev = mock(() => undefined);
-		const onNextTurn = mock(() => undefined);
-		const onPrevTurn = mock(() => undefined);
+		const onNext = mock(noop);
+		const onPrev = mock(noop);
+		const onNextTurn = mock(noop);
+		const onPrevTurn = mock(noop);
 
 		render(
 			<KeyboardHarness
@@ -43,8 +45,8 @@ describe("useKeyboard", () => {
 	});
 
 	it("handles escape and fullscreen shortcuts", () => {
-		const onEscape = mock(() => undefined);
-		const onFullscreen = mock(() => undefined);
+		const onEscape = mock(noop);
+		const onFullscreen = mock(noop);
 
 		render(<KeyboardHarness active={true} handlers={{ onEscape: onEscape, onFullscreen: onFullscreen }} />);
 
@@ -58,8 +60,8 @@ describe("useKeyboard", () => {
 	});
 
 	it("does nothing when inactive", () => {
-		const onNext = mock(() => undefined);
-		const onEscape = mock(() => undefined);
+		const onNext = mock(noop);
+		const onEscape = mock(noop);
 
 		render(<KeyboardHarness active={false} handlers={{ onNext: onNext, onEscape: onEscape }} />);
 
@@ -71,7 +73,7 @@ describe("useKeyboard", () => {
 	});
 
 	it("ignores key events from input and textarea", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 
 		const { container } = render(
 			<div>
@@ -94,7 +96,7 @@ describe("useKeyboard", () => {
 	});
 
 	it("safely skips missing handlers and cleans up on unmount", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 		const { unmount } = render(<KeyboardHarness active={true} handlers={{ onNext: onNext }} />);
 
 		unmount();

@@ -2,6 +2,8 @@ import { cleanup, render } from "@testing-library/react";
 import type { Turn } from "../types/index";
 import { PresentationShell } from "./PresentationShell";
 
+
+const noop = (): undefined => undefined;
 const STEP_REGEX = /Step\s+1\s*\/\s*2/u;
 
 function makeTurns(): Turn[] {
@@ -26,7 +28,7 @@ afterEach(cleanup);
 
 describe("PresentationShell (package)", () => {
 	it("renders progress information", async () => {
-		const { findByText } = render(<PresentationShell turns={makeTurns()} onExit={() => undefined} />);
+		const { findByText } = render(<PresentationShell turns={makeTurns()} onExit={noop} />);
 
 		expect(await findByText(STEP_REGEX)).toBeTruthy();
 		expect(await findByText("← → step · ↑ ↓ message · Esc exit · F fullscreen")).toBeTruthy();

@@ -3,6 +3,8 @@ import { fireEvent, render } from "@testing-library/react";
 import { useKeyboard } from "./useKeyboard";
 
 
+
+const noop = (): undefined => undefined;
 const T_KEYBOARD_TEST = "Keyboard test";
 
 function KeyboardTestHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }): React.ReactNode {
@@ -17,71 +19,71 @@ function fireKey(key: string, opts: KeyboardEventInit = {}): void {
 
 describe("useKeyboard", () => {
 	it("calls onNext for ArrowRight", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext }} active={true} />);
 		fireKey("ArrowRight");
 		expect(onNext).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onNext for Space", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext }} active={true} />);
 		fireKey(" ");
 		expect(onNext).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onPrev for ArrowLeft", () => {
-		const onPrev = mock(() => undefined);
+		const onPrev = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onPrev: onPrev }} active={true} />);
 		fireKey("ArrowLeft");
 		expect(onPrev).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onNextTurn for ArrowDown", () => {
-		const onNextTurn = mock(() => undefined);
+		const onNextTurn = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onNextTurn: onNextTurn }} active={true} />);
 		fireKey("ArrowDown");
 		expect(onNextTurn).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onPrevTurn for ArrowUp", () => {
-		const onPrevTurn = mock(() => undefined);
+		const onPrevTurn = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onPrevTurn: onPrevTurn }} active={true} />);
 		fireKey("ArrowUp");
 		expect(onPrevTurn).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onEscape for Escape", () => {
-		const onEscape = mock(() => undefined);
+		const onEscape = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onEscape: onEscape }} active={true} />);
 		fireKey("Escape");
 		expect(onEscape).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls onFullscreen for 'f' key (no modifier)", () => {
-		const onFullscreen = mock(() => undefined);
+		const onFullscreen = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onFullscreen: onFullscreen }} active={true} />);
 		fireKey("f");
 		expect(onFullscreen).toHaveBeenCalledTimes(1);
 	});
 
 	it("does NOT call onFullscreen for Ctrl+f", () => {
-		const onFullscreen = mock(() => undefined);
+		const onFullscreen = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onFullscreen: onFullscreen }} active={true} />);
 		fireKey("f", { ctrlKey: true });
 		expect(onFullscreen).toHaveBeenCalledTimes(0);
 	});
 
 	it("does NOT call onFullscreen for Cmd+f", () => {
-		const onFullscreen = mock(() => undefined);
+		const onFullscreen = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onFullscreen: onFullscreen }} active={true} />);
 		fireKey("f", { metaKey: true });
 		expect(onFullscreen).toHaveBeenCalledTimes(0);
 	});
 
 	it("does nothing when active is false", () => {
-		const onNext = mock(() => undefined);
-		const onPrev = mock(() => undefined);
+		const onNext = mock(noop);
+		const onPrev = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext, onPrev: onPrev }} active={false} />);
 		fireKey("ArrowRight");
 		fireKey("ArrowLeft");
@@ -90,9 +92,9 @@ describe("useKeyboard", () => {
 	});
 
 	it("does not fire for unrelated keys", () => {
-		const onNext = mock(() => undefined);
-		const onPrev = mock(() => undefined);
-		const onEscape = mock(() => undefined);
+		const onNext = mock(noop);
+		const onPrev = mock(noop);
+		const onEscape = mock(noop);
 		render(<KeyboardTestHarness handlers={{ onNext: onNext, onPrev: onPrev, onEscape: onEscape }} active={true} />);
 		fireKey("a");
 		fireKey("Enter");
@@ -113,7 +115,7 @@ describe("useKeyboard", () => {
 	});
 
 	it("cleans up listener on unmount", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 		const { unmount } = render(<KeyboardTestHarness handlers={{ onNext: onNext }} active={true} />);
 		unmount();
 		fireKey("ArrowRight");
@@ -121,7 +123,7 @@ describe("useKeyboard", () => {
 	});
 
 	it("ignores keydown when target is an input element", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 		const { container } = render(
 			<div>
 				<input type="text" data-testid="input" />
@@ -135,7 +137,7 @@ describe("useKeyboard", () => {
 	});
 
 	it("ignores keydown when target is a textarea element", () => {
-		const onNext = mock(() => undefined);
+		const onNext = mock(noop);
 		const { container } = render(
 			<div>
 				<textarea data-testid="textarea" />

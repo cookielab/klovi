@@ -1,5 +1,7 @@
 import { browserHostBridge } from "./browser-host-bridge";
 
+
+const noop = (): undefined => undefined;
 describe("browserHostBridge capabilities", () => {
 	const caps = browserHostBridge.getCapabilities();
 
@@ -38,26 +40,26 @@ describe("browserHostBridge methods in browser mode", () => {
 	});
 
 	it("onMenuAction returns no-op unsubscribe", () => {
-		const unsubscribe = browserHostBridge.onMenuAction(() => undefined);
+		const unsubscribe = browserHostBridge.onMenuAction(noop);
 		expect(typeof unsubscribe).toBe("function");
 		unsubscribe(); // should not throw
 	});
 
 	it("onUpdateStatus returns no-op unsubscribe", () => {
-		const unsubscribe = browserHostBridge.onUpdateStatus(() => undefined);
+		const unsubscribe = browserHostBridge.onUpdateStatus(noop);
 		expect(typeof unsubscribe).toBe("function");
 		unsubscribe();
 	});
 
 	it("onStatsUpdated returns no-op unsubscribe", () => {
-		const unsubscribe = browserHostBridge.onStatsUpdated(() => undefined);
+		const unsubscribe = browserHostBridge.onStatsUpdated(noop);
 		expect(typeof unsubscribe).toBe("function");
 		unsubscribe();
 	});
 
 	it("connection state is always connected", () => {
 		expect(browserHostBridge.getConnectionState()).toBe("connected");
-		const unsubscribe = browserHostBridge.onConnectionState(() => undefined);
+		const unsubscribe = browserHostBridge.onConnectionState(noop);
 		expect(typeof unsubscribe).toBe("function");
 		unsubscribe();
 	});

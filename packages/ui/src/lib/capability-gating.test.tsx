@@ -6,6 +6,8 @@ import type { KloviClient } from "./client";
 import { KloviRuntimeProvider } from "./context";
 import type { KloviHostBridge, KloviHostCapabilities, KloviHostConnectionState } from "./host-bridge";
 
+
+const noop = (): undefined => undefined;
 function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviHostBridge {
 	const capabilities: KloviHostCapabilities = {
 		desktop: false,
@@ -26,13 +28,13 @@ function createMockHostBridge(caps: Partial<KloviHostCapabilities> = {}): KloviH
 		checkForUpdate: () => Promise.resolve({ status: "up-to-date" as const, currentVersion: "0.0.0" }),
 		applyUpdate: () => Promise.resolve({ ok: false }),
 		openExternal: () => Promise.resolve({ ok: true }),
-		onMenuAction: () => () => undefined,
-		onUpdateStatus: () => () => undefined,
-		onManualUpdateResult: () => () => undefined,
-		onStatsUpdated: () => () => undefined,
-		onConnectionState: () => () => undefined,
+		onMenuAction: () => noop,
+		onUpdateStatus: () => noop,
+		onManualUpdateResult: () => noop,
+		onStatsUpdated: () => noop,
+		onConnectionState: () => noop,
 		getSystemTheme: () => Promise.resolve({ theme: null }),
-		onSystemThemeChange: () => () => undefined,
+		onSystemThemeChange: () => noop,
 	};
 }
 
@@ -69,9 +71,9 @@ describe("UpdateNotification capability gating", () => {
 			createElement(UpdateNotification, {
 				status: { status: "ready", latestVersion: "2.0.0", currentVersion: "1.0.0" },
 				dismissed: false,
-				onDismiss: () => undefined,
+				onDismiss: noop,
 				manualCheckResult: null,
-				onDismissManualCheck: () => undefined,
+				onDismissManualCheck: noop,
 			}),
 			{ updater: false },
 		);
@@ -83,9 +85,9 @@ describe("UpdateNotification capability gating", () => {
 			createElement(UpdateNotification, {
 				status: { status: "ready", latestVersion: "2.0.0", currentVersion: "1.0.0" },
 				dismissed: false,
-				onDismiss: () => undefined,
+				onDismiss: noop,
 				manualCheckResult: null,
-				onDismissManualCheck: () => undefined,
+				onDismissManualCheck: noop,
 			}),
 			{ updater: true },
 		);
@@ -110,10 +112,10 @@ describe("PluginRow browse button gating", () => {
 		render(
 			createElement(PluginRow, {
 				plugin: basePlugin,
-				onToggle: () => undefined,
-				onBrowse: () => undefined,
-				onPathChange: () => undefined,
-				onReset: () => undefined,
+				onToggle: noop,
+				onBrowse: noop,
+				onPathChange: noop,
+				onReset: noop,
 				canBrowse: true,
 			}),
 		);
@@ -124,10 +126,10 @@ describe("PluginRow browse button gating", () => {
 		render(
 			createElement(PluginRow, {
 				plugin: basePlugin,
-				onToggle: () => undefined,
-				onBrowse: () => undefined,
-				onPathChange: () => undefined,
-				onReset: () => undefined,
+				onToggle: noop,
+				onBrowse: noop,
+				onPathChange: noop,
+				onReset: noop,
 				canBrowse: false,
 			}),
 		);
@@ -138,10 +140,10 @@ describe("PluginRow browse button gating", () => {
 		render(
 			createElement(PluginRow, {
 				plugin: basePlugin,
-				onToggle: () => undefined,
-				onBrowse: () => undefined,
-				onPathChange: () => undefined,
-				onReset: () => undefined,
+				onToggle: noop,
+				onBrowse: noop,
+				onPathChange: noop,
+				onReset: noop,
 			}),
 		);
 		expect(screen.getByText("Browse")).toBeTruthy();

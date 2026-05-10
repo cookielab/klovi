@@ -3,6 +3,8 @@ import type { Session } from "../../../shared/types";
 import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { SessionView } from "./SessionView";
 
+
+const noop = (): undefined => undefined;
 const ERROR_TITLE_TEXT = "Something went wrong";
 const HTTP_404_DETAIL_TEXT = "HTTP 404";
 const NETWORK_ERROR_DETAIL_TEXT = "Network error";
@@ -35,7 +37,7 @@ describe("SessionView", () => {
 
 	it("shows loading state initially", () => {
 		setupMockRPC({
-			getSessionHead: () => new Promise(() => undefined),
+			getSessionHead: () => new Promise(noop),
 		});
 		const { container } = render(<SessionView sessionId="session-1" project="test-project" />, {
 			wrapper: MockProviders,

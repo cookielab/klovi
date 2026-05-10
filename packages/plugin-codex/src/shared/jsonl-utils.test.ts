@@ -1,6 +1,8 @@
 import { iterateJsonl } from "./jsonl-utils";
 
 
+
+const noop = (): undefined => undefined;
 const N_4 = 4;
 
 describe("iterateJsonl", () => {
@@ -34,7 +36,7 @@ describe("iterateJsonl", () => {
 	it("invokes onMalformed with source line and number", () => {
 		const malformed = mock((_line: string, _lineNumber: number, _error: unknown) => undefined);
 
-		iterateJsonl('{"ok":1}\n{broken}', () => undefined, { onMalformed: malformed });
+		iterateJsonl('{"ok":1}\n{broken}', noop, { onMalformed: malformed });
 
 		expect(malformed).toHaveBeenCalledTimes(1);
 		expect(malformed.mock.calls[0]?.[0]).toBe("{broken}");

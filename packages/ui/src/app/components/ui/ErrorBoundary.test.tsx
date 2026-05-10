@@ -3,6 +3,8 @@ import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 
 
+
+const noop = (): undefined => undefined;
 const T_SAFE_CONTENT = "Safe content";
 const T_RECOVERED = "Recovered";
 const T_RECOVERED_INLINE = "Recovered inline";
@@ -19,7 +21,7 @@ describe("ErrorBoundary", () => {
 	const originalError = console.error;
 
 	function silenceExpectedBoundaryErrors(): void {
-		console.error = () => undefined;
+		console.error = noop;
 	}
 
 	beforeEach(() => {

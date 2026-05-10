@@ -3,6 +3,8 @@ import type { UpdateStatus } from "../../shared/rpc-types";
 import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc";
 import { UpdateNotification } from "./UpdateNotification";
 
+
+const noop = (): undefined => undefined;
 const VERSION_READY_PATTERN = /v2\.0\.0 is ready/u;
 const EXTRACT_FAILED_PATTERN = /Extract failed/u;
 const UPDATE_FAILED_PATTERN = /Update failed/u;
@@ -77,7 +79,7 @@ describe("UpdateNotification", () => {
 	});
 
 	it("shows Restarting text and disables button while applying", () => {
-		const applyUpdate = mock(() => new Promise<{ ok: boolean }>(() => undefined)); // never resolves
+		const applyUpdate = mock(() => new Promise<{ ok: boolean }>(noop)); // never resolves
 		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };

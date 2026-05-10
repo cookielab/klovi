@@ -5,6 +5,8 @@ import { SettingsSidebar, type SettingsTab } from "./SettingsSidebar";
 import { SettingsView } from "./SettingsView";
 
 
+
+const noop = (): undefined => undefined;
 const N_15 = 15;
 const N_20 = 20;
 const N_6 = 6;
@@ -360,7 +362,7 @@ describe("SettingsSidebar", () => {
 	afterEach(cleanup);
 
 	it("renders General and Plugins buttons", () => {
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => undefined} />, {
+		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={noop} />, {
 			wrapper: MockProviders,
 		});
 		expect(getByRole("button", { name: "General" })).toBeDefined();
@@ -368,7 +370,7 @@ describe("SettingsSidebar", () => {
 	});
 
 	it("marks General as active when activeTab is general", () => {
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => undefined} />, {
+		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={noop} />, {
 			wrapper: MockProviders,
 		});
 		expect(getByRole("button", { name: "General" }).classList.contains("active")).toBe(true);
@@ -376,7 +378,7 @@ describe("SettingsSidebar", () => {
 	});
 
 	it("marks Plugins as active when activeTab is plugins", () => {
-		const { getByRole } = render(<SettingsSidebar activeTab="plugins" onTabChange={() => undefined} />, {
+		const { getByRole } = render(<SettingsSidebar activeTab="plugins" onTabChange={noop} />, {
 			wrapper: MockProviders,
 		});
 		expect(getByRole("button", { name: "General" }).classList.contains("active")).toBe(false);
@@ -394,7 +396,7 @@ describe("SettingsSidebar", () => {
 
 	it("renders back button when onBack provided", () => {
 		const onBack = mock();
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => undefined} onBack={onBack} />, {
+		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={noop} onBack={onBack} />, {
 			wrapper: MockProviders,
 		});
 		expect(getByRole("button", { name: "Back" })).toBeDefined();
@@ -402,7 +404,7 @@ describe("SettingsSidebar", () => {
 
 	it("calls onBack when back button clicked", () => {
 		const onBack = mock();
-		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={() => undefined} onBack={onBack} />, {
+		const { getByRole } = render(<SettingsSidebar activeTab="general" onTabChange={noop} onBack={onBack} />, {
 			wrapper: MockProviders,
 		});
 		fireEvent.click(getByRole("button", { name: "Back" }));

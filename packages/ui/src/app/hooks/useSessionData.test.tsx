@@ -4,6 +4,8 @@ import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc";
 import { useSessionData } from "./useSessionData";
 
 
+
+const noop = (): undefined => undefined;
 const N_3 = 3;
 const N_100 = 100;
 const N_50 = 50;
@@ -66,7 +68,7 @@ describe("useSessionData two-phase load", () => {
 					session: { sessionId: "s1", project: "p1", turns: headTurns } as Session,
 					totalTurns: N_50,
 				}),
-			getSessionTail: () => new Promise(() => undefined), // never resolves
+			getSessionTail: () => new Promise(noop), // never resolves
 		});
 		const { result } = renderHook(() => useSessionData("s1", "p1"), { wrapper: MockProviders });
 		await waitFor(() => expect(result.current.data?.session.turns.length).toBe(2));

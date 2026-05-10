@@ -1,13 +1,15 @@
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { Header } from "./Header";
 
+
+const noop = (): undefined => undefined;
 afterEach(cleanup);
 
 function makeProps(overrides: Partial<Parameters<typeof Header>[0]> = {}) {
 	return {
 		title: "Test Session",
 		presentationActive: false,
-		onTogglePresentation: mock(() => undefined),
+		onTogglePresentation: mock(noop),
 		showPresentationToggle: false,
 		...overrides,
 	};
@@ -83,7 +85,7 @@ describe("Header", () => {
 	});
 
 	it("calls onTogglePresentation when presentation button clicked", () => {
-		const onTogglePresentation = mock(() => undefined);
+		const onTogglePresentation = mock(noop);
 		const { getByText } = render(
 			<Header {...makeProps({ showPresentationToggle: true, onTogglePresentation: onTogglePresentation })} />,
 		);

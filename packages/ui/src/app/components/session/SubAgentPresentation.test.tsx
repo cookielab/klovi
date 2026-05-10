@@ -3,6 +3,8 @@ import type { Session } from "../../../shared/types";
 import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { SubAgentPresentation } from "./SubAgentPresentation";
 
+
+const noop = (): undefined => undefined;
 const STEP_REGEX = /Step/u;
 
 function makeSession(overrides: Partial<Session> = {}): Session {
@@ -33,10 +35,10 @@ describe("SubAgentPresentation", () => {
 
 	it("shows loading state initially", () => {
 		setupMockRPC({
-			getSubAgent: () => new Promise(() => undefined),
+			getSubAgent: () => new Promise(noop),
 		});
 		const { container } = render(
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		expect(container.querySelector(".loading")).not.toBeNull();
@@ -50,7 +52,7 @@ describe("SubAgentPresentation", () => {
 		});
 
 		const { container, findByText } = render(
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		await findByText(STEP_REGEX);
@@ -64,7 +66,7 @@ describe("SubAgentPresentation", () => {
 		});
 
 		const { container } = render(
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		await waitFor(() => {
@@ -79,7 +81,7 @@ describe("SubAgentPresentation", () => {
 		});
 
 		const { container } = render(
-			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={() => undefined} />,
+			<SubAgentPresentation sessionId="session-1" project="test-project" agentId="agent-1" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		await waitFor(() => {

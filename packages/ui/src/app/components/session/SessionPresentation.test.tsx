@@ -3,6 +3,8 @@ import type { Session } from "../../../shared/types";
 import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { SessionPresentation } from "./SessionPresentation";
 
+
+const noop = (): undefined => undefined;
 const STEP_REGEX = /Step/u;
 
 function makeSession(overrides: Partial<Session> = {}): Session {
@@ -33,10 +35,10 @@ describe("SessionPresentation", () => {
 
 	it("shows loading state initially", () => {
 		setupMockRPC({
-			getSessionHead: () => new Promise(() => undefined),
+			getSessionHead: () => new Promise(noop),
 		});
 		const { container } = render(
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		expect(container.querySelector(".loading")).not.toBeNull();
@@ -50,7 +52,7 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container, findByText } = render(
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		await findByText(STEP_REGEX);
@@ -65,7 +67,7 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container, findByText } = render(
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		await findByText(STEP_REGEX);
@@ -79,7 +81,7 @@ describe("SessionPresentation", () => {
 		});
 
 		const { container } = render(
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={() => undefined} />,
+			<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />,
 			{ wrapper: MockProviders },
 		);
 		await waitFor(() => {

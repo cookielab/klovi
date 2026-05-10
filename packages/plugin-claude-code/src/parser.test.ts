@@ -1142,8 +1142,9 @@ describe("loadClaudeSession streaming memory", () => {
 		const lines = Array.from({ length: lineCount }, () => padLine);
 		await Bun.write(filePath, lines.join("\n"));
 
-		if (typeof global.gc === "function") {
-			global.gc();
+		const globalGc = (globalThis as unknown as { gc?: () => void }).gc;
+		if (typeof globalGc === "function") {
+			globalGc();
 		}
 		const before = process.memoryUsage().heapUsed;
 		const result = await memRun(loadClaudeSession("p", sessionId));

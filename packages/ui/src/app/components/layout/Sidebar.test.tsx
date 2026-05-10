@@ -4,6 +4,8 @@ import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { Sidebar } from "./Sidebar";
 
 
+
+const noop = (): undefined => undefined;
 const T_CHILDREN = "Children";
 const T_MY_CHILD_CONTENT = "My Child Content";
 const T_CONTENT = "Content";
@@ -32,7 +34,7 @@ describe("Sidebar", () => {
 	});
 
 	it("renders search button when onSearchClick provided", () => {
-		const onSearchClick = mock(() => undefined);
+		const onSearchClick = mock(noop);
 		const { getByTitle } = render(
 			<Sidebar onSearchClick={onSearchClick}>
 				<div><Text>{T_CONTENT}</Text></div>
@@ -83,7 +85,7 @@ describe("Sidebar", () => {
 	});
 
 	it("renders settings button when onSettingsClick provided", () => {
-		const onSettingsClick = mock(() => undefined);
+		const onSettingsClick = mock(noop);
 		const { getByTitle } = render(
 			<Sidebar onSettingsClick={onSettingsClick}>
 				<div><Text>{T_CONTENT}</Text></div>

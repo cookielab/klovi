@@ -5,6 +5,8 @@ import { Button } from "../components/Button/Button";
 import { Modal } from "../components/Modal/Modal";
 
 
+
+const noop = (): undefined => undefined;
 const T_OPEN_MODAL = "Open Modal";
 const T_MODAL_TITLE = "Modal Title";
 const T_THIS_IS_MODAL_CONTENT_PRESS_ES = "This is modal content. Press Escape or click outside to close.";
@@ -41,7 +43,7 @@ export const Interactive: Story = {
 export const Open: Story = {
 	args: {
 		open: true,
-		onClose: () => undefined,
+		onClose: noop,
 		children: (
 			<div>
 				<h2><Text>{T_STATIC_MODAL}</Text></h2>

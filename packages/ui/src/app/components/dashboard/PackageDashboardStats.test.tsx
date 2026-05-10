@@ -4,6 +4,8 @@ import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
 import { PackageDashboardStats } from "./PackageDashboardStats";
 
 
+
+const noop = (): undefined => undefined;
 const N_3 = 3;
 const N_10 = 10;
 const N_5 = 5;
@@ -35,7 +37,7 @@ describe("PackageDashboardStats", () => {
 
 	it("shows a scaffold on a cold load", () => {
 		setupMockRPC({
-			getStats: () => new Promise(() => undefined),
+			getStats: () => new Promise(noop),
 		});
 
 		render(<PackageDashboardStats />, { wrapper: MockProviders });

@@ -15,6 +15,8 @@ import { Modal } from "./Modal/Modal";
 
 
 
+
+const noop = (): undefined => undefined;
 const N_640 = 640;
 
 const T_SAVE = "Save";
@@ -35,7 +37,7 @@ afterEach(cleanup);
 
 describe("design-system components", () => {
 	it("Button forwards props and handles clicks", () => {
-		const onClick = mock(() => undefined);
+		const onClick = mock(noop);
 
 		const { getByRole } = render(
 			<Button variant="primary" size="sm" icon={true} className="custom" onClick={onClick}>
@@ -68,7 +70,7 @@ describe("design-system components", () => {
 	});
 
 	it("Modal handles overlay clicks, escape, and inner click propagation", () => {
-		const onClose = mock(() => undefined);
+		const onClose = mock(noop);
 
 		const { getByRole, getByText, rerender } = render(
 			<Modal open={true} onClose={onClose} width={N_640}>
@@ -103,7 +105,7 @@ describe("design-system components", () => {
 	});
 
 	it("SegmentedControl respects value, onChange, and disabled state", () => {
-		const onChange = mock(() => undefined);
+		const onChange = mock(noop);
 
 		const { getByRole, rerender } = render(
 			<SegmentedControl
@@ -205,7 +207,7 @@ describe("design-system components", () => {
 	});
 
 	it("SidebarButton renders as a button and forwards props", () => {
-		const onClick = mock(() => undefined);
+		const onClick = mock(noop);
 		const { getByRole } = render(
 			<SidebarButton onClick={onClick} title="Search">
 				<Text>{T_SEARCH}</Text>
