@@ -14,6 +14,7 @@ export { Sidebar } from "./components/Layout/Sidebar";
 export { SidebarButton } from "./components/Layout/SidebarButton";
 export { Modal } from "./components/Modal/Modal";
 // Components
+export { Text } from "./components/Text/Text";
 export { ThemeProvider } from "./components/ThemeProvider/ThemeProvider";
 export { TurnBox } from "./components/TurnBox/TurnBox";
 export { useFontSize } from "./hooks/useFontSize";

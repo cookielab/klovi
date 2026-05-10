@@ -1,5 +1,6 @@
 import type React from "react";
 import { useCallback, useState } from "react";
+import { Text } from "../Text/Text";
 
 type CollapsibleProps = {
 	title: React.ReactNode;
@@ -10,7 +11,9 @@ type CollapsibleProps = {
 const HEADER_CLASSES =
 	"flex items-center gap-1.5 w-full px-2 py-1 cursor-pointer text-[0.82rem] font-medium text-foreground-muted bg-none border-0 font-[inherit] text-left select-none transition-colors duration-100 hover:bg-surface-muted";
 
-export function Collapsible({ title, defaultOpen = false, children }: CollapsibleProps) {
+const TRIANGLE_GLYPH = "▶";
+
+export function Collapsible({ title, defaultOpen = false, children }: CollapsibleProps): React.ReactNode {
 	const [open, setOpen] = useState(defaultOpen);
 	const handleToggle = useCallback(() => setOpen((prev) => !prev), []);
 
@@ -20,7 +23,7 @@ export function Collapsible({ title, defaultOpen = false, children }: Collapsibl
 				<span
 					className={`inline-block text-[0.6rem] text-foreground-subtle transition-transform duration-150 ${open ? "rotate-90" : ""}`}
 				>
-					&#x25B6;
+					<Text>{TRIANGLE_GLYPH}</Text>
 				</span>
 				{title}
 			</button>
