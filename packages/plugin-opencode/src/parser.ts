@@ -17,16 +17,16 @@ import { tryParseJson } from "./shared/json-utils";
 
 type MessageRow = {
 	id: string;
-	session_id: string;
-	time_created: number;
+	["session_id"]: string;
+	["time_created"]: number;
 	data: string;
 };
 
 type PartRow = {
 	id: string;
-	message_id: string;
-	session_id: string;
-	time_created: number;
+	["message_id"]: string;
+	["session_id"]: string;
+	["time_created"]: number;
 	data: string;
 };
 

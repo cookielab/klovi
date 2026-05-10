@@ -7,7 +7,7 @@ const DISCONNECT_METHOD_REGEX = /during (?<method>\w+)/u;
 
 type RpcTag = "RpcTimeoutError" | "RpcDisconnectedError" | "RpcHandlerError";
 
-function hasRpcTag(error: unknown): error is { _tag: RpcTag } {
+function hasRpcTag(error: unknown): error is { ["_tag"]: RpcTag } {
 	if (!(typeof error === "object" && error !== null && "_tag" in error)) {
 		return false;
 	}

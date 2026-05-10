@@ -53,12 +53,12 @@ type ProjectRow = {
 
 type SessionRow = {
 	id: string;
-	project_id: string;
+	["project_id"]: string;
 	directory: string;
 	title: string;
 	slug: string;
-	time_created: number;
-	time_updated: number;
+	["time_created"]: number;
+	["time_updated"]: number;
 };
 
 type MessageDataJson = {
@@ -71,8 +71,8 @@ type MessageDataJson = {
 
 type MessageRow = {
 	id: string;
-	session_id: string;
-	time_created: number;
+	["session_id"]: string;
+	["time_created"]: number;
 	data: string;
 };
 
@@ -128,7 +128,7 @@ function discoverFromProjectTable(db: SqliteDb, schema: OpenCodeSchema): PluginP
 	const selectName = hasName ? "p.name" : "NULL as name";
 
 	const rows = db
-		.query<ProjectRow & { session_count: number; last_activity: number }>(
+		.query<ProjectRow & { ["session_count"]: number; ["last_activity"]: number }>(
 			`SELECT p.id, p.worktree, ${selectName},
               count(s.id) as session_count,
               coalesce(max(s.time_updated), max(s.time_created), p.time_created) as last_activity
@@ -161,7 +161,7 @@ function discoverFromSessions(db: SqliteDb, schema: OpenCodeSchema): PluginProje
 	const groupCol = hasDirectory ? "directory" : "project_id";
 
 	const rows = db
-		.query<{ group_key: string; session_count: number; last_activity: number }>(
+		.query<{ ["group_key"]: string; ["session_count"]: number; ["last_activity"]: number }>(
 			`SELECT ${groupCol} as group_key,
               count(*) as session_count,
               coalesce(max(time_updated), max(time_created)) as last_activity

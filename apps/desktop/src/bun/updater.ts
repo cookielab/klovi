@@ -6,7 +6,7 @@ import type { UpdateChannel } from "../shared/rpc-types";
 const { semver } = Bun;
 
 type GithubRelease = {
-	tag_name: string;
+	["tag_name"]: string;
 	prerelease: boolean;
 	draft: boolean;
 	assets: GithubAsset[];
@@ -14,7 +14,7 @@ type GithubRelease = {
 
 type GithubAsset = {
 	name: string;
-	browser_download_url: string;
+	["browser_download_url"]: string;
 };
 
 type UpdateInfo = {

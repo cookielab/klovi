@@ -274,7 +274,7 @@ function extractUserContent(content: string | RawContentBlock[]): {
 		if (block.type === "image" && "source" in block) {
 			attachments.push({
 				type: "image",
-				mediaType: (block as { source: { media_type: string } }).source.media_type,
+				mediaType: (block as { source: { ["media_type"]: string } }).source.media_type,
 			});
 		}
 	}

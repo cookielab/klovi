@@ -12,7 +12,7 @@ type CodexSessionMeta = {
 	cwd: string;
 	timestamps: { created: number; updated: number };
 	model: string;
-	provider_id: string;
+	["provider_id"]: string;
 };
 
 type SessionFileInfo = {
@@ -42,7 +42,7 @@ type NewFormatMeta = {
 		id: string;
 		cwd: string;
 		timestamp?: string;
-		model_provider?: string;
+		["model_provider"]?: string;
 		model?: string;
 		originator?: string;
 		[key: string]: unknown;

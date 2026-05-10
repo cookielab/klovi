@@ -16,8 +16,8 @@ import { iterateJsonl } from "./shared/jsonl-utils";
 type CodexItemCommand = {
 	type: "command_execution";
 	command: string;
-	aggregated_output?: string;
-	exit_code?: number;
+	["aggregated_output"]?: string;
+	["exit_code"]?: number;
 };
 
 type CodexItemFileChange = {
@@ -65,9 +65,9 @@ type CodexEvent = {
 	toolInput?: Record<string, unknown> | undefined;
 	usage?:
 		| {
-				input_tokens?: number | undefined;
-				cached_input_tokens?: number | undefined;
-				output_tokens?: number | undefined;
+				["input_tokens"]?: number | undefined;
+				["cached_input_tokens"]?: number | undefined;
+				["output_tokens"]?: number | undefined;
 		  }
 		| undefined;
 };
@@ -77,20 +77,20 @@ type EnvelopePayload = {
 	message?: string;
 	text?: string;
 	name?: string;
-	call_id?: string;
+	["call_id"]?: string;
 	input?: string;
 	output?: string;
 	arguments?: Record<string, unknown> | string;
 	role?: string;
 	content?: { type: string; text?: string }[];
-	input_tokens?: number;
-	cached_input_tokens?: number;
-	output_tokens?: number;
+	["input_tokens"]?: number;
+	["cached_input_tokens"]?: number;
+	["output_tokens"]?: number;
 	info?: {
-		last_token_usage?: {
-			input_tokens?: number;
-			cached_input_tokens?: number;
-			output_tokens?: number;
+		["last_token_usage"]?: {
+			["input_tokens"]?: number;
+			["cached_input_tokens"]?: number;
+			["output_tokens"]?: number;
 		};
 	} | null;
 	[key: string]: unknown;

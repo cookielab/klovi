@@ -19,12 +19,12 @@ type RawMessage = {
 	role: "user" | "assistant";
 	model?: string;
 	content: string | RawContentBlock[];
-	stop_reason?: string;
+	["stop_reason"]?: string;
 	usage?: {
-		input_tokens?: number;
-		output_tokens?: number;
-		cache_read_input_tokens?: number;
-		cache_creation_input_tokens?: number;
+		["input_tokens"]?: number;
+		["output_tokens"]?: number;
+		["cache_read_input_tokens"]?: number;
+		["cache_creation_input_tokens"]?: number;
 	};
 };
 
@@ -49,16 +49,16 @@ type RawToolUseBlock = {
 
 type RawToolResultBlock = {
 	type: "tool_result";
-	tool_use_id: string;
+	["tool_use_id"]: string;
 	content: string | RawToolResultContent[];
-	is_error?: boolean;
+	["is_error"]?: boolean;
 };
 
 type RawImageBlock = {
 	type: "image";
 	source: {
 		type: "base64";
-		media_type: string;
+		["media_type"]: string;
 		data: string;
 	};
 };
@@ -74,7 +74,7 @@ type RawToolResultImageContent = {
 	type: "image";
 	source: {
 		type: "base64";
-		media_type: string;
+		["media_type"]: string;
 		data: string;
 	};
 };

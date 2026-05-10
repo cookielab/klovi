@@ -15,14 +15,14 @@ function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffe
 }
 
 type CauseNode = {
-	_tag?: string;
+	["_tag"]?: string;
 	error?: unknown;
 	defect?: unknown;
 	left?: unknown;
 	right?: unknown;
 };
 
-function failureToError(failure: { _tag?: string; pluginId?: string }): Error {
+function failureToError(failure: { ["_tag"]?: string; pluginId?: string }): Error {
 	if (failure._tag === "UnknownPluginError") {
 		return new Error(`Unknown plugin: ${failure.pluginId}`);
 	}
@@ -34,7 +34,7 @@ function causeToError(cause: unknown): Error {
 	while (stack.length > 0) {
 		const node = stack.pop() as CauseNode;
 		if (node._tag === "Fail") {
-			return failureToError(node.error as { _tag?: string; pluginId?: string });
+			return failureToError(node.error as { ["_tag"]?: string; pluginId?: string });
 		}
 		if (node._tag === "Die") {
 			return node.defect instanceof Error ? node.defect : new Error(String(node.defect));
