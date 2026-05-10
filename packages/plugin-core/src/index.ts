@@ -21,7 +21,6 @@ export { encodeResolvedPath, PluginRegistry } from "./plugin-registry";
 export type { PluginRequirements, RegistryRequirements } from "./plugin-runtime";
 export { makePluginConfigLayer } from "./plugin-runtime";
 export type {
-	Badge,
 	MergedProject,
 	PluginDiscoveryIndex,
 	PluginProject,
@@ -49,6 +48,7 @@ export type {
 	SystemTurn,
 	ThinkingBlock,
 	TokenUsage,
+	ToolCallKind,
 	ToolCallWithResult,
 	ToolResultImage,
 	Turn,

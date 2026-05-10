@@ -34,11 +34,6 @@ export type MergedProject<TpluginId extends string = string> = {
 	sources: ProjectSource<TpluginId>[];
 };
 
-export type Badge = {
-	label: string;
-	className: string;
-};
-
 export type RegistrySessionSummary = {
 	sessionId: string;
 	timestamp: string;
@@ -86,5 +81,4 @@ export type ToolPlugin<
 	loadSubAgentSession?: (params: ToolPluginSubAgentParams) => Effect.Effect<Tsession, PluginError, PluginRequirements>;
 
 	getResumeCommand?: (sessionId: string) => string | null;
-	getSessionBadges?: (session: TsessionSummary) => Badge[];
 };

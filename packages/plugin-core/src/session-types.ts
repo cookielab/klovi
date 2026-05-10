@@ -94,14 +94,33 @@ export type ThinkingBlock = {
 	text: string;
 };
 
+export type ToolCallKind =
+	| "shell"
+	| "file_read"
+	| "file_write"
+	| "file_edit"
+	| "search"
+	| "web"
+	| "subagent"
+	| "skill"
+	| "mcp"
+	| "generic";
+
 export type ToolCallWithResult = {
 	toolUseId: string;
-	name: string;
+	kind: ToolCallKind;
+	title: string;
+	summary?: string | undefined;
 	input: Record<string, unknown>;
+	formattedInput?: string | undefined;
 	result: string;
 	isError: boolean;
 	resultImages?: ToolResultImage[] | undefined;
 	subAgentId?: string | undefined;
+
+	/** Temporary compatibility/debug field. UI must not render from this. */
+	name: string;
+	rawName?: string | undefined;
 };
 
 export type ToolResultImage = {
