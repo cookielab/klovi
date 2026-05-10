@@ -118,8 +118,9 @@ export type ToolCallWithResult = {
 	resultImages?: ToolResultImage[] | undefined;
 	subAgentId?: string | undefined;
 
-	/** Temporary compatibility/debug field. UI must not render from this. */
+	/** Temporary compatibility field for legacy UI rendering paths; will be removed once all consumers migrate to `kind`/`title`. */
 	name: string;
+	/** Raw provider tool name before normalization. Debug/diagnostic only; UI must not branch on this. */
 	rawName?: string | undefined;
 };
 
