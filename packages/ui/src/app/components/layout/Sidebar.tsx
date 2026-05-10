@@ -37,7 +37,7 @@ const CONTENT_CLASSES = "flex-1 overflow-y-auto p-2";
 const FOOTER_CLASSES =
 	"sidebar-footer flex-shrink-0 border-border-muted border-t px-4 py-[10px] text-center text-[0.7rem] text-foreground-subtle [&_a]:text-foreground-subtle [&_a]:no-underline [&_a:hover]:text-accent";
 
-export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: SidebarProps) {
+export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: SidebarProps): React.ReactNode {
 	const client = useKloviClient();
 	const runKloviEffect = useRunKloviEffect();
 	const { data: versionInfo } = useEffectQuery<VersionInfo>(() => client.getVersion(), [client]);

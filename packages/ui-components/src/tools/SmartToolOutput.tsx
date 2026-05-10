@@ -29,7 +29,7 @@ function ToolResultImageButton({
 	img: ToolResultImage;
 	index: number;
 	onSelect: (src: string) => void;
-}) {
+}): React.ReactNode {
 	const src = `data:${img.mediaType};base64,${img.data}`;
 	const handleClick = useCallback(() => onSelect(src), [onSelect, src]);
 
@@ -40,7 +40,7 @@ function ToolResultImageButton({
 	);
 }
 
-export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutputProps) {
+export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutputProps): React.ReactNode {
 	const truncated = truncateOutput(output);
 	const wasTruncated = output.length > MAX_OUTPUT_LENGTH;
 	const detectedLang = truncated ? detectOutputFormat(truncated) : null;

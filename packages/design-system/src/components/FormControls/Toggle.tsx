@@ -13,7 +13,7 @@ const TOGGLE_CLASSES =
 	"checked:bg-accent checked:border-accent checked:after:translate-x-4 checked:after:bg-foreground-inverse " +
 	"disabled:opacity-50 disabled:cursor-default";
 
-export function Toggle({ checked, onChange, label, disabled }: ToggleProps) {
+export function Toggle({ checked, onChange, label, disabled }: ToggleProps): React.ReactNode {
 	const handleChange = useCallback(() => {
 		onChange(!checked);
 	}, [checked, onChange]);

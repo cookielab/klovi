@@ -37,7 +37,7 @@ export const SelectStory: Story = {
 	),
 };
 
-function ToggleDemo() {
+function ToggleDemo(): React.ReactNode {
 	const [checked, setChecked] = useState(false);
 	return (
 		<div>
@@ -51,7 +51,7 @@ export const ToggleStory: Story = {
 	render: () => <ToggleDemo />,
 };
 
-function SegmentedDemo() {
+function SegmentedDemo(): React.ReactNode {
 	const [value, setValue] = useState<"system" | "light" | "dark">("system");
 	return (
 		<div>

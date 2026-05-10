@@ -49,7 +49,7 @@ const EMPTY_STATE_TITLE_CLASSES = "empty-state-title mb-2 text-[1.2rem] font-sem
 const HOST_RECONNECT_BUTTON_CLASSES =
 	"mt-6 cursor-pointer border-0 bg-accent px-8 py-[10px] font-sans text-[0.95rem] font-medium text-foreground-inverse transition-[background] duration-150 hover:bg-accent-hover";
 
-function App() {
+function App(): React.ReactNode {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
 	const runKloviEffect = useRunKloviEffect();
@@ -286,7 +286,7 @@ function AppMainContent({
 	togglePresentation,
 	hostConnectionState,
 	retryRestore,
-}: AppMainContentProps) {
+}: AppMainContentProps): React.ReactNode {
 	return (
 		<ErrorBoundary>
 			{view.kind === "restoring" && (
@@ -357,7 +357,7 @@ function AppMainContent({
 	);
 }
 
-function AppGate() {
+function AppGate(): React.ReactNode {
 	const systemThemeOverride = useSystemThemeOverride();
 	useTheme({ systemThemeOverride: systemThemeOverride });
 	const client = useKloviClient();
@@ -410,7 +410,7 @@ function AppGate() {
 	}, [initialize]);
 
 	useEffect(() => {
-		const handleReset = () => {
+		const handleReset = (): void => {
 			globalThis.location.hash = "#/";
 			initialize();
 		};
@@ -483,7 +483,7 @@ type DesktopHostReconnectPanelProps = {
 	onAction: () => void;
 };
 
-function DesktopHostReconnectPanel({ title, description, actionLabel, onAction }: DesktopHostReconnectPanelProps) {
+function DesktopHostReconnectPanel({ title, description, actionLabel, onAction }: DesktopHostReconnectPanelProps): React.ReactNode {
 	return (
 		<section className={EMPTY_STATE_CLASSES}>
 			<img src={faviconUrl} alt="" width="64" height="64" className={EMPTY_STATE_LOGO_CLASSES} />

@@ -75,7 +75,7 @@ function renderGroup(options: RenderGroupOptions) {
 	});
 }
 
-function UsageFooter({ usage }: { usage: TokenUsage }) {
+function UsageFooter({ usage }: { usage: TokenUsage }): React.ReactNode {
 	return (
 		<div className={TOKEN_USAGE_CLASSES}>
 			{usage.inputTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_IN}</Text><Text>{T_SP_1}</Text>{usage.outputTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_OUT}</Text>
@@ -97,7 +97,7 @@ export function AssistantMessage({
 	pluginId,
 	onLinkClick,
 	getFrontendPlugin,
-}: AssistantMessageProps) {
+}: AssistantMessageProps): React.ReactNode {
 	const groups = groupContentBlocks(turn.contentBlocks);
 	const limit = visibleSubSteps ?? groups.length;
 	const visibleGroups = groups.slice(0, limit);

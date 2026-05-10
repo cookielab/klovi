@@ -97,7 +97,7 @@ export function useViewState(): UseViewStateResult {
 	}, [view, ready]);
 
 	useEffect(() => {
-		const handler = () => {
+		const handler = (): void => {
 			runKloviEffect(restoreFromHashEffect()).then((nextView) => {
 				applyRestoredView(nextView, true);
 			});

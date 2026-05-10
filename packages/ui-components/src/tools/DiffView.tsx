@@ -30,7 +30,7 @@ export function formatDiff(oldString: string, newString: string): string {
 	return lines.join("\n");
 }
 
-export function DiffView({ filePath, oldString, newString }: DiffViewProps) {
+export function DiffView({ filePath, oldString, newString }: DiffViewProps): React.ReactNode {
 	const { resolved: theme } = useTheme();
 	const diff = formatDiff(oldString, newString);
 	const style = theme === "dark" ? oneDark : oneLight;

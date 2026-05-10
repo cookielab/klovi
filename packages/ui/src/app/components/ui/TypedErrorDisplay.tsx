@@ -34,7 +34,7 @@ function getErrorContent(error: RpcError): { title: string; detail: string } {
 	}
 }
 
-export function TypedErrorDisplay({ error, onRetry }: TypedErrorDisplayProps) {
+export function TypedErrorDisplay({ error, onRetry }: TypedErrorDisplayProps): React.ReactNode {
 	const { title, detail } = getErrorContent(error);
 
 	return (

@@ -14,7 +14,7 @@ type SessionPresentationProps = {
 	onExit: () => void;
 };
 
-export function SessionPresentation({ sessionId, project, onExit }: SessionPresentationProps) {
+export function SessionPresentation({ sessionId, project, onExit }: SessionPresentationProps): React.ReactNode {
 	const { data, loading, error, retry } = useSessionData(sessionId, project);
 
 	if (loading) {

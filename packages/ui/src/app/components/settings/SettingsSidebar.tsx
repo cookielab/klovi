@@ -23,7 +23,7 @@ const NAV_ITEM_BASE_CLASSES =
 	"w-full cursor-pointer border-0 bg-transparent px-3 py-2 text-left text-[0.9rem] text-foreground-muted hover:bg-surface-muted";
 const NAV_ITEM_ACTIVE_CLASSES = "bg-accent-subtle font-medium text-accent";
 
-function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProps) {
+function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProps): React.ReactNode {
 	const handleGeneralClick = useCallback(() => onTabChange("general"), [onTabChange]);
 	const handlePluginsClick = useCallback(() => onTabChange("plugins"), [onTabChange]);
 

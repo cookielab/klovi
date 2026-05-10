@@ -18,7 +18,7 @@ const SIZE_SM_CLASSES = "px-2 py-1 text-[0.8rem] h-7";
 
 const ICON_CLASSES = "p-1 min-w-7 justify-center";
 
-export function Button({ variant = "default", size = "md", icon, className, ...props }: ButtonProps) {
+export function Button({ variant = "default", size = "md", icon, className, ...props }: ButtonProps): React.ReactNode {
 	const classes = [
 		BASE_CLASSES,
 		VARIANT_CLASSES[variant],

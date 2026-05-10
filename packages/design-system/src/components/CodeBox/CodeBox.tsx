@@ -21,7 +21,7 @@ const CUSTOM_STYLE = {
 	lineHeight: 1.5,
 };
 
-export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps) {
+export function CodeBox({ language, children, showLineNumbers }: CodeBoxProps): React.ReactNode {
 	const { resolved: theme } = useTheme();
 	const lang = language ?? "text";
 	const style = theme === "dark" ? oneDark : oneLight;

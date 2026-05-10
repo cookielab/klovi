@@ -82,7 +82,7 @@ export type DashboardStatsProps = {
 	onRetry?: (() => void) | undefined;
 };
 
-export function DashboardStats({ stats, loading, refreshing, error, onRetry }: DashboardStatsProps) {
+export function DashboardStats({ stats, loading, refreshing, error, onRetry }: DashboardStatsProps): React.ReactNode {
 	if (loading) {
 		return (
 			<div className={DASHBOARD_STATS_CLASSES} aria-busy="true" role="status" aria-label="Loading stats">

@@ -98,7 +98,7 @@ function withCursorTestEnv(): () => void {
 
 // ── Tests ──────────────────────────────────────────────────
 
-async function testPluginImports() {
+async function testPluginImports(): Promise<void> {
 	try {
 		if (claudeCodePlugin.id !== "claude-code") {
 			throw new Error("bad id");
@@ -133,7 +133,7 @@ async function testPluginImports() {
 	}
 }
 
-async function testRegistryBuild() {
+async function testRegistryBuild(): Promise<void> {
 	const restoreEnv = withCursorTestEnv();
 	try {
 		const config = { dataDir: testDir };
@@ -156,7 +156,7 @@ async function testRegistryBuild() {
 	}
 }
 
-async function testClaudeCodeRoundTrip() {
+async function testClaudeCodeRoundTrip(): Promise<void> {
 	const config = { dataDir: testDir };
 	const projectId = "-Users-dev-project";
 
@@ -209,7 +209,7 @@ async function testClaudeCodeRoundTrip() {
 	}
 }
 
-async function testOpenCodeImport() {
+async function testOpenCodeImport(): Promise<void> {
 	const config = { dataDir: join(testDir, "nonexistent-opencode") };
 	try {
 		const available = await runPlugin(openCodePlugin.isDataAvailable, config);
@@ -224,7 +224,7 @@ async function testOpenCodeImport() {
 
 // ── Main ───────────────────────────────────────────────────
 
-async function main() {
+async function main(): Promise<void> {
 	await mkdir(testDir, { recursive: true });
 
 	try {

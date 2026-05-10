@@ -33,7 +33,7 @@ export function SubAgentView({
 	onRetry,
 	onLinkClick,
 	getFrontendPlugin,
-}: SubAgentViewProps) {
+}: SubAgentViewProps): React.ReactNode {
 	if (loading) {
 		return <div className={LOADING_CLASSES}><Text>{T_LOADING_SUB_AGENT_CONVERSATION}</Text></div>;
 	}

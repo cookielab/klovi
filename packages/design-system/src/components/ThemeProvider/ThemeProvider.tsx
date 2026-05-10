@@ -6,7 +6,7 @@ type ThemeProviderProps = {
 	children: React.ReactNode;
 };
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
+export function ThemeProvider({ children }: ThemeProviderProps): React.ReactNode {
 	// These hooks apply data-theme and --font-size-base to the document
 	useTheme();
 	useFontSize();

@@ -30,7 +30,7 @@ export function PackageMessageList({
 	isSubAgent,
 	planSessionId,
 	implSessionId,
-}: PackageMessageListProps) {
+}: PackageMessageListProps): React.ReactNode {
 	const runKloviEffect = useRunKloviEffect();
 	const handleLinkClick = useCallback(
 		(url: string) => {

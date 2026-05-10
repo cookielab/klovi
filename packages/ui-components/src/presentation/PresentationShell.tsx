@@ -43,7 +43,7 @@ export function PresentationShell({
 	isSubAgent,
 	onLinkClick,
 	getFrontendPlugin,
-}: PresentationShellProps) {
+}: PresentationShellProps): React.ReactNode {
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const presentation = usePresentationMode(turns);
 

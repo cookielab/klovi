@@ -9,13 +9,13 @@ export type KeyboardHandlers = {
 	onFullscreen?: () => void;
 };
 
-export function useKeyboard(handlers: KeyboardHandlers, active: boolean) {
+export function useKeyboard(handlers: KeyboardHandlers, active: boolean): void {
 	useEffect(() => {
 		if (!active) {
 			return;
 		}
 
-		function handleKeyDown(e: KeyboardEvent) {
+		function handleKeyDown(e: KeyboardEvent): void {
 			// Don't capture if user is typing in an input
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
 				return;

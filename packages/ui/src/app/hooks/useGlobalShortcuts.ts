@@ -7,9 +7,9 @@ export function useSearchShortcut({
 }: {
 	fetchSearchSessions: () => void;
 	setSearchOpen: Dispatch<SetStateAction<boolean>>;
-}) {
+}): void {
 	useEffect(() => {
-		function handleCmdK(e: KeyboardEvent) {
+		function handleCmdK(e: KeyboardEvent): void {
 			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
 				e.preventDefault();
 				setSearchOpen((prev) => {
@@ -35,9 +35,9 @@ export function useGlobalShortcuts({
 	togglePresentation: () => void;
 	increase: () => void;
 	decrease: () => void;
-}) {
+}): void {
 	useEffect(() => {
-		function handleKeyDown(e: KeyboardEvent) {
+		function handleKeyDown(e: KeyboardEvent): void {
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
 				return;
 			}
@@ -79,9 +79,9 @@ export function useSettingsShortcut({
 	isSettings: boolean;
 	closeSettings: () => void;
 	goSettings: () => void;
-}) {
+}): void {
 	useEffect(() => {
-		function handleCmdComma(e: KeyboardEvent) {
+		function handleCmdComma(e: KeyboardEvent): void {
 			if ((e.metaKey || e.ctrlKey) && e.key === ",") {
 				e.preventDefault();
 				if (isSettings) {

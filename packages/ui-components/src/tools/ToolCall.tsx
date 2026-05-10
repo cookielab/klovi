@@ -53,7 +53,7 @@ function DefaultToolContent({
 	call: ToolCallWithResult;
 	pluginId?: string | undefined;
 	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
-}) {
+}): React.ReactNode {
 	const formattedInput = formatToolInput(call, getFrontendPluginFn, pluginId);
 	const jsonInput = !hasInputFormatter(call, getFrontendPluginFn, pluginId);
 
@@ -80,7 +80,7 @@ function ToolContentBody({
 	call: ToolCallWithResult;
 	pluginId?: string | undefined;
 	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
-}) {
+}): React.ReactNode {
 	if (call.name === "Bash") {
 		return <BashToolContent call={call} />;
 	}
@@ -109,7 +109,7 @@ export function ToolCall({
 	project,
 	pluginId,
 	getFrontendPlugin: getFrontendPluginFn,
-}: ToolCallProps) {
+}: ToolCallProps): React.ReactNode {
 	const summary = getToolSummary(call, getFrontendPluginFn, pluginId);
 	const mcpServer = getMcpServer(call.name);
 	const skillName = getSkillName(call);

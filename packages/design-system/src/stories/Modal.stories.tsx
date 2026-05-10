@@ -21,7 +21,7 @@ export default meta;
 
 type Story = StoryObj<typeof Modal>;
 
-function ModalDemo() {
+function ModalDemo(): React.ReactNode {
 	const [open, setOpen] = useState(false);
 	return (
 		<div>

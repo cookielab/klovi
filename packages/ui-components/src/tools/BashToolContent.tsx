@@ -11,7 +11,7 @@ type BashToolContentProps = {
 	call: ToolCallWithResult;
 };
 
-export function BashToolContent({ call }: BashToolContentProps) {
+export function BashToolContent({ call }: BashToolContentProps): React.ReactNode {
 	const command = String(call.input["command"] || "");
 
 	return (

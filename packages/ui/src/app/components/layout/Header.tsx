@@ -49,7 +49,7 @@ export function Header({
 	presentationActive,
 	onTogglePresentation,
 	showPresentationToggle,
-}: HeaderProps) {
+}: HeaderProps): React.ReactNode {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = useCallback(() => {

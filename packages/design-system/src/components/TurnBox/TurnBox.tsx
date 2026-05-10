@@ -43,7 +43,7 @@ const DEFAULT_LABELS: Record<TurnRole, string> = {
 	error: "Error",
 };
 
-export function TurnBox({ role, badge, model, timestamp, children }: TurnBoxProps) {
+export function TurnBox({ role, badge, model, timestamp, children }: TurnBoxProps): React.ReactNode {
 	const label = badge ?? DEFAULT_LABELS[role];
 
 	return (

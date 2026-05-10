@@ -5,12 +5,12 @@ import { useKeyboard } from "./useKeyboard";
 
 const T_KEYBOARD_HARNESS = "keyboard harness";
 
-function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }) {
+function KeyboardHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }): React.ReactNode {
 	useKeyboard(props.handlers, props.active);
 	return <div><Text>{T_KEYBOARD_HARNESS}</Text></div>;
 }
 
-function fireKey(key: string, opts: KeyboardEventInit = {}) {
+function fireKey(key: string, opts: KeyboardEventInit = {}): void {
 	globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true, ...opts }));
 }
 

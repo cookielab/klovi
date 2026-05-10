@@ -12,7 +12,7 @@ type PackageSubAgentViewProps = {
 	agentId: string;
 };
 
-export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubAgentViewProps) {
+export function PackageSubAgentView({ sessionId, project, agentId }: PackageSubAgentViewProps): React.ReactNode {
 	const runKloviEffect = useRunKloviEffect();
 	const { data, loading, error, retry } = useSubAgentSessionData(sessionId, project, agentId);
 	const turns = data?.session?.turns ?? [];

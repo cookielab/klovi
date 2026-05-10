@@ -11,7 +11,7 @@ type UserBashContentProps = {
 
 const LABEL_CLASSES = "mb-1 text-[0.7rem] font-semibold uppercase text-foreground-subtle";
 
-export function UserBashContent({ turn }: UserBashContentProps) {
+export function UserBashContent({ turn }: UserBashContentProps): React.ReactNode {
 	const output = [turn.bashStdout, turn.bashStderr].filter(Boolean).join("\n");
 	const isError = !turn.bashStdout && Boolean(turn.bashStderr);
 

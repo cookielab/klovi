@@ -74,7 +74,7 @@ function SearchResultItem({
 	onSelect: (result: GlobalSessionResult) => void;
 	onHighlight: (index: number) => void;
 	pluginDisplayName: (id: string) => string;
-}) {
+}): React.ReactNode {
 	const handleClick = useCallback(() => onSelect(result), [onSelect, result]);
 	const handleMouseEnter = useCallback(() => onHighlight(index), [onHighlight, index]);
 	const isHighlighted = index === highlightedIndex;
@@ -125,7 +125,7 @@ function SearchModal({
 	sessions,
 	onSelect,
 	pluginDisplayName = defaultPluginDisplayName,
-}: SearchModalProps) {
+}: SearchModalProps): React.ReactNode {
 	const [query, setQuery] = useState("");
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);

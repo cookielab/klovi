@@ -38,7 +38,7 @@ type UserMessageProps = {
 	onLinkClick?: ((url: string) => void) | undefined;
 };
 
-function TimestampLabel({ timestamp }: { timestamp: string }) {
+function TimestampLabel({ timestamp }: { timestamp: string }): React.ReactNode {
 	return (
 		<time dateTime={timestamp} data-tooltip={formatFullDateTime(timestamp)}>
 			{formatTimestamp(timestamp)}
@@ -56,7 +56,7 @@ function SessionLink({
 	project: string;
 	label: string;
 	onSessionLink?: ((id: string) => void) | undefined;
-}) {
+}): React.ReactNode {
 	return (
 		<a
 			className={SESSION_LINK_CLASSES}
@@ -83,7 +83,7 @@ export function UserMessage({
 	project,
 	onSessionLink,
 	onLinkClick,
-}: UserMessageProps) {
+}: UserMessageProps): React.ReactNode {
 	if (turn.bashInput !== undefined || turn.bashStdout !== undefined) {
 		return (
 			<TurnBox role="user" timestamp={turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : null}>

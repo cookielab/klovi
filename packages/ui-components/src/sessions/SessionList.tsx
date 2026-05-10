@@ -63,7 +63,7 @@ function SessionItem({
 	isActive: boolean;
 	onSelect: (sessionId: string) => void;
 	pluginDisplayName: (id: string) => string;
-}) {
+}): React.ReactNode {
 	const handleClick = useCallback(() => onSelect(session.sessionId), [onSelect, session.sessionId]);
 
 	const itemClasses = [
@@ -110,7 +110,7 @@ function SessionList({
 	onSelect,
 	onBack,
 	pluginDisplayName = defaultPluginDisplayName,
-}: SessionListProps) {
+}: SessionListProps): React.ReactNode {
 	const parts = projectName.split("/").filter(Boolean);
 	const displayName = parts.slice(-2).join("/");
 	const parentRef = useRef<HTMLDivElement>(null);

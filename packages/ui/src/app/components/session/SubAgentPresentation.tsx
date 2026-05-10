@@ -15,7 +15,7 @@ type SubAgentPresentationProps = {
 	onExit: () => void;
 };
 
-export function SubAgentPresentation({ sessionId, project, agentId, onExit }: SubAgentPresentationProps) {
+export function SubAgentPresentation({ sessionId, project, agentId, onExit }: SubAgentPresentationProps): React.ReactNode {
 	const { data, loading, error, retry } = useSubAgentSessionData(sessionId, project, agentId);
 
 	if (loading) {

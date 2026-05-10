@@ -7,7 +7,7 @@ import { useEffectQuery } from "../../hooks/useEffectQuery";
 
 const STATS_REFRESH_POLL_MS = 1000;
 
-export function PackageDashboardStats() {
+export function PackageDashboardStats(): React.ReactNode {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
 	const { data, loading, error, retry } = useEffectQuery<StatsResponse>(() => client.getStats(), [client]);

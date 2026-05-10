@@ -19,7 +19,7 @@ type SessionViewProps = {
 	gitBranch?: string;
 };
 
-export function SessionView({ sessionId, project, gitBranch }: SessionViewProps) {
+export function SessionView({ sessionId, project, gitBranch }: SessionViewProps): React.ReactNode {
 	const { data, loading, error, retry } = useSessionData(sessionId, project);
 
 	if (loading) {

@@ -6,7 +6,7 @@ type AppLayoutProps = {
 	children: React.ReactNode;
 };
 
-export function AppLayout({ sidebar, hideSidebar, children }: AppLayoutProps) {
+export function AppLayout({ sidebar, hideSidebar, children }: AppLayoutProps): React.ReactNode {
 	return (
 		<div className="group flex min-h-screen" data-hide-sidebar={hideSidebar ? "true" : undefined}>
 			{sidebar}

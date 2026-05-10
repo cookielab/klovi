@@ -29,7 +29,7 @@ const LIST_ITEM_TITLE_CLASSES =
 const LIST_ITEM_META_CLASSES = "mt-[2px] text-[0.75rem] text-foreground-subtle";
 const LOADING_CLASSES = "flex items-center justify-center p-[40px] text-[0.9rem] text-foreground-subtle";
 
-function HiddenProjectItem({ project, onUnhide }: { project: Project; onUnhide: (encodedPath: string) => void }) {
+function HiddenProjectItem({ project, onUnhide }: { project: Project; onUnhide: (encodedPath: string) => void }): React.ReactNode {
 	const handleUnhide = useCallback(() => onUnhide(project.encodedPath), [onUnhide, project.encodedPath]);
 	return (
 		<div className={LIST_ITEM_CLASSES}>
@@ -64,7 +64,7 @@ export function HiddenProjectList({
 	hiddenIds,
 	onUnhide,
 	onBack,
-}: HiddenProjectListProps) {
+}: HiddenProjectListProps): React.ReactNode {
 	if (loading) {
 		return <div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>;
 	}

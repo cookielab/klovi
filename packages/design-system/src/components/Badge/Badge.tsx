@@ -25,7 +25,7 @@ const VARIANT_STYLES: Record<BadgeVariant, string> = {
 	default: "text-foreground-subtle bg-surface-sunken",
 };
 
-export function Badge({ variant = "default", mono, children }: BadgeProps) {
+export function Badge({ variant = "default", mono, children }: BadgeProps): React.ReactNode {
 	const classes = [BASE_CLASSES, VARIANT_STYLES[variant], mono ? MONO_CLASSES : ""].filter(Boolean).join(" ");
 
 	return <span className={classes}>{children}</span>;

@@ -61,7 +61,7 @@ type MarkdownRendererProps = {
 	onLinkClick?: ((url: string) => void) | undefined;
 };
 
-export function MarkdownRenderer({ content, onLinkClick }: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, onLinkClick }: MarkdownRendererProps): React.ReactNode {
 	return (
 		<div className={MARKDOWN_CONTENT_CLASSES}>
 			<Markdown

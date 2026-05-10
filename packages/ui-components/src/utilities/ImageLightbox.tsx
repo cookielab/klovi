@@ -5,7 +5,7 @@ const OVERLAY_BASE =
 
 const IMAGE_BASE = "max-w-[90vw] max-h-[90vh] object-contain transition-[opacity,transform] duration-200 ease-[ease]";
 
-export function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
+export function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }): React.ReactNode {
 	const [visible, setVisible] = useState(false);
 
 	const handleClose = useCallback(() => {
@@ -23,7 +23,7 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 	}, []);
 
 	useEffect(() => {
-		const handleKey = (e: KeyboardEvent) => {
+		const handleKey = (e: KeyboardEvent): void => {
 			if (e.key === "Escape") {
 				handleClose();
 			}

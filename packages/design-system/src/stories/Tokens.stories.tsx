@@ -20,7 +20,7 @@ const TOKEN_GROUPS = {
 	Status: ["color-error", "color-success"],
 };
 
-function Swatch({ name }: { name: string }) {
+function Swatch({ name }: { name: string }): React.ReactNode {
 	return (
 		<div>
 			<div />
@@ -29,7 +29,7 @@ function Swatch({ name }: { name: string }) {
 	);
 }
 
-function TokenPalette() {
+function TokenPalette(): React.ReactNode {
 	return (
 		<div>
 			{Object.entries(TOKEN_GROUPS).map(([group, tokens]) => (

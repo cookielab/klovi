@@ -151,7 +151,7 @@ export function MessageList({
 	onSessionLink,
 	onLinkClick,
 	getFrontendPlugin,
-}: MessageListProps) {
+}: MessageListProps): React.ReactNode {
 	const parentRef = useRef<HTMLDivElement>(null);
 	const firstUserTurnIndex = useMemo(
 		() =>

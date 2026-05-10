@@ -26,7 +26,7 @@ type SecurityNoticeContentProps = {
 	onDontShowAgain?: () => void;
 };
 
-function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: SecurityNoticeContentProps) {
+function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: SecurityNoticeContentProps): React.ReactNode {
 	const [dontShow, setDontShow] = useState(false);
 
 	const handleAccept = useCallback(() => {
@@ -70,7 +70,7 @@ type SecurityWarningProps = {
 	onDontShowAgain: () => void;
 };
 
-function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningProps) {
+function SecurityWarning({ onAccept, onDontShowAgain }: SecurityWarningProps): React.ReactNode {
 	return (
 		<section className={WRAPPER_CLASSES} aria-labelledby="security-warning-heading">
 			<div className={CONTENT_CLASSES}>

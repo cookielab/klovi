@@ -6,7 +6,7 @@ type SidebarProps = {
 	children: React.ReactNode;
 };
 
-export function Sidebar({ header, footer, children }: SidebarProps) {
+export function Sidebar({ header, footer, children }: SidebarProps): React.ReactNode {
 	return (
 		<div className="fixed top-0 left-0 z-10 flex h-screen w-sidebar flex-col overflow-hidden border-border border-r bg-surface-muted transition-transform duration-200 ease-[ease] group-data-[hide-sidebar=true]:-translate-x-full">
 			{header ? (

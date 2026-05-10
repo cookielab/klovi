@@ -12,7 +12,7 @@ function stopPropagation(e: React.MouseEvent): void {
 	e.stopPropagation();
 }
 
-export function Modal({ open, onClose, width = 560, children }: ModalProps) {
+export function Modal({ open, onClose, width = 560, children }: ModalProps): React.ReactNode {
 	const handleKeyDown = useCallback(
 		(e: KeyboardEvent) => {
 			if (e.key === "Escape") {

@@ -72,7 +72,7 @@ function ProjectItem({
 	isActive: boolean;
 	onSelect: (encodedPath: string) => void;
 	onHide: (encodedPath: string) => void;
-}) {
+}): React.ReactNode {
 	const handleClick = useCallback(() => onSelect(project.encodedPath), [onSelect, project.encodedPath]);
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent) => {
@@ -127,7 +127,7 @@ function ProjectList({
 	onShowHidden,
 	filter = "",
 	onFilterChange,
-}: ProjectListProps) {
+}: ProjectListProps): React.ReactNode {
 	const handleFilterChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => onFilterChange?.(e.target.value),
 		[onFilterChange],

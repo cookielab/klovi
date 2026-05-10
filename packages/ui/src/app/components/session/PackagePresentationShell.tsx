@@ -21,7 +21,7 @@ export function PackagePresentationShell({
 	project,
 	pluginId,
 	isSubAgent,
-}: PackagePresentationShellProps) {
+}: PackagePresentationShellProps): React.ReactNode {
 	const runKloviEffect = useRunKloviEffect();
 	const handleLinkClick = useCallback(
 		(url: string) => {

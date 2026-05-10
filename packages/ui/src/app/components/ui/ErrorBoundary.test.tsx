@@ -11,7 +11,7 @@ function ThrowingComponent({ message }: { message: string }): never {
 	throw new Error(message);
 }
 
-function SafeComponent() {
+function SafeComponent(): React.ReactNode {
 	return <div><Text>{T_SAFE_CONTENT}</Text></div>;
 }
 

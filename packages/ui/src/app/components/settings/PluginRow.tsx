@@ -29,7 +29,7 @@ const RESET_LINK_CLASSES =
 const BROWSE_BTN_CLASSES =
 	"inline-flex h-7 cursor-pointer items-center gap-[6px] border border-border bg-surface px-2 py-1 text-[0.8rem] text-foreground transition-colors duration-150 enabled:hover:border-foreground-subtle enabled:hover:bg-surface-muted disabled:cursor-default disabled:opacity-50";
 
-function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps) {
+function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps): React.ReactNode {
 	const customPath = plugin.isCustomDir ? plugin.dataDir : "";
 	const [editingPath, setEditingPath] = useState(customPath);
 	const displayName = plugin.id === "cursor" ? "Cursor (beta)" : plugin.displayName;

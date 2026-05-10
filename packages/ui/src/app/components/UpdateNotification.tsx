@@ -48,7 +48,7 @@ function UpdateNotification({
 	onDismiss,
 	manualCheckResult,
 	onDismissManualCheck,
-}: UpdateNotificationProps) {
+}: UpdateNotificationProps): React.ReactNode {
 	const hostBridge = useKloviHostBridge();
 	if (!hostBridge.getCapabilities().updater) {
 		return null;
@@ -73,7 +73,7 @@ function UpdateNotification({
 	return <ReadyBanner latestVersion={status.latestVersion} onDismiss={onDismiss} />;
 }
 
-function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDismiss: () => void }) {
+function ReadyBanner({ latestVersion, onDismiss }: { latestVersion: string; onDismiss: () => void }): React.ReactNode {
 	const runKloviEffect = useRunKloviEffect();
 	const [applying, setApplying] = useState(false);
 	const [error, setError] = useState<string | null>(null);

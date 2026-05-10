@@ -8,7 +8,7 @@ type PackageSearchModalProps = {
 	onClose: () => void;
 };
 
-export function PackageSearchModal({ sessions, onSelect, onClose }: PackageSearchModalProps) {
+export function PackageSearchModal({ sessions, onSelect, onClose }: PackageSearchModalProps): React.ReactNode {
 	const handleSelect = useCallback(
 		(result: GlobalSessionResult) => onSelect(result.encodedPath, result.sessionId),
 		[onSelect],

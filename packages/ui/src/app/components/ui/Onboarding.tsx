@@ -32,7 +32,7 @@ type OnboardingProps = {
 	onComplete: () => void;
 };
 
-export function Onboarding({ onComplete }: OnboardingProps) {
+export function Onboarding({ onComplete }: OnboardingProps): React.ReactNode {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
 	const runKloviEffect = useRunKloviEffect();

@@ -352,7 +352,7 @@ function createHermeticSettingsFile(installDir: string): string {
 
 // ── Main ──────────────────────────────────────────────────
 
-async function main() {
+async function main(): Promise<void> {
 	if (!existsSync(stageDir)) {
 		process.exit(1);
 	}

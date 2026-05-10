@@ -131,7 +131,7 @@ function ThemeOption({
 	isActive: boolean;
 	disabled: boolean | undefined;
 	onChange: (v: ThemeSetting) => void;
-}) {
+}): React.ReactNode {
 	const handleClick = useCallback(() => onChange(opt.value), [onChange, opt.value]);
 	return (
 		<button
@@ -153,7 +153,7 @@ function ThemeSelector({
 	value: ThemeSetting;
 	onChange: (v: ThemeSetting) => void;
 	disabled?: boolean;
-}) {
+}): React.ReactNode {
 	return (
 		<div className={`${THEME_SELECTOR_BASE_CLASSES} ${disabled ? THEME_SELECTOR_DISABLED_CLASSES : ""}`}>
 			{THEME_OPTIONS.map((opt) => (
@@ -175,7 +175,7 @@ function FontSizeControl({
 	onIncrease: () => void;
 	onDecrease: () => void;
 	disabled?: boolean;
-}) {
+}): React.ReactNode {
 	return (
 		<div className={`${FONT_SIZE_CONTROL_BASE_CLASSES} ${disabled ? FONT_SIZE_CONTROL_DISABLED_CLASSES : ""}`}>
 			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled || size <= 10} onClick={onDecrease}>
@@ -220,7 +220,7 @@ function UpdatesTab({
 	updateSettings: UpdateSettingsInfo | null;
 	setUpdateSettings: (s: UpdateSettingsInfo) => void;
 	setChanged: (v: boolean) => void;
-}) {
+}): React.ReactNode {
 	const runKloviEffect = useRunKloviEffect();
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
 	const [checking, setChecking] = useState(false);
@@ -376,7 +376,7 @@ export function SettingsView({
 	fontSize,
 	presentationTheme,
 	presentationFontSize,
-}: SettingsViewProps) {
+}: SettingsViewProps): React.ReactNode {
 	const client = useKloviClient();
 	const hostBridge = useKloviHostBridge();
 	const runKloviEffect = useRunKloviEffect();
@@ -410,7 +410,7 @@ export function SettingsView({
 	}, [capabilities.updater, client, runKloviEffect]);
 
 	useEffect(() => {
-		function handleKeyDown(e: KeyboardEvent) {
+		function handleKeyDown(e: KeyboardEvent): void {
 			if (e.key === "Escape") {
 				e.preventDefault();
 				onNavigateHome();
