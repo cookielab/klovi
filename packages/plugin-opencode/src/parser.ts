@@ -36,14 +36,14 @@ type MessageDataUser = {
 	role: "user";
 	time?: { created?: number };
 	agent?: string;
-	model?: { providerID?: string; modelID?: string };
+	model?: { ["providerID"]?: string; ["modelID"]?: string };
 };
 
 type MessageDataAssistant = {
 	role: "assistant";
 	time?: { created?: number; completed?: number };
-	modelID?: string;
-	providerID?: string;
+	["modelID"]?: string;
+	["providerID"]?: string;
 	agent?: string;
 	cost?: number;
 	tokens?: {
@@ -100,7 +100,7 @@ type ToolStateRunning = {
 
 type PartDataTool = {
 	type: "tool";
-	callID: string;
+	["callID"]: string;
 	tool: string;
 	state: ToolStateCompleted | ToolStateError | ToolStatePending | ToolStateRunning;
 };

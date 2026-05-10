@@ -63,8 +63,8 @@ type SessionRow = {
 
 type MessageDataJson = {
 	role: "user" | "assistant";
-	modelID?: string;
-	providerID?: string;
+	["modelID"]?: string;
+	["providerID"]?: string;
 	time?: { created?: number };
 	agent?: string;
 };

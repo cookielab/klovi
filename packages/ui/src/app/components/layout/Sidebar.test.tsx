@@ -1,6 +1,6 @@
 import { Text } from "@cookielab.io/klovi-design-system";
 import { cleanup, render } from "@testing-library/react";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { Sidebar } from "./Sidebar";
 
 
@@ -55,7 +55,7 @@ describe("Sidebar", () => {
 	});
 
 	it("renders version info after fetch", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getVersion: () => Promise.resolve({ version: "1.2.3", commit: "abc1234" }),
 		});
 
@@ -71,7 +71,7 @@ describe("Sidebar", () => {
 	});
 
 	it("renders version without commit hash when empty", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getVersion: () => Promise.resolve({ version: "1.2.3", commit: "" }),
 		});
 

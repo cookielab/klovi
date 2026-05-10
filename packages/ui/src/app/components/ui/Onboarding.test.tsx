@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { Onboarding } from "./Onboarding";
 
 const SENSITIVE_INFO_REGEX = /sensitive information/u;
@@ -24,7 +24,7 @@ describe("Onboarding", () => {
 	afterEach(cleanup);
 
 	it("renders step 1 with security notice", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const { getByText } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		expect(getByText("Session Data Notice")).toBeTruthy();
 		expect(getByText(SENSITIVE_INFO_REGEX)).toBeTruthy();
@@ -32,25 +32,25 @@ describe("Onboarding", () => {
 	});
 
 	it("renders Accept & Continue button on step 1", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const { getByRole } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		expect(getByRole("button", { name: "Accept & Continue" })).toBeTruthy();
 	});
 
 	it("renders Don't show this again checkbox on step 1", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const { getByLabelText } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		expect(getByLabelText("Don't show this again")).toBeTruthy();
 	});
 
 	it("does not show Get Started on step 1", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const { queryByRole } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		expect(queryByRole("button", { name: "Get Started" })).toBeNull();
 	});
 
 	it("clicking Accept & Continue shows step 2 with plugins", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [
@@ -67,7 +67,7 @@ describe("Onboarding", () => {
 	});
 
 	it("step 2 shows Get Started button", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { getByRole, findByRole } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
@@ -77,7 +77,7 @@ describe("Onboarding", () => {
 
 	it("Get Started calls onComplete", async () => {
 		const onComplete = mock(noop);
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { getByRole, findByRole } = render(<Onboarding onComplete={onComplete} />, {
@@ -90,7 +90,7 @@ describe("Onboarding", () => {
 	});
 
 	it("Back button on step 2 returns to step 1", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { getByRole, findByRole, findByText } = render(<Onboarding onComplete={noop} />, {
@@ -105,7 +105,7 @@ describe("Onboarding", () => {
 
 	it("checking Don't show this again and accepting calls updateGeneralSettings", () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
-		setupMockRPC({ updateGeneralSettings: updateGeneralSettings });
+		setupMockRpc({ updateGeneralSettings: updateGeneralSettings });
 		const { getByRole, getByLabelText } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		fireEvent.click(getByLabelText("Don't show this again"));
 		fireEvent.click(getByRole("button", { name: "Accept & Continue" }));
@@ -113,14 +113,14 @@ describe("Onboarding", () => {
 	});
 
 	it("renders step indicator dots", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const { container } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		const dots = container.querySelectorAll(".onboarding-dot");
 		expect(dots).toHaveLength(2);
 	});
 
 	it("renders Klovi logo on step 1", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const { container } = render(<Onboarding onComplete={noop} />, { wrapper: MockProviders });
 		const img = container.querySelector(".security-warning-logo");
 		expect(img).not.toBeNull();

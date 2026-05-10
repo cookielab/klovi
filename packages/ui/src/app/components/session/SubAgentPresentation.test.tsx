@@ -1,6 +1,6 @@
 import { cleanup, render, waitFor } from "@testing-library/react";
 import type { Session } from "../../../shared/types";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SubAgentPresentation } from "./SubAgentPresentation";
 
 
@@ -34,7 +34,7 @@ describe("SubAgentPresentation", () => {
 	afterEach(cleanup);
 
 	it("shows loading state initially", () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSubAgent: () => new Promise(noop),
 		});
 		const { container } = render(
@@ -47,7 +47,7 @@ describe("SubAgentPresentation", () => {
 
 	it("renders presentation mode after fetch", async () => {
 		const session = makeSession();
-		setupMockRPC({
+		setupMockRpc({
 			getSubAgent: () => Promise.resolve({ session: session }),
 		});
 
@@ -61,7 +61,7 @@ describe("SubAgentPresentation", () => {
 
 	it("returns null when session has no turns", async () => {
 		const session = makeSession({ turns: [] });
-		setupMockRPC({
+		setupMockRpc({
 			getSubAgent: () => Promise.resolve({ session: session }),
 		});
 
@@ -76,7 +76,7 @@ describe("SubAgentPresentation", () => {
 	});
 
 	it("returns null when session is null", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSubAgent: () => Promise.resolve({ session: null as unknown as Session }),
 		});
 

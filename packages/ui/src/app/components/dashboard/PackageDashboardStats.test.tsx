@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import type { DashboardStats } from "../../../shared/types";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { PackageDashboardStats } from "./PackageDashboardStats";
 
 
@@ -36,7 +36,7 @@ describe("PackageDashboardStats", () => {
 	});
 
 	it("shows a scaffold on a cold load", () => {
-		setupMockRPC({
+		setupMockRpc({
 			getStats: () => new Promise(noop),
 		});
 
@@ -49,7 +49,7 @@ describe("PackageDashboardStats", () => {
 	it("uses server-cached stats before polling to a fresh result", async () => {
 		let getStatsCalls = 0;
 
-		setupMockRPC({
+		setupMockRpc({
 			getStats: () => {
 				getStatsCalls += 1;
 				if (getStatsCalls === 1) {
@@ -81,7 +81,7 @@ describe("PackageDashboardStats", () => {
 	it("updates when the desktop host pushes refreshed stats", async () => {
 		let listener: ((stats: DashboardStats) => void) | null = null;
 
-		setupMockRPC({
+		setupMockRpc({
 			getStats: () => Promise.resolve({ stats: makeStats(1), refreshing: false }),
 			hostBridge: {
 				onStatsUpdated: (callback) => {

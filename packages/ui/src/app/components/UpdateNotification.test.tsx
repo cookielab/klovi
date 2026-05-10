@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import type { UpdateStatus } from "../../shared/rpc-types";
-import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../test-helpers/mock-rpc";
 import { UpdateNotification } from "./UpdateNotification";
 
 
@@ -31,7 +31,7 @@ describe("UpdateNotification", () => {
 	});
 
 	it("renders nothing when dismissed", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		props.dismissed = true;
@@ -40,7 +40,7 @@ describe("UpdateNotification", () => {
 	});
 
 	it("renders notification when status is ready", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByText } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
@@ -48,7 +48,7 @@ describe("UpdateNotification", () => {
 	});
 
 	it("renders Restart button when ready", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
@@ -56,7 +56,7 @@ describe("UpdateNotification", () => {
 	});
 
 	it("calls onDismiss when dismiss button clicked", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByLabelText } = render(<UpdateNotification {...props} />, {
@@ -68,7 +68,7 @@ describe("UpdateNotification", () => {
 
 	it("calls applyUpdate RPC when Restart clicked", () => {
 		const applyUpdate = mock(() => Promise.resolve({ ok: true }));
-		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
+		setupMockRpc({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
@@ -80,7 +80,7 @@ describe("UpdateNotification", () => {
 
 	it("shows Restarting text and disables button while applying", () => {
 		const applyUpdate = mock(() => new Promise<{ ok: boolean }>(noop)); // never resolves
-		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
+		setupMockRpc({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByRole } = render(<UpdateNotification {...props} />, { wrapper: MockProviders });
@@ -92,7 +92,7 @@ describe("UpdateNotification", () => {
 
 	it("shows error when applyUpdate returns ok: false", async () => {
 		const applyUpdate = mock(() => Promise.resolve({ ok: false, error: "Extract failed" }));
-		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
+		setupMockRpc({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByRole, getByText } = render(<UpdateNotification {...props} />, {
@@ -108,7 +108,7 @@ describe("UpdateNotification", () => {
 
 	it("shows error when applyUpdate rejects", async () => {
 		const applyUpdate = mock(() => Promise.reject(new Error("RPC error")));
-		setupMockRPC({ hostBridge: { applyUpdate: applyUpdate } });
+		setupMockRpc({ hostBridge: { applyUpdate: applyUpdate } });
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		const { getByRole, getByText } = render(<UpdateNotification {...props} />, {
@@ -149,7 +149,7 @@ describe("UpdateNotification", () => {
 	});
 
 	it("manual check result with ready status falls through to normal notification", () => {
-		setupMockRPC();
+		setupMockRpc();
 		const props = defaultProps();
 		props.status = { status: "ready", currentVersion: "1.0.0", latestVersion: "2.0.0" };
 		props.manualCheckResult = {

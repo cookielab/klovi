@@ -1,6 +1,6 @@
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { Session, Turn } from "../../shared/types";
-import { MockProviders, setupMockRPC } from "../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../test-helpers/mock-rpc";
 import { useSessionData } from "./useSessionData";
 
 
@@ -30,7 +30,7 @@ describe("useSessionData two-phase load", () => {
 		const tailFn = mock((_params: { sessionId: string; project: string; fromTurn: number }) =>
 			Promise.resolve({ turns: [makeTurn(2)] }),
 		);
-		setupMockRPC({ getSessionHead: headFn, getSessionTail: tailFn });
+		setupMockRpc({ getSessionHead: headFn, getSessionTail: tailFn });
 
 		renderHook(() => useSessionData("s1", "p1"), { wrapper: MockProviders });
 
@@ -43,7 +43,7 @@ describe("useSessionData two-phase load", () => {
 	it("renders head turns first, then appends tail", async () => {
 		const headTurns = Array.from({ length: N_100 }, (_, i) => makeTurn(i));
 		const tailTurns = Array.from({ length: N_50 }, (_, i) => makeTurn(N_100 + i));
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () =>
 				Promise.resolve({
 					session: { sessionId: "s1", project: "p1", turns: headTurns } as Session,
@@ -62,7 +62,7 @@ describe("useSessionData two-phase load", () => {
 
 	it("renders head even if tail is still pending", async () => {
 		const headTurns = [makeTurn(0), makeTurn(1)];
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () =>
 				Promise.resolve({
 					session: { sessionId: "s1", project: "p1", turns: headTurns } as Session,

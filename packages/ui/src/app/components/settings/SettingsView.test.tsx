@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { PluginSettingInfo } from "../../../shared/rpc-types";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SettingsSidebar, type SettingsTab } from "./SettingsSidebar";
 import { SettingsView } from "./SettingsView";
 
@@ -50,7 +50,7 @@ describe("SettingsView", () => {
 	afterEach(cleanup);
 
 	it("renders General content by default", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
@@ -58,7 +58,7 @@ describe("SettingsView", () => {
 	});
 
 	it("renders plugin list when activeTab is plugins", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [
@@ -75,7 +75,7 @@ describe("SettingsView", () => {
 	});
 
 	it("renders Cursor as beta on the plugins page", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [makePlugin({ id: "cursor", displayName: "Cursor", defaultDataDir: "/Users/test/.cursor" })],
@@ -89,7 +89,7 @@ describe("SettingsView", () => {
 	});
 
 	it("renders checkbox for each plugin", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [makePlugin({ id: "claude-code", enabled: true }), makePlugin({ id: "codex-cli", enabled: false })],
@@ -105,7 +105,7 @@ describe("SettingsView", () => {
 	});
 
 	it("shows default path as placeholder when not customized", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [makePlugin({ isCustomDir: false, defaultDataDir: "/Users/test/.claude" })],
@@ -121,7 +121,7 @@ describe("SettingsView", () => {
 	});
 
 	it("shows custom path as value when customized", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [
@@ -140,7 +140,7 @@ describe("SettingsView", () => {
 	});
 
 	it("shows Reset link when path is customized", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () =>
 				Promise.resolve({
 					plugins: [makePlugin({ isCustomDir: true, dataDir: "/custom/path" })],
@@ -153,7 +153,7 @@ describe("SettingsView", () => {
 	});
 
 	it("does not show Reset link for default path", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin({ isCustomDir: false })] }),
 		});
 		const props = defaultProps();
@@ -166,7 +166,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab reflects persisted value", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
 		});
@@ -178,7 +178,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows Global and Presentation subsections", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { findByText } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
@@ -187,7 +187,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows theme selector with System/Light/Dark options", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -198,7 +198,7 @@ describe("SettingsView", () => {
 	});
 
 	it("theme selector calls set when option clicked", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -210,7 +210,7 @@ describe("SettingsView", () => {
 	});
 
 	it("font size controls call increase/decrease", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -224,7 +224,7 @@ describe("SettingsView", () => {
 	});
 
 	it("presentation theme selector is disabled when sameAsGlobal is true", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -239,7 +239,7 @@ describe("SettingsView", () => {
 	});
 
 	it("presentation theme selector is enabled when sameAsGlobal is false", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -253,7 +253,7 @@ describe("SettingsView", () => {
 	});
 
 	it("presentation font-size control is disabled when sameAsGlobal is true", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -267,7 +267,7 @@ describe("SettingsView", () => {
 	});
 
 	it("Same as global checkboxes are rendered", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { findAllByLabelText } = render(<SettingsView {...defaultProps()} />, {
@@ -278,7 +278,7 @@ describe("SettingsView", () => {
 	});
 
 	it("unchecking Same as global calls setSameAsGlobal(false)", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -292,7 +292,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows font size value", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const props = defaultProps();
@@ -302,7 +302,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows Reset to defaults button", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 		});
 		const { findByRole } = render(<SettingsView {...defaultProps()} />, { wrapper: MockProviders });
@@ -311,7 +311,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows Updates section with channel selector", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 			hostBridge: {
 				getUpdateSettings: () =>
@@ -328,7 +328,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows current update channel selection", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 			hostBridge: {
 				getUpdateSettings: () =>
@@ -342,7 +342,7 @@ describe("SettingsView", () => {
 	});
 
 	it("General tab shows Check now button", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getPluginSettings: () => Promise.resolve({ plugins: [makePlugin()] }),
 			hostBridge: {
 				getUpdateSettings: () =>

@@ -1,6 +1,6 @@
 import { cleanup, render, waitFor } from "@testing-library/react";
 import type { Session } from "../../../shared/types";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SessionPresentation } from "./SessionPresentation";
 
 
@@ -34,7 +34,7 @@ describe("SessionPresentation", () => {
 	afterEach(cleanup);
 
 	it("shows loading state initially", () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => new Promise(noop),
 		});
 		const { container } = render(
@@ -46,7 +46,7 @@ describe("SessionPresentation", () => {
 
 	it("renders presentation mode after fetch", async () => {
 		const session = makeSession();
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
@@ -61,7 +61,7 @@ describe("SessionPresentation", () => {
 
 	it("renders progress bar", async () => {
 		const session = makeSession();
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
@@ -75,7 +75,7 @@ describe("SessionPresentation", () => {
 	});
 
 	it("returns null when no session data", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.resolve({ session: null as unknown as Session, totalTurns: 0 }),
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});

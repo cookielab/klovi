@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { act } from "react";
 import { AppGate } from "./App";
-import { MockProviders, setMockHostConnectionState, setupMockRPC } from "./test-helpers/mock-rpc";
+import { MockProviders, setMockHostConnectionState, setupMockRpc } from "./test-helpers/mock-rpc";
 
 describe("AppGate", () => {
 	const originalError = console.error;
@@ -31,7 +31,7 @@ describe("AppGate", () => {
 	// --- First launch (isFirstLaunch=true): show full Onboarding ---
 
 	it("shows full onboarding on first launch", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 		});
 		const { findByText } = render(<AppGate />, { wrapper: MockProviders });
@@ -39,7 +39,7 @@ describe("AppGate", () => {
 	});
 
 	it("first launch: completing onboarding shows App", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 			acceptRisks: () => Promise.resolve({ ok: true }),
 			getPluginSettings: () => Promise.resolve({ plugins: [] }),
@@ -56,7 +56,7 @@ describe("AppGate", () => {
 
 	it("first launch: does not disable warning unless checkbox is checked", async () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 			updateGeneralSettings: updateGeneralSettings,
 			getPluginSettings: () => Promise.resolve({ plugins: [] }),
@@ -75,7 +75,7 @@ describe("AppGate", () => {
 
 	it("first launch: checking dont-show in step 1 saves setting", async () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 			updateGeneralSettings: updateGeneralSettings,
 			getPluginSettings: () => Promise.resolve({ plugins: [] }),
@@ -95,7 +95,7 @@ describe("AppGate", () => {
 	// --- Returning user + showSecurityWarning=true: show SecurityWarning ---
 
 	it("returning user with warning enabled sees security warning", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
 		});
@@ -104,7 +104,7 @@ describe("AppGate", () => {
 	});
 
 	it("returning user: Accept & Continue shows App", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
 			acceptRisks: () => Promise.resolve({ ok: true }),
@@ -117,7 +117,7 @@ describe("AppGate", () => {
 
 	it("returning user: checking dont-show saves setting", async () => {
 		const updateGeneralSettings = mock(() => Promise.resolve({ showSecurityWarning: false }));
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: true }),
 			acceptRisks: () => Promise.resolve({ ok: true }),
@@ -139,7 +139,7 @@ describe("AppGate", () => {
 
 	it("returning user with warning disabled skips to App", async () => {
 		const acceptRisks = mock(() => Promise.resolve({ ok: true }));
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
 			acceptRisks: acceptRisks,
@@ -152,7 +152,7 @@ describe("AppGate", () => {
 	// --- Error handling ---
 
 	it("shows onboarding when isFirstLaunch fails", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.reject(new Error("RPC failed")),
 		});
 		const { findByText } = render(<AppGate />, { wrapper: MockProviders });
@@ -160,7 +160,7 @@ describe("AppGate", () => {
 	});
 
 	it("shows onboarding when getGeneralSettings fails for returning user", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: false }),
 			getGeneralSettings: () => Promise.reject(new Error("RPC failed")),
 		});
@@ -169,7 +169,7 @@ describe("AppGate", () => {
 	});
 
 	it("App renders even if acceptRisks RPC fails", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.resolve({ firstLaunch: true }),
 			acceptRisks: () => Promise.reject(new Error("RPC failed")),
 			getPluginSettings: () => Promise.resolve({ plugins: [] }),
@@ -185,7 +185,7 @@ describe("AppGate", () => {
 	});
 
 	it("shows desktop reconnect state on transport failure instead of onboarding", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: () => Promise.reject(new Error("RPC request timed out.")),
 		});
 
@@ -200,7 +200,7 @@ describe("AppGate", () => {
 			Promise.reject(new Error("RPC request timed out.")),
 		);
 
-		setupMockRPC({
+		setupMockRpc({
 			isFirstLaunch: isFirstLaunch,
 			getGeneralSettings: () => Promise.resolve({ showSecurityWarning: false }),
 			acceptRisks: () => Promise.resolve({ ok: true }),

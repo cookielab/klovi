@@ -4,7 +4,7 @@ import { makeVersionState } from "@cookielab.io/klovi-server/services/version-se
 import { Effect, Fiber, Schedule, SubscriptionRef } from "effect";
 import Electrobun, { ApplicationMenu, BrowserView, BrowserWindow, Utils } from "electrobun/bun";
 import pkg from "../../package.json" with { type: "json" };
-import type { KloviRPC, UpdateStatus } from "../shared/rpc-types";
+import type { KloviRpc, UpdateStatus } from "../shared/rpc-types";
 import {
 	detectLinuxSystemTheme,
 	ensureDesktopRuntimeDirs,
@@ -91,7 +91,7 @@ const getSystemThemeHandler = Effect.gen(function* () {
 });
 
 // Desktop RPC: native host bridge + data methods
-const rpc = BrowserView.defineRPC<KloviRPC>({
+const rpc = BrowserView.defineRPC<KloviRpc>({
 	handlers: {
 		requests: {
 			// Native host bridge methods

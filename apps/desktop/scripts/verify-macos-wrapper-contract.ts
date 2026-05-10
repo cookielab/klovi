@@ -134,7 +134,7 @@ async function listTarEntries(tarPath: string): Promise<string[]> {
 	return parseTarEntries(stdout);
 }
 
-async function verifyMacOSWrapperContract(args: VerifyArgs): Promise<void> {
+async function verifyMacOsWrapperContract(args: VerifyArgs): Promise<void> {
 	const appPath = resolve(args.appPath);
 	const zstdPath = await resolveZstdPath(appPath, args.zstdPath);
 
@@ -172,10 +172,10 @@ async function verifyMacOSWrapperContract(args: VerifyArgs): Promise<void> {
 
 if (import.meta.main) {
 	try {
-		await verifyMacOSWrapperContract(parseArgs(Bun.argv));
+		await verifyMacOsWrapperContract(parseArgs(Bun.argv));
 	} catch {
 		process.exit(1);
 	}
 }
 
-export { getExpectedBundleName, parseArgs, parseTarEntries, verifyMacOSWrapperContract };
+export { getExpectedBundleName, parseArgs, parseTarEntries, verifyMacOsWrapperContract };

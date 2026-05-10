@@ -1,5 +1,5 @@
 import { GlobalWindow } from "happy-dom";
-import { setupMockRPC } from "./packages/ui/src/app/test-helpers/mock-rpc";
+import { setupMockRpc } from "./packages/ui/src/app/test-helpers/mock-rpc";
 
 
 const N_800 = 800;
@@ -47,7 +47,7 @@ for (const key of globals) {
 }
 
 // Set up default RPC mock for all tests
-setupMockRPC();
+setupMockRpc();
 
 // Shim ResizeObserver for @tanstack/react-virtual measureElement under happy-dom
 if (!("ResizeObserver" in globalThis)) {

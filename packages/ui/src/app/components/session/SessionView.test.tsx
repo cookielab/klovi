@@ -1,6 +1,6 @@
 import { cleanup, render } from "@testing-library/react";
 import type { Session } from "../../../shared/types";
-import { MockProviders, setupMockRPC } from "../../test-helpers/mock-rpc";
+import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SessionView } from "./SessionView";
 
 
@@ -36,7 +36,7 @@ describe("SessionView", () => {
 	afterEach(cleanup);
 
 	it("shows loading state initially", () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => new Promise(noop),
 		});
 		const { container } = render(<SessionView sessionId="session-1" project="test-project" />, {
@@ -48,7 +48,7 @@ describe("SessionView", () => {
 
 	it("renders messages after successful fetch", async () => {
 		const session = makeSession();
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
@@ -60,7 +60,7 @@ describe("SessionView", () => {
 	});
 
 	it("shows error state on fetch failure", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.reject(new Error("HTTP 404")),
 		});
 
@@ -72,7 +72,7 @@ describe("SessionView", () => {
 	});
 
 	it("shows error state on network error", async () => {
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.reject(new Error("Network error")),
 		});
 
@@ -85,7 +85,7 @@ describe("SessionView", () => {
 
 	it("renders both user and assistant messages", async () => {
 		const session = makeSession();
-		setupMockRPC({
+		setupMockRpc({
 			getSessionHead: () => Promise.resolve({ session: session, totalTurns: session.turns.length }),
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});

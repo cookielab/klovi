@@ -11,7 +11,7 @@ type RawLine = {
 	slug?: string;
 	timestamp?: string;
 	message?: RawMessage;
-	parentToolUseID?: string;
+	["parentToolUseID"]?: string;
 	data?: { type?: string; agentId?: string; [key: string]: unknown };
 };
 

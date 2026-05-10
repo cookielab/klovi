@@ -13,7 +13,7 @@ import {
 } from "@cookielab.io/klovi-ui/bootstrap";
 import type { DesktopMenuAction, DesktopRequestMethod } from "@cookielab.io/klovi-ui/shared/desktop-contract";
 import { Electroview } from "electrobun/view";
-import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types";
+import type { KloviRpc, UpdateStatus } from "../../shared/rpc-types";
 
 // Import design system globals (tokens, reset, fonts) via klovi-ui
 import "@cookielab.io/klovi-ui/styles";
@@ -47,7 +47,7 @@ let reconnectDelay = INITIAL_RECONNECT_DELAY;
 const MAX_RECONNECT_DELAY = 30_000;
 const observedSockets = new WeakSet<WebSocket>();
 
-const rpc = Electroview.defineRPC<KloviRPC>({
+const rpc = Electroview.defineRPC<KloviRpc>({
 	maxRequestTime: Number.POSITIVE_INFINITY,
 	handlers: {
 		requests: {},
