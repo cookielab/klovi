@@ -126,7 +126,6 @@ describe("design-system components", () => {
 		const { getByLabelText, getByRole } = render(
 			<div>
 				<label htmlFor="name">Name</label>
-				{/* biome-ignore lint/correctness/useUniqueElementIds: static IDs are fine in tests */}
 				<Input
 					id="name"
 					value="Jane"
@@ -136,7 +135,6 @@ describe("design-system components", () => {
 				/>
 
 				<label htmlFor="theme">Theme</label>
-				{/* biome-ignore lint/correctness/useUniqueElementIds: static IDs are fine in tests */}
 				<Select
 					id="theme"
 					value="light"

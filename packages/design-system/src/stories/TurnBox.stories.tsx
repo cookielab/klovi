@@ -28,7 +28,6 @@ export const AllRoles: Story = {
 export const WithModel: Story = {
 	render: () => (
 		<div>
-			{/* biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role */}
 			<TurnBox role="assistant" model="claude-4-opus" timestamp={<span>just now</span>}>
 				<p>This assistant message includes a model badge.</p>
 			</TurnBox>
@@ -39,7 +38,6 @@ export const WithModel: Story = {
 export const CustomBadge: Story = {
 	render: () => (
 		<div>
-			{/* biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role */}
 			<TurnBox role="agent" badge="Root Agent">
 				<p>Custom badge text overrides the default role label.</p>
 			</TurnBox>

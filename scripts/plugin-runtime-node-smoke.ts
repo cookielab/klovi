@@ -40,12 +40,12 @@ function runRegistry<A>(effect: Effect.Effect<A, never, never>): Promise<A> {
 let _passed = 0;
 let failed = 0;
 
-function ok(_label: string) {
-	_passed++;
+function ok(_label: string): void {
+	_passed += 1;
 }
 
-function fail(_label: string, _err: unknown) {
-	failed++;
+function fail(_label: string, _err: unknown): void {
+	failed += 1;
 }
 
 // ── Helpers ────────────────────────────────────────────────

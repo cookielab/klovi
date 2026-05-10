@@ -2,8 +2,6 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { BunContext } from "@effect/platform-bun";
-
-const { semver } = Bun;
 import { Effect, Layer, SubscriptionRef } from "effect";
 import type { UpdateStatus } from "../shared/rpc-types";
 import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "./services";
@@ -28,6 +26,8 @@ import {
 	validateUpdateInfo,
 } from "./updater";
 import { cleanupUpdates, downloadUpdate, getCurrentStatus } from "./updater-service";
+
+const { semver } = Bun;
 
 describe("semver.order", () => {
 	it("returns positive when a > b", () => {

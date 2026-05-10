@@ -110,7 +110,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
 				{step === 2 && (
 					<>
-						{/* biome-ignore lint/correctness/useUniqueElementIds: only one step renders at a time, no duplicate */}
 						<h1 id="onboarding-heading" className={HEADING_CLASSES}>
 							Plugins
 						</h1>

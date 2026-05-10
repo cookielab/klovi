@@ -26,12 +26,12 @@ let _passed = 0;
 let failed = 0;
 let tempDir = "";
 
-function ok(_label: string) {
-	_passed++;
+function ok(_label: string): void {
+	_passed += 1;
 }
 
-function fail(_label: string, _err: unknown) {
-	failed++;
+function fail(_label: string, _err: unknown): void {
+	failed += 1;
 }
 
 async function waitForServer(url: string, timeoutMs = 30_000): Promise<boolean> {

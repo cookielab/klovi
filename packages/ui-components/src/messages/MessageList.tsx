@@ -83,7 +83,6 @@ function renderTurn(options: RenderTurnOptions) {
 		case "system":
 			return (
 				<div className={activeClass}>
-					{/* biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role */}
 					<TurnBox
 						role="system"
 						timestamp={
@@ -101,7 +100,6 @@ function renderTurn(options: RenderTurnOptions) {
 		case "parse_error":
 			return (
 				<div className={activeClass}>
-					{/* biome-ignore lint/a11y/useValidAriaRole: role is a component prop, not HTML role */}
 					<TurnBox
 						role="error"
 						badge="Parse Error"
@@ -203,7 +201,6 @@ export function MessageList({
 	return (
 		<div ref={parentRef} className={SCROLL_CONTAINER_CLASSES}>
 			<style>{STEP_FADE_IN_KEYFRAMES}</style>
-			{/* biome-ignore lint/nursery/noInlineStyles: required by react-virtual for absolute positioning */}
 			<div className={SCROLL_INNER_CLASSES} style={{ height: totalSize }}>
 				{items.map((item) => {
 					const turn = turns[item.index];

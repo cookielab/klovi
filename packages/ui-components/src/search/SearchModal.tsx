@@ -201,7 +201,6 @@ function SearchModal({
 
 	return (
 		<div className={OVERLAY_CLASSES} role="presentation" onMouseDown={onClose}>
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation on modal body */}
 			<div className={MODAL_CLASSES} role="presentation" onMouseDown={handleModalMouseDown}>
 				<div className={INPUT_WRAPPER_CLASSES}>
 					<input
