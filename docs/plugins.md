@@ -4,7 +4,7 @@
 
 Klovi plugins are driver packages. Each plugin reads one provider's local data
 format and converts it into Klovi's canonical model from `packages/plugin-core`.
-The UI should render canonical Klovi data, not provider-specific records.
+The UI renders canonical Klovi data, not provider-specific records.
 
 Built-in driver packages currently live in:
 
@@ -42,31 +42,15 @@ into the server/UI boundary.
 
 ## Current State
 
-The core driver shape is already in place. The plugin packages parse provider
-storage and return shared `SessionSummary` and `Session` objects. They do not
-contain React components, JSX, CSS files, or React dependencies.
+The plugin architecture is fully migrated to the canonical tool model. All four
+plugin packages parse provider storage and return shared `SessionSummary` and
+`Session` objects. They contain no React components, JSX, CSS files, or React
+dependencies.
 
-Known gaps remain around tool rendering:
+### Tool model
 
-- `ToolCallWithResult` still contains raw tool names and raw input objects, so
-  UI code must infer semantics from provider/tool names.
-- `packages/ui-components/src/tools/ToolCallDefaults.ts` contains hardcoded
-  tables for names such as `Read`, `Write`, `Edit`, `Bash`, `Task`,
-  `WebSearch`, and related tool schemas.
-- `FrontendPlugin` supports plugin-provided `summaryExtractors` and
-  `inputFormatters`. These are not React components, but they are
-  presentation-specific plugin behavior and should become temporary migration
-  shims.
-- `packages/ui/src/app/components/settings/PluginRow.tsx` special-cases Cursor
-  as `Cursor (beta)` instead of receiving that as semantic metadata.
-- `Badge` in `packages/plugin-core/src/plugin-types.ts` includes `className`,
-  which would allow plugin output to carry UI styling if used.
-
-## Target Tool Model
-
-The UI should branch on canonical semantics instead of raw provider names. A
-future `ToolCallWithResult` can keep compatibility fields during migration, but
-the rendering contract should look like this:
+Every `ToolCallWithResult` now carries canonical semantic fields set by the
+plugin parser:
 
 ```ts
 type ToolCallKind =
@@ -92,63 +76,73 @@ type ToolCallWithResult = {
   isError: boolean;
   resultImages?: ToolResultImage[];
   subAgentId?: string;
+  /** Raw provider tool name before normalization. Debug/diagnostic only; UI must not branch on this. */
   rawName?: string;
 };
 ```
 
-`rawName` is only for debugging and compatibility. UI should not use it to pick
-rendering paths.
+The legacy `name` field was removed in Task 7. `rawName` is the only
+debug/diagnostic field remaining and is optional — some generic tool calls may
+not have a meaningful raw provider name.
 
-## Remediation Plan
+UI code branches on `kind`, not on raw tool names. `ToolCall.tsx` dispatches on
+`kind` to choose the shell renderer, diff renderer, sub-agent link, or generic
+fallback.
 
-1. Define the plugin boundary in docs and tests.
-   The contract above should be treated as the architecture rule for future
-   plugins and future parser changes.
+### ToolCallDefaults.ts
 
-2. Extend `ToolCallWithResult` in `packages/plugin-core/src/session-types.ts`.
-   Add canonical fields such as `kind`, `title`, `summary`, and
-   `formattedInput` while temporarily keeping `name` for compatibility.
+`packages/ui-components/src/tools/ToolCallDefaults.ts` is a thin pass-through.
+The hardcoded per-provider formatter tables were removed once all parsers emitted
+`summary` and `formattedInput` directly.
 
-3. Normalize tool calls in plugin parsers.
-   Claude should map tools like `Bash`, `Edit`, `Read`, and `Task` to canonical
-   kinds. Codex should map `command_execution`, `file_change`, and `web_search`.
-   Cursor and OpenCode should map known shapes where possible and use
-   `generic` for unknown provider tools.
+### FrontendPlugin
 
-4. Refactor reusable tool UI.
-   `packages/ui-components/src/tools/ToolCall.tsx` should branch on
-   `call.kind`, not raw tool names. Shell tools can use the existing shell
-   renderer, file edits can use the diff renderer when normalized old/new
-   strings are available, sub-agent tools can render the sub-agent link, and
-   generic tools can use JSON/default rendering.
+`FrontendPlugin` in `packages/plugin-core/src/plugin-types.ts` is now metadata
+and optional resume command only. The `summaryExtractors` and `inputFormatters`
+shims were removed once plugin parsers produced canonical fields.
 
-5. Shrink `ToolCallDefaults.ts`.
-   Keep only generic fallback behavior that is based on canonical tool
-   semantics. Remove provider-shaped formatter tables once parsers emit
-   sufficient `summary` and `formattedInput` values.
+### Plugin status and display name
 
-6. Retire or reduce `FrontendPlugin`.
-   First make UI prefer normalized tool fields. Then keep `FrontendPlugin`
-   formatters as a compatibility fallback. Finally remove `summaryExtractors`
-   and `inputFormatters`, leaving only metadata such as display name and resume
-   command if needed.
+Plugin status (e.g. `beta`) and display name are driven by server metadata. The
+UI uses `plugin.status === "beta"` from the server descriptor rather than
+special-casing provider ids in components.
 
-7. Remove direct plugin-specific UI branches.
-   Replace the Cursor beta special case with plugin metadata, for example a
-   `status: "beta"` field or a display name supplied by the server descriptor.
+## Implementation History
 
-8. Remove CSS from plugin contracts.
-   Change `Badge` from `{ label, className }` to semantic data such as
-   `{ label, tone }`, or delete `getSessionBadges` if it remains unused.
+1. **Plugin boundary defined** — Contracts documented; plugins may not export
+   React, JSX, or CSS; UI may not branch on provider ids or raw tool names.
 
-9. Add guardrail tests.
-   Tests should assert that plugin packages contain no `.tsx`, `.jsx`, or CSS
-   files, do not import React, reusable UI does not branch on built-in provider
-   ids, and tool UI does not branch on raw provider tool names.
+2. **`ToolCallWithResult` extended** — Added `kind`, `title`, `summary`, and
+   `formattedInput` fields in `packages/plugin-core/src/session-types.ts`.
 
-10. Remove compatibility fields.
-    After all plugins emit canonical tool data and UI consumes it, remove legacy
-    name-based rendering paths and plugin frontend formatter shims.
+3. **Plugin parsers normalized** — All four parsers (`plugin-claude-code`,
+   `plugin-codex`, `plugin-cursor`, `plugin-opencode`) map known provider tool
+   names to canonical kinds and emit `summary` and `formattedInput`.
+
+4. **UI refactored to branch on `kind`** — `ToolCall.tsx` dispatches on
+   `call.kind`, not raw tool names. Shell, file-edit (diff), sub-agent, and
+   generic renderers are selected canonically.
+
+5. **`ToolCallDefaults.ts` shrunk** — Provider-shaped formatter tables removed;
+   file now contains only generic fallback behavior based on canonical semantics.
+
+6. **`FrontendPlugin` retired** — `summaryExtractors` and `inputFormatters`
+   removed; only metadata fields and optional resume command remain.
+
+7. **Provider-specific UI branches removed** — Cursor beta display driven by
+   `plugin.status === "beta"` from server metadata.
+
+8. **`Badge` / `getSessionBadges` removed** — Deleted in full; session badge
+   display is driven by semantic plugin metadata.
+
+9. **Guardrail tests added** — Tests assert that plugin packages contain no
+   `.tsx`, `.jsx`, or CSS files; do not import React; reusable UI does not
+   branch on built-in provider ids; tool UI does not branch on raw provider
+   tool names.
+
+10. **Legacy `name` field removed** — `ToolCallWithResult.name` dropped;
+    `rawName` is the only debug/diagnostic field. All parsers, UI code, and
+    tests updated.
 
 ## Verification
 
