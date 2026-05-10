@@ -10,10 +10,8 @@ import {
 
 
 const N_10 = 10;
-const N_7 = 7;
-const N_2050 = 2050;
 
-function call(name: string, input: Record<string, unknown> = {}): ToolCallWithResult {
+function call(name: string, input: Record<string, unknown> = {}, overrides: Partial<ToolCallWithResult> = {}): ToolCallWithResult {
 	return {
 		toolUseId: "tool-1",
 		kind: "generic",
@@ -22,7 +20,24 @@ function call(name: string, input: Record<string, unknown> = {}): ToolCallWithRe
 		input: input,
 		result: "",
 		isError: false,
+		...overrides,
 	};
+}
+
+function callWithCanonical(
+	name: string,
+	input: Record<string, unknown> = {},
+	summary?: string,
+	formattedInput?: string,
+): ToolCallWithResult {
+	const overrides: Partial<ToolCallWithResult> = {};
+	if (summary !== undefined) {
+		overrides.summary = summary;
+	}
+	if (formattedInput !== undefined) {
+		overrides.formattedInput = formattedInput;
+	}
+	return call(name, input, overrides);
 }
 
 function createFrontendPlugin(): FrontendPlugin {
@@ -36,6 +51,10 @@ function createFrontendPlugin(): FrontendPlugin {
 			["CustomTool"]: (input) => `input:${String(input["k"] ?? "")}`,
 		},
 	};
+}
+
+function makeGetPlugin(plugin: FrontendPlugin): (id: string) => FrontendPlugin | undefined {
+	return (id: string): FrontendPlugin | undefined => (id === plugin.id ? plugin : undefined);
 }
 
 describe("truncateOutput", () => {
@@ -53,140 +72,106 @@ describe("truncateOutput", () => {
 });
 
 describe("getToolSummary", () => {
-	it("uses plugin summary extractor when provided", () => {
+	it("prefers call.summary when set", () => {
+		const c = callWithCanonical("Read", { ["file_path"]: "/tmp/file.ts" }, "/tmp/file.ts");
+		expect(getToolSummary(c)).toBe("/tmp/file.ts");
+	});
+
+	it("falls back to plugin summary extractor when call.summary not set", () => {
 		const plugin = createFrontendPlugin();
-		const getPlugin = (id: string) => (id === plugin.id ? plugin : undefined);
+		const getPlugin = makeGetPlugin(plugin);
 
 		expect(getToolSummary(call("CustomTool", { k: "v" }), getPlugin, plugin.id)).toBe("summary:v");
 	});
 
-	it("falls back to built-in extractors", () => {
-		expect(getToolSummary(call("Read", { ["file_path"]: "/tmp/file.ts" }))).toBe("/tmp/file.ts");
-		expect(getToolSummary(call("TaskUpdate", { taskId: N_7, status: "done" }))).toBe("#7 → done");
-		expect(getToolSummary(call("AskUserQuestion", { questions: [{ question: "What now?" }] }))).toBe("What now?");
+	it("falls back to mcp rawName derivation for mcp kind without summary", () => {
+		const c = call("mcp__filesystem__read_file", {}, { kind: "mcp", rawName: "mcp__filesystem__read_file" });
+		expect(getToolSummary(c)).toBe("read_file");
 	});
 
-	it("formats mcp tool names", () => {
-		expect(getToolSummary(call("mcp__filesystem__read_file"))).toBe("read_file");
-		expect(getToolSummary(call("mcp__filesystem"))).toBe("");
-	});
-
-	it("returns empty string for unknown tool", () => {
+	it("returns empty string for unknown tool without summary", () => {
 		expect(getToolSummary(call("UnknownTool"))).toBe("");
+	});
+
+	it("canonical summary takes precedence over plugin extractor", () => {
+		const plugin = createFrontendPlugin();
+		const getPlugin = makeGetPlugin(plugin);
+		const c = callWithCanonical("CustomTool", { k: "v" }, "canonical-summary");
+		expect(getToolSummary(c, getPlugin, plugin.id)).toBe("canonical-summary");
 	});
 });
 
 describe("hasInputFormatter", () => {
-	it("reports true for built-in formatters", () => {
-		expect(hasInputFormatter(call("Edit"))).toBe(true);
-		expect(hasInputFormatter(call("TaskList"))).toBe(true);
-		expect(hasInputFormatter(call("AskUserQuestion"))).toBe(true);
+	it("reports true when call.formattedInput is set", () => {
+		const c = callWithCanonical("AnyTool", {}, undefined, "formatted content");
+		expect(hasInputFormatter(c)).toBe(true);
 	});
 
-	it("reports true for plugin formatter", () => {
+	it("reports true for plugin formatter when formattedInput not set", () => {
 		const plugin = createFrontendPlugin();
-		const getPlugin = (id: string) => (id === plugin.id ? plugin : undefined);
+		const getPlugin = makeGetPlugin(plugin);
 
 		expect(hasInputFormatter(call("CustomTool"), getPlugin, plugin.id)).toBe(true);
 	});
 
-	it("reports false for unknown tools", () => {
+	it("reports false for unknown tools without formattedInput or plugin formatter", () => {
 		expect(hasInputFormatter(call("NoFormatter"))).toBe(false);
+	});
+
+	it("canonical formattedInput takes precedence over plugin formatter check", () => {
+		const plugin = createFrontendPlugin();
+		const getPlugin = makeGetPlugin(plugin);
+		// Even for a tool name the plugin knows, canonical field wins (is true)
+		const c = callWithCanonical("CustomTool", { k: "v" }, undefined, "already formatted");
+		expect(hasInputFormatter(c, getPlugin, plugin.id)).toBe(true);
 	});
 });
 
 describe("formatToolInput", () => {
-	it("uses plugin formatter when available", () => {
+	it("uses call.formattedInput when set", () => {
+		const c = callWithCanonical("Edit", { ["file_path"]: "/tmp/a.ts" }, undefined, "canonical format");
+		expect(formatToolInput(c)).toBe("canonical format");
+	});
+
+	it("uses plugin formatter when formattedInput not set", () => {
 		const plugin = createFrontendPlugin();
-		const getPlugin = (id: string) => (id === plugin.id ? plugin : undefined);
+		const getPlugin = makeGetPlugin(plugin);
 
 		expect(formatToolInput(call("CustomTool", { k: "v" }), getPlugin, plugin.id)).toBe("input:v");
 	});
 
-	it("formats edit and write inputs with labeled sections", () => {
-		const editText = formatToolInput(
-			call("Edit", {
+	it("falls back to JSON for unknown tools without formattedInput or plugin formatter", () => {
+		const text = formatToolInput(call("Unknown", { a: 1 }));
+		expect(text).toContain('"a": 1');
+	});
+
+	it("canonical formattedInput takes precedence over plugin formatter", () => {
+		const plugin = createFrontendPlugin();
+		const getPlugin = makeGetPlugin(plugin);
+		const c = callWithCanonical("CustomTool", { k: "v" }, undefined, "canonical beats plugin");
+		expect(formatToolInput(c, getPlugin, plugin.id)).toBe("canonical beats plugin");
+	});
+
+	it("formattedInput with Edit tool uses canonical value end-to-end", () => {
+		const editFormatted = "File: /tmp/a.ts\n\nReplace:\nbefore\n\nWith:\nafter";
+		const c = callWithCanonical(
+			"Edit",
+			{
 				["file_path"]: "/tmp/a.ts",
 				["old_string"]: "before",
 				["new_string"]: "after",
-			}),
+			},
+			undefined,
+			editFormatted,
 		);
-
-		expect(editText).toContain("File: /tmp/a.ts");
-		expect(editText).toContain("Replace:\nbefore");
-		expect(editText).toContain("With:\nafter");
-
-		const writeText = formatToolInput(
-			call("Write", {
-				["file_path"]: "/tmp/b.ts",
-				content: "x".repeat(N_2050),
-			}),
-		);
-
-		expect(writeText).toContain("File: /tmp/b.ts");
-		expect(writeText).toContain("Content:\n");
-		expect(writeText).toContain("...");
+		const result = formatToolInput(c);
+		expect(result).toContain("File: /tmp/a.ts");
+		expect(result).toContain("Replace:\nbefore");
+		expect(result).toContain("With:\nafter");
 	});
 
-	it("formats AskUserQuestion prompts and options", () => {
-		const text = formatToolInput(
-			call("AskUserQuestion", {
-				questions: [
-					{
-						question: "Pick one",
-						options: [{ label: "A", description: "alpha" }, { label: "B" }],
-					},
-				],
-			}),
-		);
-
-		expect(text).toContain("Q1: Pick one");
-		expect(text).toContain("- A: alpha");
-		expect(text).toContain("- B");
-	});
-
-	it("falls back to JSON when AskUserQuestion payload is invalid", () => {
+	it("falls back to JSON when AskUserQuestion payload has no formattedInput", () => {
 		const text = formatToolInput(call("AskUserQuestion", { questions: "bad" }));
 		expect(text).toContain('"questions": "bad"');
-	});
-
-	it("formats TodoWrite checklist and fallback subject/content", () => {
-		const text = formatToolInput(
-			call("TodoWrite", {
-				todos: [
-					{ status: "completed", subject: "done item" },
-					{ status: "pending", content: "next item" },
-				],
-			}),
-		);
-
-		expect(text).toContain("[x] done item");
-		expect(text).toContain("[ ] next item");
-	});
-
-	it("TaskList uses empty input sentinel", () => {
-		expect(formatToolInput(call("TaskList", {}))).toBe("(no input)");
-		expect(formatToolInput(call("TaskList", { filter: "open" }))).toContain('"filter": "open"');
-	});
-
-	it("NotebookEdit includes notebook metadata and source", () => {
-		const text = formatToolInput(
-			call("NotebookEdit", {
-				["notebook_path"]: "/tmp/demo.ipynb",
-				["cell_number"]: 2,
-				["edit_mode"]: "replace",
-				["new_source"]: "print('hello')",
-			}),
-		);
-
-		expect(text).toContain("Notebook: /tmp/demo.ipynb");
-		expect(text).toContain("Cell: 2");
-		expect(text).toContain("Mode: replace");
-		expect(text).toContain("Source:\nprint('hello')");
-	});
-
-	it("falls back to JSON for unknown tools", () => {
-		const text = formatToolInput(call("Unknown", { a: 1 }));
-		expect(text).toContain('"a": 1');
 	});
 });

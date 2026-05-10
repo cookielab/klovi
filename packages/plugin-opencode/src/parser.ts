@@ -146,12 +146,89 @@ type PartData =
 
 // --- Normalization ---
 
-function normalizeToolCall(rawName: string): {
+const N_80 = 80;
+const N_60 = 60;
+
+function truncateOpenCode(s: string, max: number): string {
+	return s.length <= max ? s : `${s.slice(0, max)}...`;
+}
+
+const OC_FILE_READ_TOOLS = new Set(["read_file", "ReadFile"]);
+const OC_FILE_WRITE_TOOLS = new Set(["write_file", "WriteFile"]);
+const OC_FILE_EDIT_TOOLS = new Set(["edit_file", "EditFile"]);
+const OC_FILE_DIFF_TOOLS = new Set(["apply_diff", "ApplyDiff"]);
+const OC_SHELL_TOOLS = new Set(["bash", "Bash", "run_command", "RunCommand"]);
+const OC_WEB_SEARCH_TOOLS = new Set(["web_search", "WebSearch"]);
+const OC_WEB_FETCH_TOOLS = new Set(["web_fetch", "fetch_url", "WebFetch"]);
+
+type OpenCodeNormalized = {
 	kind: ToolCallKind;
 	title: string;
-} {
+	summary?: string | undefined;
+	formattedInput?: string | undefined;
+};
+
+function buildOcWriteFormattedInput(filePath: string, input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (filePath) {
+		parts.push(`File: ${filePath}`);
+	}
+	const contentVal = input["content"] || input["new_content"];
+	if (contentVal) {
+		parts.push(`Content:\n${String(contentVal)}`);
+	}
+	return parts.join("\n\n") || JSON.stringify(input, null, 2);
+}
+
+function buildOcEditFormattedInput(filePath: string, input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (filePath) {
+		parts.push(`File: ${filePath}`);
+	}
+	if (input["old_string"]) {
+		parts.push(`Replace:\n${input["old_string"]}`);
+	}
+	if (input["new_string"]) {
+		parts.push(`With:\n${input["new_string"]}`);
+	}
+	return parts.join("\n\n") || JSON.stringify(input, null, 2);
+}
+
+function normalizeFileOcToolCall(rawName: string, input: Record<string, unknown>): OpenCodeNormalized | null {
+	const filePath = String(input["path"] || input["file_path"] || "");
+	const filePathFormatted = filePath ? `File: ${filePath}` : JSON.stringify(input, null, 2);
+	if (OC_FILE_READ_TOOLS.has(rawName)) {
+		return { kind: "file_read", title: rawName, summary: filePath, formattedInput: filePathFormatted };
+	}
+	if (OC_FILE_WRITE_TOOLS.has(rawName)) {
+		return { kind: "file_write", title: rawName, summary: filePath, formattedInput: buildOcWriteFormattedInput(filePath, input) };
+	}
+	if (OC_FILE_EDIT_TOOLS.has(rawName)) {
+		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: buildOcEditFormattedInput(filePath, input) };
+	}
+	if (OC_FILE_DIFF_TOOLS.has(rawName)) {
+		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: filePathFormatted };
+	}
+	return null;
+}
+
+function normalizeToolCall(rawName: string, input: Record<string, unknown>): OpenCodeNormalized {
 	if (rawName.startsWith("mcp__")) {
 		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+	}
+	const fileResult = normalizeFileOcToolCall(rawName, input);
+	if (fileResult) {
+		return fileResult;
+	}
+	const command = String(input["command"] || input["cmd"] || "");
+	if (OC_SHELL_TOOLS.has(rawName)) {
+		return { kind: "shell", title: rawName, summary: truncateOpenCode(command, N_80), formattedInput: command || JSON.stringify(input, null, 2) };
+	}
+	if (OC_WEB_SEARCH_TOOLS.has(rawName)) {
+		return { kind: "web", title: rawName, summary: truncateOpenCode(String(input["query"] || ""), N_60) };
+	}
+	if (OC_WEB_FETCH_TOOLS.has(rawName)) {
+		return { kind: "web", title: rawName, summary: truncateOpenCode(String(input["url"] || ""), N_60) };
 	}
 	return { kind: "generic", title: rawName };
 }
@@ -184,11 +261,22 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 	const { state } = toolPart;
 	const toolId = toolPart.callID || nextToolUseId();
 	const rawName = toolPart.tool;
-	const normalized = normalizeToolCall(rawName);
+	const input = state.input;
+	const normalized = normalizeToolCall(rawName, input);
+
+	function applyNormalized(base: ToolCallWithResult): ToolCallWithResult {
+		if (normalized.summary !== undefined) {
+			base.summary = normalized.summary;
+		}
+		if (normalized.formattedInput !== undefined) {
+			base.formattedInput = normalized.formattedInput;
+		}
+		return base;
+	}
 
 	switch (state.status) {
 		case "completed":
-			return {
+			return applyNormalized({
 				toolUseId: toolId,
 				kind: normalized.kind,
 				title: normalized.title,
@@ -197,9 +285,9 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 				input: state.input,
 				result: state.output,
 				isError: false,
-			};
+			});
 		case "error":
-			return {
+			return applyNormalized({
 				toolUseId: toolId,
 				kind: normalized.kind,
 				title: normalized.title,
@@ -208,10 +296,10 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 				input: state.input,
 				result: state.error,
 				isError: true,
-			};
+			});
 		case "pending":
 		case "running":
-			return {
+			return applyNormalized({
 				toolUseId: toolId,
 				kind: normalized.kind,
 				title: normalized.title,
@@ -220,7 +308,7 @@ function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): Too
 				input: state.input,
 				result: "[Tool execution was interrupted]",
 				isError: true,
-			};
+			});
 		default: {
 			const _exhaustive: never = state;
 			return _exhaustive;

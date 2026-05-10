@@ -1053,6 +1053,109 @@ describe("buildTurns", () => {
 		expect(turns[0]?.kind).toBe("parse_error");
 		expect(turns[1]?.kind).toBe("parse_error");
 	});
+
+	it("Read tool populates summary and formattedInput from file_path", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_read",
+							name: "Read",
+							input: { ["file_path"]: "/tmp/readme.ts" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.summary).toBe("/tmp/readme.ts");
+		expect(toolCall.formattedInput).toBe("/tmp/readme.ts");
+	});
+
+	it("Write tool populates summary and formattedInput with File+Content sections", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_write",
+							name: "Write",
+							input: { ["file_path"]: "/tmp/out.ts", content: "hello world" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.summary).toBe("/tmp/out.ts");
+		expect(toolCall.formattedInput).toContain("File: /tmp/out.ts");
+		expect(toolCall.formattedInput).toContain("Content:\nhello world");
+	});
+
+	it("Edit tool populates summary and formattedInput with Replace/With sections", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_edit",
+							name: "Edit",
+							input: { ["file_path"]: "/tmp/a.ts", ["old_string"]: "before", ["new_string"]: "after" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.summary).toBe("/tmp/a.ts");
+		expect(toolCall.formattedInput).toContain("File: /tmp/a.ts");
+		expect(toolCall.formattedInput).toContain("Replace:\nbefore");
+		expect(toolCall.formattedInput).toContain("With:\nafter");
+	});
+
+	it("Bash tool populates summary (truncated command) and formattedInput (full command)", () => {
+		const lines: RawLine[] = [
+			line({
+				type: "assistant",
+				message: {
+					role: "assistant",
+					model: "claude-sonnet-4-5-20250929",
+					content: [
+						{
+							type: "tool_use",
+							id: "tool_bash",
+							name: "Bash",
+							input: { command: "bun run test" },
+						},
+					],
+				},
+			}),
+		];
+		const turns = buildTurns(lines);
+		const turn = turns[0] as AssistantTurn;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		expect(toolCall.summary).toBe("bun run test");
+		expect(toolCall.formattedInput).toBe("bun run test");
+	});
 });
 
 describe("extractSubAgentMap", () => {

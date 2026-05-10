@@ -18,6 +18,112 @@ import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types";
 
 const MAX_RAW_LINE_LENGTH = 500;
 
+// --- Local helpers for populating summary/formattedInput ---
+
+const N_60 = 60;
+const N_80 = 80;
+const N_2000 = 2000;
+
+function truncate(s: string, max: number): string {
+	if (s.length <= max) {
+		return s;
+	}
+	return `${s.slice(0, max)}...`;
+}
+
+function formatFieldParts(input: Record<string, unknown>, fields: [string, string][], separator = "\n"): string {
+	const parts: string[] = [];
+	for (const [key, label] of fields) {
+		if (input[key]) {
+			parts.push(`${label}: ${input[key]}`);
+		}
+	}
+	return parts.join(separator) || JSON.stringify(input, null, 2);
+}
+
+function formatEditInput(input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (input["file_path"]) {
+		parts.push(`File: ${input["file_path"]}`);
+	}
+	if (input["old_string"]) {
+		parts.push(`Replace:\n${input["old_string"]}`);
+	}
+	if (input["new_string"]) {
+		parts.push(`With:\n${input["new_string"]}`);
+	}
+	return parts.join("\n\n");
+}
+
+function formatWriteInput(input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (input["file_path"]) {
+		parts.push(`File: ${input["file_path"]}`);
+	}
+	if (input["content"]) {
+		parts.push(`Content:\n${truncate(String(input["content"]), N_2000)}`);
+	}
+	return parts.join("\n\n");
+}
+
+function formatNotebookEditInput(input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (input["notebook_path"]) {
+		parts.push(`Notebook: ${input["notebook_path"]}`);
+	}
+	if (input["cell_number"] !== undefined) {
+		parts.push(`Cell: ${input["cell_number"]}`);
+	}
+	if (input["edit_mode"]) {
+		parts.push(`Mode: ${input["edit_mode"]}`);
+	}
+	if (input["new_source"]) {
+		parts.push(`Source:\n${truncate(String(input["new_source"]), N_2000)}`);
+	}
+	return parts.join("\n") || JSON.stringify(input, null, 2);
+}
+
+function formatAskUserInput(input: Record<string, unknown>): string {
+	if (!Array.isArray(input["questions"])) {
+		return JSON.stringify(input, null, 2);
+	}
+	return (input["questions"] as Record<string, unknown>[])
+		.map((q, i) => {
+			const lines: string[] = [];
+			if (q["question"]) {
+				lines.push(`Q${i + 1}: ${q["question"]}`);
+			}
+			if (Array.isArray(q["options"])) {
+				for (const opt of q["options"] as Record<string, unknown>[]) {
+					lines.push(`  - ${opt["label"]}${opt["description"] ? `: ${opt["description"]}` : ""}`);
+				}
+			}
+			return lines.join("\n");
+		})
+		.join("\n\n");
+}
+
+function getAskUserQuestionSummary(input: Record<string, unknown>): string {
+	if (Array.isArray(input["questions"]) && input["questions"].length > 0) {
+		const q = input["questions"][0] as Record<string, unknown>;
+		return truncate(String(q["question"] || ""), N_60);
+	}
+	return "";
+}
+
+function formatTodoWriteInput(input: Record<string, unknown>): string {
+	if (!Array.isArray(input["todos"])) {
+		return JSON.stringify(input, null, 2);
+	}
+	return (input["todos"] as Record<string, unknown>[])
+		.map((t) => `[${t["status"] === "completed" ? "x" : " "}] ${t["subject"] || t["content"] || ""}`)
+		.join("\n");
+}
+
+function formatEmptyInput(input: Record<string, unknown>): string {
+	return Object.keys(input).length === 0 ? "(no input)" : JSON.stringify(input, null, 2);
+}
+
 type ParsedSession = {
 	session: Session;
 	slug: string | undefined;
@@ -371,47 +477,102 @@ function createAssistantTurn(line: RawLine): AssistantTurn {
 
 type ToolResultMap = Map<string, { content: string; isError: boolean; images: ToolResultImage[] }>;
 
-function normalizeToolCall(
-	rawName: string,
-	input: Record<string, unknown>,
-): {
+type NormalizedToolCall = {
 	kind: ToolCallKind;
 	title: string;
 	summary?: string | undefined;
 	formattedInput?: string | undefined;
-} {
+};
+
+function formatTaskUpdateInput(input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (input["taskId"]) {
+		parts.push(`Task: #${input["taskId"]}`);
+	}
+	if (input["status"]) {
+		parts.push(`Status: ${input["status"]}`);
+	}
+	if (input["subject"]) {
+		parts.push(`Subject: ${input["subject"]}`);
+	}
+	if (input["description"]) {
+		parts.push(`Description: ${input["description"]}`);
+	}
+	return parts.join("\n") || JSON.stringify(input, null, 2);
+}
+
+type NormalizeFactory = (input: Record<string, unknown>) => NormalizedToolCall;
+
+const TOOL_NORMALIZERS: Record<string, NormalizeFactory> = {
+	["Read"]: (i) => ({
+		kind: "file_read",
+		title: "Read",
+		summary: String(i["file_path"] || ""),
+		formattedInput: i["file_path"] ? String(i["file_path"]) : JSON.stringify(i, null, 2),
+	}),
+	["Write"]: (i) => ({ kind: "file_write", title: "Write", summary: String(i["file_path"] || ""), formattedInput: formatWriteInput(i) }),
+	["Edit"]: (i) => ({ kind: "file_edit", title: "Edit", summary: String(i["file_path"] || ""), formattedInput: formatEditInput(i) }),
+	["NotebookRead"]: (i) => ({ kind: "file_read", title: "Notebook Read", summary: String(i["notebook_path"] || "") }),
+	["NotebookEdit"]: (i) => ({ kind: "file_edit", title: "Notebook Edit", summary: String(i["notebook_path"] || ""), formattedInput: formatNotebookEditInput(i) }),
+	["Glob"]: (i) => ({
+		kind: "search",
+		title: "Glob",
+		summary: String(i["pattern"] || ""),
+		formattedInput: formatFieldParts(i, [["pattern", "Pattern"], ["path", "Path"]]),
+	}),
+	["Grep"]: (i) => ({
+		kind: "search",
+		title: "Grep",
+		summary: truncate(String(i["pattern"] || ""), N_60),
+		formattedInput: formatFieldParts(i, [["pattern", "Pattern"], ["path", "Path"], ["output_mode", "Mode"]]),
+	}),
+	["WebFetch"]: (i) => ({ kind: "web", title: "WebFetch", summary: truncate(String(i["url"] || ""), N_60) }),
+	["WebSearch"]: (i) => ({ kind: "web", title: "WebSearch", summary: truncate(String(i["query"] || ""), N_60) }),
+	["Task"]: (i) => ({ kind: "generic", title: "Task", summary: truncate(String(i["description"] || ""), N_60) }),
+	["AskUserQuestion"]: (i) => ({ kind: "generic", title: "AskUserQuestion", summary: getAskUserQuestionSummary(i), formattedInput: formatAskUserInput(i) }),
+	["TodoWrite"]: (i) => ({ kind: "generic", title: "TodoWrite", summary: truncate(String(i["subject"] || ""), N_60), formattedInput: formatTodoWriteInput(i) }),
+	["TaskCreate"]: (i) => ({
+		kind: "generic",
+		title: "TaskCreate",
+		summary: truncate(String(i["subject"] || ""), N_60),
+		formattedInput: formatFieldParts(i, [["subject", "Subject"], ["description", "Description"]]),
+	}),
+	["TaskUpdate"]: (i) => ({
+		kind: "generic",
+		title: "TaskUpdate",
+		summary: `#${i["taskId"] || "?"}${i["status"] ? ` → ${i["status"]}` : ""}`,
+		formattedInput: formatTaskUpdateInput(i),
+	}),
+	["TaskList"]: (i) => ({ kind: "generic", title: "TaskList", summary: "List all tasks", formattedInput: formatEmptyInput(i) }),
+	["TaskGet"]: (i) => ({ kind: "generic", title: "TaskGet", summary: `#${i["taskId"] || "?"}` }),
+	["TaskOutput"]: (i) => ({ kind: "generic", title: "TaskOutput", summary: String(i["task_id"] || "") }),
+	["TaskStop"]: (i) => ({ kind: "generic", title: "TaskStop", summary: String(i["task_id"] || i["shell_id"] || "") }),
+	["KillShell"]: (i) => ({ kind: "generic", title: "KillShell", summary: String(i["task_id"] || i["shell_id"] || "") }),
+	["EnterPlanMode"]: (i) => ({ kind: "generic", title: "EnterPlanMode", summary: "Enter plan mode", formattedInput: formatEmptyInput(i) }),
+	["ExitPlanMode"]: (i) => ({ kind: "generic", title: "ExitPlanMode", summary: "Exit plan mode", formattedInput: formatEmptyInput(i) }),
+};
+
+function normalizeToolCall(rawName: string, input: Record<string, unknown>): NormalizedToolCall {
 	if (rawName === "Bash") {
-		return { kind: "shell", title: "Bash" };
-	}
-	if (rawName === "Read") {
-		return { kind: "file_read", title: "Read" };
-	}
-	if (rawName === "Write") {
-		return { kind: "file_write", title: "Write" };
-	}
-	if (rawName === "Edit") {
-		return { kind: "file_edit", title: "Edit" };
-	}
-	if (rawName === "NotebookRead") {
-		return { kind: "file_read", title: "Notebook Read" };
-	}
-	if (rawName === "NotebookEdit") {
-		return { kind: "file_edit", title: "Notebook Edit" };
-	}
-	if (rawName === "Glob" || rawName === "Grep") {
-		return { kind: "search", title: rawName };
-	}
-	if (rawName === "WebFetch" || rawName === "WebSearch") {
-		return { kind: "web", title: rawName };
+		return { kind: "shell", title: "Bash", summary: truncate(String(input["command"] || ""), N_80), formattedInput: String(input["command"] || "") };
 	}
 	if (rawName === "Skill") {
 		const skillName = typeof input["skill"] === "string" ? input["skill"] : undefined;
-		return { kind: "skill", title: skillName ?? "Skill" };
+		return {
+			kind: "skill",
+			title: skillName ?? "Skill",
+			summary: String(input["skill"] || ""),
+			formattedInput: formatFieldParts(input, [["skill", "Skill"], ["args", "Args"]]),
+		};
 	}
 	if (rawName.startsWith("mcp__")) {
-		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+		const displayName = parseMcpDisplayName(rawName);
+		const parts = rawName.split("__");
+		const mcpSummary = parts.slice(1, -1).join(" > ") || displayName;
+		return { kind: "mcp", title: displayName, summary: mcpSummary };
 	}
-	return { kind: "generic", title: rawName };
+	const factory = TOOL_NORMALIZERS[rawName];
+	return factory ? factory(input) : { kind: "generic", title: rawName };
 }
 
 function buildToolCall(

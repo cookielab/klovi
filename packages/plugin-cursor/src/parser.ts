@@ -92,12 +92,89 @@ function synthesizedTimestamp(baseTimestampMs: number, index: number): string {
 	return new Date(baseTimestampMs + index).toISOString();
 }
 
-function normalizeToolCall(rawName: string): {
+const N_80 = 80;
+const N_60 = 60;
+
+function truncateCursor(s: string, max: number): string {
+	return s.length <= max ? s : `${s.slice(0, max)}...`;
+}
+
+const FILE_READ_TOOLS = new Set(["read_file", "ReadFile"]);
+const FILE_WRITE_TOOLS = new Set(["write_file", "WriteFile"]);
+const FILE_EDIT_TOOLS = new Set(["edit_file", "EditFile"]);
+const FILE_DIFF_TOOLS = new Set(["apply_diff", "ApplyDiff"]);
+const SHELL_TOOLS = new Set(["run_terminal_cmd", "RunTerminalCmd", "bash", "Bash"]);
+const WEB_SEARCH_TOOLS = new Set(["web_search", "WebSearch"]);
+const WEB_FETCH_TOOLS = new Set(["web_fetch", "fetch_url", "WebFetch"]);
+
+function buildWriteFormattedInput(filePath: string, input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (filePath) {
+		parts.push(`File: ${filePath}`);
+	}
+	const contentVal = input["content"] || input["new_content"];
+	if (contentVal) {
+		parts.push(`Content:\n${String(contentVal)}`);
+	}
+	return parts.join("\n\n") || JSON.stringify(input, null, 2);
+}
+
+function buildEditFormattedInput(filePath: string, input: Record<string, unknown>): string {
+	const parts: string[] = [];
+	if (filePath) {
+		parts.push(`File: ${filePath}`);
+	}
+	if (input["old_string"]) {
+		parts.push(`Replace:\n${input["old_string"]}`);
+	}
+	if (input["new_string"]) {
+		parts.push(`With:\n${input["new_string"]}`);
+	}
+	return parts.join("\n\n") || JSON.stringify(input, null, 2);
+}
+
+type CursorNormalized = {
 	kind: ToolCallKind;
 	title: string;
-} {
+	summary?: string | undefined;
+	formattedInput?: string | undefined;
+};
+
+function normalizeFileToolCall(rawName: string, input: Record<string, unknown>): CursorNormalized | null {
+	const filePath = String(input["path"] || input["file_path"] || "");
+	const filePathFormatted = filePath ? `File: ${filePath}` : JSON.stringify(input, null, 2);
+	if (FILE_READ_TOOLS.has(rawName)) {
+		return { kind: "file_read", title: rawName, summary: filePath, formattedInput: filePathFormatted };
+	}
+	if (FILE_WRITE_TOOLS.has(rawName)) {
+		return { kind: "file_write", title: rawName, summary: filePath, formattedInput: buildWriteFormattedInput(filePath, input) };
+	}
+	if (FILE_EDIT_TOOLS.has(rawName)) {
+		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: buildEditFormattedInput(filePath, input) };
+	}
+	if (FILE_DIFF_TOOLS.has(rawName)) {
+		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: filePathFormatted };
+	}
+	return null;
+}
+
+function normalizeToolCall(rawName: string, input: Record<string, unknown>): CursorNormalized {
 	if (rawName.startsWith("mcp__")) {
 		return { kind: "mcp", title: parseMcpDisplayName(rawName) };
+	}
+	const fileResult = normalizeFileToolCall(rawName, input);
+	if (fileResult) {
+		return fileResult;
+	}
+	const command = String(input["command"] || input["cmd"] || "");
+	if (SHELL_TOOLS.has(rawName)) {
+		return { kind: "shell", title: rawName, summary: truncateCursor(command, N_80), formattedInput: command || JSON.stringify(input, null, 2) };
+	}
+	if (WEB_SEARCH_TOOLS.has(rawName)) {
+		return { kind: "web", title: rawName, summary: truncateCursor(String(input["query"] || ""), N_60) };
+	}
+	if (WEB_FETCH_TOOLS.has(rawName)) {
+		return { kind: "web", title: rawName, summary: truncateCursor(String(input["url"] || ""), N_60) };
 	}
 	return { kind: "generic", title: rawName };
 }
@@ -146,17 +223,24 @@ function bubbleToContentBlock(bubble: CursorBubblePayload): ContentBlock | null 
 	const tool = bubble.toolFormerData;
 	if (tool?.name) {
 		const rawName = tool.name;
-		const normalized = normalizeToolCall(rawName);
+		const input = normalizeToolInput(tool.params);
+		const normalized = normalizeToolCall(rawName, input);
 		const call: ToolCallWithResult = {
 			toolUseId: tool.toolCallId ?? bubble.bubbleId ?? tool.name,
 			kind: normalized.kind,
 			title: normalized.title,
 			name: rawName,
 			rawName: rawName,
-			input: normalizeToolInput(tool.params),
+			input: input,
 			result: normalizeToolResult(tool.result),
 			isError: tool.status !== "completed" && tool.status !== "success",
 		};
+		if (normalized.summary !== undefined) {
+			call.summary = normalized.summary;
+		}
+		if (normalized.formattedInput !== undefined) {
+			call.formattedInput = normalized.formattedInput;
+		}
 		return { type: "tool_call", call: call };
 	}
 

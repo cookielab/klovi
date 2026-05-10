@@ -41,8 +41,27 @@ type ToolCallProps = {
 
 function isEditWithDiff(call: ToolCallWithResult): boolean {
 	return (
-		call.name === "Edit" && typeof call.input["old_string"] === "string" && typeof call.input["new_string"] === "string"
+		call.kind === "file_edit" &&
+		typeof call.input["old_string"] === "string" &&
+		typeof call.input["new_string"] === "string"
 	);
+}
+
+function getMcpServer(call: ToolCallWithResult): string | null {
+	if (call.kind !== "mcp") {
+		return null;
+	}
+	// Derive from rawName if it has the mcp__ prefix convention
+	const rawName = call.rawName ?? call.name;
+	if (rawName.startsWith("mcp__")) {
+		const parts = rawName.split("__");
+		return parts[1] || null;
+	}
+	// Non-standard mcp rawName (e.g. Codex mcp_tool_call)
+	if (rawName.includes("__")) {
+		return rawName.split("__")[0] || null;
+	}
+	return null;
 }
 
 function DefaultToolContent({
@@ -81,25 +100,10 @@ function ToolContentBody({
 	pluginId?: string | undefined;
 	getFrontendPlugin?: ((id: string) => FrontendPlugin | undefined) | undefined;
 }): React.ReactNode {
-	if (call.name === "Bash") {
+	if (call.kind === "shell") {
 		return <BashToolContent call={call} />;
 	}
 	return <DefaultToolContent call={call} pluginId={pluginId} getFrontendPlugin={getFrontendPluginFn} />;
-}
-
-function getMcpServer(name: string): string | null {
-	if (!name.startsWith("mcp__")) {
-		return null;
-	}
-	const parts = name.split("__");
-	return parts[1] || null;
-}
-
-function getSkillName(call: ToolCallWithResult): string | null {
-	if (call.name !== "Skill") {
-		return null;
-	}
-	return String(call.input["skill"] || "") || null;
 }
 
 export function ToolCall({
@@ -111,18 +115,23 @@ export function ToolCall({
 	getFrontendPlugin: getFrontendPluginFn,
 }: ToolCallProps): React.ReactNode {
 	const summary = getToolSummary(call, getFrontendPluginFn, pluginId);
-	const mcpServer = getMcpServer(call.name);
-	const skillName = getSkillName(call);
-	const hasSubAgent = call.name === "Task" && call.subAgentId && sessionId && project;
+	const mcpServer = getMcpServer(call);
+	const isSkill = call.kind === "skill";
+	const hasSubAgent = call.kind === "subagent" && call.subAgentId && sessionId && project;
 
 	const displayName = (() => {
 		if (hasSubAgent) {
 			return "Sub-Agent";
 		}
 		if (mcpServer) {
-			return call.name.split("__").slice(1).join("__").replace(/__/gu, " > ");
+			// Show the parts after the server prefix
+			const rawName = call.rawName ?? call.name;
+			if (rawName.startsWith("mcp__")) {
+				return rawName.split("__").slice(1).join("__").replace(/__/gu, " > ");
+			}
+			return call.title;
 		}
-		return skillName ?? call.name;
+		return call.title;
 	})();
 
 	return (
@@ -131,9 +140,9 @@ export function ToolCall({
 				title={
 					<span>
 						{mcpServer ? <span className={MCP_BADGE_CLASSES}>{mcpServer}</span> : null}
-						{skillName ? <span className={SKILL_BADGE_CLASSES}><Text>{T_SKILL}</Text></span> : null}
+						{isSkill ? <span className={SKILL_BADGE_CLASSES}><Text>{T_SKILL}</Text></span> : null}
 						<span className={TOOL_NAME_CLASSES}>{displayName}</span>
-						{summary && !skillName ? <span className={TOOL_SUMMARY_CLASSES}><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{summary}</span> : null}
+						{summary && !isSkill ? <span className={TOOL_SUMMARY_CLASSES}><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{summary}</span> : null}
 						{call.isError ? <span className="text-error"><Text>{T_SP_1}</Text><Text>{T_ERROR}</Text></span> : null}
 						{hasSubAgent ? (
 							<a
