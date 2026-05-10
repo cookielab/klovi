@@ -28,10 +28,10 @@ function createFrontendPlugin(): FrontendPlugin {
 		id: "test-plugin",
 		displayName: "Test Plugin",
 		summaryExtractors: {
-			CustomTool: (input) => `summary:${String(input["k"] ?? "")}`,
+			["CustomTool"]: (input) => `summary:${String(input["k"] ?? "")}`,
 		},
 		inputFormatters: {
-			CustomTool: (input) => `input:${String(input["k"] ?? "")}`,
+			["CustomTool"]: (input) => `input:${String(input["k"] ?? "")}`,
 		},
 	};
 }

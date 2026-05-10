@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 const T_TEXT = "--";
 
 const TOKEN_GROUPS = {
-	Surfaces: [
+	["Surfaces"]: [
 		"color-surface",
 		"color-surface-muted",
 		"color-surface-sunken",
@@ -13,11 +13,11 @@ const TOKEN_GROUPS = {
 		"color-surface-card",
 		"color-surface-code",
 	],
-	Foreground: ["color-foreground", "color-foreground-muted", "color-foreground-subtle", "color-foreground-inverse"],
-	Roles: ["color-role-user", "color-role-assistant", "color-role-tool", "color-role-subagent", "color-role-agent"],
-	Accent: ["color-accent", "color-accent-hover", "color-accent-subtle"],
-	Borders: ["color-border", "color-border-muted"],
-	Status: ["color-error", "color-success"],
+	["Foreground"]: ["color-foreground", "color-foreground-muted", "color-foreground-subtle", "color-foreground-inverse"],
+	["Roles"]: ["color-role-user", "color-role-assistant", "color-role-tool", "color-role-subagent", "color-role-agent"],
+	["Accent"]: ["color-accent", "color-accent-hover", "color-accent-subtle"],
+	["Borders"]: ["color-border", "color-border-muted"],
+	["Status"]: ["color-error", "color-success"],
 };
 
 function Swatch({ name }: { name: string }): React.ReactNode {

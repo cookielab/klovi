@@ -50,7 +50,7 @@ const getCurrentStatus = Effect.gen(function* () {
 const fetchReleasesEffect = Effect.tryPromise({
 	try: async () => {
 		const response = await fetch(GITHUB_API_URL, {
-			headers: { Accept: "application/vnd.github.v3+json" },
+			headers: { ["Accept"]: "application/vnd.github.v3+json" },
 		});
 		if (!response.ok) {
 			throw new Error(`GitHub API error: HTTP ${response.status}`);

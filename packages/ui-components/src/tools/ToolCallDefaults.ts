@@ -37,43 +37,43 @@ function getAskUserQuestionSummary(input: Input): string {
 }
 
 const fileSummaryExtractors: Record<string, SummaryExtractor> = {
-	Read: (i) => String(i["file_path"] || ""),
-	Write: (i) => String(i["file_path"] || ""),
-	Edit: (i) => String(i["file_path"] || ""),
-	Glob: (i) => String(i["pattern"] || ""),
-	Grep: (i) => truncate(String(i["pattern"] || ""), N_60),
-	NotebookEdit: (i) => String(i["notebook_path"] || ""),
-	NotebookRead: (i) => String(i["notebook_path"] || ""),
+	["Read"]: (i) => String(i["file_path"] || ""),
+	["Write"]: (i) => String(i["file_path"] || ""),
+	["Edit"]: (i) => String(i["file_path"] || ""),
+	["Glob"]: (i) => String(i["pattern"] || ""),
+	["Grep"]: (i) => truncate(String(i["pattern"] || ""), N_60),
+	["NotebookEdit"]: (i) => String(i["notebook_path"] || ""),
+	["NotebookRead"]: (i) => String(i["notebook_path"] || ""),
 };
 
 const COMMAND_SUMMARY_MAX = 80;
 
 const shellSummaryExtractors: Record<string, SummaryExtractor> = {
-	Bash: (i) => truncate(String(i["command"] || ""), COMMAND_SUMMARY_MAX),
+	["Bash"]: (i) => truncate(String(i["command"] || ""), COMMAND_SUMMARY_MAX),
 };
 
 const agentSummaryExtractors: Record<string, SummaryExtractor> = {
-	Task: (i) => truncate(String(i["description"] || ""), N_60),
-	TaskCreate: (i) => truncate(String(i["subject"] || ""), N_60),
-	TaskUpdate: (i) => `#${i["taskId"] || "?"}${i["status"] ? ` → ${i["status"]}` : ""}`,
-	TaskList: () => "List all tasks",
-	TaskGet: (i) => `#${i["taskId"] || "?"}`,
-	TaskOutput: (i) => String(i["task_id"] || ""),
-	TaskStop: (i) => String(i["task_id"] || i["shell_id"] || ""),
-	KillShell: (i) => String(i["task_id"] || i["shell_id"] || ""),
-	EnterPlanMode: () => "Enter plan mode",
-	ExitPlanMode: () => "Exit plan mode",
-	TodoWrite: (i) => truncate(String(i["subject"] || ""), N_60),
+	["Task"]: (i) => truncate(String(i["description"] || ""), N_60),
+	["TaskCreate"]: (i) => truncate(String(i["subject"] || ""), N_60),
+	["TaskUpdate"]: (i) => `#${i["taskId"] || "?"}${i["status"] ? ` → ${i["status"]}` : ""}`,
+	["TaskList"]: () => "List all tasks",
+	["TaskGet"]: (i) => `#${i["taskId"] || "?"}`,
+	["TaskOutput"]: (i) => String(i["task_id"] || ""),
+	["TaskStop"]: (i) => String(i["task_id"] || i["shell_id"] || ""),
+	["KillShell"]: (i) => String(i["task_id"] || i["shell_id"] || ""),
+	["EnterPlanMode"]: () => "Enter plan mode",
+	["ExitPlanMode"]: () => "Exit plan mode",
+	["TodoWrite"]: (i) => truncate(String(i["subject"] || ""), N_60),
 };
 
 const webSummaryExtractors: Record<string, SummaryExtractor> = {
-	WebFetch: (i) => truncate(String(i["url"] || ""), N_60),
-	WebSearch: (i) => truncate(String(i["query"] || ""), N_60),
+	["WebFetch"]: (i) => truncate(String(i["url"] || ""), N_60),
+	["WebSearch"]: (i) => truncate(String(i["query"] || ""), N_60),
 };
 
 const interactionSummaryExtractors: Record<string, SummaryExtractor> = {
-	AskUserQuestion: (i) => getAskUserQuestionSummary(i),
-	Skill: (i) => String(i["skill"] || ""),
+	["AskUserQuestion"]: (i) => getAskUserQuestionSummary(i),
+	["Skill"]: (i) => String(i["skill"] || ""),
 };
 
 const SUMMARY_EXTRACTORS: Record<string, SummaryExtractor> = {
@@ -191,34 +191,34 @@ function formatEmptyInput(input: Input): string {
 }
 
 const fileInputFormatters: Record<string, InputFormatter> = {
-	Edit: formatEditInput,
-	Read: (i) => String(i["file_path"] || JSON.stringify(i, null, 2)),
-	Write: formatWriteInput,
-	Glob: (i) =>
+	["Edit"]: formatEditInput,
+	["Read"]: (i) => String(i["file_path"] || JSON.stringify(i, null, 2)),
+	["Write"]: formatWriteInput,
+	["Glob"]: (i) =>
 		formatFieldParts(i, [
 			["pattern", "Pattern"],
 			["path", "Path"],
 		]),
-	Grep: (i) =>
+	["Grep"]: (i) =>
 		formatFieldParts(i, [
 			["pattern", "Pattern"],
 			["path", "Path"],
 			["output_mode", "Mode"],
 		]),
-	NotebookEdit: formatNotebookEditInput,
+	["NotebookEdit"]: formatNotebookEditInput,
 };
 
 const shellInputFormatters: Record<string, InputFormatter> = {
-	Bash: (i) => String(i["command"] || JSON.stringify(i, null, 2)),
+	["Bash"]: (i) => String(i["command"] || JSON.stringify(i, null, 2)),
 };
 
 const agentInputFormatters: Record<string, InputFormatter> = {
-	TaskCreate: (i) =>
+	["TaskCreate"]: (i) =>
 		formatFieldParts(i, [
 			["subject", "Subject"],
 			["description", "Description"],
 		]),
-	TaskUpdate: (i) => {
+	["TaskUpdate"]: (i) => {
 		const parts: string[] = [];
 		if (i["taskId"]) {
 			parts.push(`Task: #${i["taskId"]}`);
@@ -234,15 +234,15 @@ const agentInputFormatters: Record<string, InputFormatter> = {
 		}
 		return parts.join("\n") || JSON.stringify(i, null, 2);
 	},
-	TaskList: formatEmptyInput,
-	EnterPlanMode: formatEmptyInput,
-	ExitPlanMode: formatEmptyInput,
-	TodoWrite: formatTodoWriteInput,
+	["TaskList"]: formatEmptyInput,
+	["EnterPlanMode"]: formatEmptyInput,
+	["ExitPlanMode"]: formatEmptyInput,
+	["TodoWrite"]: formatTodoWriteInput,
 };
 
 const interactionInputFormatters: Record<string, InputFormatter> = {
-	AskUserQuestion: formatAskUserInput,
-	Skill: (i) =>
+	["AskUserQuestion"]: formatAskUserInput,
+	["Skill"]: (i) =>
 		formatFieldParts(i, [
 			["skill", "Skill"],
 			["args", "Args"],
