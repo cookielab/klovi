@@ -15,12 +15,11 @@ import type { DesktopMenuAction, DesktopRequestMethod } from "@cookielab.io/klov
 import { Electroview } from "electrobun/view";
 import type { KloviRPC, UpdateStatus } from "../../shared/rpc-types";
 
+// Import design system globals (tokens, reset, fonts) via klovi-ui
+import "@cookielab.io/klovi-ui/styles";
 
 const N_120000 = 120_000;
 const N_60000 = 60_000;
-
-// Import design system globals (tokens, reset, fonts) via klovi-ui
-import "@cookielab.io/klovi-ui/styles";
 
 const menuActionListeners = new Set<(action: DesktopMenuAction) => void>();
 const updateStatusListeners = new Set<(status: UpdateStatus) => void>();

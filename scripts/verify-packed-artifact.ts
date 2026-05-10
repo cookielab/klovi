@@ -1,13 +1,3 @@
-const N_30000 = 30_000;
-const N_500 = 500;
-const N_200 = 200;
-const N_5000 = 5000;
-const N_404 = 404;
-const N_400 = 400;
-const N_15000 = 15_000;
-const N_10000 = 10_000;
-const N_60000 = 60_000;
-
 /**
  * Verify the packed npm artifact for @cookielab.io/klovi under both Node and Bun.
  *
@@ -28,6 +18,16 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import process from "node:process";
 import { getDefaultSettings } from "../packages/server/src/services/settings";
+
+const N_30000 = 30_000;
+const N_500 = 500;
+const N_200 = 200;
+const N_5000 = 5000;
+const N_404 = 404;
+const N_400 = 400;
+const N_15000 = 15_000;
+const N_10000 = 10_000;
+const N_60000 = 60_000;
 
 const repoRoot = resolve(import.meta.dirname, "..");
 const stageDir = resolve(repoRoot, "apps/package/.stage/npm");
