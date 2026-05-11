@@ -1,7 +1,9 @@
 import type {
 	AssistantTurn,
 	ContentBlock,
+	PluginConfig,
 	Session,
+	SqliteClientTag,
 	SqliteDb,
 	TokenUsage,
 	ToolCallKind,
@@ -10,6 +12,7 @@ import type {
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso, parseMcpDisplayName } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem, Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 import { openOpenCodeDb } from "./db";
 import { tryParseJson } from "./shared/json-utils";
@@ -201,10 +204,20 @@ function normalizeFileOcToolCall(rawName: string, input: Record<string, unknown>
 		return { kind: "file_read", title: rawName, summary: filePath, formattedInput: filePathFormatted };
 	}
 	if (OC_FILE_WRITE_TOOLS.has(rawName)) {
-		return { kind: "file_write", title: rawName, summary: filePath, formattedInput: buildOcWriteFormattedInput(filePath, input) };
+		return {
+			kind: "file_write",
+			title: rawName,
+			summary: filePath,
+			formattedInput: buildOcWriteFormattedInput(filePath, input),
+		};
 	}
 	if (OC_FILE_EDIT_TOOLS.has(rawName)) {
-		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: buildOcEditFormattedInput(filePath, input) };
+		return {
+			kind: "file_edit",
+			title: rawName,
+			summary: filePath,
+			formattedInput: buildOcEditFormattedInput(filePath, input),
+		};
 	}
 	if (OC_FILE_DIFF_TOOLS.has(rawName)) {
 		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: filePathFormatted };
@@ -222,7 +235,12 @@ function normalizeToolCall(rawName: string, input: Record<string, unknown>): Ope
 	}
 	const command = String(input["command"] || input["cmd"] || "");
 	if (OC_SHELL_TOOLS.has(rawName)) {
-		return { kind: "shell", title: rawName, summary: truncateOpenCode(command, N_80), formattedInput: command || JSON.stringify(input, null, 2) };
+		return {
+			kind: "shell",
+			title: rawName,
+			summary: truncateOpenCode(command, N_80),
+			formattedInput: command || JSON.stringify(input, null, 2),
+		};
 	}
 	if (OC_WEB_SEARCH_TOOLS.has(rawName)) {
 		return { kind: "web", title: rawName, summary: truncateOpenCode(String(input["query"] || ""), N_60) };
@@ -259,9 +277,9 @@ function partToContentBlock(partData: PartData, nextToolUseId: () => string): Co
 
 function buildToolCall(toolPart: PartDataTool, nextToolUseId: () => string): ToolCallWithResult {
 	const { state } = toolPart;
+	const { input } = state;
 	const toolId = toolPart.callID || nextToolUseId();
 	const rawName = toolPart.tool;
-	const input = state.input;
 	const normalized = normalizeToolCall(rawName, input);
 
 	function applyNormalized(base: ToolCallWithResult): ToolCallWithResult {
@@ -423,7 +441,7 @@ function buildAssistantTurnFromMsg(
 
 function buildOpenCodeTurns(messages: OpenCodeMessage[]): Turn[] {
 	let toolUseCounter = 0;
-	const nextToolUseId = () => {
+	const nextToolUseId = (): string => {
 		toolUseCounter += 1;
 		return `opencode-tool-${toolUseCounter}`;
 	};
@@ -515,7 +533,10 @@ function loadSessionFromDb(db: SqliteDb, nativeId: string, sessionId: string): S
 	return { sessionId: sessionId, project: project, turns: turns, pluginId: "opencode" };
 }
 
-function loadOpenCodeSession(nativeId: string, sessionId: string) {
+function loadOpenCodeSession(
+	nativeId: string,
+	sessionId: string,
+): Effect.Effect<Session, PlatformError.PlatformError, PluginConfig | FileSystem.FileSystem | SqliteClientTag> {
 	return Effect.gen(function* () {
 		const db = yield* openOpenCodeDb();
 		if (!db) {

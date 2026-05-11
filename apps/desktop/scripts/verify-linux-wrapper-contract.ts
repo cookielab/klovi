@@ -38,12 +38,10 @@ function parseArgs(argv: string[]): VerifyArgs {
 }
 
 async function hasMetadataFile(dir: string): Promise<boolean> {
-	for (const filename of METADATA_FILENAMES) {
-		if (await Bun.file(join(dir, "Resources", filename)).exists()) {
-			return true;
-		}
-	}
-	return false;
+	const checks = await Promise.all(
+		METADATA_FILENAMES.map((filename) => Bun.file(join(dir, "Resources", filename)).exists()),
+	);
+	return checks.some((exists) => exists);
 }
 
 async function detectLayout(bundlePath: string): Promise<Layout> {
@@ -105,13 +103,14 @@ function parseDesktopEntry(raw: string): Map<string, string> {
 }
 
 async function readWrapperMetadata(bundleRoot: string): Promise<WrapperMetadata> {
-	for (const filename of METADATA_FILENAMES) {
-		const filePath = join(bundleRoot, "Resources", filename);
-		if (await Bun.file(filePath).exists()) {
-			const parsed: unknown = await Bun.file(filePath).json();
-			assertMetadata(parsed);
-			return parsed;
-		}
+	const candidates = METADATA_FILENAMES.map((filename) => join(bundleRoot, "Resources", filename));
+	const existsResults = await Promise.all(candidates.map((filePath) => Bun.file(filePath).exists()));
+	const foundIndex = existsResults.findIndex((exists) => exists);
+	if (foundIndex >= 0 && candidates[foundIndex] !== undefined) {
+		const filePath = candidates[foundIndex];
+		const parsed: unknown = await Bun.file(filePath).json();
+		assertMetadata(parsed);
+		return parsed;
 	}
 	throw new Error(`No metadata file found under ${join(bundleRoot, "Resources")}`);
 }
@@ -131,21 +130,19 @@ async function findDesktopEntryPath(desktopRoot: string): Promise<string> {
 
 async function assertBundleIcons(bundleRoot: string): Promise<void> {
 	const iconPaths = [join(bundleRoot, "Resources", "appIcon.png"), join(bundleRoot, "Resources", "app", "icon.png")];
-
-	for (const iconPath of iconPaths) {
-		if (!(await Bun.file(iconPath).exists())) {
-			throw new Error(`Missing required icon asset: ${iconPath}`);
-		}
+	const checks = await Promise.all(iconPaths.map((path) => Bun.file(path).exists()));
+	const missingIndex = checks.findIndex((exists) => !exists);
+	if (missingIndex >= 0) {
+		throw new Error(`Missing required icon asset: ${iconPaths[missingIndex]}`);
 	}
 }
 
 async function assertAppDirIcons(inputRoot: string): Promise<void> {
 	const iconPaths = [join(inputRoot, `${EXPECTED_LINUX_ICON_BASENAME}.png`), join(inputRoot, ".DirIcon")];
-
-	for (const iconPath of iconPaths) {
-		if (!(await Bun.file(iconPath).exists())) {
-			throw new Error(`Missing required AppDir icon asset: ${iconPath}`);
-		}
+	const checks = await Promise.all(iconPaths.map((path) => Bun.file(path).exists()));
+	const missingIndex = checks.findIndex((exists) => !exists);
+	if (missingIndex >= 0) {
+		throw new Error(`Missing required AppDir icon asset: ${iconPaths[missingIndex]}`);
 	}
 }
 

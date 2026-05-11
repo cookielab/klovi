@@ -3,7 +3,7 @@ import { BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES } from "@cookielab.io/klovi-plugin-c
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GlobalSessionResult } from "../types/index";
 import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
-
+import type { SearchModalProps } from "./SearchModal.types";
 
 const T_SP_1 = " ";
 const T_MIDDOT = "&middot;";
@@ -19,18 +19,12 @@ function defaultPluginDisplayName(pluginId: string): string {
 	return BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES[pluginId as keyof typeof BUILTIN_KLOVI_PLUGIN_DISPLAY_NAMES] ?? pluginId;
 }
 
-type SearchModalProps = {
-	open: boolean;
-	onClose: () => void;
-	sessions: GlobalSessionResult[];
-	onSelect: (result: GlobalSessionResult) => void;
-	pluginDisplayName?: ((id: string) => string) | undefined;
-};
-
 const MAX_RESULTS = 20;
 
-const OVERLAY_CLASSES = "fixed inset-0 z-[200] flex justify-center bg-black/40 pt-[15vh]";
-const MODAL_CLASSES = "flex max-h-[480px] w-[560px] flex-col overflow-hidden border border-border bg-surface shadow-lg";
+const OVERLAY_CLASSES = "fixed inset-0 z-[200] flex justify-center pt-[15vh]";
+const OVERLAY_BACKDROP_CLASSES = "absolute inset-0 cursor-default appearance-none border-0 bg-black/40 p-0";
+const MODAL_CLASSES =
+	"relative flex max-h-[480px] w-[560px] flex-col overflow-hidden border border-border bg-surface shadow-lg";
 const INPUT_WRAPPER_CLASSES = "border-border-muted border-b px-4 py-3";
 const INPUT_CLASSES =
 	"w-full border-none bg-transparent py-2 font-inherit text-[1rem] text-foreground outline-none placeholder:text-foreground-subtle";
@@ -77,6 +71,15 @@ function SearchResultItem({
 }): React.ReactNode {
 	const handleClick = useCallback(() => onSelect(result), [onSelect, result]);
 	const handleMouseEnter = useCallback(() => onHighlight(index), [onHighlight, index]);
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLDivElement>) => {
+			if (e.key === "Enter" || e.key === " ") {
+				e.preventDefault();
+				onSelect(result);
+			}
+		},
+		[onSelect, result],
+	);
 	const isHighlighted = index === highlightedIndex;
 
 	return (
@@ -88,6 +91,7 @@ function SearchResultItem({
 			tabIndex={-1}
 			aria-selected={isHighlighted}
 			onClick={handleClick}
+			onKeyDown={handleKeyDown}
 			onMouseEnter={handleMouseEnter}
 		>
 			<div className={RESULT_TITLE_CLASSES}>
@@ -109,8 +113,10 @@ function SearchResultItem({
 						<Text>{T_SP_1}</Text>
 						<span className={PLUGIN_BADGE_CLASSES}>{pluginDisplayName(result.pluginId)}</span>
 					</>
-				) : null}<Text>{T_SP_1}</Text>
-				<Text>{T_MIDDOT}</Text><Text>{T_SP_1}</Text>
+				) : null}
+				<Text>{T_SP_1}</Text>
+				<Text>{T_MIDDOT}</Text>
+				<Text>{T_SP_1}</Text>
 				<time dateTime={result.timestamp} title={formatFullDateTime(result.timestamp)}>
 					{formatRelativeTime(result.timestamp)}
 				</time>
@@ -198,10 +204,6 @@ function SearchModal({
 		[filtered, highlightedIndex, handleSelect, onClose],
 	);
 
-	const handleModalMouseDown = useCallback((e: React.MouseEvent) => {
-		e.stopPropagation();
-	}, []);
-
 	const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		setQuery(e.target.value);
 		setHighlightedIndex(0);
@@ -212,8 +214,9 @@ function SearchModal({
 	}
 
 	return (
-		<div className={OVERLAY_CLASSES} role="presentation" onMouseDown={onClose}>
-			<div className={MODAL_CLASSES} role="presentation" onMouseDown={handleModalMouseDown}>
+		<div className={OVERLAY_CLASSES}>
+			<button type="button" className={OVERLAY_BACKDROP_CLASSES} aria-label="Close search" onClick={onClose} />
+			<div className={MODAL_CLASSES} role="dialog" aria-modal="true">
 				<div className={INPUT_WRAPPER_CLASSES}>
 					<input
 						ref={inputRef}
@@ -227,7 +230,9 @@ function SearchModal({
 				</div>
 				<div className={RESULTS_CLASSES} role="listbox" ref={resultsRef}>
 					{filtered.length === 0 ? (
-						<div className={EMPTY_CLASSES}><Text>{T_NO_RESULTS_FOUND}</Text></div>
+						<div className={EMPTY_CLASSES}>
+							<Text>{T_NO_RESULTS_FOUND}</Text>
+						</div>
 					) : (
 						filtered.map((result, index) => (
 							<SearchResultItem
@@ -244,13 +249,25 @@ function SearchModal({
 				</div>
 				<div className={FOOTER_CLASSES}>
 					<span>
-						<kbd><Text>{T_8593_8595}</Text></kbd><Text>{T_SP_1}</Text><Text>{T_NAVIGATE}</Text>
+						<kbd>
+							<Text>{T_8593_8595}</Text>
+						</kbd>
+						<Text>{T_SP_1}</Text>
+						<Text>{T_NAVIGATE}</Text>
 					</span>
 					<span>
-						<kbd><Text>{T_8629}</Text></kbd><Text>{T_SP_1}</Text><Text>{T_OPEN}</Text>
+						<kbd>
+							<Text>{T_8629}</Text>
+						</kbd>
+						<Text>{T_SP_1}</Text>
+						<Text>{T_OPEN}</Text>
 					</span>
 					<span>
-						<kbd><Text>{T_ESC}</Text></kbd><Text>{T_SP_1}</Text><Text>{T_CLOSE}</Text>
+						<kbd>
+							<Text>{T_ESC}</Text>
+						</kbd>
+						<Text>{T_SP_1}</Text>
+						<Text>{T_CLOSE}</Text>
 					</span>
 				</div>
 			</div>
@@ -258,5 +275,5 @@ function SearchModal({
 	);
 }
 
-export type { SearchModalProps };
+export type { SearchModalProps } from "./SearchModal.types";
 export { SearchModal };

@@ -2,7 +2,6 @@ import { cleanup, render } from "@testing-library/react";
 import { RpcDisconnectedError, RpcHandlerError, RpcTimeoutError } from "../../../lib/rpc-errors-effect";
 import { TypedErrorDisplay } from "./TypedErrorDisplay";
 
-
 const N_30000 = 30_000;
 
 const RETRY_REGEX = /retry/iu;

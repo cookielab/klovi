@@ -13,7 +13,12 @@ type PackageSessionListProps = {
 	selectedId?: string;
 };
 
-export function PackageSessionList({ project, onSelect, onBack, selectedId }: PackageSessionListProps): React.ReactNode {
+export function PackageSessionList({
+	project,
+	onSelect,
+	onBack,
+	selectedId,
+}: PackageSessionListProps): React.ReactNode {
 	const client = useKloviClient();
 	const { data, loading, error, retry } = useEffectQuery<{ sessions: SessionSummary[] }>(
 		() => client.getSessions({ encodedPath: project.encodedPath }),

@@ -3,14 +3,21 @@ import type { UpdateStatus } from "../../shared/rpc-types";
 import { MockProviders, setupMockRpc } from "../test-helpers/mock-rpc";
 import { UpdateNotification } from "./UpdateNotification";
 
-
 const noop = (): undefined => undefined;
 const VERSION_READY_PATTERN = /v2\.0\.0 is ready/u;
 const EXTRACT_FAILED_PATTERN = /Extract failed/u;
 const UPDATE_FAILED_PATTERN = /Update failed/u;
 const NETWORK_TIMEOUT_PATTERN = /Network timeout/u;
 
-function defaultProps() {
+type DefaultProps = {
+	status: UpdateStatus;
+	dismissed: boolean;
+	onDismiss: ReturnType<typeof mock>;
+	manualCheckResult: UpdateStatus | null;
+	onDismissManualCheck: ReturnType<typeof mock>;
+};
+
+function defaultProps(): DefaultProps {
 	return {
 		status: { status: "up-to-date", currentVersion: "1.0.0" } as UpdateStatus,
 		dismissed: false,

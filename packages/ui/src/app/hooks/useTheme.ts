@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
 import { kloviHostBridge } from "../../lib/rpc-client";
 
-
 const N_10 = 10;
 
 const DEFAULT_PRESENTATION_FONT_SIZE = 15;
@@ -11,11 +10,24 @@ const PRESENTATION_FONT_SIZE_STEP = 2;
 const MAX_PRESENTATION_FONT_SIZE = 28;
 const MIN_PRESENTATION_FONT_SIZE = 10;
 
-export type { ThemeSetting, UseThemeOptions } from "@cookielab.io/klovi-design-system";
-// Re-export core theme hooks from DS
-export { resolveTheme, useFontSize, useTheme } from "@cookielab.io/klovi-design-system";
+type UsePresentationThemeReturn = {
+	setting: ThemeSetting;
+	sameAsGlobal: boolean;
+	setSameAsGlobal: (v: boolean) => void;
+	set: (theme: ThemeSetting) => void;
+	cycle: () => void;
+};
 
-export function useSystemThemeOverride(): "dark" | "light" | null {
+type UsePresentationFontSizeReturn = {
+	size: number;
+	sameAsGlobal: boolean;
+	setSameAsGlobal: (v: boolean) => void;
+	set: (s: number) => void;
+	increase: () => void;
+	decrease: () => void;
+};
+
+function useSystemThemeOverride(): "dark" | "light" | null {
 	const hostBridge = useKloviHostBridge();
 	const runKloviEffect = useRunKloviEffect();
 	const [theme, setTheme] = useState<"dark" | "light" | null>(null);
@@ -37,7 +49,7 @@ export function useSystemThemeOverride(): "dark" | "light" | null {
 	return theme;
 }
 
-export function usePresentationTheme() {
+function usePresentationTheme(): UsePresentationThemeReturn {
 	const [setting, setSetting] = useState<ThemeSetting>(() => {
 		const stored = localStorage.getItem("klovi-presentation-theme");
 		if (stored === "light" || stored === "dark") {
@@ -81,7 +93,7 @@ export function usePresentationTheme() {
 	return { setting: setting, sameAsGlobal: sameAsGlobal, setSameAsGlobal: setSameAsGlobal, set: set, cycle: cycle };
 }
 
-export function usePresentationFontSize() {
+function usePresentationFontSize(): UsePresentationFontSizeReturn {
 	const [size, setSize] = useState(() => {
 		const stored = localStorage.getItem("klovi-presentation-font-size");
 		return stored ? Number.parseInt(stored, N_10) : DEFAULT_PRESENTATION_FONT_SIZE;
@@ -125,3 +137,8 @@ export function usePresentationFontSize() {
 		decrease: decrease,
 	};
 }
+
+export type { ThemeSetting, UseThemeOptions } from "@cookielab.io/klovi-design-system";
+// Re-export core theme hooks from DS
+export { resolveTheme, useFontSize, useTheme } from "@cookielab.io/klovi-design-system";
+export { usePresentationFontSize, usePresentationTheme, useSystemThemeOverride };

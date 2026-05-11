@@ -6,7 +6,6 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { discoverCodexProjects, listCodexSessions } from "./discovery";
 
-
 const N_1706000000 = 1_706_000_000;
 const N_1706001000 = 1_706_001_000;
 const N_1706100000 = 1_706_100_000;
@@ -18,13 +17,16 @@ const testDir = join(tmpdir(), `klovi-codex-discovery-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
 
-async function writeSession(
-	provider: string,
-	date: string,
-	uuid: string,
-	meta: Record<string, unknown>,
-	events: Record<string, unknown>[] = [],
-): Promise<string> {
+type WriteSessionArgs = {
+	provider: string;
+	date: string;
+	uuid: string;
+	meta: Record<string, unknown>;
+	events?: Record<string, unknown>[];
+};
+
+async function writeSession(args: WriteSessionArgs): Promise<string> {
+	const { provider, date, uuid, meta, events = [] } = args;
 	const dir = join(testDir, "sessions", provider, date);
 	await mkdir(dir, { recursive: true });
 	const filePath = join(dir, `${uuid}.jsonl`);
@@ -57,22 +59,32 @@ afterEach(async () => {
 
 describe("discoverCodexProjects", () => {
 	it("discovers projects from session files", async () => {
-		await writeSession("openai", "2025-01-15", "uuid-1", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-1",
-			name: "Fix bug",
-			cwd: "/Users/dev/project-a",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-1",
+				name: "Fix bug",
+				cwd: "/Users/dev/project-a",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
-		await writeSession("openai", "2025-01-16", "uuid-2", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-16",
 			uuid: "uuid-2",
-			name: "Add feature",
-			cwd: "/Users/dev/project-a",
-			timestamps: { created: N_1706100000, updated: N_1706101000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-2",
+				name: "Add feature",
+				cwd: "/Users/dev/project-a",
+				timestamps: { created: N_1706100000, updated: N_1706101000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
@@ -85,20 +97,30 @@ describe("discoverCodexProjects", () => {
 	});
 
 	it("groups sessions by cwd into separate projects", async () => {
-		await writeSession("openai", "2025-01-15", "uuid-1", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-1",
-			cwd: "/Users/dev/project-a",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-1",
+				cwd: "/Users/dev/project-a",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
-		await writeSession("openai", "2025-01-15", "uuid-2", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-2",
-			cwd: "/Users/dev/project-b",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-2",
+				cwd: "/Users/dev/project-b",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
@@ -123,20 +145,30 @@ describe("discoverCodexProjects", () => {
 	});
 
 	it("handles multiple providers", async () => {
-		await writeSession("openai", "2025-01-15", "uuid-1", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-1",
-			cwd: "/Users/dev/project",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-1",
+				cwd: "/Users/dev/project",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
-		await writeSession("anthropic", "2025-01-15", "uuid-2", {
+		await writeSession({
+			provider: "anthropic",
+			date: "2025-01-15",
 			uuid: "uuid-2",
-			cwd: "/Users/dev/project",
-			timestamps: { created: N_1706100000, updated: N_1706101000 },
-			model: "claude-4",
-			["provider_id"]: "anthropic",
+			meta: {
+				uuid: "uuid-2",
+				cwd: "/Users/dev/project",
+				timestamps: { created: N_1706100000, updated: N_1706101000 },
+				model: "claude-4",
+				["provider_id"]: "anthropic",
+			},
 		});
 
 		const projects = await Effect.runPromise(discoverCodexProjects().pipe(Effect.provide(testLayer)));
@@ -149,32 +181,47 @@ describe("discoverCodexProjects", () => {
 
 describe("listCodexSessions", () => {
 	it("lists sessions matching a project cwd", async () => {
-		await writeSession("openai", "2025-01-15", "uuid-1", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-1",
-			name: "Fix the login bug",
-			cwd: "/Users/dev/project-a",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-1",
+				name: "Fix the login bug",
+				cwd: "/Users/dev/project-a",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
-		await writeSession("openai", "2025-01-16", "uuid-2", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-16",
 			uuid: "uuid-2",
-			name: "Add tests",
-			cwd: "/Users/dev/project-a",
-			timestamps: { created: N_1706100000, updated: N_1706101000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-2",
+				name: "Add tests",
+				cwd: "/Users/dev/project-a",
+				timestamps: { created: N_1706100000, updated: N_1706101000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
 		// Different project, should not be included
-		await writeSession("openai", "2025-01-15", "uuid-3", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-3",
-			name: "Other project",
-			cwd: "/Users/dev/project-b",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-3",
+				name: "Other project",
+				cwd: "/Users/dev/project-b",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
 		const sessions = await Effect.runPromise(listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)));
@@ -188,25 +235,25 @@ describe("listCodexSessions", () => {
 	});
 
 	it("uses first agent_message when name is empty", async () => {
-		await writeSession(
-			"openai",
-			"2025-01-15",
-			"uuid-1",
-			{
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
+			uuid: "uuid-1",
+			meta: {
 				uuid: "uuid-1",
 				cwd: "/Users/dev/project-a",
 				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
 				["provider_id"]: "openai",
 			},
-			[
+			events: [
 				{ type: "turn.started" },
 				{
 					type: "item.completed",
 					item: { type: "agent_message", text: "I'll help you fix the bug" },
 				},
 			],
-		);
+		});
 
 		const sessions = await Effect.runPromise(listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)));
 
@@ -215,19 +262,19 @@ describe("listCodexSessions", () => {
 	});
 
 	it("falls back to default message when no name or agent_message", async () => {
-		await writeSession(
-			"openai",
-			"2025-01-15",
-			"uuid-1",
-			{
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
+			uuid: "uuid-1",
+			meta: {
 				uuid: "uuid-1",
 				cwd: "/Users/dev/project-a",
 				timestamps: { created: N_1706000000, updated: N_1706001000 },
 				model: "o4-mini",
 				["provider_id"]: "openai",
 			},
-			[{ type: "turn.started" }, { type: "turn.completed" }],
-		);
+			events: [{ type: "turn.started" }, { type: "turn.completed" }],
+		});
 
 		const sessions = await Effect.runPromise(listCodexSessions("/Users/dev/project-a").pipe(Effect.provide(testLayer)));
 
@@ -236,12 +283,17 @@ describe("listCodexSessions", () => {
 	});
 
 	it("returns empty for non-matching cwd", async () => {
-		await writeSession("openai", "2025-01-15", "uuid-1", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-1",
-			cwd: "/Users/dev/project-a",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-1",
+				cwd: "/Users/dev/project-a",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
 		const sessions = await Effect.runPromise(
@@ -251,22 +303,32 @@ describe("listCodexSessions", () => {
 	});
 
 	it("sessions sorted by timestamp descending", async () => {
-		await writeSession("openai", "2025-01-15", "uuid-old", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-15",
 			uuid: "uuid-old",
-			name: "Old session",
-			cwd: "/Users/dev/project",
-			timestamps: { created: N_1700000000, updated: N_1700001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-old",
+				name: "Old session",
+				cwd: "/Users/dev/project",
+				timestamps: { created: N_1700000000, updated: N_1700001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
-		await writeSession("openai", "2025-01-16", "uuid-new", {
+		await writeSession({
+			provider: "openai",
+			date: "2025-01-16",
 			uuid: "uuid-new",
-			name: "New session",
-			cwd: "/Users/dev/project",
-			timestamps: { created: N_1706000000, updated: N_1706001000 },
-			model: "o4-mini",
-			["provider_id"]: "openai",
+			meta: {
+				uuid: "uuid-new",
+				name: "New session",
+				cwd: "/Users/dev/project",
+				timestamps: { created: N_1706000000, updated: N_1706001000 },
+				model: "o4-mini",
+				["provider_id"]: "openai",
+			},
 		});
 
 		const sessions = await Effect.runPromise(listCodexSessions("/Users/dev/project").pipe(Effect.provide(testLayer)));
@@ -300,12 +362,17 @@ describe("new envelope format", () => {
 		});
 
 		it("mixes old and new format sessions into same project", async () => {
-			await writeSession("openai", "2025-01-15", "old-uuid", {
+			await writeSession({
+				provider: "openai",
+				date: "2025-01-15",
 				uuid: "old-uuid",
-				cwd: "/Users/dev/project",
-				timestamps: { created: N_1706000000, updated: N_1706001000 },
-				model: "o4-mini",
-				["provider_id"]: "openai",
+				meta: {
+					uuid: "old-uuid",
+					cwd: "/Users/dev/project",
+					timestamps: { created: N_1706000000, updated: N_1706001000 },
+					model: "o4-mini",
+					["provider_id"]: "openai",
+				},
 			});
 
 			await writeNewFormatSession("2026/02/18", "new-uuid", {

@@ -21,7 +21,31 @@ function makePlugin(overrides: Partial<PluginSettingInfo> = {}): PluginSettingIn
 	};
 }
 
-function defaultProps() {
+function defaultProps(): {
+	activeTab: SettingsTab;
+	onNavigateHome: ReturnType<typeof mock>;
+	theme: { setting: "system"; set: ReturnType<typeof mock> };
+	fontSize: {
+		size: number;
+		set: ReturnType<typeof mock>;
+		increase: ReturnType<typeof mock>;
+		decrease: ReturnType<typeof mock>;
+	};
+	presentationTheme: {
+		setting: "system";
+		sameAsGlobal: boolean;
+		setSameAsGlobal: ReturnType<typeof mock>;
+		set: ReturnType<typeof mock>;
+	};
+	presentationFontSize: {
+		size: number;
+		sameAsGlobal: boolean;
+		setSameAsGlobal: ReturnType<typeof mock>;
+		set: ReturnType<typeof mock>;
+		increase: ReturnType<typeof mock>;
+		decrease: ReturnType<typeof mock>;
+	};
+} {
 	return {
 		activeTab: "general" as SettingsTab,
 		onNavigateHome: mock(),

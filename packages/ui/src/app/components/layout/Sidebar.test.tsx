@@ -3,8 +3,6 @@ import { cleanup, render } from "@testing-library/react";
 import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { Sidebar } from "./Sidebar";
 
-
-
 const noop = (): undefined => undefined;
 const T_CHILDREN = "Children";
 const T_MY_CHILD_CONTENT = "My Child Content";
@@ -16,7 +14,9 @@ describe("Sidebar", () => {
 	it("renders Klovi title", () => {
 		const { container } = render(
 			<Sidebar>
-				<div><Text>{T_CHILDREN}</Text></div>
+				<div>
+					<Text>{T_CHILDREN}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -26,7 +26,9 @@ describe("Sidebar", () => {
 	it("renders children in sidebar-content", () => {
 		const { getByText } = render(
 			<Sidebar>
-				<div><Text>{T_MY_CHILD_CONTENT}</Text></div>
+				<div>
+					<Text>{T_MY_CHILD_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -37,7 +39,9 @@ describe("Sidebar", () => {
 		const onSearchClick = mock(noop);
 		const { getByTitle } = render(
 			<Sidebar onSearchClick={onSearchClick}>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -47,7 +51,9 @@ describe("Sidebar", () => {
 	it("does not render search button when onSearchClick not provided", () => {
 		const { container } = render(
 			<Sidebar>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -61,7 +67,9 @@ describe("Sidebar", () => {
 
 		const { findByText } = render(
 			<Sidebar>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -77,7 +85,9 @@ describe("Sidebar", () => {
 
 		const { findByText } = render(
 			<Sidebar>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -88,7 +98,9 @@ describe("Sidebar", () => {
 		const onSettingsClick = mock(noop);
 		const { getByTitle } = render(
 			<Sidebar onSettingsClick={onSettingsClick}>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -98,7 +110,9 @@ describe("Sidebar", () => {
 	it("does not render settings button when onSettingsClick not provided", () => {
 		const { container } = render(
 			<Sidebar>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);
@@ -108,7 +122,9 @@ describe("Sidebar", () => {
 	it("renders footer with cookielab link", () => {
 		const { container } = render(
 			<Sidebar>
-				<div><Text>{T_CONTENT}</Text></div>
+				<div>
+					<Text>{T_CONTENT}</Text>
+				</div>
 			</Sidebar>,
 			{ wrapper: MockProviders },
 		);

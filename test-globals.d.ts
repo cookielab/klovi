@@ -1,14 +1,14 @@
-import type * as bunTest from "bun:test";
-
 declare global {
-	const afterAll: typeof bunTest.afterAll;
-	const afterEach: typeof bunTest.afterEach;
-	const beforeAll: typeof bunTest.beforeAll;
-	const beforeEach: typeof bunTest.beforeEach;
-	const describe: typeof bunTest.describe;
-	const expect: typeof bunTest.expect;
-	const it: typeof bunTest.it;
-	const mock: typeof bunTest.mock;
-	const spyOn: typeof bunTest.spyOn;
-	const test: typeof bunTest.test;
+	const test: typeof import("bun:test").test;
+	const it: typeof import("bun:test").it;
+	const describe: typeof import("bun:test").describe;
+	const expect: typeof import("bun:test").expect;
+	const beforeAll: typeof import("bun:test").beforeAll;
+	const beforeEach: typeof import("bun:test").beforeEach;
+	const afterEach: typeof import("bun:test").afterEach;
+	const afterAll: typeof import("bun:test").afterAll;
+	const mock: typeof import("bun:test").mock;
+	const spyOn: typeof import("bun:test").spyOn;
 }
+
+export {};

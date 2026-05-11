@@ -88,9 +88,15 @@ async function checkLinuxRuntimeDeps(
 		["LD_LIBRARY_PATH"]: buildLdLibraryPath(libraryDirs, Bun.env["LD_LIBRARY_PATH"]),
 	};
 
+	const targets = [launcherPath, ...nativeWrapperPaths];
+	const results = await Promise.all(targets.map((targetPath) => commandRunner(["ldd", targetPath], env)));
 	const failures: string[] = [];
-	for (const targetPath of [launcherPath, ...nativeWrapperPaths]) {
-		const result = await commandRunner(["ldd", targetPath], env);
+	for (let i = 0; i < targets.length; i += 1) {
+		const targetPath = targets[i];
+		const result = results[i];
+		if (!(targetPath && result)) {
+			continue;
+		}
 		if (result.exitCode !== 0) {
 			const combinedOutput = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
 			if (isSkippableLddFailure(combinedOutput)) {

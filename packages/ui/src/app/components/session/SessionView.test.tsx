@@ -3,7 +3,6 @@ import type { Session } from "../../../shared/types";
 import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SessionView } from "./SessionView";
 
-
 const noop = (): undefined => undefined;
 const ERROR_TITLE_TEXT = "Something went wrong";
 const HTTP_404_DETAIL_TEXT = "HTTP 404";

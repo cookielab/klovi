@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-
 const N_10 = 10;
 
 const DEFAULT_FONT_SIZE = 15;
@@ -8,7 +7,14 @@ const FONT_SIZE_STEP = 2;
 const MAX_FONT_SIZE = 28;
 const MIN_FONT_SIZE = 10;
 
-export function useFontSize() {
+type UseFontSizeResult = {
+	size: number;
+	increase: () => void;
+	decrease: () => void;
+	set: (size: number) => void;
+};
+
+export function useFontSize(): UseFontSizeResult {
 	const [size, setSize] = useState(() => {
 		const stored = localStorage.getItem("klovi-font-size");
 		return stored ? Number.parseInt(stored, N_10) : DEFAULT_FONT_SIZE;

@@ -1,35 +1,26 @@
-import { Text } from "@cookielab.io/klovi-design-system";
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-
-
+import { T_RECOVERED, T_RECOVERED_INLINE } from "./ErrorBoundary.test.constants";
+import { MaybeThrow, SafeComponent, ThrowingComponent } from "./ErrorBoundary.test.helpers";
 
 const noop = (): undefined => undefined;
-const T_SAFE_CONTENT = "Safe content";
-const T_RECOVERED = "Recovered";
-const T_RECOVERED_INLINE = "Recovered inline";
 
-function ThrowingComponent({ message }: { message: string }): never {
-	throw new Error(message);
-}
-
-function SafeComponent(): React.ReactNode {
-	return <div><Text>{T_SAFE_CONTENT}</Text></div>;
-}
+type ConsoleHolder = { error: (...args: unknown[]) => void };
+const consoleHolder: ConsoleHolder = globalThis.console as unknown as ConsoleHolder;
 
 describe("ErrorBoundary", () => {
-	const originalError = console.error;
+	const originalError = consoleHolder.error;
 
 	function silenceExpectedBoundaryErrors(): void {
-		console.error = noop;
+		consoleHolder.error = noop;
 	}
 
 	beforeEach(() => {
-		console.error = originalError;
+		consoleHolder.error = originalError;
 	});
 	afterEach(() => {
 		cleanup();
-		console.error = originalError;
+		consoleHolder.error = originalError;
 	});
 
 	it("renders children when no error", () => {
@@ -67,44 +58,32 @@ describe("ErrorBoundary", () => {
 
 	it("retry resets error state on view-level boundary", () => {
 		silenceExpectedBoundaryErrors();
-		let shouldThrow = true;
-		function MaybeThrow(): React.JSX.Element {
-			if (shouldThrow) {
-				throw new Error("boom");
-			}
-			return <div><Text>{T_RECOVERED}</Text></div>;
-		}
+		const shouldThrowRef = { current: true };
 
 		const { getByText } = render(
 			<ErrorBoundary>
-				<MaybeThrow />
+				<MaybeThrow shouldThrowRef={shouldThrowRef} recoveredText={T_RECOVERED} />
 			</ErrorBoundary>,
 		);
 		expect(getByText("Something went wrong")).toBeTruthy();
 
-		shouldThrow = false;
+		shouldThrowRef.current = false;
 		fireEvent.click(getByText("Try Again"));
 		expect(getByText("Recovered")).toBeTruthy();
 	});
 
 	it("retry resets error state on inline boundary", () => {
 		silenceExpectedBoundaryErrors();
-		let shouldThrow = true;
-		function MaybeThrow(): React.JSX.Element {
-			if (shouldThrow) {
-				throw new Error("boom");
-			}
-			return <div><Text>{T_RECOVERED_INLINE}</Text></div>;
-		}
+		const shouldThrowRef = { current: true };
 
 		const { getByText } = render(
 			<ErrorBoundary inline={true}>
-				<MaybeThrow />
+				<MaybeThrow shouldThrowRef={shouldThrowRef} recoveredText={T_RECOVERED_INLINE} />
 			</ErrorBoundary>,
 		);
 		expect(getByText("Failed to render")).toBeTruthy();
 
-		shouldThrow = false;
+		shouldThrowRef.current = false;
 		fireEvent.click(getByText("Retry"));
 		expect(getByText("Recovered inline")).toBeTruthy();
 	});

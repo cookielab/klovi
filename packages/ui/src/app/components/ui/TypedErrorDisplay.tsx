@@ -2,7 +2,6 @@ import { Button, Text } from "@cookielab.io/klovi-design-system";
 import type { RpcError } from "../../../lib/rpc-errors-effect";
 import "./TypedErrorDisplay.css";
 
-
 const T_RETRY = "Retry";
 
 type TypedErrorDisplayProps = {

@@ -6,7 +6,6 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { resolveLinuxLauncherPath } from "./linux-bundle";
 
-
 const N_30000 = 30_000;
 const N_500 = 500;
 const N_5000 = 5000;
@@ -211,30 +210,39 @@ class WindowSearchTimeoutError extends Error {
 	}
 }
 
+async function pollForWindow(
+	rootPid: number,
+	existingWindowIds: Set<string>,
+): Promise<{ match: WindowIdentity | null; identities: WindowIdentity[] }> {
+	const windowIds = await listWindowIds();
+	const [identities, ownerPids] = await Promise.all([
+		Promise.all(windowIds.map((windowId) => readWindowIdentity(windowId))),
+		listProcessFamily(rootPid),
+	]);
+	const match = selectWindowCandidate(identities, ownerPids, existingWindowIds);
+	return { match: match, identities: identities };
+}
+
 async function findWindowForLaunch(rootPid: number, timeoutMs = N_30000): Promise<WindowIdentity> {
 	const existingWindowIds = new Set(await listWindowIds());
 	let lastObservedWindows: WindowIdentity[] = [];
 	const deadline = Date.now() + timeoutMs;
+	const pollIntervalMs = N_500;
 
-	while (Date.now() < deadline) {
-		const windowIds = await listWindowIds();
-		const identities = await Promise.all(windowIds.map((windowId) => readWindowIdentity(windowId)));
-		const ownerPids = await listProcessFamily(rootPid);
-		const match = selectWindowCandidate(identities, ownerPids, existingWindowIds);
-
+	const attempt = async (): Promise<WindowIdentity> => {
+		if (Date.now() >= deadline) {
+			throw new WindowSearchTimeoutError(rootPid, lastObservedWindows);
+		}
+		const { match, identities } = await pollForWindow(rootPid, existingWindowIds);
 		lastObservedWindows = identities;
-
 		if (match) {
 			return match;
 		}
-
-		const pollIntervalMs = N_500;
 		await Bun.sleep(pollIntervalMs);
-	}
+		return attempt();
+	};
 
-	const summary = lastObservedWindows.length > 0 ? lastObservedWindows : [];
-
-	throw new WindowSearchTimeoutError(rootPid, summary);
+	return attempt();
 }
 
 function processExists(pid: number): boolean {
@@ -257,12 +265,21 @@ async function killProcessTree(rootPid: number): Promise<void> {
 
 	const killWaitTimeoutMs = N_5000;
 	const deadline = Date.now() + killWaitTimeoutMs;
-	while (Date.now() < deadline) {
+	const killPollIntervalMs = N_100;
+
+	const waitForExit = async (): Promise<boolean> => {
 		if (!pids.some((pid) => processExists(pid))) {
-			return;
+			return true;
 		}
-		const killPollIntervalMs = N_100;
+		if (Date.now() >= deadline) {
+			return false;
+		}
 		await Bun.sleep(killPollIntervalMs);
+		return waitForExit();
+	};
+
+	if (await waitForExit()) {
+		return;
 	}
 
 	for (const pid of pids) {

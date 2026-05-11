@@ -9,7 +9,8 @@ import type { ToolPlugin } from "./plugin-types";
 import { PluginRegistry } from "./registry";
 import { getStats, getStatsCachePath, invalidateStatsCache } from "./stats-service";
 
-
+const N_99 = 99;
+const N_12 = 12;
 const N_10 = 10;
 const N_5 = 5;
 
@@ -17,7 +18,7 @@ const testLayer = Layer.merge(
 	NodeFileSystem.layer,
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
-const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>): Promise<A> =>
 	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 const testConfig = { dataDir: "/test" };
@@ -25,19 +26,22 @@ const tempDirs = new Set<string>();
 
 function isoDaysAgo(days: number): string {
 	const d = new Date();
-	d.setHours(12, 0, 0, 0);
+	d.setHours(N_12, 0, 0, 0);
 	d.setDate(d.getDate() - days);
 	return d.toISOString();
 }
 
-function makeSession(
-	id: string,
-	project: string,
-	timestamp: string,
-	model: string,
-	inputTokens: number,
-	outputTokens: number,
-): Session {
+type SessionInput = {
+	id: string;
+	project: string;
+	timestamp: string;
+	model: string;
+	inputTokens: number;
+	outputTokens: number;
+};
+
+function makeSession(input: SessionInput): Session {
+	const { id, project, timestamp, model, inputTokens, outputTokens } = input;
 	return {
 		sessionId: id,
 		project: project,
@@ -133,7 +137,14 @@ describe("stats-service", () => {
 	it("writes a stats cache file next to settings.json on cold load", async () => {
 		const settingsPath = await makeSettingsPath();
 		const registry = new PluginRegistry();
-		const session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", N_10, N_5);
+		const session = makeSession({
+			id: "s1",
+			project: "project-1",
+			timestamp: isoDaysAgo(0),
+			model: "claude-opus",
+			inputTokens: N_10,
+			outputTokens: N_5,
+		});
 		const list: SessionSummary[] = [
 			{
 				sessionId: "s1",
@@ -166,7 +177,14 @@ describe("stats-service", () => {
 	it("returns the sidecar cache first and refreshes it in the background", async () => {
 		const settingsPath = await makeSettingsPath();
 		const registry = new PluginRegistry();
-		const session = makeSession("s1", "project-1", isoDaysAgo(0), "claude-opus", 99, 5);
+		const session = makeSession({
+			id: "s1",
+			project: "project-1",
+			timestamp: isoDaysAgo(0),
+			model: "claude-opus",
+			inputTokens: N_99,
+			outputTokens: N_5,
+		});
 		const list: SessionSummary[] = [
 			{
 				sessionId: "s1",
@@ -212,11 +230,11 @@ describe("stats-service", () => {
 		await waitFor(async () => {
 			const refreshedRaw = await readFile(getStatsCachePath(settingsPath), "utf-8");
 			const refreshed = JSON.parse(refreshedRaw) as { stats: { inputTokens: number } };
-			return refreshed.stats.inputTokens === 99;
+			return refreshed.stats.inputTokens === N_99;
 		});
 
 		const refreshed = await runEffect(getStats(settingsPath, registry));
-		expect(refreshed.stats.inputTokens).toBe(99);
+		expect(refreshed.stats.inputTokens).toBe(N_99);
 		expect(refreshed.refreshing).toBe(false);
 	});
 

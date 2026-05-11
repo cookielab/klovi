@@ -29,7 +29,7 @@ function stripT3CodeSuffix(path: string): { path: string; projectName: string } 
  * Returns the main repository path if successfully resolved, otherwise falls
  * back to the original `worktreePath`.
  */
-function resolveGitWorktree(worktreePath: string) {
+function resolveGitWorktree(worktreePath: string): Effect.Effect<string, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const dotGitPath = join(worktreePath, ".git");
@@ -114,7 +114,10 @@ function buildNameMap<T extends { resolvedPath: string }>(
 }
 
 /** Resolve a single t3code entry against the name map, using .git fallback if ambiguous. */
-function resolveEntry<T extends { resolvedPath: string }>(entry: T3CodeEntry<T>, nameMap: Map<string, string[]>) {
+function resolveEntry<T extends { resolvedPath: string }>(
+	entry: T3CodeEntry<T>,
+	nameMap: Map<string, string[]>,
+): Effect.Effect<void, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const candidates = nameMap.get(entry.projectName);
 		if (!candidates || candidates.length === 0) {
@@ -145,7 +148,9 @@ function resolveEntry<T extends { resolvedPath: string }>(entry: T3CodeEntry<T>,
  *          one match, use its `resolvedPath`.
  * Phase 3: If multiple name matches, fall back to reading the `.git` file.
  */
-function resolveT3CodePaths<T extends { resolvedPath: string }>(projects: T[]) {
+function resolveT3CodePaths<T extends { resolvedPath: string }>(
+	projects: T[],
+): Effect.Effect<void, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const t3codeEntries = collectT3CodeEntries(projects);
 		if (t3codeEntries.length === 0) {

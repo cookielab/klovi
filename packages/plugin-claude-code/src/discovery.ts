@@ -6,11 +6,11 @@ import {
 	sortByIsoDesc,
 	streamJsonlHead,
 } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 import { cleanCommandMessage } from "./command-message";
 import type { RawContentBlock, RawLine } from "./raw-types";
 import { decodeEncodedPath, listFilesBySuffix, listFilesWithMtime, readDirEntriesSafe } from "./shared/discovery-utils";
-
 
 const N_20 = 20;
 const N_200 = 200;
@@ -20,7 +20,10 @@ const BRACKETED_TEXT_REGEX = /^\[.+\]$/u;
 const PROJECT_DIR_CONCURRENCY = 16;
 const SESSION_FILE_CONCURRENCY = 16;
 
-function inspectProjectSessions(projectDir: string, sessionFiles: { fileName: string; mtime: string }[]) {
+function inspectProjectSessions(
+	projectDir: string,
+	sessionFiles: { fileName: string; mtime: string }[],
+): Effect.Effect<{ lastActivity: string; resolvedPath: string }, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const lastActivity = sessionFiles[0]?.mtime || "";
 		let resolvedPath = "";
@@ -38,7 +41,7 @@ function inspectProjectSessions(projectDir: string, sessionFiles: { fileName: st
 	});
 }
 
-function discoverClaudeProjects() {
+function discoverClaudeProjects(): Effect.Effect<PluginProject[], never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const projectsDir = join(config.dataDir, "projects");
@@ -78,7 +81,9 @@ function discoverClaudeProjects() {
 
 const PLAN_PREFIX = "Implement the following plan";
 
-function listClaudeSessions(nativeId: string) {
+function listClaudeSessions(
+	nativeId: string,
+): Effect.Effect<SessionSummary[], never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const projectDir = join(config.dataDir, "projects", nativeId);
@@ -123,7 +128,7 @@ function classifySessionTypes(sessions: SessionSummary[]): void {
 	}
 }
 
-function extractCwd(filePath: string) {
+function extractCwd(filePath: string): Effect.Effect<string, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		let cwd = "";
 		yield* streamJsonlHead(
@@ -197,7 +202,9 @@ function processMetaLine(obj: RawLine, meta: MetaFields): void {
 	}
 }
 
-function extractSessionMeta(filePath: string) {
+function extractSessionMeta(
+	filePath: string,
+): Effect.Effect<Omit<SessionSummary, "sessionId"> | null, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const meta: MetaFields = {
 			timestamp: "",

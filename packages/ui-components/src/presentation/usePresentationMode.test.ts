@@ -2,7 +2,6 @@ import { act, renderHook } from "@testing-library/react";
 import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../types/index";
 import { usePresentationMode } from "./usePresentationMode";
 
-
 const N_4 = 4;
 const N_3 = 3;
 

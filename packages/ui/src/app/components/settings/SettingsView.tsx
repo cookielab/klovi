@@ -9,8 +9,6 @@ import type { ThemeSetting } from "../../hooks/useTheme";
 import { PluginRow } from "./PluginRow";
 import type { SettingsTab } from "./SettingsSidebar";
 
-
-
 const N_10 = 10;
 const N_3 = 3;
 const N_6 = 6;
@@ -185,7 +183,12 @@ function FontSizeControl({
 }): React.ReactNode {
 	return (
 		<div className={`${FONT_SIZE_CONTROL_BASE_CLASSES} ${disabled ? FONT_SIZE_CONTROL_DISABLED_CLASSES : ""}`}>
-			<button type="button" className={FONT_SIZE_BUTTON_CLASSES} disabled={disabled === true || size <= N_10} onClick={onDecrease}>
+			<button
+				type="button"
+				className={FONT_SIZE_BUTTON_CLASSES}
+				disabled={disabled === true || size <= N_10}
+				onClick={onDecrease}
+			>
 				<Text>{T_A}</Text>
 			</button>
 			<span className={FONT_SIZE_VALUE_CLASSES}>{size}</span>
@@ -304,33 +307,57 @@ function UpdatesTab({
 
 	return (
 		<>
-			<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_UPDATES}</Text></h4>
+			<h4 className={SUBSECTION_TITLE_CLASSES}>
+				<Text>{T_UPDATES}</Text>
+			</h4>
 			{loading ? (
-				<div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>
+				<div className={LOADING_CLASSES}>
+					<Text>{T_LOADING}</Text>
+				</div>
 			) : (
 				updateSettings && (
 					<>
 						<div className={CONTROL_ROW_CLASSES}>
-							<span className={CONTROL_LABEL_CLASSES}><Text>{T_UPDATE_CHANNEL}</Text></span>
+							<span className={CONTROL_LABEL_CLASSES}>
+								<Text>{T_UPDATE_CHANNEL}</Text>
+							</span>
 							<select className={SELECT_CLASSES} value={updateSettings.channel} onChange={handleChannelChange}>
-								<option value="stable"><Text>{T_STABLE}</Text></option>
-								<option value="candidate"><Text>{T_RELEASE_CANDIDATE}</Text></option>
-								<option value="beta"><Text>{T_BETA}</Text></option>
+								<option value="stable">
+									<Text>{T_STABLE}</Text>
+								</option>
+								<option value="candidate">
+									<Text>{T_RELEASE_CANDIDATE}</Text>
+								</option>
+								<option value="beta">
+									<Text>{T_BETA}</Text>
+								</option>
 							</select>
 						</div>
 
 						<div className={CONTROL_ROW_CLASSES}>
-							<span className={CONTROL_LABEL_CLASSES}><Text>{T_CHECK_INTERVAL}</Text></span>
+							<span className={CONTROL_LABEL_CLASSES}>
+								<Text>{T_CHECK_INTERVAL}</Text>
+							</span>
 							<select
 								className={SELECT_CLASSES}
 								value={updateSettings.checkIntervalHours}
 								onChange={handleIntervalChange}
 							>
-								<option value={1}><Text>{T_EVERY_HOUR}</Text></option>
-								<option value={N_3}><Text>{T_EVERY_3_HOURS}</Text></option>
-								<option value={N_6}><Text>{T_EVERY_6_HOURS}</Text></option>
-								<option value={N_12}><Text>{T_EVERY_12_HOURS}</Text></option>
-								<option value={N_24}><Text>{T_EVERY_24_HOURS}</Text></option>
+								<option value={1}>
+									<Text>{T_EVERY_HOUR}</Text>
+								</option>
+								<option value={N_3}>
+									<Text>{T_EVERY_3_HOURS}</Text>
+								</option>
+								<option value={N_6}>
+									<Text>{T_EVERY_6_HOURS}</Text>
+								</option>
+								<option value={N_12}>
+									<Text>{T_EVERY_12_HOURS}</Text>
+								</option>
+								<option value={N_24}>
+									<Text>{T_EVERY_24_HOURS}</Text>
+								</option>
 							</select>
 						</div>
 
@@ -538,9 +565,13 @@ export function SettingsView({
 			<div className={CONTENT_CLASSES}>
 				{activeTab === "plugins" && (
 					<>
-						<h3 className={SECTION_TITLE_CLASSES}><Text>{T_PLUGINS}</Text></h3>
+						<h3 className={SECTION_TITLE_CLASSES}>
+							<Text>{T_PLUGINS}</Text>
+						</h3>
 						{loading ? (
-							<div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>
+							<div className={LOADING_CLASSES}>
+								<Text>{T_LOADING}</Text>
+							</div>
 						) : (
 							<div className={PLUGIN_LIST_CLASSES}>
 								{plugins.map((plugin) => (
@@ -560,9 +591,13 @@ export function SettingsView({
 				)}
 				{activeTab === "general" && (
 					<>
-						<h3 className={SECTION_TITLE_CLASSES}><Text>{T_GENERAL}</Text></h3>
+						<h3 className={SECTION_TITLE_CLASSES}>
+							<Text>{T_GENERAL}</Text>
+						</h3>
 						{loading ? (
-							<div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>
+							<div className={LOADING_CLASSES}>
+								<Text>{T_LOADING}</Text>
+							</div>
 						) : (
 							<>
 								<div className={CONTROL_ROW_CLASSES}>
@@ -582,22 +617,32 @@ export function SettingsView({
 									</div>
 								</div>
 
-								<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_GLOBAL}</Text></h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}>
+									<Text>{T_GLOBAL}</Text>
+								</h4>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}><Text>{T_THEME}</Text></span>
+									<span className={CONTROL_LABEL_CLASSES}>
+										<Text>{T_THEME}</Text>
+									</span>
 									<ThemeSelector value={theme.setting} onChange={theme.set} />
 								</div>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}><Text>{T_FONT_SIZE}</Text></span>
+									<span className={CONTROL_LABEL_CLASSES}>
+										<Text>{T_FONT_SIZE}</Text>
+									</span>
 									<FontSizeControl size={fontSize.size} onIncrease={fontSize.increase} onDecrease={fontSize.decrease} />
 								</div>
 
-								<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_PRESENTATION}</Text></h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}>
+									<Text>{T_PRESENTATION}</Text>
+								</h4>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}><Text>{T_THEME}</Text></span>
+									<span className={CONTROL_LABEL_CLASSES}>
+										<Text>{T_THEME}</Text>
+									</span>
 									<div className={CONTROL_GROUP_CLASSES}>
 										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
@@ -617,7 +662,9 @@ export function SettingsView({
 								</div>
 
 								<div className={CONTROL_ROW_CLASSES}>
-									<span className={CONTROL_LABEL_CLASSES}><Text>{T_FONT_SIZE}</Text></span>
+									<span className={CONTROL_LABEL_CLASSES}>
+										<Text>{T_FONT_SIZE}</Text>
+									</span>
 									<div className={CONTROL_GROUP_CLASSES}>
 										<label className={SAME_AS_GLOBAL_CLASSES}>
 											<input
@@ -646,7 +693,9 @@ export function SettingsView({
 									/>
 								) : null}
 
-								<h4 className={SUBSECTION_TITLE_CLASSES}><Text>{T_RESET}</Text></h4>
+								<h4 className={SUBSECTION_TITLE_CLASSES}>
+									<Text>{T_RESET}</Text>
+								</h4>
 								<div className={CONTROL_ROW_CLASSES}>
 									{confirmingReset ? (
 										<div className={CONTROL_GROUP_CLASSES}>
@@ -682,7 +731,9 @@ export function SettingsView({
 											>
 												<Text>{T_RESET_TO_DEFAULTS}</Text>
 											</button>
-											<p className={GENERAL_HINT_CLASSES}><Text>{T_DELETES_ALL_SETTINGS_AND_RETUR}</Text></p>
+											<p className={GENERAL_HINT_CLASSES}>
+												<Text>{T_DELETES_ALL_SETTINGS_AND_RETUR}</Text>
+											</p>
 										</div>
 									)}
 								</div>

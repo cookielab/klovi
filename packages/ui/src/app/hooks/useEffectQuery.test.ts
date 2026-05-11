@@ -3,7 +3,6 @@ import { Effect } from "effect";
 import { MockProviders } from "../test-helpers/mock-rpc";
 import { useEffectQuery } from "./useEffectQuery";
 
-
 const N_42 = 42;
 
 describe("useEffectQuery", () => {
@@ -12,7 +11,8 @@ describe("useEffectQuery", () => {
 	});
 
 	it("starts in loading state", () => {
-		const rpcCall = () => Effect.never as Effect.Effect<{ value: number }, never, never>;
+		const rpcCall = (): Effect.Effect<{ value: number }, never, never> =>
+			Effect.never as Effect.Effect<{ value: number }, never, never>;
 		const { result } = renderHook(() => useEffectQuery(rpcCall, []), { wrapper: MockProviders });
 		expect(result.current.loading).toBe(true);
 		expect(result.current.data).toBeNull();
@@ -20,7 +20,7 @@ describe("useEffectQuery", () => {
 	});
 
 	it("returns data on successful call", async () => {
-		const rpcCall = () => Effect.succeed({ value: N_42 });
+		const rpcCall = (): Effect.Effect<{ value: number }, never, never> => Effect.succeed({ value: N_42 });
 		const { result } = renderHook(() => useEffectQuery(rpcCall, []), { wrapper: MockProviders });
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
@@ -29,7 +29,7 @@ describe("useEffectQuery", () => {
 	});
 
 	it("returns typed RpcHandlerError on generic failure", async () => {
-		const rpcCall = () => Effect.fail(new Error("Server error"));
+		const rpcCall = (): Effect.Effect<never, Error, never> => Effect.fail(new Error("Server error"));
 		const { result } = renderHook(() => useEffectQuery(rpcCall, []), { wrapper: MockProviders });
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
@@ -40,7 +40,7 @@ describe("useEffectQuery", () => {
 
 	it("returns RpcTimeoutError for timeout errors", async () => {
 		const error = new Error("RPC request timed out. (getProjects exceeded 30000ms)");
-		const rpcCall = () => Effect.fail(error);
+		const rpcCall = (): Effect.Effect<never, Error, never> => Effect.fail(error);
 		const { result } = renderHook(() => useEffectQuery(rpcCall, []), { wrapper: MockProviders });
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
@@ -49,7 +49,7 @@ describe("useEffectQuery", () => {
 
 	it("returns RpcDisconnectedError for disconnect errors", async () => {
 		const error = new Error("Desktop host disconnected during getSession.");
-		const rpcCall = () => Effect.fail(error);
+		const rpcCall = (): Effect.Effect<never, Error, never> => Effect.fail(error);
 		const { result } = renderHook(() => useEffectQuery(rpcCall, []), { wrapper: MockProviders });
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
@@ -58,7 +58,7 @@ describe("useEffectQuery", () => {
 
 	it("retry refetches data", async () => {
 		let callCount = 0;
-		const rpcCall = () => {
+		const rpcCall = (): Effect.Effect<{ ok: boolean }, Error, never> => {
 			callCount += 1;
 			if (callCount === 1) {
 				return Effect.fail(new Error("fail"));

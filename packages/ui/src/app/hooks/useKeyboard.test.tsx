@@ -1,21 +1,6 @@
-import { Text } from "@cookielab.io/klovi-design-system";
 import { fireEvent, render } from "@testing-library/react";
-import { useKeyboard } from "./useKeyboard";
-
-
-
-const noop = (): undefined => undefined;
-const T_KEYBOARD_TEST = "Keyboard test";
-
-function KeyboardTestHarness(props: { handlers: Parameters<typeof useKeyboard>[0]; active: boolean }): React.ReactNode {
-	useKeyboard(props.handlers, props.active);
-	return <div><Text>{T_KEYBOARD_TEST}</Text></div>;
-}
-
-function fireKey(key: string, opts: KeyboardEventInit = {}): void {
-	// Dispatch directly on window since the hook listens on window
-	globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true, ...opts }));
-}
+import { KeyboardTestHarness } from "./useKeyboard.test.harness";
+import { fireKey, noop } from "./useKeyboard.test.helpers";
 
 describe("useKeyboard", () => {
 	it("calls onNext for ArrowRight", () => {

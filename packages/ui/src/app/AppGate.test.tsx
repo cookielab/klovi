@@ -3,11 +3,14 @@ import { act } from "react";
 import { AppGate } from "./App";
 import { MockProviders, setMockHostConnectionState, setupMockRpc } from "./test-helpers/mock-rpc";
 
+type ConsoleHolder = { error: (...args: unknown[]) => void };
+const consoleHolder: ConsoleHolder = globalThis.console as unknown as ConsoleHolder;
+
 describe("AppGate", () => {
-	const originalError = console.error;
+	const originalError = consoleHolder.error;
 
 	beforeEach(() => {
-		console.error = (...args: unknown[]) => {
+		consoleHolder.error = (...args: unknown[]) => {
 			const message = args.map(String).join(" ");
 			if (message.includes("not wrapped in act")) {
 				return;
@@ -18,7 +21,7 @@ describe("AppGate", () => {
 
 	afterEach(() => {
 		cleanup();
-		console.error = originalError;
+		consoleHolder.error = originalError;
 	});
 
 	async function clickAndFlush(button: HTMLElement): Promise<void> {

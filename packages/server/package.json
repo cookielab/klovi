@@ -19,6 +19,7 @@
 		"./effect/http-app": "./src/effect/http-app.ts",
 		"./effect/platform-bun": "./src/effect/platform-bun.ts",
 		"./effect/plugin-runtime": "./src/effect/plugin-runtime.ts",
+		"./effect/server-services": "./src/effect/server-services.ts",
 		"./services/auto-discover": "./src/services/auto-discover.ts",
 		"./services/onboarding-service": "./src/services/onboarding-service.ts",
 		"./services/registry": "./src/services/registry.ts",

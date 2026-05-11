@@ -1,4 +1,3 @@
-import { Database } from "bun:sqlite";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,6 +8,19 @@ import { Effect, Layer } from "effect";
 import { buildOpenCodeTurns, loadOpenCodeSession, type OpenCodeMessage } from "./parser";
 import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
+const BUN_SQLITE_MODULE = "bun:sqlite" as const;
+
+type BunDatabase = {
+	run: (sql: string, params?: unknown[]) => void;
+	close: () => void;
+};
+
+type DatabaseConstructor = new (path: string, options?: { create?: boolean; readonly?: boolean }) => BunDatabase;
+
+type BunSqliteModule = Record<"Database", DatabaseConstructor>;
+
+const { Database } = (await import(BUN_SQLITE_MODULE)) as BunSqliteModule;
+type Database = BunDatabase;
 
 const N_1706000000 = 1_706_000_000;
 const N_100 = 100;
@@ -34,7 +46,7 @@ const testLayer = Layer.mergeAll(
 	BunSqliteLayer,
 );
 
-function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 
@@ -111,13 +123,16 @@ function insertSession(db: Database, id: string, projectId: string, directory: s
 	);
 }
 
-function insertMessage(
-	db: Database,
-	id: string,
-	sessionId: string,
-	data: Record<string, unknown>,
-	timeCreated?: number,
-): void {
+type InsertMessageArgs = {
+	db: Database;
+	id: string;
+	sessionId: string;
+	data: Record<string, unknown>;
+	timeCreated?: number;
+};
+
+function insertMessage(args: InsertMessageArgs): void {
+	const { db, id, sessionId, data, timeCreated } = args;
 	const now = timeCreated ?? Date.now();
 	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
 		id,
@@ -128,13 +143,16 @@ function insertMessage(
 	]);
 }
 
-function insertPart(
-	db: Database,
-	id: string,
-	messageId: string,
-	sessionId: string,
-	data: Record<string, unknown>,
-): void {
+type InsertPartArgs = {
+	db: Database;
+	id: string;
+	messageId: string;
+	sessionId: string;
+	data: Record<string, unknown>;
+};
+
+function insertPart(args: InsertPartArgs): void {
+	const { db, id, messageId, sessionId, data } = args;
 	const now = Date.now();
 	db.run("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)", [
 		id,
@@ -543,54 +561,78 @@ describe("loadOpenCodeSession", () => {
 		insertSession(db, "sess-1", "proj-1", "/Users/dev/project");
 
 		// User message
-		insertMessage(
-			db,
-			"msg-1",
-			"sess-1",
-			{
+		insertMessage({
+			db: db,
+			id: "msg-1",
+			sessionId: "sess-1",
+			data: {
 				role: "user",
 				time: { created: N_1706000000 },
 			},
-			N_1706000000,
-		);
-		insertPart(db, "part-1", "msg-1", "sess-1", {
-			type: "text",
-			text: "Fix the authentication bug",
+			timeCreated: N_1706000000,
+		});
+		insertPart({
+			db: db,
+			id: "part-1",
+			messageId: "msg-1",
+			sessionId: "sess-1",
+			data: {
+				type: "text",
+				text: "Fix the authentication bug",
+			},
 		});
 
 		// Assistant message
-		insertMessage(
-			db,
-			"msg-2",
-			"sess-1",
-			{
+		insertMessage({
+			db: db,
+			id: "msg-2",
+			sessionId: "sess-1",
+			data: {
 				role: "assistant",
 				["modelID"]: "claude-sonnet-4-20250514",
 				["providerID"]: "anthropic",
 				tokens: { input: N_300, output: N_150, cache: { read: N_50, write: N_10 } },
 				finish: "end_turn",
 			},
-			N_1706000001,
-		);
-		insertPart(db, "part-2", "msg-2", "sess-1", {
-			type: "reasoning",
-			text: "Let me analyze the code...",
+			timeCreated: N_1706000001,
 		});
-		insertPart(db, "part-3", "msg-2", "sess-1", {
-			type: "text",
-			text: "I found the issue in the auth handler.",
+		insertPart({
+			db: db,
+			id: "part-2",
+			messageId: "msg-2",
+			sessionId: "sess-1",
+			data: {
+				type: "reasoning",
+				text: "Let me analyze the code...",
+			},
 		});
-		insertPart(db, "part-4", "msg-2", "sess-1", {
-			type: "tool",
-			["callID"]: "call-1",
-			tool: "edit_file",
-			state: {
-				status: "completed",
-				input: { path: "src/auth.ts", content: "fixed code" },
-				output: "File updated",
-				title: "Edit file",
-				metadata: {},
-				time: { start: N_1706000002, end: N_1706000003 },
+		insertPart({
+			db: db,
+			id: "part-3",
+			messageId: "msg-2",
+			sessionId: "sess-1",
+			data: {
+				type: "text",
+				text: "I found the issue in the auth handler.",
+			},
+		});
+		insertPart({
+			db: db,
+			id: "part-4",
+			messageId: "msg-2",
+			sessionId: "sess-1",
+			data: {
+				type: "tool",
+				["callID"]: "call-1",
+				tool: "edit_file",
+				state: {
+					status: "completed",
+					input: { path: "src/auth.ts", content: "fixed code" },
+					output: "File updated",
+					title: "Edit file",
+					metadata: {},
+					time: { start: N_1706000002, end: N_1706000003 },
+				},
 			},
 		});
 
@@ -649,26 +691,32 @@ describe("loadOpenCodeSession", () => {
 		insertProject(db, "proj-1", "/Users/dev/project");
 		insertSession(db, "sess-1", "proj-1", "/Users/dev/project");
 
-		insertMessage(
-			db,
-			"msg-1",
-			"sess-1",
-			{
+		insertMessage({
+			db: db,
+			id: "msg-1",
+			sessionId: "sess-1",
+			data: {
 				role: "assistant",
 				["modelID"]: "gpt-4o",
 				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 			},
-			N_1706000000,
-		);
-		insertPart(db, "part-1", "msg-1", "sess-1", {
-			type: "tool",
-			["callID"]: "call-err",
-			tool: "bash",
-			state: {
-				status: "error",
-				input: { command: "rm -rf /" },
-				error: "Operation not permitted",
-				time: { start: N_1706000001, end: N_1706000002 },
+			timeCreated: N_1706000000,
+		});
+		insertPart({
+			db: db,
+			id: "part-1",
+			messageId: "msg-1",
+			sessionId: "sess-1",
+			data: {
+				type: "tool",
+				["callID"]: "call-err",
+				tool: "bash",
+				state: {
+					status: "error",
+					input: { command: "rm -rf /" },
+					error: "Operation not permitted",
+					time: { start: N_1706000001, end: N_1706000002 },
+				},
 			},
 		});
 
@@ -701,20 +749,26 @@ describe("loadOpenCodeSession", () => {
 		]);
 
 		// Insert a valid message after the bad one
-		insertMessage(
-			db,
-			"msg-good",
-			"sess-1",
-			{
+		insertMessage({
+			db: db,
+			id: "msg-good",
+			sessionId: "sess-1",
+			data: {
 				role: "assistant",
 				["modelID"]: "gpt-4o",
 				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
 			},
-			now + 1,
-		);
-		insertPart(db, "part-1", "msg-good", "sess-1", {
-			type: "text",
-			text: "This should still work",
+			timeCreated: now + 1,
+		});
+		insertPart({
+			db: db,
+			id: "part-1",
+			messageId: "msg-good",
+			sessionId: "sess-1",
+			data: {
+				type: "text",
+				text: "This should still work",
+			},
 		});
 
 		db.close();

@@ -1,7 +1,6 @@
 import { RpcError } from "./rpc-error";
 import { type KloviServer, startKloviServer } from "./server";
 
-
 const N_200 = 200;
 const N_404 = 404;
 

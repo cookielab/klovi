@@ -6,13 +6,8 @@ import { findNamedFiles, resolveLinuxLauncherPath } from "./linux-bundle";
 const tempRoots: string[] = [];
 
 afterEach(async () => {
-	while (tempRoots.length > 0) {
-		const root = tempRoots.pop();
-		if (!root) {
-			continue;
-		}
-		await Bun.$`rm -rf ${root}`;
-	}
+	const roots = tempRoots.splice(0, tempRoots.length);
+	await Promise.all(roots.map((root) => Bun.$`rm -rf ${root}`.quiet()));
 });
 
 async function createTempRoot(prefix: string): Promise<string> {

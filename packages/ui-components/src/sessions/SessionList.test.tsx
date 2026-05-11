@@ -2,7 +2,6 @@ import { cleanup, render } from "@testing-library/react";
 import type { SessionSummary } from "../types/index";
 import { SessionList } from "./SessionList";
 
-
 const N_500 = 500;
 const N_50 = 50;
 

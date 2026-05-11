@@ -37,7 +37,12 @@ function SegmentedOption<T extends string>({
 	);
 }
 
-export function SegmentedControl<T extends string>({ value, onChange, options, disabled }: SegmentedControlProps<T>): React.ReactNode {
+export function SegmentedControl<T extends string>({
+	value,
+	onChange,
+	options,
+	disabled,
+}: SegmentedControlProps<T>): React.ReactNode {
 	return (
 		<div
 			className={`inline-flex overflow-hidden border border-border ${disabled ? "pointer-events-none opacity-50" : ""}`}

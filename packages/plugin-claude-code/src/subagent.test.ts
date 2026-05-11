@@ -10,7 +10,7 @@ const testDir = join(tmpdir(), `klovi-claude-subagent-test-${Date.now()}`);
 
 const testLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: testDir }));
 
-function run<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function run<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 

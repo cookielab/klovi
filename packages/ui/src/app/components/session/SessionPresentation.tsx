@@ -3,7 +3,6 @@ import { useSessionData } from "../../hooks/useSessionData";
 import { TypedErrorDisplay } from "../ui/TypedErrorDisplay";
 import { PackagePresentationShell } from "./PackagePresentationShell";
 
-
 const T_LOADING_SESSION = "Loading session...";
 
 const LOADING_CLASSES = "loading flex items-center justify-center p-10 text-[0.9rem] text-foreground-subtle";
@@ -18,7 +17,11 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
 	const { data, loading, error, retry } = useSessionData(sessionId, project);
 
 	if (loading) {
-		return <div className={LOADING_CLASSES}><Text>{T_LOADING_SESSION}</Text></div>;
+		return (
+			<div className={LOADING_CLASSES}>
+				<Text>{T_LOADING_SESSION}</Text>
+			</div>
+		);
 	}
 	if (error) {
 		return <TypedErrorDisplay error={error} onRetry={retry} />;
@@ -28,11 +31,6 @@ export function SessionPresentation({ sessionId, project, onExit }: SessionPrese
 	}
 
 	return (
-		<PackagePresentationShell
-			turns={data.session.turns}
-			onExit={onExit}
-			sessionId={sessionId}
-			project={project}
-		/>
+		<PackagePresentationShell turns={data.session.turns} onExit={onExit} sessionId={sessionId} project={project} />
 	);
 }

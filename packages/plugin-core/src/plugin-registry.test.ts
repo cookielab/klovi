@@ -12,7 +12,6 @@ import type {
 } from "./plugin-types";
 import { SqliteClientTag } from "./sqlite-service";
 
-
 const N_3 = 3;
 const N_6 = 6;
 
@@ -81,7 +80,7 @@ const testLayer = Layer.merge(
 	NodeFileSystem.layer,
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
-const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>): Promise<A> =>
 	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 describe("PluginRegistry", () => {

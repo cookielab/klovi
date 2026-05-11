@@ -1,7 +1,9 @@
 import type {
 	AssistantTurn,
 	ContentBlock,
+	PluginConfig,
 	Session,
+	SqliteClientTag,
 	SystemTurn,
 	ToolCallKind,
 	ToolCallWithResult,
@@ -9,6 +11,7 @@ import type {
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
 import { parseMcpDisplayName } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem, Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 import { openCursorGlobalDb } from "./db";
 import { buildCursorProjectIndex } from "./discovery";
@@ -147,10 +150,20 @@ function normalizeFileToolCall(rawName: string, input: Record<string, unknown>):
 		return { kind: "file_read", title: rawName, summary: filePath, formattedInput: filePathFormatted };
 	}
 	if (FILE_WRITE_TOOLS.has(rawName)) {
-		return { kind: "file_write", title: rawName, summary: filePath, formattedInput: buildWriteFormattedInput(filePath, input) };
+		return {
+			kind: "file_write",
+			title: rawName,
+			summary: filePath,
+			formattedInput: buildWriteFormattedInput(filePath, input),
+		};
 	}
 	if (FILE_EDIT_TOOLS.has(rawName)) {
-		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: buildEditFormattedInput(filePath, input) };
+		return {
+			kind: "file_edit",
+			title: rawName,
+			summary: filePath,
+			formattedInput: buildEditFormattedInput(filePath, input),
+		};
 	}
 	if (FILE_DIFF_TOOLS.has(rawName)) {
 		return { kind: "file_edit", title: rawName, summary: filePath, formattedInput: filePathFormatted };
@@ -168,7 +181,12 @@ function normalizeToolCall(rawName: string, input: Record<string, unknown>): Cur
 	}
 	const command = String(input["command"] || input["cmd"] || "");
 	if (SHELL_TOOLS.has(rawName)) {
-		return { kind: "shell", title: rawName, summary: truncateCursor(command, N_80), formattedInput: command || JSON.stringify(input, null, 2) };
+		return {
+			kind: "shell",
+			title: rawName,
+			summary: truncateCursor(command, N_80),
+			formattedInput: command || JSON.stringify(input, null, 2),
+		};
 	}
 	if (WEB_SEARCH_TOOLS.has(rawName)) {
 		return { kind: "web", title: rawName, summary: truncateCursor(String(input["query"] || ""), N_60) };
@@ -336,7 +354,9 @@ function partialCursorSessionNotice(timestamp: string): SystemTurn {
 	);
 }
 
-function loadCursorComposerSession(summary: CursorComposerSummary) {
+function loadCursorComposerSession(
+	summary: CursorComposerSummary,
+): Effect.Effect<Session, never, FileSystem.FileSystem | SqliteClientTag> {
 	return Effect.gen(function* () {
 		const globalDb = yield* openCursorGlobalDb();
 		const baseTimestampMs = summary.createdAtMs;
@@ -396,7 +416,9 @@ function loadCursorComposerSession(summary: CursorComposerSummary) {
 	});
 }
 
-function loadCursorAgentSession(summary: CursorAgentSummary) {
+function loadCursorAgentSession(
+	summary: CursorAgentSummary,
+): Effect.Effect<Session, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const text = yield* readFileText(summary.filePath);
 		const turns: Turn[] = [];
@@ -446,7 +468,10 @@ function loadCursorAgentSession(summary: CursorAgentSummary) {
 	});
 }
 
-function loadCursorSession(nativeId: string, sessionId: string) {
+function loadCursorSession(
+	nativeId: string,
+	sessionId: string,
+): Effect.Effect<Session, PlatformError.PlatformError | Error, PluginConfig | FileSystem.FileSystem | SqliteClientTag> {
 	return Effect.gen(function* () {
 		const index = yield* buildCursorProjectIndex(nativeId);
 		const session =

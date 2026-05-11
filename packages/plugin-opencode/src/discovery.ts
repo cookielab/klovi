@@ -1,9 +1,15 @@
-import type { PluginProject, SessionSummary, SqliteDb } from "@cookielab.io/klovi-plugin-core";
+import type {
+	PluginConfig,
+	PluginProject,
+	SessionSummary,
+	SqliteClientTag,
+	SqliteDb,
+} from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem, Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 import { openOpenCodeDb } from "./db";
 import { tryParseJson } from "./shared/json-utils";
-
 
 const N_200 = 200;
 
@@ -88,7 +94,11 @@ type SessionPreview = {
 
 // --- Discovery ---
 
-function discoverOpenCodeProjects() {
+function discoverOpenCodeProjects(): Effect.Effect<
+	PluginProject[],
+	PlatformError.PlatformError,
+	PluginConfig | FileSystem.FileSystem | SqliteClientTag
+> {
 	return Effect.gen(function* () {
 		const db = yield* openOpenCodeDb();
 		if (!db) {
@@ -214,7 +224,13 @@ function sessionRowToSummary(db: SqliteDb, row: SessionRow): SessionSummary {
 	};
 }
 
-function listOpenCodeSessions(nativeId: string) {
+function listOpenCodeSessions(
+	nativeId: string,
+): Effect.Effect<
+	SessionSummary[],
+	PlatformError.PlatformError,
+	PluginConfig | FileSystem.FileSystem | SqliteClientTag
+> {
 	return Effect.gen(function* () {
 		const db = yield* openOpenCodeDb();
 		if (!db) {

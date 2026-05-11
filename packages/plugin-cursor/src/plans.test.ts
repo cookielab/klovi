@@ -6,12 +6,11 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
 import { extractFirstHeading, loadCursorPlanSession, parsePlanFrontmatter, readPlanDisplayName } from "./plans";
 
-
 const N_1706000000000 = 1_706_000_000_000;
 
 const testDir = join(tmpdir(), `klovi-cursor-plans-test-${Date.now()}`);
 
-function runEffect<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>) {
+function runEffect<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(NodeFileSystem.layer)));
 }
 

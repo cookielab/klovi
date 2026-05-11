@@ -53,13 +53,13 @@ function fail(_label: string, _err: unknown): void {
 const testDir = join(tmpdir(), `klovi-node-smoke-${Date.now()}`);
 
 async function writeJsonl(filePath: string, lines: Record<string, unknown>[]): Promise<void> {
-	const dir = filePath.substring(0, filePath.lastIndexOf("/"));
+	const dir = filePath.slice(0, filePath.lastIndexOf("/"));
 	await mkdir(dir, { recursive: true });
 	await writeFile(filePath, lines.map((l) => JSON.stringify(l)).join("\n"), "utf-8");
 }
 
 function withCursorTestEnv(): () => void {
-	const env = (process as { env: Record<string, string | undefined> }).env;
+	const { env } = process as { env: Record<string, string | undefined> };
 	const originalHome = env["HOME"];
 	const originalUserProfile = env["USERPROFILE"];
 	const originalXdgConfigHome = env["XDG_CONFIG_HOME"];
@@ -99,7 +99,7 @@ function withCursorTestEnv(): () => void {
 
 // ── Tests ──────────────────────────────────────────────────
 
-async function testPluginImports(): Promise<void> {
+function testPluginImports(): void {
 	try {
 		if (claudeCodePlugin.id !== "claude-code") {
 			throw new Error("bad id");
@@ -229,7 +229,7 @@ async function main(): Promise<void> {
 	await mkdir(testDir, { recursive: true });
 
 	try {
-		await testPluginImports();
+		testPluginImports();
 		await testRegistryBuild();
 		await testClaudeCodeRoundTrip();
 		await testOpenCodeImport();

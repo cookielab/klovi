@@ -10,7 +10,7 @@ import { BunPluginLayer } from "./platform-bun";
 import { ServerConfig } from "./server-config";
 import { KloviServices, KloviServicesLive } from "./server-services";
 
-function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]) {
+function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]): Promise<void> {
 	return Effect.runPromise(saveSettingsEffect(path, settings).pipe(Effect.provide(BunContext.layer)));
 }
 
@@ -60,15 +60,21 @@ async function runService<A, E>(effect: Effect.Effect<A, E, RegistryRequirements
 const testDir = join(tmpdir(), `klovi-services-test-${Date.now()}`);
 const settingsPath = join(testDir, "settings.json");
 
-function makeTestLayer() {
-	const configLayer = Layer.succeed(ServerConfig, {
-		host: "127.0.0.1",
-		port: 0,
-		settingsPath: settingsPath,
-		version: "1.0.0",
-		commit: "test",
-	});
-	return KloviServicesLive.pipe(Layer.provide(configLayer), Layer.provide(BunPluginLayer));
+const testLayer = KloviServicesLive.pipe(
+	Layer.provide(
+		Layer.succeed(ServerConfig, {
+			host: "127.0.0.1",
+			port: 0,
+			settingsPath: settingsPath,
+			version: "1.0.0",
+			commit: "test",
+		}),
+	),
+	Layer.provide(BunPluginLayer),
+);
+
+function makeTestLayer(): typeof testLayer {
+	return testLayer;
 }
 
 function runWithServices<A>(fn: (services: Effect.Effect.Success<typeof KloviServices>) => A | Promise<A>): Promise<A> {

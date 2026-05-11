@@ -63,7 +63,11 @@ export function useSessionData(sessionId: string, project: string): SessionDataR
 	};
 }
 
-export function useSubAgentSessionData(sessionId: string, project: string, agentId: string) {
+export function useSubAgentSessionData(
+	sessionId: string,
+	project: string,
+	agentId: string,
+): ReturnType<typeof useEffectQuery<{ session: Session }>> {
 	const client = useKloviClient();
 	return useEffectQuery<{ session: Session }>(
 		() => client.getSubAgent({ sessionId: sessionId, project: project, agentId: agentId }),

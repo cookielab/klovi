@@ -11,7 +11,8 @@ import type {
 	Turn,
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
-import { parseMcpDisplayName, PluginConfig, streamJsonl } from "@cookielab.io/klovi-plugin-core";
+import { PluginConfig, parseMcpDisplayName, streamJsonl } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem, Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 import { parseCommandMessage } from "./command-message";
 import type { RawContentBlock, RawLine, RawToolResultBlock } from "./raw-types";
@@ -129,7 +130,28 @@ type ParsedSession = {
 	slug: string | undefined;
 };
 
-function loadClaudeSession(nativeId: string, sessionId: string) {
+function attachSubAgentIds(turns: Turn[], subAgentMap: Map<string, string>): void {
+	for (const turn of turns) {
+		if (turn.kind !== "assistant") {
+			continue;
+		}
+		for (const block of turn.contentBlocks) {
+			if (block.type === "tool_call" && block.call.rawName === "Task") {
+				const agentId = subAgentMap.get(block.call.toolUseId);
+				if (agentId) {
+					block.call.subAgentId = agentId;
+					block.call.kind = "subagent";
+					block.call.title = "Sub-Agent";
+				}
+			}
+		}
+	}
+}
+
+function loadClaudeSession(
+	nativeId: string,
+	sessionId: string,
+): Effect.Effect<ParsedSession, PlatformError.PlatformError, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const filePath = join(config.dataDir, "projects", nativeId, `${sessionId}.jsonl`);
@@ -139,22 +161,7 @@ function loadClaudeSession(nativeId: string, sessionId: string) {
 		const slug = extractSlug(rawLines);
 		const turns = buildTurns(rawLines, parseErrors);
 
-		// Attach subAgentId to Task tool calls and upgrade kind/title
-		for (const turn of turns) {
-			if (turn.kind !== "assistant") {
-				continue;
-			}
-			for (const block of turn.contentBlocks) {
-				if (block.type === "tool_call" && block.call.rawName === "Task") {
-					const agentId = subAgentMap.get(block.call.toolUseId);
-					if (agentId) {
-						block.call.subAgentId = agentId;
-						block.call.kind = "subagent";
-						block.call.title = "Sub-Agent";
-					}
-				}
-			}
-		}
+		attachSubAgentIds(turns, subAgentMap);
 
 		return {
 			session: {
@@ -168,7 +175,11 @@ function loadClaudeSession(nativeId: string, sessionId: string) {
 	});
 }
 
-function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: string) {
+function parseSubAgentSession(
+	sessionId: string,
+	encodedPath: string,
+	agentId: string,
+): Effect.Effect<Session, never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const filePath = join(config.dataDir, "projects", encodedPath, sessionId, "subagents", `agent-${agentId}.jsonl`);
@@ -180,21 +191,7 @@ function parseSubAgentSession(sessionId: string, encodedPath: string, agentId: s
 		const subAgentMap = extractSubAgentMap(parsed.rawLines);
 		const turns = buildTurns(parsed.rawLines, parsed.parseErrors);
 
-		for (const turn of turns) {
-			if (turn.kind !== "assistant") {
-				continue;
-			}
-			for (const block of turn.contentBlocks) {
-				if (block.type === "tool_call" && block.call.rawName === "Task") {
-					const nestedAgentId = subAgentMap.get(block.call.toolUseId);
-					if (nestedAgentId) {
-						block.call.subAgentId = nestedAgentId;
-						block.call.kind = "subagent";
-						block.call.title = "Sub-Agent";
-					}
-				}
-			}
-		}
+		attachSubAgentIds(turns, subAgentMap);
 
 		return { sessionId: sessionId, project: encodedPath, turns: turns, pluginId: "claude-code" } as Session;
 	});
@@ -295,7 +292,9 @@ type ParsedLines = {
 	parseErrors: ParseErrorTurn[];
 };
 
-function readJsonlLines(filePath: string) {
+function readJsonlLines(
+	filePath: string,
+): Effect.Effect<ParsedLines, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const rawLines: RawLine[] = [];
 		const parseErrors: ParseErrorTurn[] = [];
@@ -510,32 +509,67 @@ const TOOL_NORMALIZERS: Record<string, NormalizeFactory> = {
 		summary: String(i["file_path"] || ""),
 		formattedInput: i["file_path"] ? String(i["file_path"]) : JSON.stringify(i, null, 2),
 	}),
-	["Write"]: (i) => ({ kind: "file_write", title: "Write", summary: String(i["file_path"] || ""), formattedInput: formatWriteInput(i) }),
-	["Edit"]: (i) => ({ kind: "file_edit", title: "Edit", summary: String(i["file_path"] || ""), formattedInput: formatEditInput(i) }),
+	["Write"]: (i) => ({
+		kind: "file_write",
+		title: "Write",
+		summary: String(i["file_path"] || ""),
+		formattedInput: formatWriteInput(i),
+	}),
+	["Edit"]: (i) => ({
+		kind: "file_edit",
+		title: "Edit",
+		summary: String(i["file_path"] || ""),
+		formattedInput: formatEditInput(i),
+	}),
 	["NotebookRead"]: (i) => ({ kind: "file_read", title: "Notebook Read", summary: String(i["notebook_path"] || "") }),
-	["NotebookEdit"]: (i) => ({ kind: "file_edit", title: "Notebook Edit", summary: String(i["notebook_path"] || ""), formattedInput: formatNotebookEditInput(i) }),
+	["NotebookEdit"]: (i) => ({
+		kind: "file_edit",
+		title: "Notebook Edit",
+		summary: String(i["notebook_path"] || ""),
+		formattedInput: formatNotebookEditInput(i),
+	}),
 	["Glob"]: (i) => ({
 		kind: "search",
 		title: "Glob",
 		summary: String(i["pattern"] || ""),
-		formattedInput: formatFieldParts(i, [["pattern", "Pattern"], ["path", "Path"]]),
+		formattedInput: formatFieldParts(i, [
+			["pattern", "Pattern"],
+			["path", "Path"],
+		]),
 	}),
 	["Grep"]: (i) => ({
 		kind: "search",
 		title: "Grep",
 		summary: truncate(String(i["pattern"] || ""), N_60),
-		formattedInput: formatFieldParts(i, [["pattern", "Pattern"], ["path", "Path"], ["output_mode", "Mode"]]),
+		formattedInput: formatFieldParts(i, [
+			["pattern", "Pattern"],
+			["path", "Path"],
+			["output_mode", "Mode"],
+		]),
 	}),
 	["WebFetch"]: (i) => ({ kind: "web", title: "WebFetch", summary: truncate(String(i["url"] || ""), N_60) }),
 	["WebSearch"]: (i) => ({ kind: "web", title: "WebSearch", summary: truncate(String(i["query"] || ""), N_60) }),
 	["Task"]: (i) => ({ kind: "generic", title: "Task", summary: truncate(String(i["description"] || ""), N_60) }),
-	["AskUserQuestion"]: (i) => ({ kind: "generic", title: "AskUserQuestion", summary: getAskUserQuestionSummary(i), formattedInput: formatAskUserInput(i) }),
-	["TodoWrite"]: (i) => ({ kind: "generic", title: "TodoWrite", summary: truncate(String(i["subject"] || ""), N_60), formattedInput: formatTodoWriteInput(i) }),
+	["AskUserQuestion"]: (i) => ({
+		kind: "generic",
+		title: "AskUserQuestion",
+		summary: getAskUserQuestionSummary(i),
+		formattedInput: formatAskUserInput(i),
+	}),
+	["TodoWrite"]: (i) => ({
+		kind: "generic",
+		title: "TodoWrite",
+		summary: truncate(String(i["subject"] || ""), N_60),
+		formattedInput: formatTodoWriteInput(i),
+	}),
 	["TaskCreate"]: (i) => ({
 		kind: "generic",
 		title: "TaskCreate",
 		summary: truncate(String(i["subject"] || ""), N_60),
-		formattedInput: formatFieldParts(i, [["subject", "Subject"], ["description", "Description"]]),
+		formattedInput: formatFieldParts(i, [
+			["subject", "Subject"],
+			["description", "Description"],
+		]),
 	}),
 	["TaskUpdate"]: (i) => ({
 		kind: "generic",
@@ -543,18 +577,38 @@ const TOOL_NORMALIZERS: Record<string, NormalizeFactory> = {
 		summary: `#${i["taskId"] || "?"}${i["status"] ? ` → ${i["status"]}` : ""}`,
 		formattedInput: formatTaskUpdateInput(i),
 	}),
-	["TaskList"]: (i) => ({ kind: "generic", title: "TaskList", summary: "List all tasks", formattedInput: formatEmptyInput(i) }),
+	["TaskList"]: (i) => ({
+		kind: "generic",
+		title: "TaskList",
+		summary: "List all tasks",
+		formattedInput: formatEmptyInput(i),
+	}),
 	["TaskGet"]: (i) => ({ kind: "generic", title: "TaskGet", summary: `#${i["taskId"] || "?"}` }),
 	["TaskOutput"]: (i) => ({ kind: "generic", title: "TaskOutput", summary: String(i["task_id"] || "") }),
 	["TaskStop"]: (i) => ({ kind: "generic", title: "TaskStop", summary: String(i["task_id"] || i["shell_id"] || "") }),
 	["KillShell"]: (i) => ({ kind: "generic", title: "KillShell", summary: String(i["task_id"] || i["shell_id"] || "") }),
-	["EnterPlanMode"]: (i) => ({ kind: "generic", title: "EnterPlanMode", summary: "Enter plan mode", formattedInput: formatEmptyInput(i) }),
-	["ExitPlanMode"]: (i) => ({ kind: "generic", title: "ExitPlanMode", summary: "Exit plan mode", formattedInput: formatEmptyInput(i) }),
+	["EnterPlanMode"]: (i) => ({
+		kind: "generic",
+		title: "EnterPlanMode",
+		summary: "Enter plan mode",
+		formattedInput: formatEmptyInput(i),
+	}),
+	["ExitPlanMode"]: (i) => ({
+		kind: "generic",
+		title: "ExitPlanMode",
+		summary: "Exit plan mode",
+		formattedInput: formatEmptyInput(i),
+	}),
 };
 
 function normalizeToolCall(rawName: string, input: Record<string, unknown>): NormalizedToolCall {
 	if (rawName === "Bash") {
-		return { kind: "shell", title: "Bash", summary: truncate(String(input["command"] || ""), N_80), formattedInput: String(input["command"] || "") };
+		return {
+			kind: "shell",
+			title: "Bash",
+			summary: truncate(String(input["command"] || ""), N_80),
+			formattedInput: String(input["command"] || ""),
+		};
 	}
 	if (rawName === "Skill") {
 		const skillName = typeof input["skill"] === "string" ? input["skill"] : undefined;
@@ -562,7 +616,10 @@ function normalizeToolCall(rawName: string, input: Record<string, unknown>): Nor
 			kind: "skill",
 			title: skillName ?? "Skill",
 			summary: String(input["skill"] || ""),
-			formattedInput: formatFieldParts(input, [["skill", "Skill"], ["args", "Args"]]),
+			formattedInput: formatFieldParts(input, [
+				["skill", "Skill"],
+				["args", "Args"],
+			]),
 		};
 	}
 	if (rawName.startsWith("mcp__")) {
@@ -575,16 +632,12 @@ function normalizeToolCall(rawName: string, input: Record<string, unknown>): Nor
 	return factory ? factory(input) : { kind: "generic", title: rawName };
 }
 
-function buildToolCall(
-	block: RawContentBlock,
-	toolResults: ToolResultMap,
-): ToolCallWithResult {
-	const result = toolResults.get((block as { id: string }).id);
-	const rawName = (block as { name: string }).name;
-	const input = (block as { input: Record<string, unknown> }).input;
+function buildToolCall(block: RawContentBlock, toolResults: ToolResultMap): ToolCallWithResult {
+	const { id, name: rawName, input } = block as { id: string; name: string; input: Record<string, unknown> };
+	const result = toolResults.get(id);
 	const normalized = normalizeToolCall(rawName, input);
 	const toolCall: ToolCallWithResult = {
-		toolUseId: (block as { id: string }).id,
+		toolUseId: id,
 		kind: normalized.kind,
 		title: normalized.title,
 		rawName: rawName,

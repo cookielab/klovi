@@ -7,8 +7,6 @@ import { AssistantMessage } from "./AssistantMessage";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { UserMessage } from "./UserMessage";
 
-
-
 const N_5 = 5;
 
 const T_LINE = "line";
@@ -51,7 +49,7 @@ type RenderTurnOptions = {
 	onLinkClick: ((url: string) => void) | undefined;
 };
 
-function renderTurn(options: RenderTurnOptions) {
+function renderTurn(options: RenderTurnOptions): React.ReactNode {
 	const activeClass = options.isActive ? "active-message" : "";
 
 	switch (options.turn.kind) {
@@ -85,7 +83,7 @@ function renderTurn(options: RenderTurnOptions) {
 			return (
 				<div className={activeClass}>
 					<TurnBox
-						role="system"
+						{...{ role: "system" as const }}
 						timestamp={
 							options.turn.timestamp ? (
 								<time dateTime={options.turn.timestamp} data-tooltip={formatFullDateTime(options.turn.timestamp)}>
@@ -102,11 +100,15 @@ function renderTurn(options: RenderTurnOptions) {
 			return (
 				<div className={activeClass}>
 					<TurnBox
-						role="error"
+						{...{ role: "error" as const }}
 						badge="Parse Error"
 						timestamp={
 							options.turn.lineNumber > 0 ? (
-								<span className={PARSE_ERROR_LINE_CLASSES}><Text>{T_LINE}</Text><Text>{T_SP_1}</Text>{options.turn.lineNumber}</span>
+								<span className={PARSE_ERROR_LINE_CLASSES}>
+									<Text>{T_LINE}</Text>
+									<Text>{T_SP_1}</Text>
+									{options.turn.lineNumber}
+								</span>
 							) : undefined
 						}
 					>
@@ -117,7 +119,9 @@ function renderTurn(options: RenderTurnOptions) {
 							<div className={PARSE_ERROR_DETAILS_CLASSES}>{options.turn.errorDetails}</div>
 						) : null}
 						<details className={PARSE_ERROR_RAW_CLASSES}>
-							<summary><Text>{T_RAW_CONTENT}</Text></summary>
+							<summary>
+								<Text>{T_RAW_CONTENT}</Text>
+							</summary>
 							<pre>{options.turn.rawLine}</pre>
 						</details>
 					</TurnBox>
@@ -166,7 +170,6 @@ export function MessageList({
 		measureElement: (el) => el.getBoundingClientRect().height,
 	});
 
-	const totalSize = virtualizer.getTotalSize();
 	const items = virtualizer.getVirtualItems();
 
 	const previousCountRef = useRef(turns.length);
@@ -200,7 +203,7 @@ export function MessageList({
 	return (
 		<div ref={parentRef} className={SCROLL_CONTAINER_CLASSES}>
 			<style>{STEP_FADE_IN_KEYFRAMES}</style>
-			<div className={SCROLL_INNER_CLASSES} style={{ height: totalSize }}>
+			<div className={SCROLL_INNER_CLASSES}>
 				{items.map((item) => {
 					const turn = turns[item.index];
 					if (!turn) {

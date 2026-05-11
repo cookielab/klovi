@@ -1,6 +1,7 @@
 import type {
 	AssistantTurn,
 	ContentBlock,
+	PluginConfig,
 	Session,
 	TokenUsage,
 	ToolCallKind,
@@ -9,6 +10,7 @@ import type {
 	UserTurn,
 } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso, parseMcpDisplayName } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem, Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 import { type CodexSessionMeta, findCodexSessionFileById, normalizeSessionMeta } from "./session-index";
 import { readFileText } from "./shared/discovery-utils";
@@ -544,15 +546,15 @@ function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string)
 	let userTurnCounter = 0;
 	let assistantTurnCounter = 0;
 
-	const nextToolUseId = () => {
+	const nextToolUseId = (): string => {
 		toolUseCounter += 1;
 		return `codex-tool-${toolUseCounter}`;
 	};
-	const nextUserTurnId = () => {
+	const nextUserTurnId = (): string => {
 		userTurnCounter += 1;
 		return `codex-user-${userTurnCounter}`;
 	};
-	const nextAssistantTurnId = () => {
+	const nextAssistantTurnId = (): string => {
 		assistantTurnCounter += 1;
 		return `codex-assistant-${assistantTurnCounter}`;
 	};
@@ -580,7 +582,46 @@ function buildCodexTurns(events: CodexEvent[], model: string, timestamp: string)
 	return state.turns;
 }
 
-function loadCodexSession(_nativeId: string, sessionId: string) {
+type ParsedSessionContent = {
+	meta: unknown;
+	events: CodexEvent[];
+	turnContextModel: string | null;
+};
+
+function parseSessionText(text: string): ParsedSessionContent {
+	let meta: unknown = null;
+	const events: CodexEvent[] = [];
+	let turnContextModel: string | null = null;
+
+	iterateJsonl(text, ({ parsed, lineIndex }) => {
+		if (lineIndex === 0) {
+			const normalized = normalizeSessionMeta(parsed);
+			if (normalized) {
+				meta = normalized;
+				return;
+			}
+		}
+
+		if (!isKnownModel(turnContextModel)) {
+			const extracted = extractTurnContextModel(parsed);
+			if (isKnownModel(extracted)) {
+				turnContextModel = extracted;
+			}
+		}
+
+		const event = normalizeEvent(parsed);
+		if (event) {
+			events.push(event);
+		}
+	});
+
+	return { meta: meta, events: events, turnContextModel: turnContextModel };
+}
+
+function loadCodexSession(
+	_nativeId: string,
+	sessionId: string,
+): Effect.Effect<Session, PlatformError.PlatformError, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const filePath = yield* findCodexSessionFileById(sessionId);
 		if (!filePath) {
@@ -594,31 +635,7 @@ function loadCodexSession(_nativeId: string, sessionId: string) {
 
 		const text = yield* readFileText(filePath);
 
-		let meta: unknown = null;
-		const events: CodexEvent[] = [];
-		let turnContextModel: string | null = null;
-
-		iterateJsonl(text, ({ parsed, lineIndex }) => {
-			if (lineIndex === 0) {
-				const normalized = normalizeSessionMeta(parsed);
-				if (normalized) {
-					meta = normalized;
-					return;
-				}
-			}
-
-			if (!isKnownModel(turnContextModel)) {
-				const extracted = extractTurnContextModel(parsed);
-				if (isKnownModel(extracted)) {
-					turnContextModel = extracted;
-				}
-			}
-
-			const event = normalizeEvent(parsed);
-			if (event) {
-				events.push(event);
-			}
-		});
+		const { meta, events, turnContextModel } = parseSessionText(text);
 
 		const metaInfo = normalizeSessionMeta(meta);
 		const model = resolveCodexModel(metaInfo, turnContextModel);

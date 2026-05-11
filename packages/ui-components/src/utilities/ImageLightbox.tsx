@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-
 const N_200 = 200;
 const N_800 = 800;
 const N_600 = 600;
@@ -38,9 +37,10 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 	}, [handleClose]);
 
 	return (
-		<div
-			className={`${OVERLAY_BASE} ${visible ? "bg-black/85" : "bg-black/0"}`}
-			role="presentation"
+		<button
+			type="button"
+			className={`${OVERLAY_BASE} ${visible ? "bg-black/85" : "bg-black/0"} appearance-none border-0`}
+			aria-label="Close image preview"
 			onClick={handleClose}
 		>
 			<img
@@ -50,6 +50,6 @@ export function ImageLightbox({ src, onClose }: { src: string; onClose: () => vo
 				width={N_800}
 				height={N_600}
 			/>
-		</div>
+		</button>
 	);
 }

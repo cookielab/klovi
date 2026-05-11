@@ -14,7 +14,7 @@ const testLayer = Layer.mergeAll(
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
 
-function run<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function run<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 

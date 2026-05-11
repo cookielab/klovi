@@ -2,16 +2,32 @@ import type { SqliteClient, SqliteDb, SqliteQuery } from "@cookielab.io/klovi-pl
 import { SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
 import { Effect, Layer } from "effect";
 
+const NODE_SQLITE_MODULE = "node:sqlite" as const;
+
+type NodeSqliteStatement = {
+	all: (...params: never[]) => unknown[];
+	get: (...params: never[]) => unknown;
+};
+
+type NodeSqliteDatabase = {
+	prepare: (sql: string) => NodeSqliteStatement;
+	close: () => void;
+};
+
+type DatabaseSyncConstructor = new (path: string, options?: unknown) => NodeSqliteDatabase;
+
+type NodeSqliteModule = Record<"DatabaseSync", DatabaseSyncConstructor>;
+
 const nodeSqliteClient: SqliteClient = {
 	open: (dbPath, options) =>
 		Effect.tryPromise({
 			try: async () => {
 				// Node.js built-in SQLite (available in Node 22.5+)
-				const sqlite = await import("node:sqlite");
+				const sqlite = (await import(NODE_SQLITE_MODULE)) as NodeSqliteModule;
 				const db = new sqlite.DatabaseSync(dbPath, {
 					open: true,
 					readOnly: options?.readonly ?? true,
-				} as never);
+				});
 				return {
 					query: <T = unknown>(sql: string): SqliteQuery<T> => {
 						const stmt = db.prepare(sql);
@@ -20,7 +36,7 @@ const nodeSqliteClient: SqliteClient = {
 							get: (...params: unknown[]): T | undefined => stmt.get(...(params as never[])) as T | undefined,
 						};
 					},
-					close: () => {
+					close: (): void => {
 						db.close();
 					},
 				} satisfies SqliteDb;

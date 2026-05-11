@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
-import { FileSystem } from "@effect/platform";
+import { FileSystem, type Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 
 type DirEntry = {
@@ -13,7 +13,7 @@ type FileWithMtime = {
 	mtime: string;
 };
 
-export function readDirEntriesSafe(dir: string) {
+export function readDirEntriesSafe(dir: string): Effect.Effect<DirEntry[], never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
@@ -30,21 +30,26 @@ export function readDirEntriesSafe(dir: string) {
 	});
 }
 
-export function readFileText(filePath: string) {
+export function readFileText(
+	filePath: string,
+): Effect.Effect<string, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		return yield* fs.readFileString(filePath);
 	});
 }
 
-export function fileExists(filePath: string) {
+export function fileExists(filePath: string): Effect.Effect<boolean, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		return yield* fs.exists(filePath).pipe(Effect.catchAll(() => Effect.succeed(false)));
 	});
 }
 
-export function listFilesWithMtime(dir: string, suffix: string) {
+export function listFilesWithMtime(
+	dir: string,
+	suffix: string,
+): Effect.Effect<FileWithMtime[], never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));

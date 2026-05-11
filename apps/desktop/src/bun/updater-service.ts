@@ -2,6 +2,7 @@ import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { getUpdateSettings } from "@cookielab.io/klovi-server/services/settings-service";
+import type { FileSystem } from "@effect/platform";
 import { Duration, Effect, Schedule, SubscriptionRef } from "effect";
 import type { UpdateStatus } from "../shared/rpc-types";
 import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "./services";
@@ -16,7 +17,6 @@ import {
 	validateExtractedBundle,
 	validateUpdateInfo,
 } from "./updater";
-
 
 const N_500000 = 500_000;
 const N_100 = 100;
@@ -34,7 +34,7 @@ const CHECK_THROTTLE_MS = MINUTES_PER_THROTTLE * SECONDS_PER_MINUTE * MS_PER_SEC
 
 // ────── State helpers ──────
 
-const emitStatus = (status: UpdateStatus) =>
+const emitStatus = (status: UpdateStatus): Effect.Effect<void, never, UpdateStatusRef> =>
 	Effect.gen(function* () {
 		const ref = yield* UpdateStatusRef;
 		yield* SubscriptionRef.set(ref, status);
@@ -68,18 +68,20 @@ type StreamState = {
 	currentVersion: string;
 };
 
-const streamChunksToFile = (state: StreamState) =>
+const streamChunksToFile = (state: StreamState): Effect.Effect<number, Error, UpdateStatusRef> =>
 	Effect.gen(function* () {
 		let bytesDownloaded = 0;
 		const { reader, writer, totalBytes, version, currentVersion } = state;
 
-		while (true) {
+		let streaming = true;
+		while (streaming) {
 			const { done, value } = yield* Effect.tryPromise({
 				try: () => reader.read(),
 				catch: () => new Error("Stream read failed"),
 			});
 			if (done) {
-				break;
+				streaming = false;
+				continue;
 			}
 			yield* Effect.tryPromise({
 				try: () => Promise.resolve(writer.write(value)),
@@ -100,7 +102,11 @@ const streamChunksToFile = (state: StreamState) =>
 		return bytesDownloaded;
 	});
 
-const fetchAndSave = (url: string, destPath: string, version: string) =>
+const fetchAndSave = (
+	url: string,
+	destPath: string,
+	version: string,
+): Effect.Effect<void, Error, UpdaterConfig | UpdateStatusRef> =>
 	Effect.gen(function* () {
 		const config = yield* UpdaterConfig;
 		const response = yield* Effect.tryPromise({
@@ -141,7 +147,11 @@ const fetchAndSave = (url: string, destPath: string, version: string) =>
 		}
 	});
 
-const fetchWithRetry = (url: string, destPath: string, version: string) =>
+const fetchWithRetry = (
+	url: string,
+	destPath: string,
+	version: string,
+): Effect.Effect<void, Error, UpdaterConfig | UpdateStatusRef> =>
 	fetchAndSave(url, destPath, version).pipe(
 		Effect.retry(Schedule.exponential(Duration.seconds(1)).pipe(Schedule.compose(Schedule.recurs(2)))),
 		Effect.tapError(() =>
@@ -312,7 +322,11 @@ const downloadUpdate = Effect.gen(function* () {
 
 // ────── Decompress ──────
 
-const decompressBundle = (platform: Platform, compressedPath: string, tarPath: string) =>
+const decompressBundle = (
+	platform: Platform,
+	compressedPath: string,
+	tarPath: string,
+): Effect.Effect<void, Error, never> =>
 	Effect.gen(function* () {
 		const zstdPath = getZstdBinaryPath(platform);
 		const exists = yield* Effect.tryPromise({
@@ -388,7 +402,7 @@ const applyUpdate = Effect.gen(function* () {
 
 // ────── Platform-specific apply ──────
 
-const applyMacOs = (stagingDir: string, updatesDir: string) =>
+const applyMacOs = (stagingDir: string, updatesDir: string): Effect.Effect<void, Error, UpdaterConfig> =>
 	Effect.gen(function* () {
 		const config = yield* UpdaterConfig;
 		const newAppPath = yield* Effect.tryPromise({
@@ -451,7 +465,7 @@ const applyMacOs = (stagingDir: string, updatesDir: string) =>
 		Utils.quit();
 	});
 
-const applyWindows = (stagingDir: string, appDataDir: string) =>
+const applyWindows = (stagingDir: string, appDataDir: string): Effect.Effect<void, Error, UpdaterConfig> =>
 	Effect.gen(function* () {
 		const config = yield* UpdaterConfig;
 		const runningAppPath = join(appDataDir, "app");
@@ -559,7 +573,13 @@ const cleanupUpdates = Effect.gen(function* () {
 
 // ────── Scheduled checking ──────
 
-const startUpdateSchedule = (immediateCheck: boolean) =>
+const startUpdateSchedule = (
+	immediateCheck: boolean,
+): Effect.Effect<
+	void,
+	never,
+	SettingsPathRef | UpdaterConfig | UpdateStatusRef | AppDataDirRef | FileSystem.FileSystem
+> =>
 	Effect.gen(function* () {
 		const { path: settingsPath } = yield* SettingsPathRef;
 		const settings = yield* getUpdateSettings(settingsPath);

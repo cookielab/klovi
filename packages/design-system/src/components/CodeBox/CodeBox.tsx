@@ -1,8 +1,8 @@
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import type {} from "react-syntax-highlighter";
+import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism";
 import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
 import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
 import { useTheme } from "../../hooks/useTheme";
-
 
 const N_1_5 = 1.5;
 

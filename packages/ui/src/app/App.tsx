@@ -1,10 +1,10 @@
 import { Text } from "@cookielab.io/klovi-design-system";
 import { ErrorBoundary } from "@cookielab.io/klovi-ui-components/utilities";
 import { useCallback, useEffect, useState } from "react";
-import faviconUrl from "../../favicon.svg";
 import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../lib/context";
 import { isTransportRpcError } from "../lib/rpc-errors-effect";
 import type { GlobalSessionResult } from "../shared/types";
+import { faviconUrl } from "./assets";
 import { PackageDashboardStats } from "./components/dashboard/PackageDashboardStats";
 import { Header } from "./components/layout/Header";
 import { Layout } from "./components/layout/Layout";
@@ -33,7 +33,6 @@ import { useUpdateStatus } from "./hooks/useUpdateStatus";
 import { useViewState } from "./hooks/useViewState";
 import { getSidebarContent } from "./sidebar-content";
 import { getHeaderInfo, getResumeCommand, resolveProjectAndSessionEffect } from "./view-state";
-
 
 const T_LOADING = "Loading...";
 const T_WELCOME_TO_KLOVI = "Welcome to Klovi";
@@ -202,7 +201,11 @@ function App(): React.ReactNode {
 	]);
 
 	if (!ready) {
-		return <div className={LOADING_CLASSES}><Text>{T_LOADING}</Text></div>;
+		return (
+			<div className={LOADING_CLASSES}>
+				<Text>{T_LOADING}</Text>
+			</div>
+		);
 	}
 
 	return (
@@ -305,8 +308,12 @@ function AppMainContent({
 				<>
 					<div className={EMPTY_STATE_CLASSES}>
 						<img src={faviconUrl} alt="" width="64" height="64" className={EMPTY_STATE_LOGO_CLASSES} />
-						<div className={EMPTY_STATE_TITLE_CLASSES}><Text>{T_WELCOME_TO_KLOVI}</Text></div>
-						<p><Text>{T_SELECT_A_PROJECT_FROM_THE_SIDE}</Text></p>
+						<div className={EMPTY_STATE_TITLE_CLASSES}>
+							<Text>{T_WELCOME_TO_KLOVI}</Text>
+						</div>
+						<p>
+							<Text>{T_SELECT_A_PROJECT_FROM_THE_SIDE}</Text>
+						</p>
 					</div>
 					<PackageDashboardStats />
 				</>
@@ -324,8 +331,12 @@ function AppMainContent({
 			)}
 			{view.kind === "project" && (
 				<div className={EMPTY_STATE_CLASSES}>
-					<div className={EMPTY_STATE_TITLE_CLASSES}><Text>{T_SELECT_A_SESSION}</Text></div>
-					<p><Text>{T_CHOOSE_A_CONVERSATION_FROM_THE}</Text></p>
+					<div className={EMPTY_STATE_TITLE_CLASSES}>
+						<Text>{T_SELECT_A_SESSION}</Text>
+					</div>
+					<p>
+						<Text>{T_CHOOSE_A_CONVERSATION_FROM_THE}</Text>
+					</p>
 				</div>
 			)}
 			{view.kind === "session" &&
@@ -368,32 +379,40 @@ function AppGate(): React.ReactNode {
 	const [screen, setScreen] = useState<"connecting" | "onboarding" | "security-warning" | "none">("onboarding");
 	const isDesktopHost = hostBridge.getCapabilities().desktop;
 
+	const tryAcceptRisks = useCallback(async (): Promise<void> => {
+		try {
+			await runKloviEffect(client.acceptRisks());
+			setAccepted(true);
+		} catch (error) {
+			if (isDesktopHost && isTransportRpcError(error)) {
+				setScreen("connecting");
+				return;
+			}
+			setAccepted(true);
+		}
+	}, [client, isDesktopHost, runKloviEffect]);
+
+	const resolveInitialScreen = useCallback(async (): Promise<void> => {
+		const data = await runKloviEffect(client.isFirstLaunch());
+		if (data.firstLaunch) {
+			setScreen("onboarding");
+			return;
+		}
+		const settings = await runKloviEffect(client.getGeneralSettings());
+		if (settings.showSecurityWarning) {
+			setScreen("security-warning");
+			return;
+		}
+		setScreen("none");
+		await tryAcceptRisks();
+	}, [client, runKloviEffect, tryAcceptRisks]);
+
 	const initialize = useCallback(async () => {
 		setAccepted(false);
 		setLoading(true);
 		setScreen("onboarding");
 		try {
-			const data = await runKloviEffect(client.isFirstLaunch());
-			if (data.firstLaunch) {
-				setScreen("onboarding");
-				return;
-			}
-			const settings = await runKloviEffect(client.getGeneralSettings());
-			if (settings.showSecurityWarning) {
-				setScreen("security-warning");
-				return;
-			}
-			setScreen("none");
-			try {
-				await runKloviEffect(client.acceptRisks());
-				setAccepted(true);
-			} catch (error) {
-				if (isDesktopHost && isTransportRpcError(error)) {
-					setScreen("connecting");
-					return;
-				}
-				setAccepted(true);
-			}
+			await resolveInitialScreen();
 		} catch (error) {
 			if (isDesktopHost && isTransportRpcError(error)) {
 				setScreen("connecting");
@@ -403,7 +422,7 @@ function AppGate(): React.ReactNode {
 		} finally {
 			setLoading(false);
 		}
-	}, [client, isDesktopHost, runKloviEffect]);
+	}, [isDesktopHost, resolveInitialScreen]);
 
 	useEffect(() => {
 		initialize();
@@ -483,7 +502,12 @@ type DesktopHostReconnectPanelProps = {
 	onAction: () => void;
 };
 
-function DesktopHostReconnectPanel({ title, description, actionLabel, onAction }: DesktopHostReconnectPanelProps): React.ReactNode {
+function DesktopHostReconnectPanel({
+	title,
+	description,
+	actionLabel,
+	onAction,
+}: DesktopHostReconnectPanelProps): React.ReactNode {
 	return (
 		<section className={EMPTY_STATE_CLASSES}>
 			<img src={faviconUrl} alt="" width="64" height="64" className={EMPTY_STATE_LOGO_CLASSES} />

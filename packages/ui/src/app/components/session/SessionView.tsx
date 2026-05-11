@@ -3,7 +3,6 @@ import { useSessionData } from "../../hooks/useSessionData";
 import { PackageMessageList } from "../message/PackageMessageList";
 import { TypedErrorDisplay } from "../ui/TypedErrorDisplay";
 
-
 const T_LOADING_SESSION = "Loading session...";
 const T_TEXT = "⎇";
 const T_SP_1 = " ";
@@ -23,7 +22,11 @@ export function SessionView({ sessionId, project, gitBranch }: SessionViewProps)
 	const { data, loading, error, retry } = useSessionData(sessionId, project);
 
 	if (loading) {
-		return <div className={LOADING_CLASSES}><Text>{T_LOADING_SESSION}</Text></div>;
+		return (
+			<div className={LOADING_CLASSES}>
+				<Text>{T_LOADING_SESSION}</Text>
+			</div>
+		);
 	}
 	if (error) {
 		return <TypedErrorDisplay error={error} onRetry={retry} />;
@@ -37,7 +40,11 @@ export function SessionView({ sessionId, project, gitBranch }: SessionViewProps)
 		<>
 			{gitBranch ? (
 				<div className={BRANCH_BAR_CLASSES}>
-					<span className={BRANCH_ICON_CLASSES}><Text>{T_TEXT}</Text></span><Text>{T_SP_1}</Text>{gitBranch}
+					<span className={BRANCH_ICON_CLASSES}>
+						<Text>{T_TEXT}</Text>
+					</span>
+					<Text>{T_SP_1}</Text>
+					{gitBranch}
 				</div>
 			) : null}
 			<PackageMessageList

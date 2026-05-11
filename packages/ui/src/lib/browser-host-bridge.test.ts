@@ -1,6 +1,5 @@
 import { browserHostBridge } from "./browser-host-bridge";
 
-
 const noop = (): undefined => undefined;
 describe("browserHostBridge capabilities", () => {
 	const caps = browserHostBridge.getCapabilities();

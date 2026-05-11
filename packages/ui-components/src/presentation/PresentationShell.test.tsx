@@ -2,7 +2,6 @@ import { cleanup, render } from "@testing-library/react";
 import type { Turn } from "../types/index";
 import { PresentationShell } from "./PresentationShell";
 
-
 const noop = (): undefined => undefined;
 const STEP_REGEX = /Step\s+1\s*\/\s*2/u;
 

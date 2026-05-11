@@ -7,7 +7,6 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Ref } from "effect";
 import { streamJsonl, streamJsonlHead } from "./jsonl-stream";
 
-
 const N_3 = 3;
 const N_50 = 50;
 const N_5 = 5;
@@ -21,7 +20,7 @@ const N_4 = 4;
 const testDir = join(tmpdir(), `klovi-jsonl-stream-test-${Date.now()}`);
 const fsLayer = NodeFileSystem.layer;
 
-function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>) {
+function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(fsLayer)) as Effect.Effect<A, E, never>);
 }
 
@@ -193,9 +192,13 @@ describe("streamJsonl", () => {
 		const filePath = join(testDir, "messy.jsonl");
 		await Bun.write(
 			filePath,
-			[JSON.stringify({ a: 1 }), "{ broken", JSON.stringify({ a: N_3 }), "also-broken", JSON.stringify({ a: N_5 })].join(
-				"\n",
-			),
+			[
+				JSON.stringify({ a: 1 }),
+				"{ broken",
+				JSON.stringify({ a: N_3 }),
+				"also-broken",
+				JSON.stringify({ a: N_5 }),
+			].join("\n"),
 		);
 
 		const seen: number[] = [];

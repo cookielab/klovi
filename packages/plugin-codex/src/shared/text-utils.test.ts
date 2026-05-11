@@ -1,6 +1,5 @@
 import { truncate } from "./text-utils";
 
-
 const N_10 = 10;
 const N_5 = 5;
 

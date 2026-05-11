@@ -4,7 +4,6 @@ import { useKloviHostBridge, useRunKloviEffect } from "../../lib/context";
 import { kloviHostBridge } from "../../lib/rpc-client";
 import type { UpdateStatus } from "../../shared/rpc-types";
 
-
 const T_TIMES = "&times;";
 
 const NOTIFICATION_CLASSES =

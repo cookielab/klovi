@@ -22,7 +22,6 @@ import {
 } from "./parser";
 import type { RawLine } from "./raw-types";
 
-
 const N_36 = 36;
 const N_8 = 8;
 const N_5 = 5;
@@ -186,7 +185,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("shell");
 		expect(toolCall.title).toBe("Bash");
 		expect(toolCall.rawName).toBe("Bash");
@@ -212,7 +212,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("file_write");
 		expect(toolCall.title).toBe("Write");
 	});
@@ -237,7 +238,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("file_edit");
 		expect(toolCall.title).toBe("Edit");
 	});
@@ -262,7 +264,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("search");
 		expect(toolCall.title).toBe("Glob");
 	});
@@ -287,7 +290,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("web");
 		expect(toolCall.title).toBe("WebFetch");
 	});
@@ -312,7 +316,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("skill");
 		expect(toolCall.title).toBe("verify");
 		expect(toolCall.summary).toBe("verify");
@@ -339,7 +344,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("skill");
 		expect(toolCall.title).toBe("Skill");
 		expect(toolCall.summary).toBe("");
@@ -365,7 +371,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("mcp");
 		expect(toolCall.title).toBe("read_file");
 		expect(toolCall.summary).toBe("read_file");
@@ -392,7 +399,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.kind).toBe("generic");
 		expect(toolCall.title).toBe("SomeFutureToolName");
 	});
@@ -1075,7 +1083,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.summary).toBe("/tmp/readme.ts");
 		expect(toolCall.formattedInput).toBe("/tmp/readme.ts");
 	});
@@ -1100,7 +1109,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.summary).toBe("/tmp/out.ts");
 		expect(toolCall.formattedInput).toContain("File: /tmp/out.ts");
 		expect(toolCall.formattedInput).toContain("Content:\nhello world");
@@ -1126,7 +1136,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.summary).toBe("/tmp/a.ts");
 		expect(toolCall.formattedInput).toContain("File: /tmp/a.ts");
 		expect(toolCall.formattedInput).toContain("Replace:\nbefore");
@@ -1153,7 +1164,8 @@ describe("buildTurns", () => {
 		];
 		const turns = buildTurns(lines);
 		const turn = turns[0] as AssistantTurn;
-		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>).call;
+		const toolCall = (turn.contentBlocks[0] as Extract<(typeof turn.contentBlocks)[number], { type: "tool_call" }>)
+			.call;
 		expect(toolCall.summary).toBe("bun run test");
 		expect(toolCall.formattedInput).toBe("bun run test");
 	});
@@ -1452,7 +1464,7 @@ describe("findImplSessionId", () => {
 
 const memTestDir = join(tmpdir(), `klovi-claude-parser-mem-${Date.now()}`);
 const memTestLayer = Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: memTestDir }));
-function memRun<A, E, R>(eff: Effect.Effect<A, E, R>) {
+function memRun<A, E, R>(eff: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(eff.pipe(Effect.provide(memTestLayer)) as Effect.Effect<A, E, never>);
 }
 

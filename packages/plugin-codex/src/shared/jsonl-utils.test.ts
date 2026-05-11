@@ -1,7 +1,5 @@
 import { iterateJsonl } from "./jsonl-utils";
 
-
-
 const noop = (): undefined => undefined;
 const N_4 = 4;
 

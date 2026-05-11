@@ -5,10 +5,6 @@ import type { Turn } from "../types/index";
 import { useKeyboard } from "./useKeyboard";
 import { usePresentationMode } from "./usePresentationMode";
 
-
-
-const N_100 = 100;
-
 const T_STEP = "Step";
 const T_SP_1 = " ";
 const T_TEXT = "/";
@@ -72,10 +68,6 @@ export function PresentationShell({
 		}
 	}, [currentStep]);
 
-	const percentMultiplier = N_100;
-	const progress =
-		presentation.totalSteps > 0 ? ((presentation.currentStep + 1) / presentation.totalSteps) * percentMultiplier : 0;
-
 	const className = presentation.fullscreen ? FULLSCREEN_CLASSES : SHELL_CLASSES;
 
 	return (
@@ -90,12 +82,20 @@ export function PresentationShell({
 			/>
 			<div className={PROGRESS_CLASSES}>
 				<span>
-					<Text>{T_STEP}</Text><Text>{T_SP_1}</Text>{presentation.currentStep + 1}<Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{presentation.totalSteps}
+					<Text>{T_STEP}</Text>
+					<Text>{T_SP_1}</Text>
+					{presentation.currentStep + 1}
+					<Text>{T_SP_1}</Text>
+					<Text>{T_TEXT}</Text>
+					<Text>{T_SP_1}</Text>
+					{presentation.totalSteps}
 				</span>
 				<div className={PROGRESS_BAR_CLASSES}>
-					<div className={PROGRESS_FILL_CLASSES} style={{ width: `${progress}%` }} />
+					<div className={PROGRESS_FILL_CLASSES} />
 				</div>
-				<span className={HINT_CLASSES}><Text>{T_STEP_MESSAGE_ESC_EXIT_F_FULLSC}</Text></span>
+				<span className={HINT_CLASSES}>
+					<Text>{T_STEP_MESSAGE_ESC_EXIT_F_FULLSC}</Text>
+				</span>
 			</div>
 		</div>
 	);

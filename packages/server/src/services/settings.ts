@@ -4,7 +4,6 @@ import { Effect } from "effect";
 import { BUILTIN_PLUGIN_DESCRIPTORS } from "./catalog";
 import { SettingsWriteError } from "./errors";
 
-
 const N_6 = 6;
 
 type UpdateChannel = "stable" | "candidate" | "beta";

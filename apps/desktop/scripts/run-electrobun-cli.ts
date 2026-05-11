@@ -194,20 +194,38 @@ export function getTemplate(name: string): TemplateEntry {
 `,
 };
 
-async function ensureShims(): Promise<void> {
-	for (const [relativePath, contents] of Object.entries(shims)) {
-		const fullPath = join(electrobunDir, relativePath);
-		mkdirSync(dirname(fullPath), { recursive: true });
-		const file = Bun.file(fullPath);
-		const current = (await file.exists()) ? await file.text() : null;
-		if (current !== contents) {
-			await Bun.write(fullPath, contents);
-		}
+async function applyShim([relativePath, contents]: [string, string]): Promise<void> {
+	const fullPath = join(electrobunDir, relativePath);
+	mkdirSync(dirname(fullPath), { recursive: true });
+	const file = Bun.file(fullPath);
+	const current = (await file.exists()) ? await file.text() : null;
+	if (current !== contents) {
+		await Bun.write(fullPath, contents);
 	}
+}
+
+async function ensureShims(): Promise<void> {
+	await Promise.all(Object.entries(shims).map((entry) => applyShim(entry)));
 }
 
 const HARDCODED_WM_CLASS = "ElectrobunKitchenSink-dev";
 const REPLACEMENT_WM_CLASS = "Klovi";
+
+async function patchNativeLibrary(libPath: string, searchBytes: Buffer, replacement: Buffer): Promise<void> {
+	const file = Bun.file(libPath);
+	if (!(await file.exists())) {
+		return;
+	}
+
+	const buf = Buffer.from(await file.arrayBuffer());
+	const idx = buf.indexOf(searchBytes);
+	if (idx === -1) {
+		return; // already patched or not present
+	}
+
+	replacement.copy(buf, idx);
+	await Bun.write(libPath, buf);
+}
 
 async function patchNativeLibraries(): Promise<void> {
 	const distDir = join(electrobunDir, "dist-linux-x64");
@@ -216,22 +234,7 @@ async function patchNativeLibraries(): Promise<void> {
 	const replacement = Buffer.alloc(searchBytes.length);
 	replacement.write(REPLACEMENT_WM_CLASS, "utf-8"); // rest is null bytes
 
-	for (const lib of libs) {
-		const libPath = join(distDir, lib);
-		const file = Bun.file(libPath);
-		if (!(await file.exists())) {
-			continue;
-		}
-
-		const buf = Buffer.from(await file.arrayBuffer());
-		const idx = buf.indexOf(searchBytes);
-		if (idx === -1) {
-			continue; // already patched or not present
-		}
-
-		replacement.copy(buf, idx);
-		await Bun.write(libPath, buf);
-	}
+	await Promise.all(libs.map((lib) => patchNativeLibrary(join(distDir, lib), searchBytes, replacement)));
 }
 
 async function installDevDesktopEntry(): Promise<void> {

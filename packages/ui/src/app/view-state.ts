@@ -3,10 +3,10 @@ import { Effect } from "effect";
 import type { KloviClient } from "../lib/client";
 import { kloviClient } from "../lib/rpc-client";
 import { isRpcTransportError } from "../lib/rpc-errors";
-import { isTransportRpcError } from "../lib/rpc-errors-effect";
+import { isTransportRpcError, type RpcError } from "../lib/rpc-errors-effect";
+import type { KloviClientService } from "../lib/runtime";
 import type { Project, SessionSummary } from "../shared/types";
 import { getFrontendPlugin } from "./plugin-registry";
-
 
 const N_3 = 3;
 const N_60 = 60;
@@ -103,17 +103,23 @@ async function resolveProjectAndSession(
 	}
 }
 
-const loadProjectEffect = (encodedPath: string) =>
+const loadProjectEffect = (encodedPath: string): Effect.Effect<Project | undefined, RpcError, KloviClientService> =>
 	kloviClient
 		.getProjects()
 		.pipe(Effect.map((data) => data.projects.find((project) => project.encodedPath === encodedPath)));
 
-const loadProjectSessionEffect = (project: Project, sessionId: string) =>
+const loadProjectSessionEffect = (
+	project: Project,
+	sessionId: string,
+): Effect.Effect<SessionSummary | undefined, RpcError, KloviClientService> =>
 	kloviClient
 		.getSessions({ encodedPath: project.encodedPath })
 		.pipe(Effect.map((data) => data.sessions.find((session) => session.sessionId === sessionId)));
 
-const resolveProjectAndSessionEffect = (encodedPath: string, sessionId: string) =>
+const resolveProjectAndSessionEffect = (
+	encodedPath: string,
+	sessionId: string,
+): Effect.Effect<{ project: Project; session: SessionSummary } | null, never, KloviClientService> =>
 	Effect.gen(function* () {
 		const project = yield* loadProjectEffect(encodedPath);
 		if (!project) {
@@ -141,7 +147,10 @@ function parseHashToStaticView(hash: string): ViewState | null {
 	return null;
 }
 
-function resolveSessionViewEffect(project: Project, sessionId: string) {
+function resolveSessionViewEffect(
+	project: Project,
+	sessionId: string,
+): Effect.Effect<ViewState, never, KloviClientService> {
 	return Effect.gen(function* () {
 		const sessionResult = yield* Effect.either(loadProjectSessionEffect(project, sessionId));
 		if (sessionResult._tag === "Left") {
@@ -156,7 +165,11 @@ function resolveSessionViewEffect(project: Project, sessionId: string) {
 	});
 }
 
-function resolveProjectViewEffect(encodedPath: string, sessionId: string | undefined, subAgentId: string | undefined) {
+function resolveProjectViewEffect(
+	encodedPath: string,
+	sessionId: string | undefined,
+	subAgentId: string | undefined,
+): Effect.Effect<ViewState, never, KloviClientService> {
 	return Effect.gen(function* () {
 		const projectResult = yield* Effect.either(loadProjectEffect(encodedPath));
 		if (projectResult._tag === "Left") {
@@ -185,7 +198,7 @@ function resolveProjectViewEffect(encodedPath: string, sessionId: string | undef
 	});
 }
 
-const restoreFromHashEffect = () =>
+const restoreFromHashEffect = (): Effect.Effect<ViewState, never, KloviClientService> =>
 	Effect.gen(function* () {
 		const hash = globalThis.location.hash.replace(HASH_PREFIX_REGEX, "");
 		const staticView = parseHashToStaticView(hash);

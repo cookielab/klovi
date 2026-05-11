@@ -3,8 +3,6 @@ import type { DashboardStats } from "../../../shared/types";
 import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { PackageDashboardStats } from "./PackageDashboardStats";
 
-
-
 const noop = (): undefined => undefined;
 const N_3 = 3;
 const N_10 = 10;

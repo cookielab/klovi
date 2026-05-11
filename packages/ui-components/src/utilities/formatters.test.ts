@@ -7,7 +7,6 @@ import {
 	shortModel,
 } from "./formatters";
 
-
 const N_5 = 5;
 const N_60000 = 60_000;
 const N_3 = 3;

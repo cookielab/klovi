@@ -1,5 +1,6 @@
 import { basename } from "node:path";
 import type { Session, SystemTurn } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem, Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 import { readFileText } from "./shared/discovery-utils";
 import type { CursorPlanSummary } from "./types";
@@ -72,7 +73,9 @@ function getPlanFallbackName(filePath: string): string {
 	return basename(filePath).replace(PLAN_FILE_SUFFIX_REGEX, "");
 }
 
-function readPlanDisplayName(filePath: string) {
+function readPlanDisplayName(
+	filePath: string,
+): Effect.Effect<string, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return readFileText(filePath).pipe(
 		Effect.map((text) => {
 			const parsed = parsePlanFrontmatter(text);
@@ -90,7 +93,11 @@ function makeSystemTurn(text: string, timestamp: string): SystemTurn {
 	};
 }
 
-function loadCursorPlanSession(plan: CursorPlanSummary) {
+type CursorPlanSession = Session & { turns: [SystemTurn] };
+
+function loadCursorPlanSession(
+	plan: CursorPlanSummary,
+): Effect.Effect<CursorPlanSession, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return readFileText(plan.filePath).pipe(
 		Effect.map((text) => {
 			const parsed = parsePlanFrontmatter(text);
@@ -99,7 +106,7 @@ function loadCursorPlanSession(plan: CursorPlanSummary) {
 				project: plan.projectPath,
 				pluginId: "cursor",
 				turns: [makeSystemTurn(parsed.body, plan.timestamp)],
-			} satisfies Session;
+			} satisfies CursorPlanSession;
 		}),
 	);
 }

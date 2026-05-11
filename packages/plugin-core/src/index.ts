@@ -9,6 +9,7 @@ export {
 export { epochMsToIso, epochSecondsToIso, maxIso, sortByIsoDesc } from "./iso-time";
 export type { JsonlLineContext, JsonlVisitor, StreamJsonlHeadOptions, StreamJsonlOptions } from "./jsonl-stream";
 export { streamJsonl, streamJsonlHead } from "./jsonl-stream";
+export { parseMcpDisplayName } from "./mcp-utils";
 export type { PluginConfigShape } from "./plugin-config";
 export { PluginConfig } from "./plugin-config";
 export { PluginError } from "./plugin-errors";
@@ -27,7 +28,6 @@ export type {
 	ToolPluginSessionDetail,
 	ToolPluginSubAgentParams,
 } from "./plugin-types";
-export { parseMcpDisplayName } from "./mcp-utils";
 export { stripT3CodeSuffix } from "./resolve-worktree";
 export type { ParsedSessionId } from "./session-id";
 export { encodeSessionId, parseSessionId } from "./session-id";

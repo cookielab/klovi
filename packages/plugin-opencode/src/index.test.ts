@@ -1,4 +1,3 @@
-import { Database } from "bun:sqlite";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,6 +7,18 @@ import { Effect, Layer } from "effect";
 import { openCodePlugin } from "./index";
 import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
+const BUN_SQLITE_MODULE = "bun:sqlite" as const;
+
+type BunDatabase = {
+	run: (sql: string, params?: unknown[]) => void;
+	close: () => void;
+};
+
+type DatabaseConstructor = new (path: string, options?: { create?: boolean; readonly?: boolean }) => BunDatabase;
+
+type BunSqliteModule = Record<"Database", DatabaseConstructor>;
+
+const { Database } = (await import(BUN_SQLITE_MODULE)) as BunSqliteModule;
 
 const N_1706000000000 = 1_706_000_000_000;
 const N_1706001000000 = 1_706_001_000_000;
@@ -23,7 +34,7 @@ const testLayer = Layer.mergeAll(
 	BunSqliteLayer,
 );
 
-function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 

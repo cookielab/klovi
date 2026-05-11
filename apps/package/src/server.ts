@@ -32,7 +32,7 @@ function openInBrowser(url: string): void {
  * npm contract — use `startKloviServer` from `@cookielab.io/klovi/server`.
  */
 async function startKloviPackageServer(options: StartKloviPackageServerOptions = {}): Promise<KloviPackageServer> {
-	const makeServe = () => makePackageServeLayer(options.staticDir);
+	const makeServe = (): ReturnType<typeof makePackageServeLayer> => makePackageServeLayer(options.staticDir);
 	const result = await bootstrapServer(options, makeServe);
 
 	if (options.openBrowser) {

@@ -5,9 +5,6 @@ import { detectOutputFormat } from "../utilities/format-detector";
 import { ImageLightbox } from "../utilities/ImageLightbox";
 import { MAX_OUTPUT_LENGTH, truncateOutput } from "./ToolCallDefaults";
 
-
-
-
 const N_32 = 32;
 
 const N_200 = 200;
@@ -60,16 +57,27 @@ export function SmartToolOutput({ output, isError, resultImages }: SmartToolOutp
 
 	return (
 		<div>
-			<div className={SECTION_LABEL_CLASSES}><Text>{T_OUTPUT}</Text></div>
+			<div className={SECTION_LABEL_CLASSES}>
+				<Text>{T_OUTPUT}</Text>
+			</div>
 			{output && detectedLang && !isError ? <CodeBox language={detectedLang}>{truncated}</CodeBox> : null}
 			{output && !(detectedLang && !isError) ? (
 				<div className={`${OUTPUT_BASE_CLASSES}${isError ? "text-error" : ""}`}>{truncated}</div>
 			) : null}
-			{wasTruncated && <div className="py-1 text-[0.75rem] text-foreground-subtle italic"><Text>{T_TRUNCATED}</Text></div>}
+			{wasTruncated && (
+				<div className="py-1 text-[0.75rem] text-foreground-subtle italic">
+					<Text>{T_TRUNCATED}</Text>
+				</div>
+			)}
 			{resultImages && resultImages.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{resultImages.map((img, i) => (
-						<ToolResultImageButton key={`${img.mediaType}-${img.data.slice(0, N_32)}`} img={img} index={i} onSelect={setLightboxSrc} />
+						<ToolResultImageButton
+							key={`${img.mediaType}-${img.data.slice(0, N_32)}`}
+							img={img}
+							index={i}
+							onSelect={setLightboxSrc}
+						/>
 					))}
 				</div>
 			)}

@@ -1,6 +1,5 @@
 import { formatLaunchFailure, parseArgs, parsePidList, selectWindowCandidate } from "./verify-linux-window-identity";
 
-
 const N_123 = 123;
 const N_456 = 456;
 const N_789 = 789;

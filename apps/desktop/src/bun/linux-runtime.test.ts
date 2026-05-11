@@ -10,7 +10,10 @@ import {
 	resolveLinuxRenderer,
 } from "./linux-runtime";
 
-const runDetect = (platform: NodeJS.Platform, env: Record<string, string | undefined>) =>
+const runDetect = (
+	platform: NodeJS.Platform,
+	env: Record<string, string | undefined>,
+): Promise<"dark" | "light" | null> =>
 	Effect.runPromise(detectLinuxSystemTheme(platform, env).pipe(Effect.provide(BunContext.layer)));
 
 describe("resolveLinuxRenderer", () => {

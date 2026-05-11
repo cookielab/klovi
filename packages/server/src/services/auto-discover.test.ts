@@ -16,7 +16,7 @@ const testLayer = Layer.merge(
 	NodeFileSystem.layer,
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
-const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>): Promise<A> =>
 	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 const testDir = join(tmpdir(), `klovi-registry-test-${Date.now()}`);

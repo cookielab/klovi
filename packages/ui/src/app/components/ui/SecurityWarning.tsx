@@ -1,12 +1,13 @@
 import { Text } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import { useCallback, useState } from "react";
-import faviconUrl from "../../../../favicon.svg";
-
+import { faviconUrl } from "../../assets";
 
 const T_SESSION_DATA_NOTICE = "Session Data Notice";
-const T_KLOVI_READS_AI_CODING_SESSION_ = "Klovi reads AI coding session history from your local machine. Session data may contain sensitive information\n\t\t\t\tsuch as API keys, credentials, or private code snippets.";
-const T_KLOVI_IS_FULLY_LOCAL_YOUR_DATA = "Klovi is fully local — your data never leaves your machine. Klovi is open source, so you can verify this\n\t\t\t\tyourself.";
+const T_KLOVI_READS_AI_CODING_SESSION_ =
+	"Klovi reads AI coding session history from your local machine. Session data may contain sensitive information\n\t\t\t\tsuch as API keys, credentials, or private code snippets.";
+const T_KLOVI_IS_FULLY_LOCAL_YOUR_DATA =
+	"Klovi is fully local — your data never leaves your machine. Klovi is open source, so you can verify this\n\t\t\t\tyourself.";
 const T_BE_MINDFUL_WHEN_SCREEN_SHARING = "Be mindful when screen sharing or using Klovi in public settings.";
 const T_DON_T_SHOW_THIS_AGAIN = " Don't show this again";
 const T_ACCEPT_CONTINUE = "Accept & Continue";
@@ -53,7 +54,9 @@ function SecurityNoticeContent({ headingId, onAccept, onDontShowAgain }: Securit
 			<p>
 				<Text>{T_KLOVI_IS_FULLY_LOCAL_YOUR_DATA}</Text>
 			</p>
-			<p className={MUTED_CLASSES}><Text>{T_BE_MINDFUL_WHEN_SCREEN_SHARING}</Text></p>
+			<p className={MUTED_CLASSES}>
+				<Text>{T_BE_MINDFUL_WHEN_SCREEN_SHARING}</Text>
+			</p>
 			<label className={CHECKBOX_LABEL_CLASSES}>
 				<input type="checkbox" className="custom-checkbox" checked={dontShow} onChange={handleDontShowChange} />
 				<Text>{T_DON_T_SHOW_THIS_AGAIN}</Text>

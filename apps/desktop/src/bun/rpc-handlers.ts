@@ -32,6 +32,8 @@ import { refreshRegistry } from "./runtime";
 import { RegistryRef, SettingsPathRef, VersionState } from "./services";
 import { applyUpdate as applyUpdateEffect, checkForUpdate } from "./updater-service";
 
+type Wrap<Effct, R> = Effct extends Effect.Effect<infer A, infer E, infer Req> ? Effect.Effect<A, E, Req | R> : never;
+
 // ---------- Onboarding / misc ----------
 
 const acceptRisksHandler = Effect.gen(function* () {
@@ -74,31 +76,46 @@ const getProjectsHandler = Effect.gen(function* () {
 	return yield* getProjectsEffect(registry);
 });
 
-const getSessionsHandler = (params: { encodedPath: string }) =>
+const getSessionsHandler = (params: { encodedPath: string }): Wrap<ReturnType<typeof getSessionsEffect>, RegistryRef> =>
 	Effect.gen(function* () {
 		const registry = yield* currentRegistry;
 		return yield* getSessionsEffect(registry, params);
 	});
 
-const getSessionHandler = (params: { sessionId: string; project: string }) =>
+const getSessionHandler = (params: {
+	sessionId: string;
+	project: string;
+}): Wrap<ReturnType<typeof getSessionEffect>, RegistryRef> =>
 	Effect.gen(function* () {
 		const registry = yield* currentRegistry;
 		return yield* getSessionEffect(registry, params);
 	});
 
-const getSessionHeadHandler = (params: { sessionId: string; project: string; headSize?: number }) =>
+const getSessionHeadHandler = (params: {
+	sessionId: string;
+	project: string;
+	headSize?: number;
+}): Wrap<ReturnType<typeof getSessionHeadEffect>, RegistryRef> =>
 	Effect.gen(function* () {
 		const registry = yield* currentRegistry;
 		return yield* getSessionHeadEffect(registry, params);
 	});
 
-const getSessionTailHandler = (params: { sessionId: string; project: string; fromTurn: number }) =>
+const getSessionTailHandler = (params: {
+	sessionId: string;
+	project: string;
+	fromTurn: number;
+}): Wrap<ReturnType<typeof getSessionTailEffect>, RegistryRef> =>
 	Effect.gen(function* () {
 		const registry = yield* currentRegistry;
 		return yield* getSessionTailEffect(registry, params);
 	});
 
-const getSubAgentHandler = (params: { sessionId: string; project: string; agentId: string }) =>
+const getSubAgentHandler = (params: {
+	sessionId: string;
+	project: string;
+	agentId: string;
+}): Wrap<ReturnType<typeof getSubAgentEffect>, RegistryRef> =>
 	Effect.gen(function* () {
 		const registry = yield* currentRegistry;
 		return yield* getSubAgentEffect(registry, params);
@@ -116,7 +133,17 @@ const getPluginSettingsHandler = Effect.gen(function* () {
 	return yield* getPluginSettingsEffect(path);
 });
 
-const updatePluginSettingHandler = (params: { pluginId: string; enabled?: boolean; dataDir?: string | null }) =>
+const updatePluginSettingHandler = (params: {
+	pluginId: string;
+	enabled?: boolean;
+	dataDir?: string | null;
+}): Wrap<
+	ReturnType<typeof updatePluginSettingEffect>,
+	| SettingsPathRef
+	| RegistryRef
+	| Effect.Effect.Context<typeof refreshRegistry>
+	| Effect.Effect.Context<ReturnType<typeof invalidateStatsCache>>
+> =>
 	Effect.gen(function* () {
 		const { path } = yield* SettingsPathRef;
 		const result = yield* updatePluginSettingEffect(path, params);
@@ -130,7 +157,9 @@ const getGeneralSettingsHandler = Effect.gen(function* () {
 	return yield* getGeneralSettingsEffect(path);
 });
 
-const updateGeneralSettingsHandler = (params: { showSecurityWarning?: boolean }) =>
+const updateGeneralSettingsHandler = (params: {
+	showSecurityWarning?: boolean;
+}): Wrap<ReturnType<typeof updateGeneralSettingsEffect>, SettingsPathRef> =>
 	Effect.gen(function* () {
 		const { path } = yield* SettingsPathRef;
 		return yield* updateGeneralSettingsEffect(path, params);
@@ -155,7 +184,7 @@ const updateUpdateSettingsHandler = (params: {
 	channel?: UpdateChannel;
 	checkIntervalHours?: number;
 	autoDownload?: boolean;
-}) =>
+}): Wrap<ReturnType<typeof updateUpdateSettingsEffect>, SettingsPathRef> =>
 	Effect.gen(function* () {
 		const { path } = yield* SettingsPathRef;
 		return yield* updateUpdateSettingsEffect(path, params);

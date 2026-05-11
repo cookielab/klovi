@@ -1,6 +1,5 @@
 import { iterateJsonl } from "./jsonl-utils";
 
-
 const N_3 = 3;
 const N_5 = 5;
 

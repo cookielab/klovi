@@ -5,7 +5,6 @@ import { formatFullDateTime, formatTimestamp } from "../utilities/index";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { UserBashContent } from "./UserBashContent";
 
-
 const T_OPENED = "Opened";
 const T_SP_1 = " ";
 const T_SKILL = "skill";
@@ -86,7 +85,10 @@ export function UserMessage({
 }: UserMessageProps): React.ReactNode {
 	if (turn.bashInput !== undefined || turn.bashStdout !== undefined) {
 		return (
-			<TurnBox role="user" timestamp={turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : null}>
+			<TurnBox
+				{...{ role: "user" as const }}
+				timestamp={turn.timestamp ? <TimestampLabel timestamp={turn.timestamp} /> : null}
+			>
 				<UserBashContent turn={turn} />
 			</TurnBox>
 		);
@@ -95,7 +97,9 @@ export function UserMessage({
 	if (turn.ideOpenedFile !== undefined) {
 		return (
 			<div className={IDE_OPENED_FILE_NOTICE_CLASSES}>
-				<Text>{T_OPENED}</Text><Text>{T_SP_1}</Text><code className={IDE_OPENED_FILE_PATH_CLASSES}>{turn.ideOpenedFile}</code>
+				<Text>{T_OPENED}</Text>
+				<Text>{T_SP_1}</Text>
+				<code className={IDE_OPENED_FILE_PATH_CLASSES}>{turn.ideOpenedFile}</code>
 			</div>
 		);
 	}
@@ -111,7 +115,7 @@ export function UserMessage({
 
 	return (
 		<TurnBox
-			role={role}
+			{...{ role: role }}
 			timestamp={
 				<>
 					{showPlanLink ? (
@@ -136,7 +140,9 @@ export function UserMessage({
 		>
 			{turn.command ? (
 				<div className={COMMAND_CALL_CLASSES}>
-					<span className={SKILL_BADGE_CLASSES}><Text>{T_SKILL}</Text></span>
+					<span className={SKILL_BADGE_CLASSES}>
+						<Text>{T_SKILL}</Text>
+					</span>
 					<span className={COMMAND_CALL_LABEL_CLASSES}>{turn.command.name}</span>
 				</div>
 			) : null}
@@ -145,7 +151,8 @@ export function UserMessage({
 				<div className={ATTACHMENTS_CLASSES}>
 					{turn.attachments.map((a) => (
 						<span key={a.mediaType} className={ATTACHMENT_BADGE_CLASSES}>
-							<Text>{T_IMAGE}</Text>{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
+							<Text>{T_IMAGE}</Text>
+							{a.mediaType.replace(IMAGE_MEDIA_TYPE_PREFIX_REGEX, "")}
 						</span>
 					))}
 				</div>

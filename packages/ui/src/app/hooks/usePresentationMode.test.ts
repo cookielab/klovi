@@ -2,7 +2,6 @@ import { act, renderHook } from "@testing-library/react";
 import type { AssistantTurn, ContentBlock, Turn, UserTurn } from "../../shared/types";
 import { usePresentationMode } from "./usePresentationMode";
 
-
 const N_3 = 3;
 
 function userTurn(text = "hello"): UserTurn {
@@ -32,7 +31,14 @@ function assistantTurn(opts: { thinking?: number; text?: number; tools?: number 
 			})),
 			...Array.from({ length: tools }, (_, i) => ({
 				type: "tool_call" as const,
-				call: { toolUseId: `tool-${i}`, kind: "generic" as const, title: "Read", input: {}, result: "ok", isError: false },
+				call: {
+					toolUseId: `tool-${i}`,
+					kind: "generic" as const,
+					title: "Read",
+					input: {},
+					result: "ok",
+					isError: false,
+				},
 			})),
 		] satisfies ContentBlock[],
 	};

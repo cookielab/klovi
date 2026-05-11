@@ -3,7 +3,6 @@ import type { Session } from "../../../shared/types";
 import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SubAgentPresentation } from "./SubAgentPresentation";
 
-
 const noop = (): undefined => undefined;
 const STEP_REGEX = /Step/u;
 

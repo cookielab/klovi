@@ -11,7 +11,6 @@ import { Effect } from "effect";
 import type { MergedProject } from "./plugin-types";
 import type { PluginRegistry } from "./registry";
 
-
 const N_7 = 7;
 
 type SessionWithProject = {

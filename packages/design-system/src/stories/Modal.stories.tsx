@@ -1,6 +1,6 @@
 import type { Story, StoryDefault } from "@ladle/react";
 import type { ComponentProps } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "../components/Button/Button";
 import { Modal } from "../components/Modal/Modal";
 import { Text } from "../index";
@@ -17,12 +17,18 @@ const T_THIS_MODAL_IS_ALWAYS_OPEN_IN_T = "This modal is always open in this stor
 
 function ModalDemo(): React.ReactNode {
 	const [open, setOpen] = useState(false);
+	const handleOpen = useCallback((): void => {
+		setOpen(true);
+	}, []);
+	const handleClose = useCallback((): void => {
+		setOpen(false);
+	}, []);
 	return (
 		<div>
-			<Button onClick={() => setOpen(true)}>
+			<Button onClick={handleOpen}>
 				<Text>{T_OPEN_MODAL}</Text>
 			</Button>
-			<Modal open={open} onClose={() => setOpen(false)}>
+			<Modal open={open} onClose={handleClose}>
 				<div>
 					<h2>
 						<Text>{T_MODAL_TITLE}</Text>
@@ -31,7 +37,7 @@ function ModalDemo(): React.ReactNode {
 						<Text>{T_THIS_IS_MODAL_CONTENT_PRESS_ES}</Text>
 					</p>
 					<div>
-						<Button variant="primary" onClick={() => setOpen(false)}>
+						<Button variant="primary" onClick={handleClose}>
 							<Text>{T_CLOSE}</Text>
 						</Button>
 					</div>

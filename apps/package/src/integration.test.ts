@@ -2,7 +2,6 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type KloviPackageServer, startKloviPackageServer } from "./server";
 
-
 const N_200 = 200;
 const N_404 = 404;
 

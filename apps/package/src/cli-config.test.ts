@@ -1,7 +1,6 @@
 import { resolve } from "node:path";
 import { parsePort, resolveCliConfig, resolveStaticDir } from "./cli-config";
 
-
 const N_4444 = 4444;
 const N_9999 = 9999;
 

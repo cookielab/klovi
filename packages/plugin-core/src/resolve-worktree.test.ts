@@ -6,7 +6,7 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect } from "effect";
 import { resolveGitWorktree, resolveT3CodePaths, stripT3CodeSuffix } from "./resolve-worktree";
 
-const run = <A>(effect: Effect.Effect<A, never, FileSystem.FileSystem>) =>
+const run = <A>(effect: Effect.Effect<A, never, FileSystem.FileSystem>): Promise<A> =>
 	Effect.runPromise(effect.pipe(Effect.provide(NodeFileSystem.layer)));
 
 describe("stripT3CodeSuffix", () => {

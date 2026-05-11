@@ -1,20 +1,12 @@
 import { Text } from "@cookielab.io/klovi-design-system";
 import { useCallback } from "react";
-
+import type { SettingsSidebarProps } from "./SettingsSidebar.types";
 
 const T_LARR = "&larr;";
 const T_SP_1 = " ";
 const T_BACK = "Back";
 const T_GENERAL = "General";
 const T_PLUGINS = "Plugins";
-
-type SettingsTab = "general" | "plugins";
-
-type SettingsSidebarProps = {
-	activeTab: SettingsTab;
-	onTabChange: (tab: SettingsTab) => void;
-	onBack?: (() => void) | undefined;
-};
 
 const NAV_CLASSES = "flex flex-col gap-[2px]";
 const NAV_BACK_CLASSES =
@@ -31,7 +23,11 @@ function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProp
 		<nav className={NAV_CLASSES}>
 			{onBack ? (
 				<button type="button" className={NAV_BACK_CLASSES} onClick={onBack}>
-					<span aria-hidden="true"><Text>{T_LARR}</Text><Text>{T_SP_1}</Text></span><Text>{T_BACK}</Text>
+					<span aria-hidden="true">
+						<Text>{T_LARR}</Text>
+						<Text>{T_SP_1}</Text>
+					</span>
+					<Text>{T_BACK}</Text>
 				</button>
 			) : null}
 			<button
@@ -52,5 +48,5 @@ function SettingsSidebar({ activeTab, onTabChange, onBack }: SettingsSidebarProp
 	);
 }
 
-export type { SettingsTab };
+export type { SettingsTab } from "./SettingsSidebar.types";
 export { SettingsSidebar };

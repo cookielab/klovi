@@ -6,7 +6,6 @@ import { Effect } from "effect";
 import type { PluginSettings } from "./settings";
 import { getDefaultSettings, loadSettings, saveSettings } from "./settings";
 
-
 const N_6 = 6;
 
 const testDir = join(tmpdir(), `klovi-settings-test-${Date.now()}`);

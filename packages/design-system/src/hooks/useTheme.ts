@@ -16,7 +16,14 @@ export type UseThemeOptions = {
 	systemThemeOverride?: "dark" | "light" | null;
 };
 
-export function useTheme(options?: UseThemeOptions) {
+export type UseThemeResult = {
+	setting: ThemeSetting;
+	resolved: ResolvedTheme;
+	cycle: () => void;
+	set: (theme: ThemeSetting) => void;
+};
+
+export function useTheme(options?: UseThemeOptions): UseThemeResult {
 	const systemThemeOverride = options?.systemThemeOverride ?? null;
 
 	const [setting, setSetting] = useState<ThemeSetting>(() => {
@@ -50,7 +57,9 @@ export function useTheme(options?: UseThemeOptions) {
 		}
 
 		const mq = globalThis.matchMedia("(prefers-color-scheme: dark)");
-		const handler = () => setResolved(getSystemTheme());
+		const handler = (): void => {
+			setResolved(getSystemTheme());
+		};
 		mq.addEventListener("change", handler);
 		return () => mq.removeEventListener("change", handler);
 	}, [setting, systemThemeOverride]);

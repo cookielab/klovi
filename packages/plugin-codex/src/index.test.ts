@@ -6,7 +6,6 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { codexCliPlugin, getCodexCliDir, setCodexCliDir } from "./index";
 
-
 const N_1706000000 = 1_706_000_000;
 const N_1706001000 = 1_706_001_000;
 const N_100 = 100;
@@ -20,7 +19,7 @@ const testLayer = Layer.mergeAll(
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
 
-function run<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function run<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 

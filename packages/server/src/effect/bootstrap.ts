@@ -40,10 +40,7 @@ function detectRuntime(requested: "auto" | "bun" | "node" = "auto"): "bun" | "no
  */
 type AnyLayer = Layer.Layer<never, unknown, unknown>;
 
-async function bootstrapServer(
-	options: BootstrapOptions,
-	makeServe: () => AnyLayer,
-): Promise<BootstrapResult> {
+async function bootstrapServer(options: BootstrapOptions, makeServe: () => AnyLayer): Promise<BootstrapResult> {
 	const host = options.host ?? "127.0.0.1";
 	const port = options.port ?? 0;
 	const settingsPath = options.settingsPath ?? getDefaultSettingsPath();

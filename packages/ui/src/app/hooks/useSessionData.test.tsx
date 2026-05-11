@@ -3,8 +3,6 @@ import type { Session, Turn } from "../../shared/types";
 import { MockProviders, setupMockRpc } from "../test-helpers/mock-rpc";
 import { useSessionData } from "./useSessionData";
 
-
-
 const noop = (): undefined => undefined;
 const N_3 = 3;
 const N_100 = 100;

@@ -9,8 +9,8 @@ import { Effect, Layer } from "effect";
 import { PluginRegistry } from "./registry";
 import { getSessionHead, getSessionTail } from "./sessions-service";
 
-
 const N_30 = 30;
+const N_20 = 20;
 const N_10 = 10;
 const N_5 = 5;
 
@@ -21,7 +21,7 @@ const testLayer = Layer.merge(
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
 
-const run = <A>(effect: Effect.Effect<A, unknown, RegistryRequirements>) =>
+const run = <A>(effect: Effect.Effect<A, unknown, RegistryRequirements>): Promise<A> =>
 	Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, unknown, never>);
 
 async function writeSession(projectId: string, sessionId: string, turnCount: number): Promise<void> {
@@ -76,10 +76,10 @@ describe("getSessionHead / getSessionTail", () => {
 			getSessionTail(registry, {
 				sessionId: "claude-code::s1",
 				project: "-Users-x",
-				fromTurn: 10,
+				fromTurn: N_10,
 			}),
 		);
-		expect(result.turns.length).toBe(20);
+		expect(result.turns.length).toBe(N_20);
 	});
 
 	it("tail returns empty array when fromTurn >= totalTurns", async () => {

@@ -17,46 +17,54 @@ import {
 	updatePluginSetting as updatePluginSettingEffect,
 } from "./settings-service";
 
-
 const N_4 = 4;
 
 function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
 }
 
-function loadSettings(path: string) {
+function loadSettings(path: string): Promise<Effect.Effect.Success<ReturnType<typeof loadSettingsEffect>>> {
 	return runFs(loadSettingsEffect(path));
 }
 
-function saveSettings(path: string, settings: Parameters<typeof saveSettingsEffect>[1]) {
+function saveSettings(
+	path: string,
+	settings: Parameters<typeof saveSettingsEffect>[1],
+): Promise<Effect.Effect.Success<ReturnType<typeof saveSettingsEffect>>> {
 	return runFs(saveSettingsEffect(path, settings));
 }
 
-function getPluginSettings(path: string) {
+function getPluginSettings(path: string): Promise<Effect.Effect.Success<ReturnType<typeof getPluginSettingsEffect>>> {
 	return runFs(getPluginSettingsEffect(path));
 }
 
-function updatePluginSetting(path: string, params: Parameters<typeof updatePluginSettingEffect>[1]) {
+function updatePluginSetting(
+	path: string,
+	params: Parameters<typeof updatePluginSettingEffect>[1],
+): Promise<Effect.Effect.Success<ReturnType<typeof updatePluginSettingEffect>>> {
 	return runFs(updatePluginSettingEffect(path, params));
 }
 
-function getGeneralSettings(path: string) {
+function getGeneralSettings(path: string): Promise<Effect.Effect.Success<ReturnType<typeof getGeneralSettingsEffect>>> {
 	return runFs(getGeneralSettingsEffect(path));
 }
 
-function updateGeneralSettings(path: string, params: Parameters<typeof updateGeneralSettingsEffect>[1]) {
+function updateGeneralSettings(
+	path: string,
+	params: Parameters<typeof updateGeneralSettingsEffect>[1],
+): Promise<Effect.Effect.Success<ReturnType<typeof updateGeneralSettingsEffect>>> {
 	return runFs(updateGeneralSettingsEffect(path, params));
 }
 
-function isFirstLaunch(path: string) {
+function isFirstLaunch(path: string): Promise<Effect.Effect.Success<ReturnType<typeof isFirstLaunchEffect>>> {
 	return runFs(isFirstLaunchEffect(path));
 }
 
-function resetSettings(path: string) {
+function resetSettings(path: string): Promise<Effect.Effect.Success<ReturnType<typeof resetSettingsEffect>>> {
 	return runFs(resetSettingsEffect(path));
 }
 
-function completeOnboarding(path: string) {
+function completeOnboarding(path: string): Promise<Effect.Effect.Success<ReturnType<typeof completeOnboardingEffect>>> {
 	return runFs(completeOnboardingEffect(path));
 }
 

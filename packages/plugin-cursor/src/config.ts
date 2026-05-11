@@ -17,7 +17,7 @@ function getEnv(options?: CursorPathOptions): NodeJS.ProcessEnv {
 	return options?.env ?? Bun.env;
 }
 
-function getPathApi(platform: NodeJS.Platform) {
+function getPathApi(platform: NodeJS.Platform): typeof posix {
 	return platform === "win32" ? win32 : posix;
 }
 

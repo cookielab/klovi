@@ -6,8 +6,6 @@ import { formatFullDateTime, formatTimestamp, shortModel } from "../utilities/in
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ThinkingBlock } from "./ThinkingBlock";
 
-
-
 const N_40 = 40;
 
 const T_IN = "in /";
@@ -45,8 +43,10 @@ function contentBlockKey(block: ContentBlock, index: number): string {
 }
 
 function groupKey(group: ContentBlock[], index: number): string {
-	const first = group[0];
-	if (!first) return `empty-${index}`;
+	const [first] = group;
+	if (!first) {
+		return `empty-${index}`;
+	}
 	return `group-${contentBlockKey(first, index)}`;
 }
 
@@ -57,7 +57,7 @@ type RenderGroupOptions = {
 	onLinkClick: ((url: string) => void) | undefined;
 };
 
-function renderGroup(options: RenderGroupOptions) {
+function renderGroup(options: RenderGroupOptions): React.ReactNode[] {
 	return options.group.map((block, i) => {
 		const key = contentBlockKey(block, i);
 		if (block.type === "thinking") {
@@ -66,26 +66,39 @@ function renderGroup(options: RenderGroupOptions) {
 		if (block.type === "text") {
 			return <MarkdownRenderer key={key} content={block.text} onLinkClick={options.onLinkClick} />;
 		}
-		return (
-			<ToolCall
-				key={key}
-				call={block.call}
-				sessionId={options.sessionId}
-				project={options.project}
-			/>
-		);
+		return <ToolCall key={key} call={block.call} sessionId={options.sessionId} project={options.project} />;
 	});
 }
 
 function UsageFooter({ usage }: { usage: TokenUsage }): React.ReactNode {
 	return (
 		<div className={TOKEN_USAGE_CLASSES}>
-			{usage.inputTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_IN}</Text><Text>{T_SP_1}</Text>{usage.outputTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_OUT}</Text>
+			{usage.inputTokens.toLocaleString()}
+			<Text>{T_SP_1}</Text>
+			<Text>{T_IN}</Text>
+			<Text>{T_SP_1}</Text>
+			{usage.outputTokens.toLocaleString()}
+			<Text>{T_SP_1}</Text>
+			<Text>{T_OUT}</Text>
 			{usage.cacheReadTokens && usage.cacheReadTokens > 0 && (
-				<span><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{usage.cacheReadTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_CACHE_READ}</Text></span>
+				<span>
+					<Text>{T_SP_1}</Text>
+					<Text>{T_TEXT}</Text>
+					<Text>{T_SP_1}</Text>
+					{usage.cacheReadTokens.toLocaleString()}
+					<Text>{T_SP_1}</Text>
+					<Text>{T_CACHE_READ}</Text>
+				</span>
 			)}
 			{usage.cacheCreationTokens && usage.cacheCreationTokens > 0 && (
-				<span><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{usage.cacheCreationTokens.toLocaleString()}<Text>{T_SP_1}</Text><Text>{T_CACHE_WRITE}</Text></span>
+				<span>
+					<Text>{T_SP_1}</Text>
+					<Text>{T_TEXT}</Text>
+					<Text>{T_SP_1}</Text>
+					{usage.cacheCreationTokens.toLocaleString()}
+					<Text>{T_SP_1}</Text>
+					<Text>{T_CACHE_WRITE}</Text>
+				</span>
 			)}
 		</div>
 	);
@@ -122,7 +135,7 @@ export function AssistantMessage({
 
 	return (
 		<TurnBox
-			role="assistant"
+			{...{ role: "assistant" as const }}
 			{...(turn.model ? { model: shortModel(turn.model) } : {})}
 			{...(turn.timestamp
 				? {
@@ -162,7 +175,10 @@ export function AssistantMessage({
 				</div>
 			)}
 			{flatGroups.map((group, i) => (
-				<div key={`flat-${groupKey(group, i)}`} className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}>
+				<div
+					key={`flat-${groupKey(group, i)}`}
+					className={isPresentation && i === flatGroups.length - 1 ? STEP_ENTER_CLASSES : ""}
+				>
 					{renderGroup({
 						group: group,
 						sessionId: sessionId,

@@ -9,7 +9,15 @@ const DEFAULT_STATUS: UpdateStatus = {
 
 const MANUAL_CHECK_DISMISS_MS = 5000;
 
-export function useUpdateStatus() {
+type UseUpdateStatusReturn = {
+	updateStatus: UpdateStatus;
+	updateDismissed: boolean;
+	dismissUpdate: () => void;
+	manualCheckResult: UpdateStatus | null;
+	dismissManualCheck: () => void;
+};
+
+export function useUpdateStatus(): UseUpdateStatusReturn {
 	const hostBridge = useKloviHostBridge();
 	const [updateStatus, setUpdateStatus] = useState<UpdateStatus>(DEFAULT_STATUS);
 	const [updateDismissed, setUpdateDismissed] = useState(false);

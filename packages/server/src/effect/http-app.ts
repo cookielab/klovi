@@ -11,7 +11,6 @@ import {
 } from "../services/errors";
 import { KloviServices, type KloviServicesShape } from "./server-services";
 
-
 const N_400 = 400;
 const N_404 = 404;
 const N_500 = 500;
@@ -96,16 +95,27 @@ const emptyMethodHandler = Effect.succeed(
 	HttpServerResponse.unsafeJson({ error: "Method name required" }, { status: N_400 }),
 );
 
-const makeRpcRouter = () =>
-	HttpRouter.empty.pipe(
-		HttpRouter.post("/api/rpc/", emptyMethodHandler),
-		HttpRouter.post("/api/rpc/:method", rpcHandler),
-	);
+const rpcRouter = HttpRouter.empty.pipe(
+	HttpRouter.post("/api/rpc/", emptyMethodHandler),
+	HttpRouter.post("/api/rpc/:method", rpcHandler),
+);
+
+function makeRpcRouter(): typeof rpcRouter {
+	return rpcRouter;
+}
 
 const notFoundHandler = Effect.succeed(HttpServerResponse.unsafeJson({ error: "Not found" }, { status: N_404 }));
 
-const makeHttpApp = () => makeRpcRouter().pipe(Effect.catchTag("RouteNotFound", () => notFoundHandler));
+const httpApp = rpcRouter.pipe(Effect.catchTag("RouteNotFound", () => notFoundHandler));
 
-const makeServeLayer = () => makeHttpApp().pipe(HttpServer.serve());
+function makeHttpApp(): typeof httpApp {
+	return httpApp;
+}
+
+const serveLayer = httpApp.pipe(HttpServer.serve());
+
+function makeServeLayer(): typeof serveLayer {
+	return serveLayer;
+}
 
 export { makeHttpApp, makeRpcRouter, makeServeLayer };

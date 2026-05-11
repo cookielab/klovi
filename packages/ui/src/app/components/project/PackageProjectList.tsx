@@ -13,7 +13,13 @@ type PackageProjectListProps = {
 	onShowHidden: () => void;
 };
 
-export function PackageProjectList({ onSelect, selected, hiddenIds, onHide, onShowHidden }: PackageProjectListProps): React.ReactNode {
+export function PackageProjectList({
+	onSelect,
+	selected,
+	hiddenIds,
+	onHide,
+	onShowHidden,
+}: PackageProjectListProps): React.ReactNode {
 	const client = useKloviClient();
 	const { data, loading, error, retry } = useEffectQuery<{ projects: Project[] }>(() => client.getProjects(), [client]);
 	const [filter, setFilter] = useState("");

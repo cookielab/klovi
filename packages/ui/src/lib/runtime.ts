@@ -18,7 +18,7 @@ export type KloviUiRuntimeConfig = {
 
 export type KloviUiRuntime = ManagedRuntime.ManagedRuntime<KloviUiServices, never>;
 
-export const makeKloviUiLayer = (config: KloviUiRuntimeConfig) =>
+export const makeKloviUiLayer = (config: KloviUiRuntimeConfig): Layer.Layer<KloviUiServices, never, never> =>
 	Layer.mergeAll(
 		Layer.succeed(KloviClientService, config.client),
 		Layer.succeed(KloviHostBridgeService, config.hostBridge),

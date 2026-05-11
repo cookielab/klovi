@@ -1,7 +1,14 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { PluginProject, SessionSummary, SqliteDb } from "@cookielab.io/klovi-plugin-core";
+import type {
+	PluginDiscoveryIndex,
+	PluginProject,
+	SessionSummary,
+	SqliteClientTag,
+	SqliteDb,
+} from "@cookielab.io/klovi-plugin-core";
 import { epochMsToIso, PluginConfig, sortByIsoDesc } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 import { encodeCursorProjectPath } from "./config";
 import { getCursorWorkspaceStorageDirEffect, openCursorDbIfExists, openCursorGlobalDb } from "./db";
@@ -304,7 +311,9 @@ function parseProjectPathFromWorkspaceJson(content: string): string | null {
 	return fileUrlToPath(parsed.folder);
 }
 
-function discoverWorkspaceDescriptors(targetProjectPath?: string) {
+function discoverWorkspaceDescriptors(
+	targetProjectPath?: string,
+): Effect.Effect<WorkspaceDescriptor[], never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const workspaceStorageDir = yield* getCursorWorkspaceStorageDirEffect();
 		const workspaceEntries = yield* readDirEntriesSafe(workspaceStorageDir);
@@ -370,7 +379,7 @@ function collectComposerSessions({
 	sessionsByProject,
 	composersById,
 	options,
-}: CollectComposerSessionsInput) {
+}: CollectComposerSessionsInput): Effect.Effect<void, never, FileSystem.FileSystem | SqliteClientTag> {
 	return Effect.gen(function* () {
 		for (const descriptor of workspaceDescriptors) {
 			const workspaceDb = yield* openCursorDbIfExists(descriptor.workspaceDbPath);
@@ -434,7 +443,9 @@ function readFirstTranscriptUserMessage(text: string): string {
 	return firstMessage;
 }
 
-function listTranscriptFiles(agentTranscriptsDir: string) {
+function listTranscriptFiles(
+	agentTranscriptsDir: string,
+): Effect.Effect<AgentTranscriptFile[], never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const agentDirs = yield* readDirEntriesSafe(agentTranscriptsDir);
 		const files: AgentTranscriptFile[] = [];
@@ -489,7 +500,7 @@ function createBackgroundAgentSummary(
 function discoverBackgroundAgentsForProject(
 	projectPath: string,
 	options: BackgroundAgentDiscoveryOptions = { readPreviewText: true },
-) {
+): Effect.Effect<Map<string, CursorAgentSummary>, never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const agentTranscriptsDir = join(
@@ -522,7 +533,7 @@ function discoverBackgroundAgentsForProject(
 function discoverBackgroundAgents(
 	projectPaths: readonly string[],
 	options: BackgroundAgentDiscoveryOptions = { readPreviewText: true },
-) {
+): Effect.Effect<Map<string, CursorAgentSummary>, never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const agentsById = new Map<string, CursorAgentSummary>();
 
@@ -578,12 +589,71 @@ function createPlanSummary(
 	};
 }
 
+type PlanLookupResult = {
+	composer: CursorComposerSummary | undefined;
+	agent: CursorAgentSummary | undefined;
+	projectPath: string | undefined;
+};
+
+function lookupPlanOwner(
+	entry: CursorPlanRegistryEntry,
+	composersById: Map<string, CursorComposerSummary>,
+	agentsById: Map<string, CursorAgentSummary>,
+): PlanLookupResult {
+	const composer = isNonEmptyString(entry.createdBy) ? composersById.get(entry.createdBy) : undefined;
+	const agent = isNonEmptyString(entry.createdBy) ? agentsById.get(entry.createdBy) : undefined;
+	const projectPath = composer?.projectPath ?? agent?.projectPath;
+	return { composer: composer, agent: agent, projectPath: projectPath };
+}
+
+type ProcessPlanEntryArgs = {
+	entry: CursorPlanRegistryEntry;
+	composersById: Map<string, CursorComposerSummary>;
+	agentsById: Map<string, CursorAgentSummary>;
+	options: PlanDiscoveryOptions;
+	plansById: Map<string, CursorPlanSummary>;
+};
+
+function processPlanEntry(args: ProcessPlanEntryArgs): Effect.Effect<void, never, FileSystem.FileSystem> {
+	const { entry, composersById, agentsById, options, plansById } = args;
+	return Effect.gen(function* () {
+		const filePath = entry.uri?.fsPath;
+		if (!isNonEmptyString(filePath)) {
+			return;
+		}
+
+		const { agent, projectPath } = lookupPlanOwner(entry, composersById, agentsById);
+		if (!projectPath) {
+			return;
+		}
+
+		const exists = yield* fileExists(filePath);
+		if (!exists) {
+			return;
+		}
+
+		const displayName = options.loadDisplayName
+			? yield* readPlanDisplayName(filePath).pipe(Effect.catchAll(() => Effect.succeed("")))
+			: "";
+
+		const summary = createPlanSummary(entry, projectPath, filePath, displayName || entry.name?.trim() || "Cursor plan");
+		if (!summary) {
+			return;
+		}
+
+		plansById.set(summary.planId, summary);
+		if (agent) {
+			agent.sessionType = "plan";
+		}
+	});
+}
+
 function discoverMappedPlans(
 	globalDb: SqliteDb | null,
 	composersById: Map<string, CursorComposerSummary>,
 	agentsById: Map<string, CursorAgentSummary>,
 	options: PlanDiscoveryOptions = { loadDisplayName: true },
-) {
+): Effect.Effect<Map<string, CursorPlanSummary>, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const plansById = new Map<string, CursorPlanSummary>();
 		if (!globalDb) {
@@ -592,41 +662,13 @@ function discoverMappedPlans(
 
 		const entries = parsePlanRegistry(queryItemTableRow(globalDb, "composer.planRegistry"));
 		for (const entry of entries) {
-			const filePath = entry.uri?.fsPath;
-			if (!isNonEmptyString(filePath)) {
-				continue;
-			}
-
-			const composer = isNonEmptyString(entry.createdBy) ? composersById.get(entry.createdBy) : undefined;
-			const agent = isNonEmptyString(entry.createdBy) ? agentsById.get(entry.createdBy) : undefined;
-			const projectPath = composer?.projectPath ?? agent?.projectPath;
-			if (!projectPath) {
-				continue;
-			}
-
-			const exists = yield* fileExists(filePath);
-			if (!exists) {
-				continue;
-			}
-
-			const displayName = options.loadDisplayName
-				? yield* readPlanDisplayName(filePath).pipe(Effect.catchAll(() => Effect.succeed("")))
-				: "";
-
-			const summary = createPlanSummary(
-				entry,
-				projectPath,
-				filePath,
-				displayName || entry.name?.trim() || "Cursor plan",
-			);
-			if (!summary) {
-				continue;
-			}
-
-			plansById.set(summary.planId, summary);
-			if (agent) {
-				agent.sessionType = "plan";
-			}
+			yield* processPlanEntry({
+				entry: entry,
+				composersById: composersById,
+				agentsById: agentsById,
+				options: options,
+				plansById: plansById,
+			});
 		}
 
 		return plansById;
@@ -656,7 +698,9 @@ function buildProjects(sessionsByProject: Map<string, CursorSessionRecord[]>): P
 	return projects;
 }
 
-function buildCursorProjectIndex(nativeId: string) {
+function buildCursorProjectIndex(
+	nativeId: string,
+): Effect.Effect<CursorIndex, never, PluginConfig | FileSystem.FileSystem | SqliteClientTag> {
 	return Effect.gen(function* () {
 		const globalDb = yield* openCursorGlobalDb();
 		const sessionsByProject = new Map<string, CursorSessionRecord[]>();
@@ -691,7 +735,7 @@ function buildCursorProjectIndex(nativeId: string) {
 	});
 }
 
-function buildCursorIndex() {
+function buildCursorIndex(): Effect.Effect<CursorIndex, never, PluginConfig | FileSystem.FileSystem | SqliteClientTag> {
 	return Effect.gen(function* () {
 		const globalDb = yield* openCursorGlobalDb();
 		const sessionsByProject = new Map<string, CursorSessionRecord[]>();
@@ -740,7 +784,11 @@ function toSessionSummary(session: CursorSessionRecord): SessionSummary {
 	};
 }
 
-function buildCursorDiscoveryIndex() {
+function buildCursorDiscoveryIndex(): Effect.Effect<
+	PluginDiscoveryIndex<string, SessionSummary>,
+	never,
+	PluginConfig | FileSystem.FileSystem | SqliteClientTag
+> {
 	return buildCursorIndex().pipe(
 		Effect.map((index) => ({
 			projects: index.projects,
@@ -754,7 +802,11 @@ function buildCursorDiscoveryIndex() {
 	);
 }
 
-function discoverCursorProjects() {
+function discoverCursorProjects(): Effect.Effect<
+	PluginProject[],
+	never,
+	PluginConfig | FileSystem.FileSystem | SqliteClientTag
+> {
 	return Effect.gen(function* () {
 		const globalDb = yield* openCursorGlobalDb();
 		const sessionsByProject = new Map<string, CursorSessionRecord[]>();
@@ -786,7 +838,9 @@ function discoverCursorProjects() {
 	});
 }
 
-function listCursorSessions(nativeId: string) {
+function listCursorSessions(
+	nativeId: string,
+): Effect.Effect<SessionSummary[], never, PluginConfig | FileSystem.FileSystem | SqliteClientTag> {
 	return buildCursorProjectIndex(nativeId).pipe(
 		Effect.map((index) => {
 			const sessions = index.sessionsByProject.get(nativeId) ?? [];

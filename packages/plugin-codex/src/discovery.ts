@@ -1,10 +1,10 @@
-import type { PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
+import type { PluginConfig, PluginProject, SessionSummary } from "@cookielab.io/klovi-plugin-core";
 import { epochSecondsToIso, sortByIsoDesc, streamJsonlHead } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 import { type SessionFileInfo, scanCodexSessions } from "./session-index";
 import { readFileText } from "./shared/discovery-utils";
 import { iterateJsonl } from "./shared/jsonl-utils";
-
 
 const N_200 = 200;
 
@@ -24,7 +24,7 @@ type CodexEvent = {
 
 const SESSION_FILE_CONCURRENCY = 16;
 
-function discoverCodexProjects() {
+function discoverCodexProjects(): Effect.Effect<PluginProject[], never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const sessions = yield* scanCodexSessions();
 
@@ -81,7 +81,7 @@ function visitForFirstUserMessage(parsed: unknown, captured: { value: string | n
 	return false;
 }
 
-function streamFirstUserMessage(filePath: string) {
+function streamFirstUserMessage(filePath: string): Effect.Effect<string | null, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const captured = { value: null as string | null };
 		yield* streamJsonlHead(
@@ -133,7 +133,9 @@ function extractFirstUserMessageFromText(text: string): string | null {
 	return message;
 }
 
-function listCodexSessions(nativeId: string) {
+function listCodexSessions(
+	nativeId: string,
+): Effect.Effect<SessionSummary[], never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const allSessions = yield* scanCodexSessions();
 		const matching = allSessions.filter((s) => s.meta.cwd === nativeId);

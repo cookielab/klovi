@@ -8,7 +8,6 @@ import { AppDataDirRef, SettingsPathRef, UpdaterConfig, UpdateStatusRef } from "
 import {
 	filterReleasesByChannel,
 	findExtractedAppBundlePath,
-	findLatestRelease,
 	findLatestUsableRelease,
 	findReleaseAsset,
 	type GithubRelease,
@@ -26,7 +25,6 @@ import {
 	validateUpdateInfo,
 } from "./updater";
 import { cleanupUpdates, downloadUpdate, getCurrentStatus } from "./updater-service";
-
 
 const N_4 = 4;
 const N_3 = 3;
@@ -76,20 +74,24 @@ function makeRelease(tag: string, prerelease: boolean): GithubRelease {
 	};
 }
 
-function makeReleaseWithAssets(
-	tag: string,
-	prerelease: boolean,
-	platform: "macos" | "linux" | "win",
-	arch: "arm64" | "x64",
-	opts?: { missingTarball?: boolean; missingUpdateJson?: boolean },
-): GithubRelease {
+type MakeReleaseWithAssetsOptions = {
+	tag: string;
+	prerelease: boolean;
+	platform: "macos" | "linux" | "win";
+	arch: "arm64" | "x64";
+	missingTarball?: boolean;
+	missingUpdateJson?: boolean;
+};
+
+function makeReleaseWithAssets(options: MakeReleaseWithAssetsOptions): GithubRelease {
+	const { tag, prerelease, platform, arch, missingTarball, missingUpdateJson } = options;
 	const tarballName = getReleaseBundleAssetName(platform, arch);
 	const updateJsonName = getUpdateJsonAssetName(platform, arch);
 	const assets: GithubRelease["assets"] = [];
-	if (!opts?.missingTarball) {
+	if (!missingTarball) {
 		assets.push({ name: tarballName, ["browser_download_url"]: `https://example.com/${tarballName}` });
 	}
-	if (!opts?.missingUpdateJson) {
+	if (!missingUpdateJson) {
 		assets.push({
 			name: updateJsonName,
 			["browser_download_url"]: `https://example.com/${updateJsonName}`,
@@ -350,19 +352,27 @@ describe("validateUpdateInfo", () => {
 
 describe("releaseHasUpdaterAssets", () => {
 	it("returns true when both tarball and update.json exist", () => {
-		const release = makeReleaseWithAssets("2.0.0", false, "macos", "arm64");
+		const release = makeReleaseWithAssets({ tag: "2.0.0", prerelease: false, platform: "macos", arch: "arm64" });
 		expect(releaseHasUpdaterAssets(release, "macos", "arm64")).toBe(true);
 	});
 
 	it("returns false when tarball is missing", () => {
-		const release = makeReleaseWithAssets("2.0.0", false, "macos", "arm64", {
+		const release = makeReleaseWithAssets({
+			tag: "2.0.0",
+			prerelease: false,
+			platform: "macos",
+			arch: "arm64",
 			missingTarball: true,
 		});
 		expect(releaseHasUpdaterAssets(release, "macos", "arm64")).toBe(false);
 	});
 
 	it("returns false when update.json is missing", () => {
-		const release = makeReleaseWithAssets("2.0.0", false, "macos", "arm64", {
+		const release = makeReleaseWithAssets({
+			tag: "2.0.0",
+			prerelease: false,
+			platform: "macos",
+			arch: "arm64",
 			missingUpdateJson: true,
 		});
 		expect(releaseHasUpdaterAssets(release, "macos", "arm64")).toBe(false);
@@ -405,73 +415,21 @@ describe("findReleaseAsset", () => {
 	});
 });
 
-describe("findLatestRelease", () => {
-	const releases: GithubRelease[] = [
-		{
-			...makeRelease("2.1.0-beta.1", true),
-			assets: [
-				{
-					name: "stable-macos-arm64-Klovi.app.tar.zst",
-					["browser_download_url"]: "https://example.com/beta",
-				},
-			],
-		},
-		{
-			...makeRelease("2.1.0-rc.1", true),
-			assets: [
-				{
-					name: "stable-macos-arm64-Klovi.app.tar.zst",
-					["browser_download_url"]: "https://example.com/rc",
-				},
-			],
-		},
-		{
-			...makeRelease("2.0.0", false),
-			assets: [
-				{
-					name: "stable-macos-arm64-Klovi.app.tar.zst",
-					["browser_download_url"]: "https://example.com/stable",
-				},
-			],
-		},
-		{ ...makeRelease("1.9.0", false), assets: [] },
-	];
-
-	it("returns null when current version is latest on stable", () => {
-		const result = findLatestRelease(releases, "stable", "2.0.0");
-		expect(result).toBeNull();
-	});
-
-	it("returns newer stable release", () => {
-		const result = findLatestRelease(releases, "stable", "1.9.0");
-		expect(result?.tag_name).toBe("2.0.0");
-	});
-
-	it("returns rc release on candidate channel", () => {
-		const result = findLatestRelease(releases, "candidate", "2.0.0");
-		expect(result?.tag_name).toBe("2.1.0-rc.1");
-	});
-
-	it("returns stable release on candidate channel when it is newest allowed", () => {
-		const result = findLatestRelease(releases, "candidate", "1.0.0");
-		expect(result?.tag_name).toBe("2.1.0-rc.1");
-	});
-
-	it("returns highest version on beta channel", () => {
-		const result = findLatestRelease(releases, "beta", "1.0.0");
-		expect(result?.tag_name).toBe("2.1.0-rc.1");
-	});
-});
-
 describe("findLatestUsableRelease", () => {
 	it("skips incomplete newer release and picks newest usable", () => {
 		const releases: GithubRelease[] = [
 			// Newer but missing update.json
-			makeReleaseWithAssets("2.2.0", false, "macos", "arm64", { missingUpdateJson: true }),
+			makeReleaseWithAssets({
+				tag: "2.2.0",
+				prerelease: false,
+				platform: "macos",
+				arch: "arm64",
+				missingUpdateJson: true,
+			}),
 			// Complete release
-			makeReleaseWithAssets("2.1.0", false, "macos", "arm64"),
+			makeReleaseWithAssets({ tag: "2.1.0", prerelease: false, platform: "macos", arch: "arm64" }),
 			// Older
-			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
+			makeReleaseWithAssets({ tag: "2.0.0", prerelease: false, platform: "macos", arch: "arm64" }),
 		];
 
 		const result = findLatestUsableRelease({
@@ -486,8 +444,14 @@ describe("findLatestUsableRelease", () => {
 
 	it("skips release missing normalized tarball", () => {
 		const releases: GithubRelease[] = [
-			makeReleaseWithAssets("2.1.0", false, "macos", "arm64", { missingTarball: true }),
-			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
+			makeReleaseWithAssets({
+				tag: "2.1.0",
+				prerelease: false,
+				platform: "macos",
+				arch: "arm64",
+				missingTarball: true,
+			}),
+			makeReleaseWithAssets({ tag: "2.0.0", prerelease: false, platform: "macos", arch: "arm64" }),
 		];
 
 		const result = findLatestUsableRelease({
@@ -502,7 +466,13 @@ describe("findLatestUsableRelease", () => {
 
 	it("returns null when no usable release is newer", () => {
 		const releases: GithubRelease[] = [
-			makeReleaseWithAssets("2.0.0", false, "macos", "arm64", { missingUpdateJson: true }),
+			makeReleaseWithAssets({
+				tag: "2.0.0",
+				prerelease: false,
+				platform: "macos",
+				arch: "arm64",
+				missingUpdateJson: true,
+			}),
 		];
 		const result = findLatestUsableRelease({
 			releases: releases,
@@ -515,7 +485,9 @@ describe("findLatestUsableRelease", () => {
 	});
 
 	it("returns null when current is latest", () => {
-		const releases: GithubRelease[] = [makeReleaseWithAssets("2.0.0", false, "macos", "arm64")];
+		const releases: GithubRelease[] = [
+			makeReleaseWithAssets({ tag: "2.0.0", prerelease: false, platform: "macos", arch: "arm64" }),
+		];
 		const result = findLatestUsableRelease({
 			releases: releases,
 			channel: "stable",
@@ -549,8 +521,8 @@ describe("findLatestUsableRelease", () => {
 
 	it("respects channel filtering for usable releases", () => {
 		const releases: GithubRelease[] = [
-			makeReleaseWithAssets("2.1.0-beta.1", true, "macos", "arm64"),
-			makeReleaseWithAssets("2.0.0", false, "macos", "arm64"),
+			makeReleaseWithAssets({ tag: "2.1.0-beta.1", prerelease: true, platform: "macos", arch: "arm64" }),
+			makeReleaseWithAssets({ tag: "2.0.0", prerelease: false, platform: "macos", arch: "arm64" }),
 		];
 		// Stable channel should not see beta
 		const stable = findLatestUsableRelease({
@@ -608,7 +580,11 @@ describe("updater-service", () => {
 		} catch {}
 	});
 
-	function makeTestLayer() {
+	function makeTestLayer(): Layer.Layer<
+		UpdaterConfig | SettingsPathRef | AppDataDirRef | UpdateStatusRef | Layer.Layer.Success<typeof BunContext.layer>,
+		never,
+		never
+	> {
 		return Layer.mergeAll(
 			Layer.succeed(UpdaterConfig, {
 				currentVersion: "1.0.0",

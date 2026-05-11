@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { useHiddenProjects } from "./useHiddenProjects";
 
-
 const N_99 = 99;
 
 const STORAGE_KEY = "klovi-hidden-projects";

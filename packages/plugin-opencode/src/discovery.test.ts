@@ -1,4 +1,3 @@
-import { Database } from "bun:sqlite";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,6 +7,19 @@ import { Effect, Layer } from "effect";
 import { discoverOpenCodeProjects, listOpenCodeSessions } from "./discovery";
 import { BunSqliteLayer } from "./runtime/bun-sqlite";
 
+const BUN_SQLITE_MODULE = "bun:sqlite" as const;
+
+type BunDatabase = {
+	run: (sql: string, params?: unknown[]) => void;
+	close: () => void;
+};
+
+type DatabaseConstructor = new (path: string, options?: { create?: boolean; readonly?: boolean }) => BunDatabase;
+
+type BunSqliteModule = Record<"Database", DatabaseConstructor>;
+
+const { Database } = (await import(BUN_SQLITE_MODULE)) as BunSqliteModule;
+type Database = BunDatabase;
 
 const N_1706000000000 = 1_706_000_000_000;
 const N_1706000005000 = 1_706_000_005_000;
@@ -32,7 +44,7 @@ const testLayer = Layer.mergeAll(
 	BunSqliteLayer,
 );
 
-function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 
@@ -120,13 +132,16 @@ function insertSession(
 	);
 }
 
-function insertMessage(
-	db: Database,
-	id: string,
-	sessionId: string,
-	data: Record<string, unknown>,
-	timeCreated?: number,
-): void {
+type InsertMessageArgs = {
+	db: Database;
+	id: string;
+	sessionId: string;
+	data: Record<string, unknown>;
+	timeCreated?: number;
+};
+
+function insertMessage(args: InsertMessageArgs): void {
+	const { db, id, sessionId, data, timeCreated } = args;
 	const now = timeCreated ?? Date.now();
 	db.run("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)", [
 		id,
@@ -137,13 +152,16 @@ function insertMessage(
 	]);
 }
 
-function insertPart(
-	db: Database,
-	id: string,
-	messageId: string,
-	sessionId: string,
-	data: Record<string, unknown>,
-): void {
+type InsertPartArgs = {
+	db: Database;
+	id: string;
+	messageId: string;
+	sessionId: string;
+	data: Record<string, unknown>;
+};
+
+function insertPart(args: InsertPartArgs): void {
+	const { db, id, messageId, sessionId, data } = args;
 	const now = Date.now();
 	db.run("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)", [
 		id,
@@ -380,17 +398,27 @@ describe("listOpenCodeSessions", () => {
 		});
 
 		// Add an assistant message to get model info
-		insertMessage(db, "msg-1", "sess-1", {
-			role: "assistant",
-			["modelID"]: "claude-sonnet-4-20250514",
-			["providerID"]: "anthropic",
-			tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
+		insertMessage({
+			db: db,
+			id: "msg-1",
+			sessionId: "sess-1",
+			data: {
+				role: "assistant",
+				["modelID"]: "claude-sonnet-4-20250514",
+				["providerID"]: "anthropic",
+				tokens: { input: N_100, output: N_50, cache: { read: 0, write: 0 } },
+			},
 		});
-		insertMessage(db, "msg-2", "sess-2", {
-			role: "assistant",
-			["modelID"]: "gpt-4o",
-			["providerID"]: "openai",
-			tokens: { input: N_200, output: N_100, cache: { read: 0, write: 0 } },
+		insertMessage({
+			db: db,
+			id: "msg-2",
+			sessionId: "sess-2",
+			data: {
+				role: "assistant",
+				["modelID"]: "gpt-4o",
+				["providerID"]: "openai",
+				tokens: { input: N_200, output: N_100, cache: { read: 0, write: 0 } },
+			},
 		});
 		db.close();
 
@@ -418,19 +446,25 @@ describe("listOpenCodeSessions", () => {
 		});
 
 		// Add user message with text part
-		insertMessage(
-			db,
-			"msg-1",
-			"sess-1",
-			{
+		insertMessage({
+			db: db,
+			id: "msg-1",
+			sessionId: "sess-1",
+			data: {
 				role: "user",
 				time: { created: N_1706000000 },
 			},
-			N_1706000000,
-		);
-		insertPart(db, "part-1", "msg-1", "sess-1", {
-			type: "text",
-			text: "Help me fix the authentication flow",
+			timeCreated: N_1706000000,
+		});
+		insertPart({
+			db: db,
+			id: "part-1",
+			messageId: "msg-1",
+			sessionId: "sess-1",
+			data: {
+				type: "text",
+				text: "Help me fix the authentication flow",
+			},
 		});
 		db.close();
 

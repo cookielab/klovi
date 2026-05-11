@@ -2,7 +2,6 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import type { Project } from "../types/index";
 import { ProjectList } from "./ProjectList";
 
-
 const N_12 = 12;
 const N_400 = 400;
 const N_50 = 50;

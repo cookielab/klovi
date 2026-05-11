@@ -1,11 +1,10 @@
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { Header } from "./Header";
 
-
 const noop = (): undefined => undefined;
 afterEach(cleanup);
 
-function makeProps(overrides: Partial<Parameters<typeof Header>[0]> = {}) {
+function makeProps(overrides: Partial<Parameters<typeof Header>[0]> = {}): Parameters<typeof Header>[0] {
 	return {
 		title: "Test Session",
 		presentationActive: false,

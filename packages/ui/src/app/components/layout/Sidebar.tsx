@@ -2,11 +2,10 @@ import { SidebarButton, Text } from "@cookielab.io/klovi-design-system";
 import { formatShortcut } from "@cookielab.io/klovi-ui-components/utilities";
 import type React from "react";
 import { useCallback } from "react";
-import faviconUrl from "../../../../favicon.svg";
 import { useKloviClient, useRunKloviEffect } from "../../../lib/context";
 import { kloviHostBridge } from "../../../lib/rpc-client";
+import { faviconUrl } from "../../assets";
 import { useEffectQuery } from "../../hooks/useEffectQuery";
-
 
 const T_KLOVI = "Klovi";
 const T_SEARCH = "Search";
@@ -58,7 +57,9 @@ export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: Si
 		<div className={`${SIDEBAR_BASE_CLASSES} ${hidden ? SIDEBAR_HIDDEN_CLASSES : ""}`}>
 			<div className={HEADER_CLASSES}>
 				<img src={faviconUrl} alt="" width="28" height="28" />
-				<h1 className={TITLE_CLASSES}><Text>{T_KLOVI}</Text></h1>
+				<h1 className={TITLE_CLASSES}>
+					<Text>{T_KLOVI}</Text>
+				</h1>
 				{versionInfo ? (
 					<span className={VERSION_CLASSES}>
 						{versionInfo.version}
@@ -92,7 +93,8 @@ export function Sidebar({ children, hidden, onSearchClick, onSettingsClick }: Si
 			</div>
 			<div className={CONTENT_CLASSES}>{children}</div>
 			<div className={FOOTER_CLASSES}>
-				<Text>{T_MADE_BY}</Text><Text>{T_SP_1}</Text>
+				<Text>{T_MADE_BY}</Text>
+				<Text>{T_SP_1}</Text>
 				<a href="https://cookielab.io?utm_source=opensource&utm_medium=klovi" onClick={handleCookielabClick}>
 					<Text>{T_COOKIELAB_IO}</Text>
 				</a>

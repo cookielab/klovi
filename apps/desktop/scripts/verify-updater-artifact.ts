@@ -101,13 +101,14 @@ async function resolveZstdPath(platform: Platform, arch: Arch, explicitPath?: st
 		return resolvedPath;
 	}
 
-	for (const candidate of getDefaultZstdPaths(platform, arch)) {
-		if (await Bun.file(candidate).exists()) {
-			return candidate;
-		}
+	const candidates = getDefaultZstdPaths(platform, arch);
+	const checks = await Promise.all(candidates.map((candidate) => Bun.file(candidate).exists()));
+	const foundIndex = checks.findIndex((exists) => exists);
+	if (foundIndex >= 0 && candidates[foundIndex] !== undefined) {
+		return candidates[foundIndex];
 	}
 
-	throw new Error(`Required binary not found. Looked for: ${getDefaultZstdPaths(platform, arch).join(", ")}`);
+	throw new Error(`Required binary not found. Looked for: ${candidates.join(", ")}`);
 }
 
 async function validateUpdateJson(args: VerifyUpdaterArtifactArgs): Promise<void> {

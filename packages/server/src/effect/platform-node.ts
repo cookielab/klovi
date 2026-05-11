@@ -3,11 +3,18 @@ import { NodeSqliteLayer } from "@cookielab.io/klovi-plugin-opencode";
 import { NodeContext, NodeHttpServer } from "@effect/platform-node";
 import { Layer } from "effect";
 
-export const NodePluginLayer = Layer.merge(NodeContext.layer, NodeSqliteLayer);
+type NodeServerLayer = ReturnType<
+	typeof Layer.mergeAll<[ReturnType<typeof NodeHttpServer.layer>, typeof NodeContext.layer, typeof NodeSqliteLayer]>
+>;
 
-export const makeNodeServerLayer = (options: { host: string; port: number }) =>
-	Layer.mergeAll(
+function makeNodeServerLayer(options: { host: string; port: number }): NodeServerLayer {
+	return Layer.mergeAll(
 		NodeHttpServer.layer(() => createServer(), options),
 		NodeContext.layer,
 		NodeSqliteLayer,
 	);
+}
+
+const NodePluginLayer = Layer.merge(NodeContext.layer, NodeSqliteLayer);
+
+export { makeNodeServerLayer, NodePluginLayer };

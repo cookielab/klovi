@@ -2,7 +2,14 @@ import { BunSqliteLayer } from "@cookielab.io/klovi-plugin-opencode";
 import { BunContext, BunHttpServer } from "@effect/platform-bun";
 import { Layer } from "effect";
 
-export const BunPluginLayer = Layer.merge(BunContext.layer, BunSqliteLayer);
+type BunServerLayer = ReturnType<
+	typeof Layer.mergeAll<[ReturnType<typeof BunHttpServer.layer>, typeof BunContext.layer, typeof BunSqliteLayer]>
+>;
 
-export const makeBunServerLayer = (options: { hostname: string; port: number }) =>
-	Layer.mergeAll(BunHttpServer.layer(options), BunContext.layer, BunSqliteLayer);
+function makeBunServerLayer(options: { hostname: string; port: number }): BunServerLayer {
+	return Layer.mergeAll(BunHttpServer.layer(options), BunContext.layer, BunSqliteLayer);
+}
+
+const BunPluginLayer = Layer.merge(BunContext.layer, BunSqliteLayer);
+
+export { BunPluginLayer, makeBunServerLayer };

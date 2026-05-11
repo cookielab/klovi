@@ -3,7 +3,6 @@ import React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-
 const T_TEXT = "@";
 
 const FILE_REF_RE = /@(?<path>[\w./-]+\.\w+)/gu;
@@ -40,7 +39,8 @@ function renderTextWithFileRefs(text: string): React.ReactNode {
 		}
 		parts.push(
 			<code key={match.index} className={FILE_REF_CLASSES}>
-				<Text>{T_TEXT}</Text>{match.groups?.["path"]}
+				<Text>{T_TEXT}</Text>
+				{match.groups?.["path"]}
 			</code>,
 		);
 		last = FILE_REF_RE.lastIndex;

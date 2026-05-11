@@ -6,7 +6,6 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { findCodexSessionFileById, isCodexSessionMeta, normalizeSessionMeta, scanCodexSessions } from "./session-index";
 
-
 const N_1000 = 1000;
 const N_2000 = 2000;
 const N_1706000000 = 1_706_000_000;

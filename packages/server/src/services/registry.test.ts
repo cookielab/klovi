@@ -10,7 +10,7 @@ const testLayer = Layer.merge(
 	NodeFileSystem.layer,
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
-const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>) =>
+const runEffect = <A>(effect: Effect.Effect<A, never, RegistryRequirements>): Promise<A> =>
 	Effect.runPromise(effect.pipe(Effect.provide(testLayer)));
 
 function createMockPlugin(
@@ -122,7 +122,8 @@ describe("PluginRegistry", () => {
 
 		const [merged] = projects;
 		expect(merged?.resolvedPath).toBe("/Users/foo/project");
-		expect(merged?.sessionCount).toBe(8);
+		const expectedSessionCount = 8;
+		expect(merged?.sessionCount).toBe(expectedSessionCount);
 		expect(merged?.lastActivity).toBe("2025-01-02T00:00:00Z");
 		expect(merged?.encodedPath).toBe("-Users-foo-project");
 		expect(merged?.sources).toHaveLength(2);
@@ -193,7 +194,8 @@ describe("PluginRegistry", () => {
 		registry.register(plugin, testConfig);
 
 		const projects = await runEffect(registry.discoverAllProjects());
-		expect(projects).toHaveLength(3);
+		const expectedProjectCount = 3;
+		expect(projects).toHaveLength(expectedProjectCount);
 		expect(projects[0]?.resolvedPath).toBe("/Users/foo/new-project");
 		expect(projects[1]?.resolvedPath).toBe("/Users/foo/mid-project");
 		expect(projects[2]?.resolvedPath).toBe("/Users/foo/old-project");
@@ -296,7 +298,8 @@ describe("PluginRegistry", () => {
 
 		const project = projects[0] as MergedProject;
 		const sessions = await runEffect(registry.listAllSessions(project));
-		expect(sessions).toHaveLength(3);
+		const expectedSessionCount = 3;
+		expect(sessions).toHaveLength(expectedSessionCount);
 
 		// Sorted by timestamp descending
 		expect(sessions[0]?.sessionId).toBe("plugin-b::session-3");

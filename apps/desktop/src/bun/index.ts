@@ -39,7 +39,6 @@ import { UpdateStatusRef } from "./services";
 import { makeThemePollingFiber } from "./theme-polling";
 import { cleanupUpdates, startUpdateSchedule } from "./updater-service";
 
-
 const N_6 = 6;
 const N_1400 = 1400;
 const N_900 = 900;

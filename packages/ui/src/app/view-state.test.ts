@@ -3,7 +3,6 @@ import type { KloviClient } from "../lib/client";
 import { createRpcTimeoutError } from "../lib/rpc-errors";
 import { getResumeCommand, restoreFromHash } from "./view-state";
 
-
 const N_120000 = 120_000;
 
 const baseProject = {

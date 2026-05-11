@@ -1,6 +1,11 @@
-import { HttpServerRequest, HttpServerResponse } from "@effect/platform";
+import { type HttpPlatform, HttpServerRequest, HttpServerResponse } from "@effect/platform";
 import { Effect } from "effect";
 
+type StaticHandler = Effect.Effect<
+	HttpServerResponse.HttpServerResponse,
+	never,
+	HttpServerRequest.HttpServerRequest | HttpPlatform.HttpPlatform
+>;
 
 const N_404 = 404;
 
@@ -20,7 +25,7 @@ const isNavigationRequest = (pathname: string): boolean => {
 	return !lastSegment.includes(".");
 };
 
-export const makeStaticHandler = (staticDir: string) =>
+export const makeStaticHandler = (staticDir: string): StaticHandler =>
 	Effect.gen(function* () {
 		const req = yield* HttpServerRequest.HttpServerRequest;
 		const url = new URL(req.url, "http://localhost");

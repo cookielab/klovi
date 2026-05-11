@@ -2,7 +2,6 @@ import { cleanup, render } from "@testing-library/react";
 import type { Turn } from "../types/index";
 import { MessageList } from "./MessageList";
 
-
 const N_500 = 500;
 const N_50 = 50;
 const N_100 = 100;

@@ -15,6 +15,12 @@ import {
 	VersionState,
 } from "./services";
 
+type RegistryRefLayer = Layer.Layer<RegistryRef, never, Layer.Layer.Success<typeof BunPluginLayer>>;
+
+type UpdateStatusRefLayer = Layer.Layer<UpdateStatusRef, never, never>;
+
+type DesktopRuntimeLayer = Layer.Layer<DesktopServices | Layer.Layer.Success<typeof BunPluginLayer>, never, never>;
+
 type DesktopRuntimeConfig = {
 	versionInfo: VersionInfo;
 	settingsPath: string;
@@ -40,7 +46,7 @@ const makeRefsLayer = (
 		}),
 	);
 
-const makeRegistryRefLayer = (settingsPath: string) =>
+const makeRegistryRefLayer = (settingsPath: string): RegistryRefLayer =>
 	Layer.effect(
 		RegistryRef,
 		Effect.gen(function* () {
@@ -50,7 +56,7 @@ const makeRegistryRefLayer = (settingsPath: string) =>
 		}),
 	);
 
-const makeUpdateStatusRefLayer = (currentVersion: string) =>
+const makeUpdateStatusRefLayer = (currentVersion: string): UpdateStatusRefLayer =>
 	Layer.effect(
 		UpdateStatusRef,
 		SubscriptionRef.make<UpdateStatus>({ status: "up-to-date", currentVersion: currentVersion }),
@@ -84,7 +90,7 @@ const bridgeHandler = <A, E>(
 
 export type { DesktopRuntime, DesktopRuntimeConfig };
 
-export const makeDesktopRuntimeLayer = (config: DesktopRuntimeConfig) => {
+export const makeDesktopRuntimeLayer = (config: DesktopRuntimeConfig): DesktopRuntimeLayer => {
 	const refs = makeRefsLayer(config);
 	const registryRef = makeRegistryRefLayer(config.settingsPath).pipe(Layer.provide(BunPluginLayer));
 	const updateStatusRef = makeUpdateStatusRefLayer(config.currentVersion);

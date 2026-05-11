@@ -33,16 +33,13 @@ function filterReleasesByChannel(releases: GithubRelease[], channel: UpdateChann
 			return false;
 		}
 		const tagChannel = getReleaseChannel(r.tag_name);
-		switch (channel) {
-			case "stable":
-				return tagChannel === "stable";
-			case "candidate":
-				return tagChannel === "stable" || tagChannel === "candidate";
-			case "beta":
-				return true;
-			default:
-				return false;
+		if (channel === "stable") {
+			return tagChannel === "stable";
 		}
+		if (channel === "candidate") {
+			return tagChannel === "stable" || tagChannel === "candidate";
+		}
+		return true;
 	});
 }
 
@@ -119,16 +116,13 @@ async function pathExists(path: string): Promise<boolean> {
 }
 
 function getRequiredLauncherRelativePath(platform: Platform): string {
-	switch (platform) {
-		case "macos":
-			return join("Contents", "MacOS", "launcher");
-		case "linux":
-			return join("bin", "launcher");
-		case "win":
-			return join("bin", "launcher.exe");
-		default:
-			return join("bin", "launcher");
+	if (platform === "macos") {
+		return join("Contents", "MacOS", "launcher");
 	}
+	if (platform === "win") {
+		return join("bin", "launcher.exe");
+	}
+	return join("bin", "launcher");
 }
 
 async function findExtractedAppBundlePath(platform: Platform, stagingDir: string): Promise<string> {
@@ -148,11 +142,12 @@ async function findExtractedAppBundlePath(platform: Platform, stagingDir: string
 	}
 
 	const entries = await readdir(stagingDir);
-	for (const entry of entries) {
-		const fullPath = join(stagingDir, entry);
-		if ((await stat(fullPath)).isDirectory()) {
-			return fullPath;
-		}
+	const stats = await Promise.all(
+		entries.map(async (entry) => ({ entry: entry, stat: await stat(join(stagingDir, entry)) })),
+	);
+	const directory = stats.find(({ stat: entryStat }) => entryStat.isDirectory());
+	if (directory) {
+		return join(stagingDir, directory.entry);
 	}
 
 	if (platform === "linux") {
@@ -207,30 +202,10 @@ function findLatestUsableRelease(options: {
 	return null;
 }
 
-/** @deprecated Use findLatestUsableRelease instead. Kept for backward compatibility in tests. */
-function findLatestRelease(
-	releases: GithubRelease[],
-	channel: UpdateChannel,
-	currentVersion: string,
-): GithubRelease | null {
-	const filtered = filterReleasesByChannel(releases, channel);
-	let best: GithubRelease | null = null;
-	for (const release of filtered) {
-		if (
-			semver.order(release.tag_name, currentVersion) > 0 &&
-			(!best || semver.order(release.tag_name, best.tag_name) > 0)
-		) {
-			best = release;
-		}
-	}
-	return best;
-}
-
 export type { Arch, GithubAsset, GithubRelease, Platform, UpdateInfo };
 export {
 	filterReleasesByChannel,
 	findExtractedAppBundlePath,
-	findLatestRelease,
 	findLatestUsableRelease,
 	findReleaseAsset,
 	getElectrobunTarballName,

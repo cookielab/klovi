@@ -18,7 +18,7 @@ const originalPlatform = process.platform;
 
 const fsLayer = NodeFileSystem.layer;
 
-function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>) {
+function runFs<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(fsLayer)) as Effect.Effect<A, E, never>);
 }
 

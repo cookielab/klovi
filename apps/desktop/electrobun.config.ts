@@ -5,7 +5,7 @@ import pkg from "./package.json" with { type: "json" };
 const version = pkg.version == null || pkg.version === "0.0.0" ? "dev" : pkg.version;
 const isDev = Bun.argv.includes("dev");
 
-export default {
+const config = {
 	app: {
 		name: "Klovi",
 		identifier: "io.cookielab.klovi",
@@ -51,3 +51,5 @@ export default {
 		},
 	},
 } satisfies ElectrobunConfig;
+
+export const { app, release, runtime, build } = config;

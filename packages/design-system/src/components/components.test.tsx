@@ -1,20 +1,15 @@
-import { Text } from "../index";
 import { cleanup, fireEvent, render } from "@testing-library/react";
+import { Text } from "../index";
 import { Badge } from "./Badge/Badge";
 import { Button } from "./Button/Button";
 import { Collapsible } from "./Collapsible/Collapsible";
-import { Input } from "./FormControls/Input";
+import { FormControlsHarness } from "./components.test.helpers";
 import { SegmentedControl } from "./FormControls/SegmentedControl";
-import { Select } from "./FormControls/Select";
-import { Toggle } from "./FormControls/Toggle";
 import { AppLayout } from "./Layout/AppLayout";
 import { ContentHeader } from "./Layout/ContentHeader";
 import { Sidebar } from "./Layout/Sidebar";
 import { SidebarButton } from "./Layout/SidebarButton";
 import { Modal } from "./Modal/Modal";
-
-
-
 
 const noop = (): undefined => undefined;
 const N_640 = 640;
@@ -23,8 +18,6 @@ const T_SAVE = "Save";
 const T_HIDDEN_CONTENT = "Hidden content";
 const T_INNER = "Inner";
 const T_CLOSED = "Closed";
-const T_NAME = "Name";
-const T_THEME = "Theme";
 const T_MENU = "Menu";
 const T_MAIN_CONTENT = "Main content";
 const T_SEARCH = "Search";
@@ -56,7 +49,9 @@ describe("design-system components", () => {
 	it("Collapsible toggles content visibility", () => {
 		const { queryByText, getByRole } = render(
 			<Collapsible title="Details">
-				<div><Text>{T_HIDDEN_CONTENT}</Text></div>
+				<div>
+					<Text>{T_HIDDEN_CONTENT}</Text>
+				</div>
 			</Collapsible>,
 		);
 
@@ -74,7 +69,9 @@ describe("design-system components", () => {
 
 		const { getByRole, getByText, rerender } = render(
 			<Modal open={true} onClose={onClose} width={N_640}>
-				<button type="button"><Text>{T_INNER}</Text></button>
+				<button type="button">
+					<Text>{T_INNER}</Text>
+				</button>
 			</Modal>,
 		);
 
@@ -96,7 +93,9 @@ describe("design-system components", () => {
 
 		rerender(
 			<Modal open={false} onClose={onClose}>
-				<div><Text>{T_CLOSED}</Text></div>
+				<div>
+					<Text>{T_CLOSED}</Text>
+				</div>
 			</Modal>,
 		);
 
@@ -138,36 +137,12 @@ describe("design-system components", () => {
 	});
 
 	it("Input, Select, and Toggle render and wire through props", () => {
-		let inputChanges = 0;
-		let selectChanges = 0;
+		const onInputChange = mock(noop);
+		const onSelectChange = mock(noop);
 		const onToggle = mock((_checked: boolean) => undefined);
 
 		const { getByLabelText, getByRole } = render(
-			<div>
-				<label htmlFor="name"><Text>{T_NAME}</Text></label>
-				<Input
-					id="name"
-					value="Jane"
-					onChange={() => {
-						inputChanges += 1;
-					}}
-				/>
-
-				<label htmlFor="theme"><Text>{T_THEME}</Text></label>
-				<Select
-					id="theme"
-					value="light"
-					onChange={() => {
-						selectChanges += 1;
-					}}
-					options={[
-						{ value: "light", label: "Light" },
-						{ value: "dark", label: "Dark" },
-					]}
-				/>
-
-				<Toggle checked={true} onChange={onToggle} label="Enabled" />
-			</div>,
+			<FormControlsHarness onInputChange={onInputChange} onSelectChange={onSelectChange} onToggleChange={onToggle} />,
 		);
 
 		const input = getByLabelText("Name") as HTMLInputElement;
@@ -178,8 +153,8 @@ describe("design-system components", () => {
 		fireEvent.change(select, { target: { value: "dark" } });
 		fireEvent.click(toggle);
 
-		expect(inputChanges).toBe(1);
-		expect(selectChanges).toBe(1);
+		expect(onInputChange).toHaveBeenCalledTimes(1);
+		expect(onSelectChange).toHaveBeenCalledTimes(1);
 		expect(onToggle).toHaveBeenCalledTimes(1);
 	});
 
@@ -194,7 +169,9 @@ describe("design-system components", () => {
 				hideSidebar={true}
 			>
 				<ContentHeader left="Left" right="Right" />
-				<div><Text>{T_MAIN_CONTENT}</Text></div>
+				<div>
+					<Text>{T_MAIN_CONTENT}</Text>
+				</div>
 			</AppLayout>,
 		);
 
@@ -223,7 +200,11 @@ describe("design-system components", () => {
 	});
 
 	it("Badge renders content for multiple variants", () => {
-		const { getByText, rerender } = render(<Badge><Text>{T_DEFAULT}</Text></Badge>);
+		const { getByText, rerender } = render(
+			<Badge>
+				<Text>{T_DEFAULT}</Text>
+			</Badge>,
+		);
 		expect(getByText("Default")).toBeTruthy();
 
 		rerender(

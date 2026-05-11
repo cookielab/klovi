@@ -1,10 +1,10 @@
-import { Database } from "bun:sqlite";
 import { mkdir, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { AssistantTurn, SqliteDb, UserTurn } from "@cookielab.io/klovi-plugin-core";
 import { PluginConfig, SqliteClientTag } from "@cookielab.io/klovi-plugin-core";
+import type { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { encodeCursorProjectPath, getCursorGlobalDbPath, getCursorWorkspaceStorageDir } from "./config";
@@ -12,6 +12,18 @@ import { buildCursorIndex, discoverCursorProjects, listCursorSessions } from "./
 import { cursorPlugin } from "./index";
 import { buildTurnsFromBubbles, loadCursorSession } from "./parser";
 
+const BUN_SQLITE_MODULE = "bun:sqlite" as const;
+
+type BunDatabase = {
+	run: (sql: string, params?: unknown[]) => void;
+	close: () => void;
+};
+
+type DatabaseConstructor = new (path: string, options?: { create?: boolean; readonly?: boolean }) => BunDatabase;
+
+type BunSqliteModule = Record<"Database", DatabaseConstructor>;
+
+const { Database } = (await import(BUN_SQLITE_MODULE)) as BunSqliteModule;
 
 const N_7 = 7;
 const N_1000 = 1000;
@@ -46,11 +58,11 @@ function restoreEnv(): void {
 	Bun.env["APPDATA"] = ORIGINAL_ENV.APPDATA;
 }
 
-function makeTestLayer() {
+function makeTestLayer(): Layer.Layer<PluginConfig | FileSystem.FileSystem | SqliteClientTag> {
 	return Layer.mergeAll(NodeFileSystem.layer, Layer.succeed(PluginConfig, { dataDir: userDataDir }), TEST_SQLITE_LAYER);
 }
 
-function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function runEffect<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(makeTestLayer())) as Effect.Effect<A, E, never>);
 }
 

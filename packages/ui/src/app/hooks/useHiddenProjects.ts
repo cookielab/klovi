@@ -38,7 +38,14 @@ function persistHiddenIds(ids: Set<string>): void {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
-export function useHiddenProjects() {
+type UseHiddenProjectsReturn = {
+	hiddenIds: Set<string>;
+	hide: (encodedPath: string) => void;
+	unhide: (encodedPath: string) => void;
+	isHidden: (encodedPath: string) => boolean;
+};
+
+export function useHiddenProjects(): UseHiddenProjectsReturn {
 	const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => loadHiddenIds());
 
 	const hide = useCallback((encodedPath: string) => {

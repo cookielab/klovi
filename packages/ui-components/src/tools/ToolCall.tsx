@@ -6,7 +6,6 @@ import { DiffView } from "./DiffView";
 import { SmartToolOutput } from "./SmartToolOutput";
 import { formatToolInput, getToolSummary, hasInputFormatter } from "./ToolCallDefaults";
 
-
 const T_INPUT = "Input";
 const T_SKILL = "skill";
 const T_TEXT = "—";
@@ -68,7 +67,9 @@ function DefaultToolContent({ call }: { call: ToolCallWithResult }): React.React
 	return (
 		<>
 			<div className="mb-2">
-				<div className={SECTION_LABEL_CLASSES}><Text>{T_INPUT}</Text></div>
+				<div className={SECTION_LABEL_CLASSES}>
+					<Text>{T_INPUT}</Text>
+				</div>
 				{jsonInput ? (
 					<CodeBox language="json">{formattedInput}</CodeBox>
 				) : (
@@ -114,10 +115,26 @@ export function ToolCall({ call, defaultOpen, sessionId, project }: ToolCallProp
 				title={
 					<span>
 						{mcpServer ? <span className={MCP_BADGE_CLASSES}>{mcpServer}</span> : null}
-						{isSkill ? <span className={SKILL_BADGE_CLASSES}><Text>{T_SKILL}</Text></span> : null}
+						{isSkill ? (
+							<span className={SKILL_BADGE_CLASSES}>
+								<Text>{T_SKILL}</Text>
+							</span>
+						) : null}
 						<span className={TOOL_NAME_CLASSES}>{displayName}</span>
-						{summary && !isSkill ? <span className={TOOL_SUMMARY_CLASSES}><Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>{summary}</span> : null}
-						{call.isError ? <span className="text-error"><Text>{T_SP_1}</Text><Text>{T_ERROR}</Text></span> : null}
+						{summary && !isSkill ? (
+							<span className={TOOL_SUMMARY_CLASSES}>
+								<Text>{T_SP_1}</Text>
+								<Text>{T_TEXT}</Text>
+								<Text>{T_SP_1}</Text>
+								{summary}
+							</span>
+						) : null}
+						{call.isError ? (
+							<span className="text-error">
+								<Text>{T_SP_1}</Text>
+								<Text>{T_ERROR}</Text>
+							</span>
+						) : null}
 						{hasSubAgent ? (
 							<a
 								className={SUBAGENT_LINK_CLASSES}

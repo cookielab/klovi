@@ -6,12 +6,8 @@ import { EXPECTED_WM_CLASS, parseArgs, patchLinuxNativeWrapper, UPSTREAM_WM_CLAS
 const tempPaths: string[] = [];
 
 afterEach(async () => {
-	while (tempPaths.length > 0) {
-		const path = tempPaths.pop();
-		if (path) {
-			await rm(path, { recursive: true, force: true });
-		}
-	}
+	const paths = tempPaths.splice(0, tempPaths.length);
+	await Promise.all(paths.map((path) => rm(path, { recursive: true, force: true })));
 });
 
 async function makeTempDir(prefix: string): Promise<string> {

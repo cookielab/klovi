@@ -1,20 +1,10 @@
 import { Text } from "@cookielab.io/klovi-design-system";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
-import type { PluginSettingInfo } from "../../../shared/rpc-types";
-
+import type { PluginRowProps } from "./PluginRow.types";
 
 const T_BROWSE = "Browse";
 const T_RESET = "Reset";
-
-type PluginRowProps = {
-	plugin: PluginSettingInfo;
-	onToggle: (pluginId: string, enabled: boolean) => void;
-	onBrowse: (pluginId: string, currentDir: string) => void;
-	onPathChange: (pluginId: string, dataDir: string) => void;
-	onReset: (pluginId: string) => void;
-	canBrowse?: boolean;
-};
 
 const ROW_BASE_CLASSES = "border border-border-muted bg-surface p-3";
 const ROW_DISABLED_CLASSES = "opacity-60";
@@ -29,7 +19,14 @@ const RESET_LINK_CLASSES =
 const BROWSE_BTN_CLASSES =
 	"inline-flex h-7 cursor-pointer items-center gap-[6px] border border-border bg-surface px-2 py-1 text-[0.8rem] text-foreground transition-colors duration-150 enabled:hover:border-foreground-subtle enabled:hover:bg-surface-muted disabled:cursor-default disabled:opacity-50";
 
-function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrowse = true }: PluginRowProps): React.ReactNode {
+function PluginRow({
+	plugin,
+	onToggle,
+	onBrowse,
+	onPathChange,
+	onReset,
+	canBrowse = true,
+}: PluginRowProps): React.ReactNode {
 	const customPath = plugin.isCustomDir ? plugin.dataDir : "";
 	const [editingPath, setEditingPath] = useState(customPath);
 	const displayName = plugin.status === "beta" ? `${plugin.displayName} (beta)` : plugin.displayName;
@@ -105,5 +102,5 @@ function PluginRow({ plugin, onToggle, onBrowse, onPathChange, onReset, canBrows
 	);
 }
 
-export type { PluginRowProps };
+export type { PluginRowProps } from "./PluginRow.types";
 export { PluginRow };

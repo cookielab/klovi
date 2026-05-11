@@ -6,7 +6,6 @@ import { Effect } from "effect";
 import { getUpdateSettings, updateUpdateSettings } from "./settings-service";
 import { getVersion, makeVersionState } from "./version-service";
 
-
 const N_6 = 6;
 const N_100 = 100;
 const N_24 = 24;

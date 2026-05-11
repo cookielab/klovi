@@ -2,7 +2,6 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { useFontSize } from "./useFontSize";
 import { resolveTheme, useTheme } from "./useTheme";
 
-
 const N_15 = 15;
 const N_28 = 28;
 const N_26 = 26;
@@ -26,7 +25,7 @@ function installMatchMedia(initialMatches: boolean): MockMediaApi {
 
 	const mediaQuery = {
 		media: "(prefers-color-scheme: dark)",
-		get matches() {
+		get matches(): boolean {
 			return matches;
 		},
 		onchange: null,

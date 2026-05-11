@@ -19,7 +19,7 @@ type KloviRuntimeProviderProps = {
 
 export const KloviRuntimeContext = createContext<KloviRuntimeContextValue | null>(null);
 
-export function KloviRuntimeProvider({ children, client, hostBridge }: KloviRuntimeProviderProps) {
+export function KloviRuntimeProvider({ children, client, hostBridge }: KloviRuntimeProviderProps): ReactNode {
 	const runtime = useMemo(() => makeKloviUiRuntime({ client: client, hostBridge: hostBridge }), [client, hostBridge]);
 
 	useEffect(
@@ -40,7 +40,7 @@ export function useKloviRuntime(): KloviUiRuntime {
 	return value.runtime;
 }
 
-export function useKloviClient() {
+export function useKloviClient(): typeof kloviClient {
 	return kloviClient;
 }
 
@@ -52,11 +52,11 @@ export function useKloviHostBridge(): KloviHostBridge {
 	return value.hostBridge;
 }
 
-export function useRunKloviEffect() {
+export function useRunKloviEffect(): <A, E, R>(effect: Effect.Effect<A, E, R>) => Promise<A> {
 	const runtime = useKloviRuntime();
 
 	return useCallback(
-		async <A, E, R>(effect: Effect.Effect<A, E, R>) => {
+		async <A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> => {
 			const result = await runtime.runPromise(Effect.either(effect as Effect.Effect<A, E, KloviUiServices>));
 			if (result._tag === "Left") {
 				throw result.left;

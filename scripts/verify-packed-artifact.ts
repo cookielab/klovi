@@ -44,29 +44,43 @@ function fail(_label: string, _err: unknown): void {
 	failed += 1;
 }
 
-async function waitForServer(url: string, timeoutMs = N_30000): Promise<boolean> {
-	const start = Date.now();
-	while (Date.now() - start < timeoutMs) {
-		try {
-			const res = await fetch(url);
-			if (res.ok || res.status < N_500) {
-				return true;
-			}
-		} catch {
-			// Server not ready yet
-		}
-		await new Promise((r) => setTimeout(r, N_200));
+async function checkServerOnce(url: string): Promise<boolean> {
+	try {
+		const res = await fetch(url);
+		return res.ok || res.status < N_500;
+	} catch {
+		return false;
 	}
-	return false;
+}
+
+function delay(ms: number): Promise<void> {
+	return new Promise((finished) => setTimeout(finished, ms));
+}
+
+function waitForServer(url: string, timeoutMs = N_30000): Promise<boolean> {
+	const deadline = Date.now() + timeoutMs;
+
+	const attempt = async (): Promise<boolean> => {
+		if (await checkServerOnce(url)) {
+			return true;
+		}
+		if (Date.now() >= deadline) {
+			return false;
+		}
+		await delay(N_200);
+		return attempt();
+	};
+
+	return attempt();
 }
 
 function killProcess(proc: ReturnType<typeof spawn>): Promise<void> {
-	return new Promise((resolve) => {
+	return new Promise((finished) => {
 		if (proc.exitCode !== null) {
-			resolve();
+			finished();
 			return;
 		}
-		proc.on("exit", () => resolve());
+		proc.on("exit", () => finished());
 		proc.kill("SIGTERM");
 		setTimeout(() => {
 			if (proc.exitCode === null) {
@@ -154,7 +168,7 @@ async function verifyServerBehavior(serverUrl: string, label: string): Promise<v
 	}
 }
 
-async function testServerImport(runtime: string, installDir: string): Promise<void> {
+function testServerImport(runtime: string, installDir: string): void {
 	const testFile = join(installDir, "test-import.mjs");
 	writeFileSync(
 		testFile,
@@ -240,7 +254,7 @@ async function testRuntime(runtime: "node" | "bun", installDir: string): Promise
 		}
 
 		await verifyServerBehavior(serverUrl, runtime);
-		await testServerImport(runtime, installDir);
+		testServerImport(runtime, installDir);
 	} catch (e) {
 		fail(`${runtime}: server lifecycle`, e);
 	}
@@ -362,20 +376,24 @@ function createHermeticSettingsFile(installDir: string): string {
 
 // ── Main ──────────────────────────────────────────────────
 
-async function main(): Promise<void> {
-	if (!existsSync(stageDir)) {
-		process.exit(1);
-	}
-	ok("Staged artifact directory exists");
+type StagedPackage = {
+	name?: string;
+	version?: string;
+	commit?: string;
+	dependencies?: Record<string, unknown>;
+};
 
-	const stagedPkg = JSON.parse(readFileSync(join(stageDir, "package.json"), "utf-8"));
+function readStagedPackage(): StagedPackage {
+	return JSON.parse(readFileSync(join(stageDir, "package.json"), "utf-8")) as StagedPackage;
+}
+
+function verifyPackageMetadata(stagedPkg: StagedPackage): void {
 	if (stagedPkg.name === "@cookielab.io/klovi") {
 		ok("Package name is @cookielab.io/klovi");
 	} else {
 		fail("Package name", `Expected @cookielab.io/klovi, got ${stagedPkg.name}`);
 	}
 
-	// Check no workspace deps
 	const deps = stagedPkg.dependencies ?? {};
 	const workspaceDeps = Object.entries(deps).filter(([, v]) => typeof v === "string" && v.startsWith("workspace:"));
 	if (workspaceDeps.length > 0) {
@@ -384,7 +402,6 @@ async function main(): Promise<void> {
 		ok("No workspace:* dependencies");
 	}
 
-	// Check no internal package refs
 	const internalDeps = Object.keys(deps).filter((k) => k.startsWith("@cookielab.io/klovi-"));
 	if (internalDeps.length > 0) {
 		fail("No internal package refs", `Found: ${internalDeps.join(", ")}`);
@@ -392,17 +409,15 @@ async function main(): Promise<void> {
 		ok("No internal workspace package references");
 	}
 
-	// Check version/commit metadata if present
 	if (stagedPkg.version && stagedPkg.version !== "0.0.0") {
 		ok(`Staged version: ${stagedPkg.version}`);
 	}
 	if (stagedPkg.commit) {
 		ok(`Staged commit: ${stagedPkg.commit}`);
 	}
-	tempDir = join(tmpdir(), `klovi-verify-${Date.now()}`);
-	mkdirSync(tempDir, { recursive: true });
+}
 
-	let tarball: string;
+function packTarball(): string {
 	try {
 		const packOutput = execFileSync("npm", ["pack", "--json"], {
 			cwd: stageDir,
@@ -410,15 +425,18 @@ async function main(): Promise<void> {
 		});
 		const packResult = JSON.parse(packOutput) as Array<{ filename: string }>;
 		const filename = packResult[0]?.filename;
-		tarball = join(stageDir, filename);
+		if (!filename) {
+			throw new Error("npm pack returned empty filename");
+		}
 		ok(`npm pack produced ${filename}`);
+		return join(stageDir, filename);
 	} catch (e) {
 		fail("npm pack", e);
 		process.exit(1);
 	}
-	const installDir = join(tempDir, "install-test");
-	mkdirSync(installDir, { recursive: true });
+}
 
+function installTarball(tarball: string, installDir: string): void {
 	writeFileSync(
 		join(installDir, "package.json"),
 		JSON.stringify({ name: "klovi-verify", version: "1.0.0", type: "module" }, null, 2),
@@ -435,38 +453,32 @@ async function main(): Promise<void> {
 		fail("npm install from tarball", e);
 		process.exit(1);
 	}
+}
 
-	// Verify installed structure
+function verifyInstalledStructure(installDir: string): void {
 	const installedPkgDir = join(installDir, "node_modules/@cookielab.io/klovi");
-	if (existsSync(join(installedPkgDir, "dist/cli.js"))) {
-		ok("dist/cli.js present in installed package");
-	} else {
-		fail("Installed structure", "dist/cli.js missing");
+	const expectedFiles = ["dist/cli.js", "dist/server.js", "dist/web/index.html"];
+	for (const relPath of expectedFiles) {
+		if (existsSync(join(installedPkgDir, relPath))) {
+			ok(`${relPath} present in installed package`);
+		} else {
+			fail("Installed structure", `${relPath} missing`);
+		}
 	}
-	if (existsSync(join(installedPkgDir, "dist/server.js"))) {
-		ok("dist/server.js present in installed package");
-	} else {
-		fail("Installed structure", "dist/server.js missing");
-	}
-	if (existsSync(join(installedPkgDir, "dist/web/index.html"))) {
-		ok("dist/web/index.html present in installed package");
-	} else {
-		fail("Installed structure", "dist/web/index.html missing");
-	}
+}
 
-	// 4. Node verification
+async function runRuntimeVerifications(installDir: string): Promise<void> {
 	await testRuntime("node", installDir);
-
-	// 5. Bun verification
 	try {
 		execFileSync("bun", ["--version"], { encoding: "utf-8" });
 		await testRuntime("bun", installDir);
-	} catch {}
-
-	// 6. Environment overrides
+	} catch {
+		// bun not available
+	}
 	await testEnvOverrides(installDir);
-	rmSync(tempDir, { recursive: true, force: true });
-	// Clean up tarballs in stage dir
+}
+
+function cleanupStageTarballs(): void {
 	try {
 		const entries = readdirSync(stageDir);
 		for (const f of entries) {
@@ -477,6 +489,32 @@ async function main(): Promise<void> {
 	} catch {
 		// ignore
 	}
+}
+
+async function main(): Promise<void> {
+	if (!existsSync(stageDir)) {
+		process.exit(1);
+	}
+	ok("Staged artifact directory exists");
+
+	const stagedPkg = readStagedPackage();
+	verifyPackageMetadata(stagedPkg);
+
+	tempDir = join(tmpdir(), `klovi-verify-${Date.now()}`);
+	mkdirSync(tempDir, { recursive: true });
+
+	const tarball = packTarball();
+	const installDir = join(tempDir, "install-test");
+	mkdirSync(installDir, { recursive: true });
+
+	installTarball(tarball, installDir);
+	verifyInstalledStructure(installDir);
+
+	await runRuntimeVerifications(installDir);
+
+	rmSync(tempDir, { recursive: true, force: true });
+	cleanupStageTarballs();
+
 	if (failed > 0) {
 		process.exit(1);
 	}

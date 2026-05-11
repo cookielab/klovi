@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { useFontSize, usePresentationFontSize, usePresentationTheme, useTheme } from "./useTheme";
 
-
 const N_15 = 15;
 const N_20 = 20;
 const N_17 = 17;

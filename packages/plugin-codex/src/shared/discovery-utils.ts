@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import process from "node:process";
-import { FileSystem } from "@effect/platform";
+import { FileSystem, type Error as PlatformError } from "@effect/platform";
 import { Effect } from "effect";
 
 const WINDOWS_DRIVE_LETTER_REGEX = /^[A-Za-z]\//u;
@@ -12,7 +12,7 @@ type DirEntry = {
 
 const STAT_CONCURRENCY = 32;
 
-export function readDirEntriesSafe(dir: string) {
+export function readDirEntriesSafe(dir: string): Effect.Effect<DirEntry[], never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
@@ -29,14 +29,18 @@ export function readDirEntriesSafe(dir: string) {
 	});
 }
 
-export function readFileText(filePath: string) {
+export function readFileText(
+	filePath: string,
+): Effect.Effect<string, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		return yield* fs.readFileString(filePath);
 	});
 }
 
-export function fileExists(filePath: string) {
+export function fileExists(
+	filePath: string,
+): Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const fs = yield* FileSystem.FileSystem;
 		return yield* fs.exists(filePath);

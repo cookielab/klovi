@@ -40,7 +40,7 @@ export const AllRoles: Story = () => (
 export const WithModel: Story = () => (
 	<div>
 		<TurnBox
-			role="assistant"
+			{...{ role: "assistant" as const }}
 			model="claude-4-opus"
 			timestamp={
 				<span>
@@ -57,7 +57,7 @@ export const WithModel: Story = () => (
 
 export const CustomBadge: Story = () => (
 	<div>
-		<TurnBox role="agent" badge="Root Agent">
+		<TurnBox {...{ role: "agent" as const }} badge="Root Agent">
 			<p>
 				<Text>{T_CUSTOM_BADGE_TEXT_OVERRIDES_TH}</Text>
 			</p>

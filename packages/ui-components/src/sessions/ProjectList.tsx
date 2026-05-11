@@ -4,8 +4,7 @@ import type React from "react";
 import { useCallback, useRef } from "react";
 import type { Project } from "../types/index";
 import { formatFullDateTime, formatRelativeTime } from "../utilities/formatters";
-
-
+import { type ProjectListProps, projectDisplayName } from "./ProjectList.helpers";
 
 const N_8 = 8;
 
@@ -20,13 +19,6 @@ const T_TEXT_3 = ")";
 const T_NO_PROJECTS_FOUND = "No projects found";
 const T_HIDDEN_PROJECT = "hidden project";
 
-const PATH_SEPARATOR_REGEX = /[/\\]/u;
-
-function projectDisplayName(project: Project): string {
-	const parts = project.name.split(PATH_SEPARATOR_REGEX).filter(Boolean);
-	return parts.slice(-2).join("/");
-}
-
 const SCROLL_CONTAINER_CLASSES = "h-full w-full overflow-auto";
 const FILTER_INPUT_CLASSES =
 	"mb-[8px] w-full border border-border bg-surface px-[12px] py-[8px] text-[0.85rem] text-foreground outline-none focus:border-accent";
@@ -34,6 +26,8 @@ const SECTION_TITLE_CLASSES =
 	"px-[12px] pt-[12px] pb-[4px] text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-foreground-subtle";
 const LIST_ITEM_BASE_CLASSES =
 	"group flex cursor-pointer items-center gap-[8px] px-[12px] py-[10px] transition-[background] duration-100 hover:bg-surface-sunken";
+const LIST_ITEM_BUTTON_CLASSES =
+	"flex flex-1 min-w-0 cursor-pointer items-center gap-[8px] border-0 bg-transparent p-0 text-left appearance-none";
 const LIST_ITEM_ACTIVE_CLASSES = "border-l-[3px] border-l-accent bg-accent-subtle";
 const LIST_ITEM_CONTENT_CLASSES = "min-w-0 flex-1";
 const LIST_ITEM_TITLE_CLASSES =
@@ -51,20 +45,6 @@ const FETCH_ERROR_MESSAGE_CLASSES = "text-error";
 
 const PROJECT_ROW_HEIGHT = 56;
 
-type ProjectListProps = {
-	projects: Project[];
-	loading?: boolean | undefined;
-	error?: string | undefined;
-	onRetry?: (() => void) | undefined;
-	selectedId?: string | undefined;
-	hiddenIds: Set<string>;
-	onSelect: (encodedPath: string) => void;
-	onHide: (encodedPath: string) => void;
-	onShowHidden: () => void;
-	filter?: string | undefined;
-	onFilterChange?: ((filter: string) => void) | undefined;
-};
-
 function ProjectItem({
 	project,
 	isActive,
@@ -77,15 +57,6 @@ function ProjectItem({
 	onHide: (encodedPath: string) => void;
 }): React.ReactNode {
 	const handleClick = useCallback(() => onSelect(project.encodedPath), [onSelect, project.encodedPath]);
-	const handleKeyDown = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (e.key === "Enter" || e.key === " ") {
-				e.preventDefault();
-				onSelect(project.encodedPath);
-			}
-		},
-		[onSelect, project.encodedPath],
-	);
 	const handleHide = useCallback(
 		(e: React.MouseEvent) => {
 			e.stopPropagation();
@@ -95,22 +66,24 @@ function ProjectItem({
 	);
 
 	return (
-		<div
-			className={`${LIST_ITEM_BASE_CLASSES} ${isActive ? LIST_ITEM_ACTIVE_CLASSES : ""}`}
-			role="button"
-			tabIndex={0}
-			onClick={handleClick}
-			onKeyDown={handleKeyDown}
-		>
-			<div className={LIST_ITEM_CONTENT_CLASSES}>
-				<div className={LIST_ITEM_TITLE_CLASSES}>{projectDisplayName(project)}</div>
-				<div className={LIST_ITEM_META_CLASSES}>
-					{project.sessionCount}<Text>{T_SP_1}</Text><Text>{T_SESSION}</Text>{project.sessionCount === 1 ? "" : "s"}<Text>{T_SP_1}</Text><Text>{T_TEXT}</Text><Text>{T_SP_1}</Text>
-					<time dateTime={project.lastActivity} title={formatFullDateTime(project.lastActivity)}>
-						{formatRelativeTime(project.lastActivity)}
-					</time>
+		<div className={`${LIST_ITEM_BASE_CLASSES} ${isActive ? LIST_ITEM_ACTIVE_CLASSES : ""}`}>
+			<button type="button" className={LIST_ITEM_BUTTON_CLASSES} onClick={handleClick}>
+				<div className={LIST_ITEM_CONTENT_CLASSES}>
+					<div className={LIST_ITEM_TITLE_CLASSES}>{projectDisplayName(project)}</div>
+					<div className={LIST_ITEM_META_CLASSES}>
+						{project.sessionCount}
+						<Text>{T_SP_1}</Text>
+						<Text>{T_SESSION}</Text>
+						{project.sessionCount === 1 ? "" : "s"}
+						<Text>{T_SP_1}</Text>
+						<Text>{T_TEXT}</Text>
+						<Text>{T_SP_1}</Text>
+						<time dateTime={project.lastActivity} title={formatFullDateTime(project.lastActivity)}>
+							{formatRelativeTime(project.lastActivity)}
+						</time>
+					</div>
 				</div>
-			</div>
+			</button>
 			<button type="button" className={BTN_HIDE_CLASSES} title="Hide project" onClick={handleHide}>
 				<Text>{T_TEXT_2}</Text>
 			</button>
@@ -157,7 +130,11 @@ function ProjectList({
 	});
 
 	if (loading) {
-		return <div className={LOADING_CLASSES}><Text>{T_LOADING_PROJECTS}</Text></div>;
+		return (
+			<div className={LOADING_CLASSES}>
+				<Text>{T_LOADING_PROJECTS}</Text>
+			</div>
+		);
 	}
 	if (error) {
 		return (
@@ -180,9 +157,15 @@ function ProjectList({
 				value={filter}
 				onChange={handleFilterChange}
 			/>
-			<div className={SECTION_TITLE_CLASSES}><Text>{T_PROJECTS}</Text>{filtered.length}<Text>{T_TEXT_3}</Text></div>
+			<div className={SECTION_TITLE_CLASSES}>
+				<Text>{T_PROJECTS}</Text>
+				{filtered.length}
+				<Text>{T_TEXT_3}</Text>
+			</div>
 			{filtered.length === 0 ? (
-				<div className={EMPTY_MESSAGE_CLASSES}><Text>{T_NO_PROJECTS_FOUND}</Text></div>
+				<div className={EMPTY_MESSAGE_CLASSES}>
+					<Text>{T_NO_PROJECTS_FOUND}</Text>
+				</div>
 			) : (
 				<div>
 					{virtualizer.getVirtualItems().map((item) => {
@@ -205,12 +188,16 @@ function ProjectList({
 			)}
 			{hiddenIds.size > 0 && (
 				<button type="button" className={HIDDEN_PROJECTS_LINK_CLASSES} onClick={onShowHidden}>
-					{hiddenIds.size}<Text>{T_SP_1}</Text><Text>{T_HIDDEN_PROJECT}</Text>{hiddenIds.size === 1 ? "" : "s"}
+					{hiddenIds.size}
+					<Text>{T_SP_1}</Text>
+					<Text>{T_HIDDEN_PROJECT}</Text>
+					{hiddenIds.size === 1 ? "" : "s"}
 				</button>
 			)}
 		</div>
 	);
 }
 
-export type { ProjectListProps };
-export { ProjectList, projectDisplayName };
+export type { ProjectListProps } from "./ProjectList.helpers";
+export { projectDisplayName } from "./ProjectList.helpers";
+export { ProjectList };

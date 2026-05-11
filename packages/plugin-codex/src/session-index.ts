@@ -3,7 +3,6 @@ import { PluginConfig, streamJsonlHead } from "@cookielab.io/klovi-plugin-core";
 import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 
-
 const N_256 = 256;
 
 type CodexSessionMeta = {
@@ -101,7 +100,7 @@ function extractTurnContextModel(parsed: unknown): string | null {
 	return typeof event.payload?.model === "string" ? event.payload.model : null;
 }
 
-function streamInferredModel(filePath: string) {
+function streamInferredModel(filePath: string): Effect.Effect<string | null, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		let model: string | null = null;
 		yield* streamJsonlHead(
@@ -123,7 +122,10 @@ function streamInferredModel(filePath: string) {
 	});
 }
 
-function parseSessionMeta(filePath: string, fileMtimeEpoch: number | undefined) {
+function parseSessionMeta(
+	filePath: string,
+	fileMtimeEpoch: number | undefined,
+): Effect.Effect<CodexSessionMeta | null, never, FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		// Object wrapper avoids TS narrowing the closure-assigned `null` after the stream
 		// completes — direct `let firstLineMeta: CodexSessionMeta | null = null` followed by
@@ -183,34 +185,63 @@ function walkJsonlFiles(
 	});
 }
 
-function scanCodexSessions() {
+function processSessionFile(
+	filePath: string,
+	fs: FileSystem.FileSystem,
+	sessions: SessionFileInfo[],
+): Effect.Effect<void, never, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const info = yield* fs.stat(filePath).pipe(Effect.catchAll(() => Effect.succeed(null)));
+		const fileMtimeEpoch = info?.mtime._tag === "Some" ? info.mtime.value.getTime() / MS_PER_SECOND : undefined;
+
+		const meta = yield* parseSessionMeta(filePath, fileMtimeEpoch);
+		if (!meta) {
+			return;
+		}
+
+		if (info?.mtime._tag === "Some") {
+			sessions.push({
+				filePath: filePath,
+				meta: meta,
+				mtime: info.mtime.value.toISOString(),
+			});
+		}
+	});
+}
+
+function scanCodexSessions(): Effect.Effect<SessionFileInfo[], never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const fs = yield* FileSystem.FileSystem;
 		const sessionsDir = join(config.dataDir, "sessions");
 		const sessions: SessionFileInfo[] = [];
 
-		yield* walkJsonlFiles(sessionsDir, (filePath, _fileName) =>
-			Effect.gen(function* () {
-				const info = yield* fs.stat(filePath).pipe(Effect.catchAll(() => Effect.succeed(null)));
-				const fileMtimeEpoch = info?.mtime._tag === "Some" ? info.mtime.value.getTime() / MS_PER_SECOND : undefined;
-
-				const meta = yield* parseSessionMeta(filePath, fileMtimeEpoch);
-				if (!meta) {
-					return;
-				}
-
-				if (info?.mtime._tag === "Some") {
-					sessions.push({
-						filePath: filePath,
-						meta: meta,
-						mtime: info.mtime.value.toISOString(),
-					});
-				}
-			}),
-		);
+		yield* walkJsonlFiles(sessionsDir, (filePath, _fileName) => processSessionFile(filePath, fs, sessions));
 
 		return sessions;
+	});
+}
+
+function checkEntry(
+	dir: string,
+	name: string,
+	match: (fileName: string) => boolean,
+): Effect.Effect<string | null, never, FileSystem.FileSystem> {
+	return Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		const fullPath = join(dir, name);
+		const info = yield* fs.stat(fullPath).pipe(Effect.catchAll(() => Effect.succeed(null)));
+		if (!info) {
+			return null;
+		}
+
+		if (info.type !== "Directory" && match(name)) {
+			return fullPath;
+		}
+		if (info.type === "Directory") {
+			return yield* walkForFile(fullPath, match);
+		}
+		return null;
 	});
 }
 
@@ -223,27 +254,18 @@ function walkForFile(
 		const names = yield* fs.readDirectory(dir).pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])));
 
 		for (const name of names) {
-			const fullPath = join(dir, name);
-			const info = yield* fs.stat(fullPath).pipe(Effect.catchAll(() => Effect.succeed(null)));
-			if (!info) {
-				continue;
-			}
-
-			if (info.type !== "Directory" && match(name)) {
-				return fullPath;
-			}
-			if (info.type === "Directory") {
-				const found = yield* walkForFile(fullPath, match);
-				if (found) {
-					return found;
-				}
+			const found = yield* checkEntry(dir, name, match);
+			if (found) {
+				return found;
 			}
 		}
 		return null;
 	});
 }
 
-function findCodexSessionFileById(sessionId: string) {
+function findCodexSessionFileById(
+	sessionId: string,
+): Effect.Effect<string | null, never, PluginConfig | FileSystem.FileSystem> {
 	return Effect.gen(function* () {
 		const config = yield* PluginConfig;
 		const fs = yield* FileSystem.FileSystem;

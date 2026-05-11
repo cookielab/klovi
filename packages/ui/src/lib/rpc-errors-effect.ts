@@ -1,4 +1,5 @@
-import { Data } from "effect";
+import { RpcDisconnectedError, type RpcError, RpcTimeoutError } from "./rpc-error-classes";
+import { RpcHandlerError } from "./rpc-error-handler";
 import { getRpcErrorCode } from "./rpc-errors";
 
 const TIMEOUT_MS_REGEX = /exceeded (?<ms>\d+)ms/u;
@@ -15,21 +16,9 @@ function hasRpcTag(error: unknown): error is { ["_tag"]: RpcTag } {
 	return error._tag === "RpcTimeoutError" || error._tag === "RpcDisconnectedError" || error._tag === "RpcHandlerError";
 }
 
-export class RpcTimeoutError extends Data.TaggedError("RpcTimeoutError")<{
-	readonly method: string;
-	readonly timeoutMs: number;
-}> {}
-
-export class RpcDisconnectedError extends Data.TaggedError("RpcDisconnectedError")<{
-	readonly method: string;
-}> {}
-
-export class RpcHandlerError extends Data.TaggedError("RpcHandlerError")<{
-	readonly method: string;
-	readonly reason: string;
-}> {}
-
-export type RpcError = RpcTimeoutError | RpcDisconnectedError | RpcHandlerError;
+export type { RpcError } from "./rpc-error-classes";
+export { RpcDisconnectedError, RpcTimeoutError } from "./rpc-error-classes";
+export { RpcHandlerError } from "./rpc-error-handler";
 
 export function isRpcError(error: unknown): error is RpcError {
 	return hasRpcTag(error);

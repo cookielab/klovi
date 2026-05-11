@@ -5,8 +5,7 @@ import { useCallback, useRef } from "react";
 import type { SessionSummary } from "../types/index";
 import { FetchError } from "../utilities/FetchError";
 import { formatFullDateTime, formatTime } from "../utilities/formatters";
-
-
+import type { SessionListProps } from "./SessionList.types";
 
 const N_8 = 8;
 
@@ -44,18 +43,6 @@ const LOADING_CLASSES = "flex items-center justify-center p-[40px] text-[0.9rem]
 
 const SESSION_ROW_HEIGHT = 56;
 
-type SessionListProps = {
-	sessions: SessionSummary[];
-	loading?: boolean | undefined;
-	error?: string | undefined;
-	onRetry?: (() => void) | undefined;
-	selectedId?: string | undefined;
-	projectName: string;
-	onSelect: (sessionId: string) => void;
-	onBack: () => void;
-	pluginDisplayName?: ((id: string) => string) | undefined;
-};
-
 function SessionItem({
 	session,
 	isActive,
@@ -83,7 +70,8 @@ function SessionItem({
 		<button type="button" className={itemClasses} onClick={handleClick}>
 			<div className={LIST_ITEM_TITLE_CLASSES}>{session.firstMessage || session.slug}</div>
 			<div className={LIST_ITEM_META_CLASSES}>
-				{session.pluginId ? <span className={PLUGIN_BADGE_CLASSES}>{pluginDisplayName(session.pluginId)}</span> : null}<Text>{T_SP_1}</Text>
+				{session.pluginId ? <span className={PLUGIN_BADGE_CLASSES}>{pluginDisplayName(session.pluginId)}</span> : null}
+				<Text>{T_SP_1}</Text>
 				{session.sessionType ? (
 					<span
 						className={`${SESSION_TYPE_BADGE_CLASSES} ${
@@ -94,7 +82,8 @@ function SessionItem({
 					>
 						{session.sessionType === "plan" ? "Plan" : "Impl"}
 					</span>
-				) : null}<Text>{T_SP_1}</Text>
+				) : null}
+				<Text>{T_SP_1}</Text>
 				<time dateTime={session.timestamp} title={formatFullDateTime(session.timestamp)}>
 					{formatTime(session.timestamp)}
 				</time>
@@ -125,7 +114,11 @@ function SessionList({
 	});
 
 	if (loading) {
-		return <div className={LOADING_CLASSES}><Text>{T_LOADING_SESSIONS}</Text></div>;
+		return (
+			<div className={LOADING_CLASSES}>
+				<Text>{T_LOADING_SESSIONS}</Text>
+			</div>
+		);
 	}
 	if (error) {
 		return <FetchError error={error} {...(onRetry ? { onRetry: onRetry } : {})} />;
@@ -138,7 +131,9 @@ function SessionList({
 			</button>
 			<div className={SECTION_TITLE_CLASSES}>{displayName}</div>
 			{sessions.length === 0 ? (
-				<div className={EMPTY_MESSAGE_CLASSES}><Text>{T_NO_SESSIONS_FOUND}</Text></div>
+				<div className={EMPTY_MESSAGE_CLASSES}>
+					<Text>{T_NO_SESSIONS_FOUND}</Text>
+				</div>
 			) : (
 				<div>
 					{virtualizer.getVirtualItems().map((item) => {
@@ -163,5 +158,5 @@ function SessionList({
 	);
 }
 
-export type { SessionListProps };
+export type { SessionListProps } from "./SessionList.types";
 export { SessionList };

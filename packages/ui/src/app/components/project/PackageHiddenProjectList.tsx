@@ -10,7 +10,11 @@ type PackageHiddenProjectListProps = {
 	onBack: () => void;
 };
 
-export function PackageHiddenProjectList({ hiddenIds, onUnhide, onBack }: PackageHiddenProjectListProps): React.ReactNode {
+export function PackageHiddenProjectList({
+	hiddenIds,
+	onUnhide,
+	onBack,
+}: PackageHiddenProjectListProps): React.ReactNode {
 	const client = useKloviClient();
 	const { data, loading, error, retry } = useEffectQuery<{ projects: Project[] }>(() => client.getProjects(), [client]);
 

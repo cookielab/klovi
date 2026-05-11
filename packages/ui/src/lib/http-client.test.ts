@@ -1,6 +1,5 @@
 import { createHttpClient } from "./http-client";
 
-
 const N_500 = 500;
 const N_404 = 404;
 

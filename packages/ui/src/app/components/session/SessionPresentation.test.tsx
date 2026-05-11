@@ -3,7 +3,6 @@ import type { Session } from "../../../shared/types";
 import { MockProviders, setupMockRpc } from "../../test-helpers/mock-rpc";
 import { SessionPresentation } from "./SessionPresentation";
 
-
 const noop = (): undefined => undefined;
 const STEP_REGEX = /Step/u;
 
@@ -37,10 +36,9 @@ describe("SessionPresentation", () => {
 		setupMockRpc({
 			getSessionHead: () => new Promise(noop),
 		});
-		const { container } = render(
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />,
-			{ wrapper: MockProviders },
-		);
+		const { container } = render(<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />, {
+			wrapper: MockProviders,
+		});
 		expect(container.querySelector(".loading")).not.toBeNull();
 	});
 
@@ -80,10 +78,9 @@ describe("SessionPresentation", () => {
 			getSessionTail: () => Promise.resolve({ turns: [] }),
 		});
 
-		const { container } = render(
-			<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />,
-			{ wrapper: MockProviders },
-		);
+		const { container } = render(<SessionPresentation sessionId="session-1" project="test-project" onExit={noop} />, {
+			wrapper: MockProviders,
+		});
 		await waitFor(() => {
 			expect(container.querySelector(".loading")).toBeNull();
 		});

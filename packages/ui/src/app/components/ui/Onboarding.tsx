@@ -1,11 +1,10 @@
 import { Text } from "@cookielab.io/klovi-design-system";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useKloviClient, useKloviHostBridge, useRunKloviEffect } from "../../../lib/context";
 import { kloviHostBridge } from "../../../lib/rpc-client";
 import type { PluginSettingInfo } from "../../../shared/rpc-types";
 import { PluginRow } from "../settings/PluginRow";
 import { SecurityNoticeContent } from "./SecurityWarning";
-
 
 const T_PLUGINS = "Plugins";
 const T_CHOOSE_WHICH_AI_CODING_TOOLS_T = "Choose which AI coding tools to monitor";
@@ -98,9 +97,10 @@ export function Onboarding({ onComplete }: OnboardingProps): React.ReactNode {
 		runKloviEffect(client.updateGeneralSettings({ showSecurityWarning: false })).catch(() => undefined);
 	}, [client, runKloviEffect]);
 	const handleBackToStep1 = useCallback(() => setStep(1), []);
+	const headingId = useId();
 
 	return (
-		<section className={WRAPPER_CLASSES} aria-labelledby="onboarding-heading">
+		<section className={WRAPPER_CLASSES} aria-labelledby={headingId}>
 			<div className={CONTENT_CLASSES}>
 				<div className={STEPS_CLASSES} aria-hidden="true">
 					<div className={`${DOT_BASE_CLASSES} ${step === 1 ? DOT_ACTIVE_CLASSES : DOT_INACTIVE_CLASSES}`} />
@@ -110,7 +110,7 @@ export function Onboarding({ onComplete }: OnboardingProps): React.ReactNode {
 
 				{step === 1 && (
 					<SecurityNoticeContent
-						headingId="onboarding-heading"
+						headingId={headingId}
 						onAccept={handleAcceptStep1}
 						onDontShowAgain={handleDontShowAgain}
 					/>
@@ -118,12 +118,16 @@ export function Onboarding({ onComplete }: OnboardingProps): React.ReactNode {
 
 				{step === 2 && (
 					<>
-						<h1 id="onboarding-heading" className={HEADING_CLASSES}>
+						<h1 id={headingId} className={HEADING_CLASSES}>
 							<Text>{T_PLUGINS}</Text>
 						</h1>
-						<p className={SUBTITLE_CLASSES}><Text>{T_CHOOSE_WHICH_AI_CODING_TOOLS_T}</Text></p>
+						<p className={SUBTITLE_CLASSES}>
+							<Text>{T_CHOOSE_WHICH_AI_CODING_TOOLS_T}</Text>
+						</p>
 						{loading ? (
-							<div><Text>{T_LOADING}</Text></div>
+							<div>
+								<Text>{T_LOADING}</Text>
+							</div>
 						) : (
 							<div className={PLUGINS_CLASSES}>
 								{plugins.map((plugin) => (

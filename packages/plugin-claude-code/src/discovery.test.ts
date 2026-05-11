@@ -7,7 +7,6 @@ import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { classifySessionTypes, discoverClaudeProjects, listClaudeSessions } from "./discovery";
 
-
 const N_30 = 30;
 const N_15 = 15;
 const N_14 = 14;
@@ -22,7 +21,7 @@ const testLayer = Layer.mergeAll(
 	Layer.succeed(SqliteClientTag, { open: () => Effect.succeed(null) }),
 );
 
-function run<A, E, R>(effect: Effect.Effect<A, E, R>) {
+function run<A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> {
 	return Effect.runPromise(effect.pipe(Effect.provide(testLayer)) as Effect.Effect<A, E, never>);
 }
 

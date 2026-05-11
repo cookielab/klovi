@@ -1,8 +1,8 @@
 import { useTheme } from "@cookielab.io/klovi-design-system";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/prism";
 import oneDark from "react-syntax-highlighter/dist/esm/styles/prism/one-dark";
 import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
-
+import { formatDiff } from "./DiffView.helpers";
 
 const N_1_5 = 1.5;
 
@@ -16,24 +16,7 @@ type DiffViewProps = {
 	newString: string;
 };
 
-export function formatDiff(oldString: string, newString: string): string {
-	const lines: string[] = [];
-
-	if (oldString !== "") {
-		for (const line of oldString.split("\n")) {
-			lines.push(`-${line}`);
-		}
-	}
-	if (newString !== "") {
-		for (const line of newString.split("\n")) {
-			lines.push(`+${line}`);
-		}
-	}
-
-	return lines.join("\n");
-}
-
-export function DiffView({ filePath, oldString, newString }: DiffViewProps): React.ReactNode {
+function DiffView({ filePath, oldString, newString }: DiffViewProps): React.ReactNode {
 	const { resolved: theme } = useTheme();
 	const diff = formatDiff(oldString, newString);
 	const style = theme === "dark" ? oneDark : oneLight;
@@ -60,3 +43,6 @@ export function DiffView({ filePath, oldString, newString }: DiffViewProps): Rea
 		</div>
 	);
 }
+
+export { formatDiff } from "./DiffView.helpers";
+export { DiffView };

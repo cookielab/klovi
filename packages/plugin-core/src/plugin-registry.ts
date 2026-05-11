@@ -228,7 +228,9 @@ class PluginRegistry<
 		});
 	}
 
-	public listAllSessions(project: MergedProject<TpluginId>): Effect.Effect<TsessionSummary[], never, RegistryRequirements> {
+	public listAllSessions(
+		project: MergedProject<TpluginId>,
+	): Effect.Effect<TsessionSummary[], never, RegistryRequirements> {
 		return Effect.gen(this, function* () {
 			const allSessions: TsessionSummary[] = [];
 

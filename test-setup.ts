@@ -1,7 +1,6 @@
 import { GlobalWindow } from "happy-dom";
 import { setupMockRpc } from "./packages/ui/src/app/test-helpers/mock-rpc";
 
-
 const N_800 = 800;
 const N_600 = 600;
 

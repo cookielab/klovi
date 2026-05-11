@@ -58,7 +58,10 @@ function createMockClient(): KloviClient {
 	};
 }
 
-function renderWithProviders(element: React.ReactElement, caps: Partial<KloviHostCapabilities> = {}) {
+function renderWithProviders(
+	element: React.ReactElement,
+	caps: Partial<KloviHostCapabilities> = {},
+): ReturnType<typeof render> {
 	const client = createMockClient();
 	const hostBridge = createMockHostBridge(caps);
 	return render(createElement(KloviRuntimeProvider, { client: client, hostBridge: hostBridge }, element));
