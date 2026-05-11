@@ -1,5 +1,5 @@
 import { Cause, Effect, Fiber } from "effect";
-import { type DependencyList, useCallback, useEffect, useState } from "react";
+import { type DependencyList, useCallback, useEffect, useRef, useState } from "react";
 import { useKloviRuntime } from "../../lib/context";
 import { normalizeRpcError, type RpcError } from "../../lib/rpc-errors-effect";
 
@@ -12,22 +12,30 @@ type UseEffectQueryResult<T> = {
 
 export function useEffectQuery<T, E = unknown, R = unknown>(
 	effectFactory: () => Effect.Effect<T, E, R>,
-	_deps: DependencyList,
+	deps: DependencyList,
 ): UseEffectQueryResult<T> {
 	const runtime = useKloviRuntime();
 	const [data, setData] = useState<T | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<RpcError | null>(null);
-	const [_retryCount, setRetryCount] = useState(0);
+	const [retryCount, setRetryCount] = useState(0);
+
+	const effectFactoryRef = useRef(effectFactory);
+	effectFactoryRef.current = effectFactory;
 
 	const retry = useCallback(() => setRetryCount((c) => c + 1), []);
 
 	useEffect(() => {
+		// Reading retryCount makes biome treat it as a real dependency, so that
+		// callers triggering retry() trigger a refetch via this useEffect.
+		if (retryCount < 0) {
+			return;
+		}
 		setLoading(true);
 		setError(null);
 
 		const fiber = runtime.runFork(
-			effectFactory().pipe(
+			effectFactoryRef.current().pipe(
 				Effect.matchCauseEffect({
 					onFailure: (cause) =>
 						Effect.sync(() => {
@@ -47,7 +55,7 @@ export function useEffectQuery<T, E = unknown, R = unknown>(
 		return () => {
 			Effect.runFork(Fiber.interrupt(fiber));
 		};
-	}, [runtime, effectFactory]);
+	}, [runtime, retryCount, ...deps]);
 
 	return { data: data, loading: loading, error: error, retry: retry };
 }

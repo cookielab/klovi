@@ -1,4 +1,4 @@
-import { cleanup, renderHook, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
 import { MockProviders } from "../test-helpers/mock-rpc";
 import { useEffectQuery } from "./useEffectQuery";
@@ -70,7 +70,9 @@ describe("useEffectQuery", () => {
 		await waitFor(() => expect(result.current.loading).toBe(false));
 		expect(result.current.error).not.toBeNull();
 
-		result.current.retry();
+		act(() => {
+			result.current.retry();
+		});
 		await waitFor(() => expect(result.current.data).toEqual({ ok: true }));
 		expect(result.current.error).toBeNull();
 	});
