@@ -1,8 +1,16 @@
+import { mock, spyOn } from "bun:test";
 import { GlobalWindow } from "happy-dom";
 import { setupMockRpc } from "./packages/ui/src/app/test-helpers/mock-rpc";
 
 const N_800 = 800;
 const N_600 = 600;
+
+(globalThis as Record<string, unknown>)["mock"] = mock;
+(globalThis as Record<string, unknown>)["spyOn"] = spyOn;
+
+// React 19 requires this flag so testing-library's act() integration works under
+// happy-dom; without it, async updates trigger "act()" warnings and waitFor() hangs.
+(globalThis as Record<string, unknown>)["IS_REACT_ACT_ENVIRONMENT"] = true;
 
 const window = new GlobalWindow();
 
