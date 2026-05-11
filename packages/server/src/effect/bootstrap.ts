@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import process from "node:process";
 import { HttpServer } from "@effect/platform";
 import { Cause, Effect, Fiber, Layer } from "effect";
 import { makeBunServerLayer } from "./platform-bun";
@@ -20,7 +21,8 @@ type BootstrapResult = {
 };
 
 function getDefaultSettingsPath(): string {
-	const home = Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "";
+	// biome-ignore lint/style/noProcessEnv: server bootstrap must run under Node and Bun
+	const home = process.env["HOME"] ?? process.env["USERPROFILE"] ?? "";
 	return join(home, ".klovi", "settings.json");
 }
 

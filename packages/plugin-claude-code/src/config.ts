@@ -1,6 +1,8 @@
 import { join } from "node:path";
+import process from "node:process";
 
-const DEFAULT_CLAUDE_CODE_DIR = join(Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "", ".claude");
+// biome-ignore lint/style/noProcessEnv: plugin must run under Node (smoke tests) and Bun
+const DEFAULT_CLAUDE_CODE_DIR = join(process.env["HOME"] ?? process.env["USERPROFILE"] ?? "", ".claude");
 
 // Legacy mutable state — kept for backwards compatibility with tests/callers
 // that haven't migrated to PluginConfig yet. New code should use PluginConfig.

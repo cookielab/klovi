@@ -1,6 +1,8 @@
 import { join } from "node:path";
+import process from "node:process";
 
-const DEFAULT_CODEX_CLI_DIR = join(Bun.env["HOME"] ?? Bun.env["USERPROFILE"] ?? "", ".codex");
+// biome-ignore lint/style/noProcessEnv: plugin must run under Node (smoke tests) and Bun
+const DEFAULT_CODEX_CLI_DIR = join(process.env["HOME"] ?? process.env["USERPROFILE"] ?? "", ".codex");
 
 // Legacy mutable state — kept for backwards compatibility
 let codexCliDir = DEFAULT_CODEX_CLI_DIR;

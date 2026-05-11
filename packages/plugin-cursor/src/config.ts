@@ -14,7 +14,8 @@ function getPlatform(options?: CursorPathOptions): NodeJS.Platform {
 }
 
 function getEnv(options?: CursorPathOptions): NodeJS.ProcessEnv {
-	return options?.env ?? Bun.env;
+	// biome-ignore lint/style/noProcessEnv: plugin must run under Node (smoke tests) and Bun
+	return options?.env ?? process.env;
 }
 
 function getPathApi(platform: NodeJS.Platform): typeof posix {
