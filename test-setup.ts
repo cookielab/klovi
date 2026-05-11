@@ -96,4 +96,26 @@ if (typeof HTMLElement !== "undefined") {
 			["toJSON"]: () => ({}),
 		} as DOMRect;
 	};
+
+	// @tanstack/virtual-core@3.14.0 switched from getBoundingClientRect to
+	// offsetWidth/offsetHeight when observing the scroll element. happy-dom
+	// returns 0 for both on unlaid-out elements, which leaves the virtualizer
+	// with an empty viewport. Mirror the rect shim above so tests can still
+	// exercise the windowing path.
+	const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth")?.get;
+	const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight")?.get;
+	Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+		configurable: true,
+		get(): number {
+			const value = (originalOffsetWidth?.call(this) as number | undefined) ?? 0;
+			return value !== 0 ? value : N_800;
+		},
+	});
+	Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+		configurable: true,
+		get(): number {
+			const value = (originalOffsetHeight?.call(this) as number | undefined) ?? 0;
+			return value !== 0 ? value : N_600;
+		},
+	});
 }
