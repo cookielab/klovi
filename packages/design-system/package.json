@@ -32,9 +32,9 @@
 	},
 	"devDependencies": {
 		"@ladle/react": "5.1.1",
-		"@tailwindcss/vite": "4.2.4",
+		"@tailwindcss/vite": "4.3.0",
 		"@testing-library/react": "16.3.2",
 		"@types/react-syntax-highlighter": "15.5.13",
-		"vite": "8.0.10"
+		"vite": "8.0.11"
 	}
 }
