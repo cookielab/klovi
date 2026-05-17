@@ -38,6 +38,6 @@
 		"@effect/platform-bun": "0.89.0",
 		"bun-plugin-tailwind": "0.1.2",
 		"effect": "3.21.2",
-		"electrobun": "1.18.0"
+		"electrobun": "1.18.1"
 	}
 }
