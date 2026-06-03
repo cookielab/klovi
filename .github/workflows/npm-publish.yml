@@ -56,7 +56,7 @@ jobs:
           echo "::error::Run the Release workflow (.github/workflows/release.yml) for production trusted publishing, or rerun this workflow with dry-run enabled."
           exit 1
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - uses: actions/setup-node@v6
         with:
