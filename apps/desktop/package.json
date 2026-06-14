@@ -35,9 +35,9 @@
 		"@cookielab.io/klovi-server": "workspace:*",
 		"@cookielab.io/klovi-ui": "workspace:*",
 		"@effect/platform": "0.96.1",
-		"@effect/platform-bun": "0.89.0",
+		"@effect/platform-bun": "0.90.0",
 		"bun-plugin-tailwind": "0.1.2",
-		"effect": "3.21.2",
+		"effect": "3.21.3",
 		"electrobun": "1.18.1"
 	}
 }
